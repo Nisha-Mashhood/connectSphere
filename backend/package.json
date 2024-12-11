@@ -1,0 +1,50 @@
+{
+  "name": "connect-sphere-backend",
+  "version": "1.0.0",
+  "main": "src/index.ts",
+  "type": "module",
+  "scripts": {
+    "clean": "rimraf dist",
+    "build": "npm clean && tsc",
+    "start": "node dist/index.js",
+    "dev": "concurrently \"tsc --watch\" \"nodemon dist/index.js\"",
+    "serve": "nodemon src/index.ts"
+  },
+  "keywords": [
+    "backend",
+    "typescript",
+    "nodejs",
+    "express",
+    "mongodb"
+  ],
+  "author": "Nisha Mashhood",
+  "license": "ISC",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/NishaAnas/connectSphere.git"
+  },
+  "description": "Backend for Connect Sphere platform, supporting user authentication, collaboration management, and mentor features.",
+  "dependencies": {
+    "bcrypt": "^5.1.1",
+    "body-parser": "^1.20.3",
+    "concurrently": "^9.1.0",
+    "cors": "^2.8.5",
+    "dotenv": "^16.4.7",
+    "express": "^4.21.2",
+    "joi": "^17.13.3",
+    "jsonwebtoken": "^9.0.2",
+    "mongoose": "^8.8.4",
+    "rimraf": "^6.0.1"
+  },
+  "devDependencies": {
+    "@types/bcryptjs": "^2.4.6",
+    "@types/cors": "^2.8.17",
+    "@types/express": "^5.0.0",
+    "@types/joi": "^17.2.2",
+    "@types/jsonwebtoken": "^9.0.7",
+    "@types/node": "^22.10.1",
+    "nodemon": "^3.1.7",
+    "ts-node": "^10.9.2",
+    "typescript": "^5.7.2"
+  }
+}

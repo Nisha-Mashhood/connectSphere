@@ -1,0 +1,39 @@
+{
+  "compilerOptions": {
+    /* General */
+    "target": "ES2016",                                  /* JavaScript version for compiled files. */
+    "module": "ES6",                                /* Node.js-compatible module system. */
+    "rootDir": "./src",                                  /* Root folder for source files. */
+    "outDir": "./dist",                                  /* Directory for compiled output files. */
+    "esModuleInterop": true,                            /* Compatibility for CommonJS modules. */
+    "strict": true,                                      /* Enable strict type checking. */
+    "forceConsistentCasingInFileNames": true,            /* Prevent case mismatch errors in imports. */
+    "skipLibCheck": true,                                /* Skip type checking of declaration files. */
+
+    /* TypeScript Enhancements */
+    "resolveJsonModule": true,                           /* Allow importing .json files. */
+    "declaration": true,                                 /* Emit declaration files for types. */
+    "declarationMap": true, 
+    "allowImportingTsExtensions": false,
+                                 /* Generate source maps for declaration files. */
+
+    /* Source Maps for Debugging */
+    "sourceMap": true,                                   /* Emit .map files for debugging. */
+    "inlineSources": true,                               /* Include original source code in source maps. */
+
+    /* Advanced Options */
+    "moduleResolution": "Node",                          /* Resolve modules in Node.js style. */
+    "allowSyntheticDefaultImports": true,                /* Allow default imports for modules without a default export. */
+    "typeRoots": ["./node_modules/@types"],              /* Specify the type definition root folder. */
+    "baseUrl": "./",                                     /* Base directory for module resolution. */
+
+    /* Optional Linting Improvements */
+    "noUnusedLocals": true,                              /* Report unused variables. */
+    "noUnusedParameters": true,                          /* Report unused function parameters. */
+    "noImplicitAny": true,                               /* Disallow variables with an implied `any` type. */
+    "noImplicitReturns": true,                           /* Ensure all code paths in a function return a value. */
+    "noFallthroughCasesInSwitch": true                   /* Disallow fallthrough cases in switch statements. */
+  },
+  "include": ["src/**/*"],                               /* Compile all files in the src directory. */
+  "exclude": ["node_modules", "dist", "tests/**/*.test.ts"] /* Exclude unnecessary folders and test files. */
+}
