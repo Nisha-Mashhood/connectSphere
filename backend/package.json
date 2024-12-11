@@ -26,14 +26,17 @@
   "description": "Backend for Connect Sphere platform, supporting user authentication, collaboration management, and mentor features.",
   "dependencies": {
     "bcrypt": "^5.1.1",
+    "bcryptjs": "^2.4.3",
     "body-parser": "^1.20.3",
     "concurrently": "^9.1.0",
     "cors": "^2.8.5",
+    "crypto": "^1.0.1",
     "dotenv": "^16.4.7",
     "express": "^4.21.2",
     "joi": "^17.13.3",
     "jsonwebtoken": "^9.0.2",
     "mongoose": "^8.8.4",
+    "nodemailer": "^6.9.16",
     "rimraf": "^6.0.1"
   },
   "devDependencies": {

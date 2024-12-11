@@ -8,9 +8,10 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
     });
 };
 import mongoose from 'mongoose';
+import config from '../config/env.js';
 const connectDB = () => __awaiter(void 0, void 0, void 0, function* () {
     try {
-        const mongoUri = process.env.MONGO_URI;
+        const mongoUri = config.mongoURI;
         if (!mongoUri) {
             throw new Error("MongoDB URI is not defined.");
         }

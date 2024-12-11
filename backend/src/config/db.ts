@@ -1,8 +1,9 @@
 import mongoose from 'mongoose';
+import config from '../config/env.js';
 
 const connectDB = async () => {
   try {
-    const mongoUri = process.env.MONGO_URI;
+    const mongoUri = config.mongoURI;
     if (!mongoUri) {
       throw new Error("MongoDB URI is not defined.");
     }

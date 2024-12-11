@@ -1,16 +1,19 @@
 import express from 'express';
 import dotenv from 'dotenv';
 import connectDB from './config/db.js';
+import config from './config/env.js';
+import authRoutes from './routes/authRoutes.js';
 dotenv.config();
 const app = express();
-const PORT = process.env.PORT || 3000;
 connectDB();
 app.use(express.json());
+// Use the authentication routes
+app.use('/api/auth', authRoutes);
 // Placeholder route
 app.get('/', (req, res) => {
     res.send('Connect Sphere Backend is running!');
 });
-app.listen(PORT, () => {
-    console.log(`Server is running on http://localhost:${PORT}`);
+app.listen(config.port, () => {
+    console.log(`Server is running on http://localhost:${config.port}`);
 });
 //# sourceMappingURL=index.js.map
