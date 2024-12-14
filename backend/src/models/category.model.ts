@@ -23,6 +23,4 @@ const categorySchema: Schema<CategoryInterface> = new mongoose.Schema(
     { timestamps: true }
   );
 
-  const Category: Model<CategoryInterface> = mongoose.model<CategoryInterface>("Category", categorySchema);
-
-  export default Category
+ export  const Category: Model<CategoryInterface> = mongoose.model<CategoryInterface>("Category", categorySchema);

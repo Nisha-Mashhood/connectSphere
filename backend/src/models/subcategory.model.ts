@@ -9,7 +9,7 @@ export interface SubcategoryInterface extends Document {
   }
 
   // Category Schema
-const categorySchema: Schema<SubcategoryInterface> = new mongoose.Schema(
+const SubcategorySchema: Schema<SubcategoryInterface> = new mongoose.Schema(
     {
       name: { 
         type: String, 
@@ -30,6 +30,6 @@ const categorySchema: Schema<SubcategoryInterface> = new mongoose.Schema(
     { timestamps: true }
   );
 
-  const Category: Model<SubcategoryInterface> = mongoose.model<SubcategoryInterface>("Category", categorySchema);
+  export const Subcategory: Model<SubcategoryInterface> = mongoose.model<SubcategoryInterface>("Category", SubcategorySchema);
 
-  export default Category
+  
