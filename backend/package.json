@@ -4,11 +4,9 @@
   "main": "src/index.ts",
   "type": "module",
   "scripts": {
-    "clean": "rimraf dist",
-    "build": "npm clean && tsc",
+    "build": "tsc",
     "start": "node dist/index.js",
-    "dev": "concurrently \"tsc --watch\" \"nodemon dist/index.js\"",
-    "serve": "nodemon src/index.ts"
+    "dev": "npm run build && nodemon dist/index.js"
   },
   "keywords": [
     "backend",
@@ -28,7 +26,6 @@
     "bcrypt": "^5.1.1",
     "bcryptjs": "^2.4.3",
     "body-parser": "^1.20.3",
-    "concurrently": "^9.1.0",
     "cors": "^2.8.5",
     "crypto": "^1.0.1",
     "dotenv": "^16.4.7",
@@ -37,7 +34,7 @@
     "jsonwebtoken": "^9.0.2",
     "mongoose": "^8.8.4",
     "nodemailer": "^6.9.16",
-    "rimraf": "^6.0.1"
+    "tsconfig-paths": "^4.2.0"
   },
   "devDependencies": {
     "@types/bcryptjs": "^2.4.6",
@@ -46,8 +43,10 @@
     "@types/joi": "^17.2.2",
     "@types/jsonwebtoken": "^9.0.7",
     "@types/node": "^22.10.1",
+    "@types/nodemailer": "^6.4.17",
     "nodemon": "^3.1.7",
     "ts-node": "^10.9.2",
+    "ts-node-dev": "^2.0.0",
     "typescript": "^5.7.2"
   }
 }

@@ -1,7 +1,7 @@
 {
   "compilerOptions": {
     /* General */
-    "target": "ES2016",                                  /* JavaScript version for compiled files. */
+    "target": "ESNext",                                  /* JavaScript version for compiled files. */
     "module": "NodeNext",                                /* Node.js-compatible module system. */
     "rootDir": "./src",                                  /* Root folder for source files. */
     "outDir": "./dist",                                  /* Directory for compiled output files. */
@@ -22,10 +22,13 @@
     "inlineSources": true,                               /* Include original source code in source maps. */
 
     /* Advanced Options */
-    "moduleResolution": "NodeNext",                          /* Resolve modules in Node.js style. */
+    "moduleResolution": "nodenext",                          /* Resolve modules in Node.js style. */
     "allowSyntheticDefaultImports": true,                /* Allow default imports for modules without a default export. */
     "typeRoots": ["./node_modules/@types"],              /* Specify the type definition root folder. */
-    "baseUrl": "./",                                     /* Base directory for module resolution. */
+    "baseUrl": "./",  
+    "paths": {
+      "src/*": ["./src/*"]
+    },                                   /* Base directory for module resolution. */
 
     /* Optional Linting Improvements */
     "noUnusedLocals": true,                              /* Report unused variables. */
