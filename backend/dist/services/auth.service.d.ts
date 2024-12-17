@@ -48,6 +48,7 @@ export declare const loginUser: (email: string, password: string) => Promise<{
 export declare const refreshToken: (refreshToken: string) => Promise<{
     newAccessToken: string;
 }>;
+export declare const findOrCreateUserforPassport: (profile: any, provider: string) => Promise<import("../models/user.model.js").UserInterface>;
 export declare const forgotPassword: (email: string) => Promise<string>;
 export declare const verifyOTP: (email: string, otp: string) => Promise<string>;
 export declare const resetPassword: (email: string, newPassword: string) => Promise<void>;

@@ -14,6 +14,7 @@ export declare const findUserById: (id: string) => Promise<(import("mongoose").D
 }> & {
     __v: number;
 }) | null>;
+export declare const findOrCreateUser: (profile: any, provider: string) => Promise<UserInterface>;
 export declare const updateUser: (id: string, updateData: Partial<UserInterface>) => Promise<(import("mongoose").Document<unknown, {}, UserInterface> & UserInterface & Required<{
     _id: import("mongoose").Types.ObjectId;
 }> & {

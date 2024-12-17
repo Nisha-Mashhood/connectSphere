@@ -1,4 +1,5 @@
 import mongoose, { Schema, Document, Model } from "mongoose";
+import config from '../config/env.config.js'
 
 export interface UserInterface extends Document {
   fullName: string;
@@ -11,10 +12,12 @@ export interface UserInterface extends Document {
   industry?: string;
   reasonForJoining?: string;
   role?: "user" | "mentor";
-  isMentorApproved?: boolean;
+  isBlocked: boolean;
+  provider?: string;
+  providerId?: string;
   profilePic?: string;
   coverPic?: string;
-  certificate?: string; // For mentors, store certificate file path
+  accessToken?: string;
   refreshToken?:string | null;
   createdAt: Date;
   updatedAt: Date;
@@ -66,21 +69,31 @@ const userSchema: Schema<UserInterface> = new mongoose.Schema(
         enum: ["user", "mentor"], 
         default:null 
     },
-    isMentorApproved: { 
+    isBlocked: { 
         type: Boolean, 
         default: false 
     },
+    provider: { 
+        type: String, 
+        enum: ["google", "facebook", "github"],
+        default: null 
+    },
+    providerId: { 
+        type: String, 
+        default: null 
+    },
     profilePic: { 
         type: String,
-        default: "https://www.pngarts.com/files/10/Default-Profile-Picture-PNG-Download-Image.png"
+        default: config.defaultprofilepic,
     },
     coverPic: { 
         type: String,
-        default: "https://tokystorage.s3.amazonaws.com/images/default-cover.png"
+        default: config.defaultcoverpic,
     },
-    certificate: { 
+    accessToken: {
         type: String,
-        default:null 
+        default: null,  
+        required: false
     },
     refreshToken: {
         type: String,

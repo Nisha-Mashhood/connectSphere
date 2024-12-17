@@ -5,6 +5,8 @@ export declare const registerProfessionalDetails: (req: Request, res: Response) 
 export declare const registerReasonAndRole: (req: Request, res: Response) => Promise<void>;
 export declare const login: (req: Request, res: Response) => Promise<void>;
 export declare const refreshToken: (req: Request, res: Response) => Promise<void>;
+export declare const googleAuthRedirect: (req: Request, res: Response) => void;
+export declare const githubAuthRedirect: (req: Request, res: Response) => void;
 export declare const logout: (req: Request, res: Response) => Promise<void>;
 export declare const handleForgotPassword: (req: Request, res: Response) => Promise<void>;
 export declare const handleVerifyOTP: (req: Request, res: Response) => Promise<void>;

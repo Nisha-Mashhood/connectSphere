@@ -4,11 +4,13 @@ import {
   findUserById,
   updatePassword,
   updateRefreshToken,
+  findOrCreateUser,
 } from "../repositories/user.repositry.js";
 import bcrypt from "bcryptjs";
 import { generateAccessToken,generateRefreshToken, verifyRefreshToken,removeRefreshToken } from "../utils/jwt.utils.js";
 import { generateOTP } from "../utils/otp.utils.js";
 import { sendEmail } from "../utils/email.utils.js";
+import * as MentorService from "../services/mentor.service.js";
 
 // Handle personal details registration
 export const savePersonalDetails = async (data: {
@@ -81,12 +83,22 @@ export const saveReasonAndRole = async (data: {
 
   user.reasonForJoining = reasonForJoining;
   user.role = role;
+  await user.save();
 
+   // If the role is 'mentor', create a mentor profile
   if (role === "mentor") {
-    user.isMentorApproved = false;
+    const newMentorData = {
+      userId: userId,
+      skills: [], 
+      certifications: [], 
+      specialization: "", 
+      availableSlots: [], 
+    };
+
+    // Create the mentor entry in the Mentor collection
+    await MentorService.submitMentorRequest(newMentorData);
   }
 
-  await user.save();
   return user;
 };
 
@@ -130,6 +142,16 @@ export const refreshToken = async (refreshToken: string) => {
   }
 };
 
+
+export const findOrCreateUserforPassport = async (profile: any, provider: string) =>{
+  if(!profile) throw new Error('Profile not found');
+  if(!provider) throw new Error('Provider not defined');
+
+  let user = await findOrCreateUser(profile, provider);
+
+  return user;
+}
+
 //Handle forgot password
 const otpStore: Record<string, string> = {}; // Temporary storage for OTPs
 
@@ -166,6 +188,7 @@ export const resetPassword = async (email: string, newPassword: string) => {
   await updatePassword(user._id.toString(), hashedPassword);
 };
 
+//Handle logout
 export const logout = async(userId:string) =>{
   try {
     // Call the removeRefreshToken function 

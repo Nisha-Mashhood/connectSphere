@@ -1,11 +1,10 @@
 import { savePersonalDetails, saveAccountDetails, saveProfessionalDetails, saveReasonAndRole, loginUser, forgotPassword, verifyOTP, resetPassword, refreshToken as refeshTokenService, logout as logoutUserService, } from "../services/auth.service.js";
+import { clearCookies, setTokensInCookies } from "../utils/jwt.utils.js";
 //Handles the personal details Registration
 export const registerPersonalDetails = async (req, res) => {
     try {
         const personalDetails = await savePersonalDetails(req.body);
-        res
-            .status(201)
-            .json({
+        res.status(201).json({
             message: "Personal details saved.",
             userId: personalDetails._id,
         });
@@ -50,6 +49,8 @@ export const login = async (req, res) => {
         const { email, password } = req.body;
         //console.log(req.body);
         const { user, accessToken, refreshToken } = await loginUser(email, password);
+        // Store tokens in cookies
+        setTokensInCookies(res, accessToken, refreshToken);
         res.json({ message: "Login successful", user, accessToken, refreshToken });
     }
     catch (error) {
@@ -67,12 +68,40 @@ export const refreshToken = async (req, res) => {
         res.status(400).json({ message: error.message });
     }
 };
-// Handle logout logic
+// Google Auth Redirect
+export const googleAuthRedirect = (req, res) => {
+    const user = req.user;
+    setTokensInCookies(res, user.accessToken, user.refreshToken);
+    res.json({
+        message: "Google login successful",
+        user: {
+            id: user._id,
+            email: user.email,
+            fullName: user.fullName,
+        },
+    });
+};
+// GitHub Auth Redirect
+export const githubAuthRedirect = (req, res) => {
+    const user = req.user;
+    setTokensInCookies(res, user.accessToken, user.refreshToken);
+    res.json({
+        message: "GitHub login successful",
+        user: {
+            id: user._id,
+            email: user.email,
+            fullName: user.fullName,
+        },
+    });
+};
+// Handle logout
 export const logout = async (req, res) => {
     try {
         const userId = req.body.userId; // Get userId from the request body (or from JWT)
         // Call the logout service to remove the refresh token
         await logoutUserService(userId);
+        // Clear cookies
+        clearCookies(res);
         res.status(200).json({ message: "Logged out successfully." });
     }
     catch (error) {

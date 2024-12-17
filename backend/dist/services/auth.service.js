@@ -1,8 +1,9 @@
-import { createUser, findUserByEmail, findUserById, updatePassword, updateRefreshToken, } from "../repositories/user.repositry.js";
+import { createUser, findUserByEmail, findUserById, updatePassword, updateRefreshToken, findOrCreateUser, } from "../repositories/user.repositry.js";
 import bcrypt from "bcryptjs";
 import { generateAccessToken, generateRefreshToken, verifyRefreshToken, removeRefreshToken } from "../utils/jwt.utils.js";
 import { generateOTP } from "../utils/otp.utils.js";
 import { sendEmail } from "../utils/email.utils.js";
+import * as MentorService from "../services/mentor.service.js";
 // Handle personal details registration
 export const savePersonalDetails = async (data) => {
     const { fullName, email, phone, dateOfBirth } = data;
@@ -47,10 +48,19 @@ export const saveReasonAndRole = async (data) => {
         throw new Error("User not found.");
     user.reasonForJoining = reasonForJoining;
     user.role = role;
-    if (role === "mentor") {
-        user.isMentorApproved = false;
-    }
     await user.save();
+    // If the role is 'mentor', create a mentor profile
+    if (role === "mentor") {
+        const newMentorData = {
+            userId: userId,
+            skills: [],
+            certifications: [],
+            specialization: "",
+            availableSlots: [],
+        };
+        // Create the mentor entry in the Mentor collection
+        await MentorService.submitMentorRequest(newMentorData);
+    }
     return user;
 };
 // Handle login logic
@@ -58,7 +68,6 @@ export const loginUser = async (email, password) => {
     const user = await findUserByEmail(email);
     if (!user)
         throw new Error("User not found");
-    console.log(user);
     // Ensure user.password is defined
     if (!user.password) {
         throw new Error("Password not set for user");
@@ -67,12 +76,9 @@ export const loginUser = async (email, password) => {
     const isMatch = await bcrypt.compare(password, user.password);
     if (!isMatch)
         throw new Error("Invalid credentials");
-    console.log('Generating tokens...');
     // Generate JWT token
     const accessToken = generateAccessToken({ userId: user._id });
     const refreshToken = generateRefreshToken({ userId: user._id });
-    console.log(`Access Token: ${accessToken}`);
-    console.log(`Refresh Token: ${refreshToken}`);
     // Save the refresh token in the database
     await updateRefreshToken(user._id.toString(), refreshToken);
     return { user, accessToken, refreshToken };
@@ -89,6 +95,14 @@ export const refreshToken = async (refreshToken) => {
     catch (error) {
         throw new Error("Invalid or expired refresh token.");
     }
+};
+export const findOrCreateUserforPassport = async (profile, provider) => {
+    if (!profile)
+        throw new Error('Profile not found');
+    if (!provider)
+        throw new Error('Provider not defined');
+    let user = await findOrCreateUser(profile, provider);
+    return user;
 };
 //Handle forgot password
 const otpStore = {}; // Temporary storage for OTPs
@@ -121,6 +135,7 @@ export const resetPassword = async (email, newPassword) => {
     const hashedPassword = await bcrypt.hash(newPassword, 10);
     await updatePassword(user._id.toString(), hashedPassword);
 };
+//Handle logout
 export const logout = async (userId) => {
     try {
         // Call the removeRefreshToken function 

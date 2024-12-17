@@ -1,4 +1,5 @@
 import mongoose from "mongoose";
+import config from '../config/env.config.js';
 const userSchema = new mongoose.Schema({
     fullName: {
         type: String,
@@ -43,21 +44,31 @@ const userSchema = new mongoose.Schema({
         enum: ["user", "mentor"],
         default: null
     },
-    isMentorApproved: {
+    isBlocked: {
         type: Boolean,
         default: false
     },
+    provider: {
+        type: String,
+        enum: ["google", "facebook", "github"],
+        default: null
+    },
+    providerId: {
+        type: String,
+        default: null
+    },
     profilePic: {
         type: String,
-        default: "https://www.pngarts.com/files/10/Default-Profile-Picture-PNG-Download-Image.png"
+        default: config.defaultprofilepic,
     },
     coverPic: {
         type: String,
-        default: "https://tokystorage.s3.amazonaws.com/images/default-cover.png"
+        default: config.defaultcoverpic,
     },
-    certificate: {
+    accessToken: {
         type: String,
-        default: null
+        default: null,
+        required: false
     },
     refreshToken: {
         type: String,

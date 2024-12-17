@@ -10,10 +10,12 @@ export interface UserInterface extends Document {
     industry?: string;
     reasonForJoining?: string;
     role?: "user" | "mentor";
-    isMentorApproved?: boolean;
+    isBlocked: boolean;
+    provider?: string;
+    providerId?: string;
     profilePic?: string;
     coverPic?: string;
-    certificate?: string;
+    accessToken?: string;
     refreshToken?: string | null;
     createdAt: Date;
     updatedAt: Date;

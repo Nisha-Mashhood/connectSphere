@@ -1,7 +1,7 @@
 import { Request, Response } from "express";
 import * as SkillService from "../services/skills.service.js";
 
-export const createSkill = async(req:Request, res:Response) => {
+export const createSkill = async(req:Request, res:Response): Promise<void> => {
     try {
         const skill = await SkillService.createSkill(req.body);
         res.status(201).json({ message: "Skill created successfully", skill });
@@ -10,7 +10,7 @@ export const createSkill = async(req:Request, res:Response) => {
       }
 }
 
-export const getAllSkills = async(req:Request, res:Response) => {
+export const getAllSkills = async(_:Request, res:Response): Promise<void> => {
     try {
         const skills = await SkillService.getAllSkills();
         res.status(200).json(skills);
@@ -19,11 +19,12 @@ export const getAllSkills = async(req:Request, res:Response) => {
       }
 }
 
-export const getSkillById = async(req:Request, res:Response) => {
+export const getSkillById = async(req:Request, res:Response): Promise<void> => {
     try {
         const skill = await SkillService.getSkillById(req.params.id);
         if (!skill) {
-          return res.status(404).json({ message: "Skill not found" });
+          res.status(404).json({ message: "Skill not found" });
+          return
         }
         res.status(200).json(skill);
       } catch (error:any) {
@@ -31,11 +32,12 @@ export const getSkillById = async(req:Request, res:Response) => {
       }
 }
 
-export const updateSkill = async(req:Request, res:Response) => {
+export const updateSkill = async(req:Request, res:Response): Promise<void> => {
     try {
         const updatedSkill = await SkillService.updateSkill(req.params.id, req.body);
         if (!updatedSkill) {
-          return res.status(404).json({ message: "Skill not found" });
+          res.status(404).json({ message: "Skill not found" });
+          return 
         }
         res.status(200).json({ message: "Skill updated successfully", updatedSkill });
       } catch (error:any) {
@@ -43,11 +45,12 @@ export const updateSkill = async(req:Request, res:Response) => {
       }
 }
 
-export const deleteSkill = async(req:Request, res:Response) => {
+export const deleteSkill = async(req:Request, res:Response): Promise<void> => {
     try {
         const deletedSkill = await SkillService.deleteSkill(req.params.id);
         if (!deletedSkill) {
-          return res.status(404).json({ message: "Skill not found" });
+          res.status(404).json({ message: "Skill not found" });
+          return 
         }
         res.status(200).json({ message: "Skill deleted successfully" });
       } catch (error:any) {

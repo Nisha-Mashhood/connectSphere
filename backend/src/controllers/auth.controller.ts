@@ -11,17 +11,16 @@ import {
   refreshToken as refeshTokenService,
   logout as logoutUserService,
 } from "../services/auth.service.js";
+import { clearCookies, setTokensInCookies } from "../utils/jwt.utils.js";
 
 //Handles the personal details Registration
 export const registerPersonalDetails = async (req: Request, res: Response) => {
   try {
     const personalDetails = await savePersonalDetails(req.body);
-    res
-      .status(201)
-      .json({
-        message: "Personal details saved.",
-        userId: personalDetails._id,
-      });
+    res.status(201).json({
+      message: "Personal details saved.",
+      userId: personalDetails._id,
+    });
   } catch (error: any) {
     res.status(400).json({ message: error.message });
   }
@@ -65,7 +64,12 @@ export const login = async (req: Request, res: Response) => {
   try {
     const { email, password } = req.body;
     //console.log(req.body);
-    const { user, accessToken, refreshToken } = await loginUser(email, password);
+    const { user, accessToken, refreshToken } = await loginUser(
+      email,
+      password
+    );
+    // Store tokens in cookies
+    setTokensInCookies(res, accessToken, refreshToken);
     res.json({ message: "Login successful", user, accessToken, refreshToken });
   } catch (error: any) {
     res.status(400).json({ message: error.message });
@@ -83,13 +87,45 @@ export const refreshToken = async (req: Request, res: Response) => {
   }
 };
 
-// Handle logout logic
+// Google Auth Redirect
+export const googleAuthRedirect = (req: Request, res: Response) => {
+  const user: any = req.user;
+  setTokensInCookies(res, user.accessToken, user.refreshToken);
+  res.json({
+    message: "Google login successful",
+    user: {
+      id: user._id,
+      email: user.email,
+      fullName: user.fullName,
+    },
+  });
+};
+
+// GitHub Auth Redirect
+export const githubAuthRedirect = (req: Request, res: Response) => {
+  const user: any = req.user;
+  setTokensInCookies(res, user.accessToken, user.refreshToken);
+
+  res.json({
+    message: "GitHub login successful",
+    user: {
+      id: user._id,
+      email: user.email,
+      fullName: user.fullName,
+    },
+  });
+};
+
+// Handle logout
 export const logout = async (req: Request, res: Response) => {
   try {
     const userId = req.body.userId; // Get userId from the request body (or from JWT)
 
     // Call the logout service to remove the refresh token
-    await logoutUserService(userId); 
+    await logoutUserService(userId);
+    // Clear cookies
+    clearCookies(res);
+
     res.status(200).json({ message: "Logged out successfully." });
   } catch (error: any) {
     res.status(400).json({ message: error.message });
@@ -101,7 +137,7 @@ export const handleForgotPassword = async (req: Request, res: Response) => {
   try {
     const { email } = req.body;
     const otp = await forgotPassword(email);
-    res.status(200).json({ message: "OTP sent to email." , otp });
+    res.status(200).json({ message: "OTP sent to email.", otp });
   } catch (error: any) {
     res.status(400).json({ message: error.message });
   }

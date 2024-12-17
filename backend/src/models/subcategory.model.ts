@@ -30,6 +30,6 @@ const SubcategorySchema: Schema<SubcategoryInterface> = new mongoose.Schema(
     { timestamps: true }
   );
 
-  export const Subcategory: Model<SubcategoryInterface> = mongoose.model<SubcategoryInterface>("Category", SubcategorySchema);
+  export const Subcategory: Model<SubcategoryInterface> = mongoose.model<SubcategoryInterface>("Subcategory", SubcategorySchema);
 
   
