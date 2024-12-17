@@ -67,21 +67,6 @@ const configurePassport = () => {
       }
     )
   );
-
-  // Serialize user to session
-  passport.serializeUser((user: any, done: (err: any, id?: string) => void) => {
-    done(null, user._id); // Save only the user ID in the session
-  });
-
-  // Deserialize user from session
-  passport.deserializeUser(async (id: string, done: (err: any, user?: UserInterface | null) => void) => {
-    try {
-      const user = await findUserById(id);
-      done(null, user);
-    } catch (error) {
-      done(error, null);
-    }
-  });
 };
 
 export default configurePassport;
