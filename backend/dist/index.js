@@ -10,7 +10,6 @@ import userRoutes from "./routes/user.routes.js";
 import mentorRoutes from "./routes/mentor.routes.js";
 import passport from "passport";
 import configurePassport from "./utils/passport.utils.js";
-import session from "express-session";
 import helmet from "helmet";
 import cors from "cors";
 dotenv.config();
@@ -21,16 +20,6 @@ connectDB();
 app.use(express.json());
 app.use(helmet());
 app.use(cors());
-// Session configuration
-app.use(session({
-    secret: config.sessionsecret,
-    resave: false,
-    saveUninitialized: false,
-    cookie: {
-        secure: process.env.NODE_ENV === "production", // Only secure cookies in production
-        maxAge: 24 * 60 * 60 * 1000, // 1 day
-    },
-}));
 // Passport Configuration
 app.use(passport.initialize());
 configurePassport();

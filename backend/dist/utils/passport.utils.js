@@ -1,7 +1,6 @@
 import passport from "passport";
 import { Strategy as GoogleStrategy } from "passport-google-oauth20";
 import { Strategy as GitHubStrategy } from "passport-github2";
-import { findUserById } from "../repositories/user.repositry.js";
 import { generateAccessToken, generateRefreshToken } from "../utils/jwt.utils.js";
 import config from '../config/env.config.js';
 import { findOrCreateUserforPassport } from "../services/auth.service.js";
@@ -49,20 +48,6 @@ const configurePassport = () => {
             return done(error, undefined);
         }
     }));
-    // Serialize user to session
-    passport.serializeUser((user, done) => {
-        done(null, user._id); // Save only the user ID in the session
-    });
-    // Deserialize user from session
-    passport.deserializeUser(async (id, done) => {
-        try {
-            const user = await findUserById(id);
-            done(null, user);
-        }
-        catch (error) {
-            done(error, null);
-        }
-    });
 };
 export default configurePassport;
 //# sourceMappingURL=passport.utils.js.map

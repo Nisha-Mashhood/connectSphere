@@ -22,7 +22,7 @@ const MentorSchema = new Schema({
     ],
     specialization: {
         type: String,
-        required: true
+        default: null
     },
     availableSlots: [
         {

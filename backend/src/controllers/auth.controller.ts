@@ -70,7 +70,7 @@ export const login = async (req: Request, res: Response) => {
     );
     // Store tokens in cookies
     setTokensInCookies(res, accessToken, refreshToken);
-    res.json({ message: "Login successful", user, accessToken, refreshToken });
+    res.json({ message: "Login successful", user });
   } catch (error: any) {
     res.status(400).json({ message: error.message });
   }
@@ -164,3 +164,4 @@ export const handleResetPassword = async (req: Request, res: Response) => {
     res.status(400).json({ message: error.message });
   }
 };
+

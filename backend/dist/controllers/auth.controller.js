@@ -51,7 +51,7 @@ export const login = async (req, res) => {
         const { user, accessToken, refreshToken } = await loginUser(email, password);
         // Store tokens in cookies
         setTokensInCookies(res, accessToken, refreshToken);
-        res.json({ message: "Login successful", user, accessToken, refreshToken });
+        res.json({ message: "Login successful", user });
     }
     catch (error) {
         res.status(400).json({ message: error.message });

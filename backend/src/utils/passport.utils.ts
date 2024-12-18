@@ -1,9 +1,7 @@
 import passport from "passport";
 import { Strategy as GoogleStrategy } from "passport-google-oauth20";
 import { Strategy as GitHubStrategy, Profile as GitHubProfile } from "passport-github2";
-import { findUserById } from "../repositories/user.repositry.js"; 
 import { generateAccessToken, generateRefreshToken } from "../utils/jwt.utils.js";
-import { UserInterface } from "../models/user.model.js";
 import config from '../config/env.config.js';
 import { findOrCreateUserforPassport } from "../services/auth.service.js";
   

@@ -15,4 +15,12 @@ export const approveMentorRequest = async (id) => {
 export const rejectMentorRequest = async (id) => {
     await Mentor.findByIdAndDelete(id);
 };
+// Get mentor by userId
+export const getMentorByUserId = async (userId) => {
+    return await Mentor.findOne({ userId });
+};
+// Update  for mentor with mentorId
+export const updateMentorById = async (mentorId, updateData) => {
+    return await Mentor.findByIdAndUpdate(mentorId, updateData, { new: true });
+};
 //# sourceMappingURL=mentor.repositry.js.map
