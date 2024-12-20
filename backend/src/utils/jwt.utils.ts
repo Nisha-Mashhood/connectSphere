@@ -1,7 +1,7 @@
 import jwt from "jsonwebtoken";
 import config from "../config/env.config.js";
 import {
-  findUserById,
+  findUserByEmail,
   removeRefreshToken as removeRefreshTokenRepositry,
 } from "../repositories/user.repositry.js";
 import { Response } from "express";
@@ -90,14 +90,14 @@ export const clearCookies = (res: Response) => {
 };
 
 // Function to handle token removal during logout
-export const removeRefreshToken = async (userId: string) => {
+export const removeRefreshToken = async (useremail: string) => {
   try {
     // Find the user by their ID
-    const user = await findUserById(userId);
+    const user = await findUserByEmail(useremail);
     if (!user) {
       throw new Error("User not found");
     }
-    await removeRefreshTokenRepositry(userId);
+    await removeRefreshTokenRepositry(useremail);
     return { message: "Refresh token removed successfully" };
   } catch (error: any) {
     throw new Error("Error removing refresh token: " + error.message);

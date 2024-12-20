@@ -42,7 +42,9 @@ export const updateRefreshToken = async (userId, refreshToken) => {
     return await User.findByIdAndUpdate(userId, { refreshToken }, { new: true });
 };
 // Remove refresh token (logout)
-export const removeRefreshToken = async (userId) => {
-    return await User.findByIdAndUpdate(userId, { refreshToken: null }, { new: true });
+export const removeRefreshToken = async (useremail) => {
+    // Perform the query
+    await User.updateOne({ email: useremail }, { $unset: { refreshToken: "" } });
+    return;
 };
 //# sourceMappingURL=user.repositry.js.map

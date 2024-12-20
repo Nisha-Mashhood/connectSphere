@@ -6,12 +6,19 @@ const initialState = {
   loading: false,
   error: false,
   isAdmin: false,
+  resetEmail: null,
 };
 
 const userSlice = createSlice({
     name: "user",
   initialState,
   reducers: {
+      setResetEmail: (state, action) => {
+        state.resetEmail = action.payload;
+      },
+      clearResetEmail: (state) => {
+        state.resetEmail = null;
+      },
     signinStart: (state) => {
         state.loading = false;
         state.error = false;
@@ -35,5 +42,5 @@ const userSlice = createSlice({
   }
 })
 
-export const { } = userSlice.actions;
+export const {setResetEmail,clearResetEmail, signinStart, signinSuccess, signinFailure, signOut } = userSlice.actions;
 export default userSlice.reducer;

@@ -1,45 +1,17 @@
-import { savePersonalDetails, saveAccountDetails, saveProfessionalDetails, saveReasonAndRole, loginUser, forgotPassword, verifyOTP, resetPassword, refreshToken as refeshTokenService, logout as logoutUserService, } from "../services/auth.service.js";
+import { loginUser, forgotPassword, verifyOTP, resetPassword, refreshToken as refeshTokenService, logout as logoutUserService, sigupDetails, } from "../services/auth.service.js";
 import { clearCookies, setTokensInCookies } from "../utils/jwt.utils.js";
+// import mongoose from "mongoose";
 //Handles the personal details Registration
-export const registerPersonalDetails = async (req, res) => {
+export const signup = async (req, res) => {
     try {
-        const personalDetails = await savePersonalDetails(req.body);
+        const user = await sigupDetails(req.body);
+        console.log("Registered User Details:", user);
         res.status(201).json({
-            message: "Personal details saved.",
-            userId: personalDetails._id,
+            message: "User Registered Successfully"
         });
     }
     catch (error) {
-        res.status(400).json({ message: error.message });
-    }
-};
-//Handles the Account Details Registration
-export const registerAccountDetails = async (req, res) => {
-    try {
-        const user = await saveAccountDetails(req.body);
-        res.status(200).json({ message: "Account details saved.", user });
-    }
-    catch (error) {
-        res.status(400).json({ message: error.message });
-    }
-};
-//Handles the professional Details Registration
-export const registerProfessionalDetails = async (req, res) => {
-    try {
-        const user = await saveProfessionalDetails(req.body);
-        res.status(200).json({ message: "Professional details saved.", user });
-    }
-    catch (error) {
-        res.status(400).json({ message: error.message });
-    }
-};
-//Handles the Reason and Role registration
-export const registerReasonAndRole = async (req, res) => {
-    try {
-        const user = await saveReasonAndRole(req.body);
-        res.status(200).json({ message: "Reason and role saved.", user });
-    }
-    catch (error) {
+        console.error("Signup Error:", error.message);
         res.status(400).json({ message: error.message });
     }
 };
@@ -97,9 +69,19 @@ export const githubAuthRedirect = (req, res) => {
 // Handle logout
 export const logout = async (req, res) => {
     try {
-        const userId = req.body.userId; // Get userId from the request body (or from JWT)
+        const { useremail } = req.body; // Get userId from the request body
+        console.log(useremail);
+        // if (!useremail) {
+        //    res.status(400).json({ message: "User email is required." });
+        //    return
+        // }
+        // Validate if the userId is a valid ObjectId
+        // if (!mongoose.Types.ObjectId.isValid(userId)) {
+        //    res.status(400).json({ message: "Invalid User ID." });
+        //    return
+        // }
         // Call the logout service to remove the refresh token
-        await logoutUserService(userId);
+        await logoutUserService(useremail);
         // Clear cookies
         clearCookies(res);
         res.status(200).json({ message: "Logged out successfully." });

@@ -1,11 +1,145 @@
-import SignupImage from '../../assets/Signup.png'
+import { useState } from "react";
+import SignupImage from "../../assets/Signup.png";
+import { Link, useNavigate } from "react-router-dom";
+import { axiosInstance } from "../../lib/axios.ts";
+import { useDispatch } from "react-redux";
+import { signinFailure, signinStart } from "../../redux/Slice/userSlice.ts";
+import toast from "react-hot-toast";
 
+interface FormData {
+  name: string;
+  email: string;
+  password: string;
+}
 const Signup = () => {
+  const [formData, setFormData] = useState<FormData>({
+    name: "",
+    email: "",
+    password: "",
+  });
+  const [error, setError] = useState(false);
+  const [loading, setLoading] = useState(false);
+  const Navigate = useNavigate();
+  const dispatch = useDispatch();
+
+  const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    setFormData({ ...formData, [e.target.id]: e.target.value });
+  };
+  const ValidateForm = () => {
+    // Name Validation
+    if (!formData.name.trim()) {
+      toast.error("Full name is required");
+      return false;
+    }
+    if (!/^[A-Za-z ]+$/.test(formData.name.trim())) {
+      toast.error("Full name can only contain alphabets");
+      return false;
+    }
+    if (formData.name.trim().length < 3) {
+      toast.error("Name must be at least 3 characters long");
+      return false;
+    }
+    if (formData.name.trim().length > 50) {
+      toast.error("Name cannot exceed 50 characters");
+      return false;
+    }
+    if (/ {2,}/.test(formData.name)) {
+      toast.error("Name cannot contain multiple consecutive spaces");
+      return false;
+    }
+  
+    // Email Validation
+    if (!formData.email.trim()) {
+      toast.error("Email is required");
+      return false;
+    }
+    if (
+      !/^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/.test(formData.email)
+    ) {
+      toast.error("Invalid email format");
+      return false;
+    }
+    if (formData.email.endsWith("@example.com")) {
+      toast.error("Email from @example.com domain is not allowed");
+      return false;
+    }
+    if (formData.email.length > 100) {
+      toast.error("Email cannot exceed 100 characters");
+      return false;
+    }
+    if (/ {2,}/.test(formData.email)) {
+      toast.error("Email cannot contain multiple consecutive spaces");
+      return false;
+    }
+  
+    // Password Validation
+    if (!formData.password) {
+      toast.error("Password is required");
+      return false;
+    }
+    if (!/^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[!@#$%^&*])[A-Za-z\d!@#$%^&*]{8,20}$/.test(formData.password)) {
+      toast.error(
+        "Password must be 8-20 characters long, include at least one uppercase letter, one lowercase letter, one number, and one special character"
+      );
+      return false;
+    }
+    if (/(\d)\1{2,}/.test(formData.password)) {
+      toast.error("Password cannot contain sequential repeated digits");
+      return false;
+    }
+    if (/([A-Za-z])\1{2,}/.test(formData.password)) {
+      toast.error("Password cannot contain sequential repeated letters");
+      return false;
+    }
+    if (formData.password.includes(formData.name.trim())) {
+      toast.error("Password cannot contain your name");
+      return false;
+    }
+    if (formData.password.includes(formData.email.split("@")[0])) {
+      toast.error("Password cannot contain parts of your email");
+      return false;
+    }
+    if (/ {2,}/.test(formData.password)) {
+      toast.error("Password cannot contain multiple consecutive spaces");
+      return false;
+    }
+  
+    return true; // All validations passed
+  };
+  
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    const success = ValidateForm();
+    
+    if (success === true){
+      // console.log("validataion success");
+
+      setLoading(true);
+      setError(false);
+    dispatch(signinStart());
+    try {
+      await axiosInstance.post("/auth/register/signup", {
+        name: formData.name,
+        email: formData.email,
+        password: formData.password,
+      });
+      Navigate("/login");
+      toast.success("User Registered Successfully");
+    } catch (err: any) {
+      console.error(err);
+      dispatch(signinFailure(err.response?.data?.message || "Signup failed"));
+      setError(true);
+    } finally {
+      setLoading(false);
+    }
+    } 
+  };
+
+
   return (
     <div>
       <section className="flex flex-col md:flex-row h-screen items-center">
-        
-
         {/* Left Section with Signup Form */}
         <div className="bg-white w-full md:max-w-md lg:max-w-full md:w-1/2 xl:w-1/3 h-screen px-6 lg:px-16 xl:px-12 flex items-center justify-center">
           <div className="w-full h-100">
@@ -13,14 +147,15 @@ const Signup = () => {
               Create an Account
             </h1>
 
-            <form className="mt-6" action="#" method="POST">
+            <form className="mt-6" onSubmit={handleSubmit} method="POST">
               <div>
                 <label className="block text-gray-700">Full Name</label>
                 <input
                   type="text"
                   placeholder="Enter Full Name"
+                  id="name"
                   className="w-full px-4 py-3 rounded-lg bg-gray-200 mt-2 border focus:border-blue-500 focus:bg-white focus:outline-none"
-                  required
+                  onChange={handleChange}
                 />
               </div>
 
@@ -29,8 +164,9 @@ const Signup = () => {
                 <input
                   type="email"
                   placeholder="Enter Email Address"
+                  id="email"
                   className="w-full px-4 py-3 rounded-lg bg-gray-200 mt-2 border focus:border-blue-500 focus:bg-white focus:outline-none"
-                  required
+                  onChange={handleChange}
                 />
               </div>
 
@@ -39,16 +175,17 @@ const Signup = () => {
                 <input
                   type="password"
                   placeholder="Create Password"
+                  id="password"
                   className="w-full px-4 py-3 rounded-lg bg-gray-200 mt-2 border focus:border-blue-500 focus:bg-white focus:outline-none"
-                  required
+                  onChange={handleChange}
                 />
               </div>
 
               <button
-                type="submit"
+                disabled={loading}
                 className="w-full block bg-indigo-500 hover:bg-indigo-400 focus:bg-indigo-400 text-white font-semibold rounded-lg px-4 py-3 mt-6"
               >
-                Sign Up
+                {loading ? "Loading..." : "Sign Up"}
               </button>
             </form>
             <hr className="my-6 border-gray-300 w-full" />
@@ -92,14 +229,16 @@ const Signup = () => {
 
             <p className="mt-8">
               Already have an account?{" "}
-              <a
-                href="/login"
+              <Link
+                to="/login"
                 className="text-blue-500 hover:text-blue-700 font-semibold"
               >
                 Log In
-              </a>
+              </Link>
             </p>
           </div>
+          <p className="text-center text-red-600 mt-4">{error}</p>
+          {/* <p className="text-center text-red-600 mt-4">{error && "Something went wrong"}</p> */}
         </div>
         {/* Right Section with Image */}
         <div className="bg-indigo-600 hidden lg:block w-full md:w-1/2 xl:w-2/3 h-screen">
@@ -111,7 +250,7 @@ const Signup = () => {
         </div>
       </section>
     </div>
-  )
-}
+  );
+};
 
-export default Signup
+export default Signup;

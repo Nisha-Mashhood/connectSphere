@@ -1,6 +1,6 @@
 import jwt from "jsonwebtoken";
 import config from "../config/env.config.js";
-import { findUserById, removeRefreshToken as removeRefreshTokenRepositry, } from "../repositories/user.repositry.js";
+import { findUserByEmail, removeRefreshToken as removeRefreshTokenRepositry, } from "../repositories/user.repositry.js";
 // Generate JWT Access token (short-lived, 1 hour)
 export const generateAccessToken = (payload, expiresIn = "1h") => {
     if (!config.jwtSecret) {
@@ -68,14 +68,14 @@ export const clearCookies = (res) => {
     res.clearCookie("refreshToken", { httpOnly: true, sameSite: "strict" });
 };
 // Function to handle token removal during logout
-export const removeRefreshToken = async (userId) => {
+export const removeRefreshToken = async (useremail) => {
     try {
         // Find the user by their ID
-        const user = await findUserById(userId);
+        const user = await findUserByEmail(useremail);
         if (!user) {
             throw new Error("User not found");
         }
-        await removeRefreshTokenRepositry(userId);
+        await removeRefreshTokenRepositry(useremail);
         return { message: "Refresh token removed successfully" };
     }
     catch (error) {

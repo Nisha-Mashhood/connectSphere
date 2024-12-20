@@ -8,7 +8,7 @@ export declare const generateRefreshToken: (payload: JwtPayload) => string;
 export declare const verifyRefreshToken: (token: string) => JwtPayload;
 export declare const setTokensInCookies: (res: Response, accessToken: string, refreshToken: string) => void;
 export declare const clearCookies: (res: Response) => void;
-export declare const removeRefreshToken: (userId: string) => Promise<{
+export declare const removeRefreshToken: (useremail: string) => Promise<{
     message: string;
 }>;
 export {};

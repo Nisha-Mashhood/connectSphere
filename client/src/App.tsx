@@ -8,8 +8,17 @@ import OTPVerification from './Components/User/OtpVerification'
 import ResetPassword from './Components/User/ResetPassword'
 import Profile from './Components/User/Profile'
 import Categories from './Components/Admin/Categories'
+import  { Toaster } from 'react-hot-toast'
+import { GoogleOAuthProvider } from '@react-oauth/google'
 
 function App() {
+  // const GoogleOAuthWrapper = () =>{
+  //   return(
+  //     <GoogleOAuthProvider clientId='262075947289-073n0lv1ifch18cnipv6jl9vfqms9r5u.apps.googleusercontent.com'>
+  //       <Login />
+  //     </GoogleOAuthProvider>
+  //   )
+  // }
 
   return (
   <>
@@ -24,6 +33,7 @@ function App() {
       <Route path='/profile' element={ <Profile />} />
       <Route path='/categories' element={<Categories />} />
     </Routes>
+    <Toaster />
   </>
   )
 }

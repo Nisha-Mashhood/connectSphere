@@ -1,67 +1,20 @@
-import { createUser, findUserByEmail, findUserById, updatePassword, updateRefreshToken, findOrCreateUser, } from "../repositories/user.repositry.js";
+import { createUser, findUserByEmail, updatePassword, updateRefreshToken, findOrCreateUser, } from "../repositories/user.repositry.js";
 import bcrypt from "bcryptjs";
 import { generateAccessToken, generateRefreshToken, verifyRefreshToken, removeRefreshToken } from "../utils/jwt.utils.js";
 import { generateOTP } from "../utils/otp.utils.js";
 import { sendEmail } from "../utils/email.utils.js";
-import * as MentorService from "../services/mentor.service.js";
-// Handle personal details registration
-export const savePersonalDetails = async (data) => {
-    const { fullName, email, phone, dateOfBirth } = data;
+// Handle Registration with details 
+export const sigupDetails = async (data) => {
+    const { name, email, password } = data;
+    console.log("data at service file :", data);
     // Check if the email already exists
     const userExists = await findUserByEmail(email);
     if (userExists)
         throw new Error("User already exists.");
     //create new user with the passed details
-    const newUser = await createUser({ fullName, email, phone, dateOfBirth });
-    return newUser;
-};
-// Handle account details registration
-export const saveAccountDetails = async (data) => {
-    const { userId, username, password, confirmPassword } = data;
-    if (password !== confirmPassword)
-        throw new Error("Passwords do not match.");
-    const user = await findUserById(userId);
-    if (!user)
-        throw new Error("User not found.");
     const hashedPassword = await bcrypt.hash(password, 10);
-    user.username = username;
-    user.password = hashedPassword;
-    await user.save();
-    return user;
-};
-// Handle professional details registration
-export const saveProfessionalDetails = async (data) => {
-    const { userId, jobTitle, industry } = data;
-    const user = await findUserById(userId);
-    if (!user)
-        throw new Error("User not found.");
-    user.jobTitle = jobTitle;
-    user.industry = industry;
-    await user.save();
-    return user;
-};
-// Handle reason and role registration
-export const saveReasonAndRole = async (data) => {
-    const { userId, reasonForJoining, role } = data;
-    const user = await findUserById(userId);
-    if (!user)
-        throw new Error("User not found.");
-    user.reasonForJoining = reasonForJoining;
-    user.role = role;
-    await user.save();
-    // If the role is 'mentor', create a mentor profile
-    if (role === "mentor") {
-        const newMentorData = {
-            userId: userId,
-            skills: [],
-            certifications: [],
-            specialization: "",
-            availableSlots: [],
-        };
-        // Create the mentor entry in the Mentor collection
-        await MentorService.submitMentorRequest(newMentorData);
-    }
-    return user;
+    const newUser = await createUser({ name, email, password: hashedPassword });
+    return newUser;
 };
 // Handle login logic
 export const loginUser = async (email, password) => {
@@ -136,10 +89,11 @@ export const resetPassword = async (email, newPassword) => {
     await updatePassword(user._id.toString(), hashedPassword);
 };
 //Handle logout
-export const logout = async (userId) => {
+export const logout = async (useremail) => {
+    ;
     try {
         // Call the removeRefreshToken function 
-        await removeRefreshToken(userId);
+        await removeRefreshToken(useremail);
     }
     catch (error) {
         throw new Error('Error during logout: ' + error.message);

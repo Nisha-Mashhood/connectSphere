@@ -1,7 +1,6 @@
 import {
   createUser,
   findUserByEmail,
-  findUserById,
   updatePassword,
   updateRefreshToken,
   findOrCreateUser,
@@ -10,97 +9,25 @@ import bcrypt from "bcryptjs";
 import { generateAccessToken,generateRefreshToken, verifyRefreshToken,removeRefreshToken } from "../utils/jwt.utils.js";
 import { generateOTP } from "../utils/otp.utils.js";
 import { sendEmail } from "../utils/email.utils.js";
-import * as MentorService from "../services/mentor.service.js";
 
-// Handle personal details registration
-export const savePersonalDetails = async (data: {
-  fullName: string;
+// Handle Registration with details 
+export const sigupDetails = async (data: {
+  name: string;
   email: string;
-  phone: string;
-  dateOfBirth: Date;
+  password: string;
 }) => {
-  const { fullName, email, phone, dateOfBirth } = data;
-
+  const { name, email, password } = data;
+  console.log("data at service file :",data);
   // Check if the email already exists
   const userExists = await findUserByEmail(email);
   if (userExists) throw new Error("User already exists.");
 
   //create new user with the passed details
-  const newUser = await createUser({ fullName, email, phone, dateOfBirth });
+  const hashedPassword = await bcrypt.hash(password, 10);
+  const newUser = await createUser({  name, email, password:hashedPassword });
   return newUser;
 };
 
-// Handle account details registration
-export const saveAccountDetails = async (data: {
-  userId: string;
-  username: string;
-  password: string;
-  confirmPassword: string;
-}) => {
-  const { userId, username, password, confirmPassword } = data;
-
-  if (password !== confirmPassword) throw new Error("Passwords do not match.");
-
-  const user = await findUserById(userId);
-  if (!user) throw new Error("User not found.");
-
-  const hashedPassword = await bcrypt.hash(password, 10);
-  user.username = username;
-  user.password = hashedPassword;
-
-  await user.save();
-  return user;
-};
-
-// Handle professional details registration
-export const saveProfessionalDetails = async (data: {
-  userId: string;
-  jobTitle?: string;
-  industry?: string;
-}) => {
-  const { userId, jobTitle, industry } = data;
-
-  const user = await findUserById(userId);
-  if (!user) throw new Error("User not found.");
-
-  user.jobTitle = jobTitle;
-  user.industry = industry;
-
-  await user.save();
-  return user;
-};
-
-// Handle reason and role registration
-export const saveReasonAndRole = async (data: {
-  userId: string;
-  reasonForJoining?: string;
-  role: "user" | "mentor";
-}) => {
-  const { userId, reasonForJoining, role } = data;
-
-  const user = await findUserById(userId);
-  if (!user) throw new Error("User not found.");
-
-  user.reasonForJoining = reasonForJoining;
-  user.role = role;
-  await user.save();
-
-   // If the role is 'mentor', create a mentor profile
-  if (role === "mentor") {
-    const newMentorData = {
-      userId: userId,
-      skills: [], 
-      certifications: [], 
-      specialization: "", 
-      availableSlots: [], 
-    };
-
-    // Create the mentor entry in the Mentor collection
-    await MentorService.submitMentorRequest(newMentorData);
-  }
-
-  return user;
-};
 
 // Handle login logic
 export const loginUser = async (email: string, password: string) => {
@@ -189,10 +116,10 @@ export const resetPassword = async (email: string, newPassword: string) => {
 };
 
 //Handle logout
-export const logout = async(userId:string) =>{
+export const logout = async(useremail:string) =>{;
   try {
     // Call the removeRefreshToken function 
-    await removeRefreshToken(userId);
+    await removeRefreshToken(useremail);
   } catch (error: any) {
     throw new Error('Error during logout: ' + error.message);
   }

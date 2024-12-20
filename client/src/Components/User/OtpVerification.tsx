@@ -1,9 +1,75 @@
-import React from "react";
+import React, { useState, useEffect } from "react";
 import otpImage from "../../assets/OTP verification.png";
 import { InputOtp } from "@nextui-org/input-otp";
+import { useDispatch, useSelector } from "react-redux";
+import { Link, useNavigate } from "react-router-dom";
+import { axiosInstance } from "../../lib/axios";
+import { signinStart } from "../../redux/Slice/userSlice";
+import { RootState } from "../../redux/store";
+import toast from "react-hot-toast";
 
 const OTPVerification = () => {
-  const [value, setValue] = React.useState("");
+  const resetEmail = useSelector((state: RootState) => state.user.resetEmail);
+  const [value, setValue] = useState("");
+  const [error, setError] = useState(""); // State to track OTP errors
+  const [timeLeft, setTimeLeft] = useState(120); // Timer for 2 minutes
+  const [isResendEnabled, setIsResendEnabled] = useState(false); // State for enabling resend OTP
+  const dispatch = useDispatch();
+  const navigate = useNavigate();
+
+  // Handle OTP submission
+  const onSubmit = async (event: React.FormEvent) => {
+    event.preventDefault(); // Prevent form reload
+
+    if (value.length !== 6) {
+      setError("Please enter a valid 6-digit OTP."); // Validate OTP length
+      return;
+    }
+
+    const data = { email: resetEmail, otp: value };
+    try {
+      dispatch(signinStart());
+      const otpSuccess = await axiosInstance.post("/auth/register/verify-otp", data);
+
+      if (otpSuccess.status === 200) {
+        toast.success("OTP verified successfully!");
+        navigate("/reset");
+      } else {
+        setError("Invalid OTP. Please try again."); // Show error if OTP fails
+      }
+    } catch (error: any) {
+      setError(error.response?.data?.message || "Submission failed"); // Handle server errors
+    }
+  };
+
+  // Timer effect
+  useEffect(() => {
+    if (!resetEmail) {
+      toast.error("Email is required");
+      navigate("/forgot-password");
+      return null;
+    }
+    if (timeLeft > 0) {
+      const timer = setTimeout(() => setTimeLeft(timeLeft - 1), 1000);
+      return () => clearTimeout(timer); // Cleanup timer
+    } else {
+      setIsResendEnabled(true); // Enable the resend OTP button after timer ends
+    }
+  }, [timeLeft]);
+
+  // Resend OTP logic
+  const handleResendOtp = async () => {
+    if (!isResendEnabled) return; // Don't resend if not enabled
+    try {
+      await axiosInstance.post("/auth/register/forgot-password", { email: resetEmail });
+      toast.success("OTP has been resent!");
+      setTimeLeft(120); // Reset the timer
+      setIsResendEnabled(false); // Disable resend until the timer resets
+    } catch (error) {
+      toast.error("Failed to resend OTP. Please try again.");
+    }
+  };
+
   return (
     <div>
       <section className="flex flex-col md:flex-row h-screen items-center">
@@ -23,15 +89,46 @@ const OTPVerification = () => {
               Enter Verification Code
             </h1>
             <p className="text-gray-600 mt-2">
-              We’ve sent a code to your email. Enter it below to verify.
+              We’ve sent a code to your email <strong>{resetEmail}</strong>. Enter it below to verify.
             </p>
 
-            <form className="mt-6" action="#" method="POST">
+            <form className="mt-6" onSubmit={onSubmit}>
               <div className="flex flex-col items-start gap-2">
-                <InputOtp length={4} value={value} onValueChange={setValue} />
+                <InputOtp
+                  length={6}
+                  value={value}
+                  onValueChange={(val) => {
+                    setValue(val);
+                    if (error) setError(""); // Clear error when typing
+                  }}
+                />
+                {error && <p className="text-red-500 text-sm">{error}</p>}
                 <div className="text-small text-default-500">
-                  OTP value:{" "}
-                  <span className="text-md font-medium">{value}</span>
+                  OTP value: <span className="text-md font-medium">{value}</span>
+                </div>
+
+                {/* Resend OTP Section */}
+                {isResendEnabled ? (
+                  <button
+                    type="button"
+                    onClick={handleResendOtp}
+                    className="text-indigo-600 mt-2"
+                  >
+                    Resend OTP
+                  </button>
+                ) : (
+                  <p className="text-sm text-gray-500">
+                    You can resend OTP in {timeLeft} seconds
+                  </p>
+                )}
+
+                <div className="text-right mt-2">
+                  <Link
+                    to="/forgot"
+                    className="text-sm font-semibold text-gray-700 hover:text-blue-700 focus:text-blue-700"
+                  >
+                    Forgot Password?
+                  </Link>
                 </div>
               </div>
 

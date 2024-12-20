@@ -30,9 +30,5 @@ export declare const updateRefreshToken: (userId: string, refreshToken: string) 
 }> & {
     __v: number;
 }) | null>;
-export declare const removeRefreshToken: (userId: string) => Promise<(import("mongoose").Document<unknown, {}, UserInterface> & UserInterface & Required<{
-    _id: import("mongoose").Types.ObjectId;
-}> & {
-    __v: number;
-}) | null>;
+export declare const removeRefreshToken: (useremail: string) => Promise<void>;
 //# sourceMappingURL=user.repositry.d.ts.map

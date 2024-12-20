@@ -54,6 +54,8 @@ export const updateRefreshToken = async (userId: string, refreshToken: string) =
 };
 
 // Remove refresh token (logout)
-export const removeRefreshToken = async (userId: string) => {
-  return await User.findByIdAndUpdate(userId, { refreshToken: null }, { new: true });
+export const removeRefreshToken = async (useremail: string) => {
+    // Perform the query
+    await User.updateOne({ email: useremail }, { $unset: { refreshToken: "" } });
+  return 
 };

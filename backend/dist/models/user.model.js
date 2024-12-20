@@ -1,7 +1,7 @@
 import mongoose from "mongoose";
 import config from '../config/env.config.js';
 const userSchema = new mongoose.Schema({
-    fullName: {
+    name: {
         type: String,
         required: true
     },
@@ -12,20 +12,13 @@ const userSchema = new mongoose.Schema({
     },
     phone: {
         type: String,
-        required: true
     },
     dateOfBirth: {
         type: Date,
-        required: true
-    },
-    username: {
-        type: String,
-        default: null,
-        unique: true
     },
     password: {
         type: String,
-        default: null,
+        required: true
     },
     jobTitle: {
         type: String,

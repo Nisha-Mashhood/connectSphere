@@ -2,12 +2,11 @@ import mongoose, { Schema, Document, Model } from "mongoose";
 import config from '../config/env.config.js'
 
 export interface UserInterface extends Document {
-  fullName: string;
+  name: string;
   email: string;
-  phone: string;
-  dateOfBirth: Date;
-  username?: string;
-  password?: string;
+  phone?:string;
+  dateOfBirth?: Date;
+  password: string;
   jobTitle?: string;
   industry?: string;
   reasonForJoining?: string;
@@ -26,7 +25,7 @@ export interface UserInterface extends Document {
 
 const userSchema: Schema<UserInterface> = new mongoose.Schema(
   {
-    fullName: { 
+    name: { 
         type: String, 
         required: true 
     },
@@ -37,20 +36,13 @@ const userSchema: Schema<UserInterface> = new mongoose.Schema(
     },
     phone: { 
         type: String, 
-        required: true 
     },
     dateOfBirth: { 
         type: Date, 
-        required: true 
-    },
-    username: { 
-        type: String, 
-        default:null, 
-        unique: true 
     },
     password: { 
         type: String,
-        default:null, 
+        required:true
     },
     jobTitle: { 
         type: String,

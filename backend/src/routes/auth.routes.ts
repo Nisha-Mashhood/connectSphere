@@ -1,10 +1,7 @@
 import express from 'express';
 import passport from "passport";
 import {
-  registerPersonalDetails,
-  registerAccountDetails,
-  registerProfessionalDetails,
-  registerReasonAndRole,
+  signup,
   login,
   handleForgotPassword,
   handleVerifyOTP,
@@ -17,10 +14,7 @@ import {
 
 const router = express.Router();
 
-router.post('/register/personal', registerPersonalDetails);
-router.post('/register/account', registerAccountDetails);
-router.post('/register/professional', registerProfessionalDetails);
-router.post('/register/reason-role', registerReasonAndRole);
+router.post('/register/signup', signup);
 router.post('/register/forgot-password', handleForgotPassword);
 router.post('/register/verify-otp', handleVerifyOTP);
 router.post('/register/reset-password', handleResetPassword);
