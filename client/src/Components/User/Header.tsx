@@ -13,10 +13,11 @@ import {
 import Logo from '../../assets/logo.svg'
 import { axiosInstance } from "../../lib/axios";
 import { useDispatch, useSelector } from "react-redux";
-import { useNavigate } from "react-router-dom";
+import { useLocation, useNavigate } from "react-router-dom";
 import { signOut } from "../../redux/Slice/userSlice";
 import toast from "react-hot-toast";
 import { RootState } from "../../redux/store";
+import { useEffect } from "react";
 
 export const ConnectSphereLogo = () => {
   return (
@@ -28,7 +29,14 @@ export const ConnectSphereLogo = () => {
 const Header = () => {
   const dispatch = useDispatch();
   const navigate = useNavigate();
+  const location = useLocation();
   const { currentUser } = useSelector((state: RootState) => state.user);
+
+  useEffect(() => {
+      if (currentUser && location.pathname === "/login") {
+        navigate("/", { replace: true });
+      }
+    }, [currentUser, location.pathname, navigate]);
 
   const handleLogout = async() =>{
     const useremail = currentUser?.email;
@@ -36,13 +44,17 @@ const Header = () => {
     try{
       await axiosInstance.post("/auth/logout", { useremail });
     dispatch(signOut());
-    navigate("/login");
-    toast.success("OTP sent successfully!");
+    navigate("/login",{replace: true});
+    toast.success("Logout successfully!");
     }catch(err){
       toast.error(err.response?.data?.message || "Logout Failed");
     }
-
   }
+  
+  const handleProfileClick = () => {
+    navigate("/profile");
+  };
+  
   return (
     <Navbar className="bg-green-100">
       <NavbarBrand>
@@ -88,7 +100,7 @@ const Header = () => {
             />
           </DropdownTrigger>
           <DropdownMenu aria-label="Profile Actions" variant="flat">
-            <DropdownItem key="profile" className="h-14 gap-2">
+            <DropdownItem key="profile" className="h-14 gap-2" onPress={handleProfileClick}>
               <p className="font-semibold">Signed in as</p>
               <p className="font-semibold">{currentUser.name}</p>
             </DropdownItem>

@@ -1,7 +1,12 @@
 import { Button } from "@nextui-org/react";
 import BannerImage from '../../assets/Banner.webp'
+import { useNavigate } from "react-router-dom";
+import { RootState } from "../../redux/store";
+import { useSelector } from "react-redux";
 
 const Banner = () => {
+  const navigate = useNavigate();
+  const { currentUser } = useSelector((state: RootState) => state.user);
   return (
     <div>
       <div className="relative flex flex-col-reverse py-16 lg:pt-0 lg:flex-col lg:pb-0">
@@ -35,7 +40,9 @@ const Banner = () => {
               goals.
             </p>
             <div className="flex items-center gap-5">
-              <Button color="secondary"> Get started</Button>
+              {!currentUser && (
+                <Button color="secondary" onPress={()=>navigate('/signup')}> Get started</Button>
+              )}
               <Button color="primary" variant="bordered">
                 Learn more
               </Button>

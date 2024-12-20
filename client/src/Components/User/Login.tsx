@@ -1,35 +1,49 @@
-import LoginImage from '../../assets/Login.png';
-import { Link, useNavigate } from "react-router-dom";
+import LoginImage from "../../assets/Login.png";
+import { Link, useLocation, useNavigate } from "react-router-dom";
 import { useForm } from "react-hook-form";
-import { useDispatch } from 'react-redux';
-import { signinFailure, signinStart, signinSuccess } from '../../redux/Slice/userSlice';
-import { axiosInstance } from '../../lib/axios';
-import toast from 'react-hot-toast';
-import GoogleLogin from './GoogleLogin';
-import GitHub from './GitHub';
-
+import { useDispatch } from "react-redux";
+import {
+  signinFailure,
+  signinStart,
+  signinSuccess,
+} from "../../redux/Slice/userSlice";
+import { axiosInstance } from "../../lib/axios";
+import toast from "react-hot-toast";
+import GoogleLogin from "./GoogleLogin";
+import GitHub from "./GitHub";
+import { useEffect } from "react";
 
 const Login = () => {
   const dispatch = useDispatch();
   const navigate = useNavigate();
+  const location = useLocation();
   const {
     register,
     handleSubmit,
     formState: { errors },
   } = useForm();
 
+  //Check for any error passed
+  useEffect(() => {
+    if (location.state?.error) {
+      toast.error(location.state.error);
+    }
+  }, [location.state]);
+
+  //handle the submit of the form
   const onSubmit = async (data: { email: string; password: string }) => {
     try {
       dispatch(signinStart());
       const response = await axiosInstance.post("/auth/login", data);
       dispatch(signinSuccess(response.data.user));
-      navigate("/"); // Navigate to the dashboard or home page
+      navigate("/", { replace: true });
     } catch (error: any) {
       // Using react-hot-toast to show error
       toast.error(error.response?.data?.message || "Login failed");
       dispatch(signinFailure(error.response?.data?.message || "Login failed"));
     }
   };
+  
 
   return (
     <div>
@@ -37,7 +51,7 @@ const Login = () => {
         {/* Left Section with SVG */}
         <div className="bg-indigo-600 hidden lg:block w-full md:w-1/2 xl:w-2/3 h-screen">
           <div className="flex justify-center items-center h-full">
-          <img src={LoginImage} alt="Logo" />
+            <img src={LoginImage} alt="Logo" />
           </div>
         </div>
 
@@ -68,7 +82,9 @@ const Login = () => {
                     },
                   })}
                 />
-                 {errors.email && typeof errors.email.message === 'string' && <p className="text-red-500 text-sm">{errors.email.message}</p>}
+                {errors.email && typeof errors.email.message === "string" && (
+                  <p className="text-red-500 text-sm">{errors.email.message}</p>
+                )}
               </div>
 
               <div className="mt-4">
@@ -87,13 +103,21 @@ const Login = () => {
                     },
                   })}
                 />
-                {errors.password && typeof errors.password.message === 'string' && <p className="text-red-500 text-sm">{errors.password.message}</p>}
+                {errors.password &&
+                  typeof errors.password.message === "string" && (
+                    <p className="text-red-500 text-sm">
+                      {errors.password.message}
+                    </p>
+                  )}
               </div>
 
               <div className="text-right mt-2">
-              <Link to="/forgot" className="text-sm font-semibold text-gray-700 hover:text-blue-700 focus:text-blue-700">
-              Forgot Password?
-              </Link> 
+                <Link
+                  to="/forgot"
+                  className="text-sm font-semibold text-gray-700 hover:text-blue-700 focus:text-blue-700"
+                >
+                  Forgot Password?
+                </Link>
               </div>
 
               <button
@@ -115,9 +139,12 @@ const Login = () => {
 
             <p className="mt-8">
               Need an account?{" "}
-              <Link to="/signup" className="text-blue-500 hover:text-blue-700 font-semibold">
-              Create an account
-              </Link> 
+              <Link
+                to="/signup"
+                className="text-blue-500 hover:text-blue-700 font-semibold"
+              >
+                Create an account
+              </Link>
             </p>
           </div>
         </div>
