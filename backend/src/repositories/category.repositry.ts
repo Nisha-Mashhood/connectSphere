@@ -24,3 +24,5 @@ export const updateCategory = async (id: string, data: Partial<CategoryInterface
 export const deleteCategory = async (id: string) => {
   return await Category.findByIdAndDelete(id);
 };
+
+

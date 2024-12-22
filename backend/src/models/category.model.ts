@@ -3,6 +3,7 @@ import mongoose, { Schema, Document, Model } from "mongoose";
 export interface CategoryInterface extends Document {
     name: string;
     description?: string;
+    imageUrl?:string | null;
     createdAt: Date;
     updatedAt: Date;
   }
@@ -18,6 +19,10 @@ const categorySchema: Schema<CategoryInterface> = new mongoose.Schema(
       description: { 
         type: String, 
         default: null 
+    },
+    imageUrl: { 
+      type: String, 
+      default: null 
     },
     },
     { timestamps: true }

@@ -17,6 +17,7 @@ import AdminSignUp from "./Components/Admin/AdminSignUp";
 import AdminProfile from "./Components/Admin/AdminProfile";
 import PageNotFound from "./Components/PageNotFound";
 import AdminHeader from "./Components/Admin/AdminHeader";
+// import ModalDummy from './Components/Modal';
 // import { GoogleOAuthProvider } from '@react-oauth/google'
 
 function App() {
@@ -51,12 +52,14 @@ function App() {
             <Route path="signup" element={<AdminSignUp />} />
 
             <Route element={<AdminPrivateRoute />} >
-            <Route path="categories" element={<Categories />} />
+           
             <Route path="profile" element={<AdminProfile />} />
             </Route>
+            <Route path="categories" element={<Categories />} />
 
           </Route>
           <Route path="*" element={<PageNotFound />} />
+          {/* <Route path="/modalopen" element={<ModalDummy />} /> */}
         
       </Routes>
       <Toaster />

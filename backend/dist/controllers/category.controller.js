@@ -1,7 +1,8 @@
 import * as CategoryService from "../services/category.service.js";
 export const createCategory = async (req, res) => {
     try {
-        const category = await CategoryService.createCategory(req.body);
+        const imagePath = req.file?.path;
+        const category = await CategoryService.createCategory(req.body, imagePath);
         res.status(201).json({ message: "Category created successfully", category });
     }
     catch (error) {
@@ -32,7 +33,10 @@ export const getCategoryById = async (req, res) => {
 };
 export const updateCategory = async (req, res) => {
     try {
-        const updatedCategory = await CategoryService.updateCategory(req.params.id, req.body);
+        const imagePath = req.file?.path;
+        console.log(req.body);
+        console.log(imagePath);
+        const updatedCategory = await CategoryService.updateCategory(req.params.id, req.body, imagePath);
         if (!updatedCategory) {
             res.status(404).json({ message: "Category not found" });
             return;

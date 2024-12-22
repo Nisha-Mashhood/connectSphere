@@ -10,6 +10,10 @@ const categorySchema = new mongoose.Schema({
         type: String,
         default: null
     },
+    imageUrl: {
+        type: String,
+        default: null
+    },
 }, { timestamps: true });
 export const Category = mongoose.model("Category", categorySchema);
 //# sourceMappingURL=category.model.js.map

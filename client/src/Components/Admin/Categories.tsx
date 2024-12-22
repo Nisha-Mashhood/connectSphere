@@ -1,167 +1,336 @@
-import  { useState } from 'react'
+import { useEffect, useState } from "react";
+import { axiosInstance } from "../../lib/axios";
+import toast from "react-hot-toast";
+import { useDispatch, useSelector } from "react-redux";
+import { addCategoryFailure, addCategoryStart, addCategorySuccess } from "../../redux/Slice/categorySlice";
+import { RootState } from "../../redux/store";
 
-const Categories = () => {
-    const [categories, setCategories] = useState([
-    {
-      id: 1,
-      name: "Development",
-      description: "All development-related topics",
-      image: "https://via.placeholder.com/150",
-      subcategories: [
-        {
-          id: 1,
-          name: "Frontend",
-          description: "UI/UX design and development",
-          skills: ["React", "Angular", "Vue.js"],
-        },
-        {
-          id: 2,
-          name: "Backend",
-          description: "Server-side development",
-          skills: ["Node.js", "Express", "Django"],
-        },
-      ],
-    },
-    {
-      id: 2,
-      name: "Design",
-      description: "Design tools and principles",
-      image: "https://via.placeholder.com/150",
-      subcategories: [
-        {
-          id: 3,
-          name: "Graphic Design",
-          description: "Creating visuals for branding",
-          skills: ["Photoshop", "Illustrator"],
-        },
-        {
-          id: 4,
-          name: "UI/UX Design",
-          description: "User experience and interfaces",
-          skills: ["Figma", "Adobe XD"],
-        },
-      ],
-    },
-  ]);
+const AddCategoryModal = ({ isOpen, onClose, fetchCategories }) =>{
+  const dispatch = useDispatch();
+  const { loading } = useSelector((state: RootState) => state.categories);
+  const [name, setName] = useState("");
+  const [description, setDescription] = useState("");
+  const [image, setImage] = useState(null);
+  const [preview, setPreview] = useState(null);
 
-  const [expandedCategory, setExpandedCategory] = useState(null);
-  const [expandedSubcategory, setExpandedSubcategory] = useState(null);
+  const handleImageChange = (e) => {
+    const file = e.target.files[0];
+    setImage(file);
+    setPreview(URL.createObjectURL(file));
+  };
+  const handleClose = () => {
+    setName("");
+    setDescription("");
+    setImage(null); 
+    setPreview(null); 
+    onClose(); 
+  };
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+    if (!name || !description || !image) {
+      toast.error("All fields are required");
+      return;
+    }
+    dispatch(addCategoryStart());
+    try {
+      const formData = new FormData();
+      formData.append("name", name);
+      formData.append("description", description);
+      formData.append("image", image);
 
-  const handleExpandCategory = (id) =>
-    setExpandedCategory(expandedCategory === id ? null : id);
+      const response = await axiosInstance.post(
+        "admin/category/create-category",
+        formData
+      );
+      console.log(response)
 
-  const handleExpandSubcategory = (id) =>
-    setExpandedSubcategory(expandedSubcategory === id ? null : id);
+      dispatch(addCategorySuccess(response.data.category)); // Update state with the new category
+      toast.success("Category added successfully!");
+      fetchCategories();
+      handleClose(); // Close the modal 
+    } catch (error) {
+      dispatch(addCategoryFailure(error.response?.data?.message || "Failed to add category"));
+      toast.error(error.response?.data?.message || "Failed to add category");
+    }
+  }
+
+  if (!isOpen) return null;
 
   return (
-    <div className="p-6 bg-gray-100 min-h-screen">
-      <h1 className="text-2xl font-bold mb-4">Admin Panel</h1>
-
-      <button className="mb-4 px-4 py-2 bg-blue-500 text-white rounded-md hover:bg-blue-600">
-        Add New Category
-      </button>
-
-      <div className="space-y-4">
-        {categories.map((category) => (
-          <div
-            key={category.id}
-            className="bg-white rounded-lg shadow p-4 border"
-          >
-            {/* Category Header */}
-            <div
-              className="flex justify-between items-center cursor-pointer"
-              onClick={() => handleExpandCategory(category.id)}
-            >
-              <div className="flex items-center space-x-4">
-                <img
-                  src={category.image}
-                  alt={category.name}
-                  className="w-16 h-16 rounded-md object-cover"
-                />
-                <div>
-                  <h3 className="text-lg font-semibold">{category.name}</h3>
-                  <p className="text-sm text-gray-500">{category.description}</p>
-                </div>
-              </div>
-              <div className="flex space-x-2">
-                <button className="px-3 py-2 bg-yellow-500 text-white rounded-md hover:bg-yellow-600">
-                  Edit
-                </button>
-                <button className="px-3 py-2 bg-red-500 text-white rounded-md hover:bg-red-600">
-                  Delete
-                </button>
-              </div>
-            </div>
-
-            {/* Subcategories Accordion */}
-            {expandedCategory === category.id && (
-              <div className="mt-4 ml-4">
-                <button className="mb-4 px-4 py-2 bg-green-500 text-white rounded-md hover:bg-green-600">
-                  Add New Subcategory
-                </button>
-                <div className="space-y-4">
-                  {category.subcategories.map((sub) => (
-                    <div
-                      key={sub.id}
-                      className="bg-gray-50 rounded-lg shadow p-4 border"
-                    >
-                      {/* Subcategory Header */}
-                      <div
-                        className="flex justify-between items-center cursor-pointer"
-                        onClick={() => handleExpandSubcategory(sub.id)}
-                      >
-                        <div>
-                          <h4 className="text-md font-medium">{sub.name}</h4>
-                          <p className="text-sm text-gray-500">
-                            {sub.description}
-                          </p>
-                        </div>
-                        <div className="flex space-x-2">
-                          <button className="px-3 py-2 bg-yellow-500 text-white rounded-md hover:bg-yellow-600">
-                            Edit
-                          </button>
-                          <button className="px-3 py-2 bg-red-500 text-white rounded-md hover:bg-red-600">
-                            Delete
-                          </button>
-                        </div>
-                      </div>
-
-                      {/* Skills Accordion */}
-                      {expandedSubcategory === sub.id && (
-                        <div className="mt-4 ml-4">
-                          <button className="mb-4 px-4 py-2 bg-blue-500 text-white rounded-md hover:bg-blue-600">
-                            Add New Skill
-                          </button>
-                          <ul className="list-disc pl-5 space-y-2">
-                            {sub.skills.map((skill, index) => (
-                              <li
-                                key={index}
-                                className="flex justify-between items-center"
-                              >
-                                <span>{skill}</span>
-                                <div className="flex space-x-2">
-                                  <button className="px-3 py-2 bg-yellow-500 text-white rounded-md hover:bg-yellow-600">
-                                    Edit
-                                  </button>
-                                  <button className="px-3 py-2 bg-red-500 text-white rounded-md hover:bg-red-600">
-                                    Delete
-                                  </button>
-                                </div>
-                              </li>
-                            ))}
-                          </ul>
-                        </div>
-                      )}
-                    </div>
-                  ))}
-                </div>
-              </div>
+    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center">
+      <div className="bg-white p-6 rounded-lg shadow-lg w-96">
+        <h2 className="text-xl font-bold mb-4">Add Category</h2>
+        <form onSubmit={handleSubmit}>
+          <div className="mb-4">
+            <label className="block mb-2 font-medium">Name</label>
+            <input
+              type="text"
+              id="name"
+              className="border border-gray-300 rounded-md w-full p-2"
+              value={name}
+              onChange={(e) => setName(e.target.value)}
+            />
+          </div>
+          <div className="mb-4">
+            <label className="block mb-2 font-medium">Description</label>
+            <textarea
+              className="border border-gray-300 rounded-md w-full p-2"
+              id="description"
+              value={description}
+              onChange={(e) => setDescription(e.target.value)}
+            />
+          </div>
+          <div className="mb-4">
+            <label className="block mb-2 font-medium">Image</label>
+            <input type="file" id="image" onChange={handleImageChange} />
+            {preview && (
+              <img
+                src={preview}
+                alt="Preview"
+                className="mt-2 w-24 h-24 object-cover rounded-md"
+              />
             )}
           </div>
-        ))}
+          <div className="flex justify-end">
+            <button
+              type="button"
+              onClick={handleClose}
+              className="px-4 py-2 bg-gray-300 rounded-md mr-2"
+            >
+              Cancel
+            </button>
+            <button
+              type="submit"
+              className="px-4 py-2 bg-blue-500 text-white rounded-md hover:bg-blue-600"
+              disabled={loading}
+            >
+              {loading ? 'Adding...' : 'Add'}
+            </button>
+          </div>
+        </form>
       </div>
     </div>
   );
 }
 
-export default Categories
+const Categories = () => {
+  // State to store categories
+  const [categories, setCategories] = useState([]);
+  const [isModalOpen, setIsModalOpen] = useState(false);
+  const [editingCategoryId, setEditingCategoryId] = useState(null);
+  const [editedCategory, setEditedCategory] = useState(null);
+
+  // Fetch categories from the backend
+  const fetchCategories = async () => {
+    try {
+      const response = await axiosInstance.get("/admin/category/get-categories");
+      setCategories(response.data); // Update state with fetched data
+    } catch (error) {
+      console.error("Error fetching categories:", error);
+    }
+  };
+  // Handle Edit Click
+  const handleEditClick = (category) => {
+    setEditingCategoryId(category._id);
+    setEditedCategory({ ...category }); // Set the current category for editing
+  };
+
+  // Handle Input Changes
+  const handleInputChange = (e, field) => {
+    setEditedCategory((prev) => ({ ...prev, [field]: e.target.value }));
+  };
+
+  // Handle Image Change
+  const handleImageChange = (e) => {
+    const file = e.target.files[0];
+    setEditedCategory((prev) => ({
+      ...prev,
+      image: file,
+      preview: URL.createObjectURL(file),
+    }));
+  };
+
+  // Handle Save
+  const handleSave = async () => {
+    try {
+      const formData = new FormData();
+      formData.append("name", editedCategory.name);
+      formData.append("description", editedCategory.description);
+      if (editedCategory.image) {
+        formData.append("image", editedCategory.image);
+      }
+
+      console.log(formData);
+
+      await axiosInstance.put(`/admin/category/update-category/${editingCategoryId}`, formData);
+
+      toast.success("Category updated successfully!");
+      fetchCategories(); // Refresh categories after update
+      setEditingCategoryId(null); // Exit edit mode
+    } catch (error) {
+      toast.error(error.response?.data?.message || "Failed to update category");
+    }
+  };
+
+  // Handle Cancel
+  const handleCancel = () => {
+    setEditingCategoryId(null); // Exit edit mode
+    setEditedCategory(null);
+  };
+
+  // Delete a category
+  const deleteCategory = async (id) => {
+    toast((t) => (
+      <div className="p-4">
+        <p className="text-lg font-medium">Are you sure you want to delete this category?</p>
+        <div className="mt-3 flex justify-end gap-2">
+          <button
+            onClick={() => {
+              confirmDeleteCategory(id);
+              toast.dismiss(t.id); // Dismiss the toast
+            }}
+            className="px-4 py-2 bg-red-500 text-white rounded-md hover:bg-red-600"
+          >
+            Confirm
+          </button>
+          <button
+            onClick={() => toast.dismiss(t.id)}
+            className="px-4 py-2 bg-gray-300 text-gray-700 rounded-md hover:bg-gray-400"
+          >
+            Cancel
+          </button>
+        </div>
+      </div>
+    ));
+  };
+
+  const confirmDeleteCategory = async (id) => {
+    try {
+      await axiosInstance.delete(`/admin/category/delete-category/${id}`);
+      toast.success("Category deleted successfully!");
+      fetchCategories(); // Refresh categories after deletion
+    } catch (error) {
+      toast.error(error.response?.data?.message || "Failed to delete category");
+    }
+  };
+
+   
+  // Fetch categories when the component mounts
+  useEffect(() => {
+    fetchCategories();
+  }, []);
+
+  return (
+    <div>
+      <div className="p-6 bg-gray-100 min-h-screen">
+      <div className="flex justify-between items-center mb-4">
+          <h1 className="text-2xl font-bold">Categories</h1>
+          <button
+            onClick={() => setIsModalOpen(true)}
+            className="px-4 py-2 bg-green-500 text-white rounded-md hover:bg-green-600"
+          >
+            Add Category
+          </button>
+        </div>
+
+        <table className="table-auto border-collapse border border-gray-200 w-full">
+          <thead>
+            <tr className="bg-gray-200">
+              <th className="border border-gray-300 px-4 py-2">Image</th>
+              <th className="border border-gray-300 px-4 py-2">Name</th>
+              <th className="border border-gray-300 px-4 py-2">Description</th>
+              <th className="border border-gray-300 px-4 py-2">Actions</th>
+            </tr>
+          </thead>
+          <tbody>
+            {categories.map((category) => (
+              <tr key={category._id} className="hover:bg-gray-100">
+                <td className="border border-gray-300 px-4 py-2">
+                  {editingCategoryId === category._id ? (
+                    <>
+                      <input type="file" onChange={handleImageChange} />
+                      {editedCategory?.preview && (
+                        <img
+                          src={editedCategory.preview}
+                          alt="Preview"
+                          className="mt-2 w-16 h-16 object-cover rounded-md"
+                        />
+                      )}
+                    </>
+                  ) : (
+                    <img
+                      src={category.imageUrl || "https://via.placeholder.com/100"}
+                      alt={category.name}
+                      className="w-16 h-16 object-cover"
+                    />
+                  )}
+                </td>
+                <td className="border border-gray-300 px-4 py-2">
+                  {editingCategoryId === category._id ? (
+                    <input
+                      type="text"
+                      value={editedCategory.name}
+                      onChange={(e) => handleInputChange(e, "name")}
+                      className="border border-gray-300 rounded-md w-full p-2"
+                    />
+                  ) : (
+                    category.name
+                  )}
+                </td>
+                <td className="border border-gray-300 px-4 py-2">
+                  {editingCategoryId === category._id ? (
+                    <textarea
+                      value={editedCategory.description}
+                      onChange={(e) => handleInputChange(e, "description")}
+                      className="border border-gray-300 rounded-md w-full p-2"
+                    />
+                  ) : (
+                    category.description
+                  )}
+                </td>
+                <td className="border border-gray-300 px-4 py-2">
+                  {editingCategoryId === category._id ? (
+                    <>
+                      <button
+                        onClick={handleSave}
+                        className="px-2 py-1 bg-green-500 text-white rounded-md hover:bg-green-600 mr-2"
+                      >
+                        Save
+                      </button>
+                      <button
+                        onClick={handleCancel}
+                        className="px-2 py-1 bg-gray-300 text-gray-700 rounded-md hover:bg-gray-400"
+                      >
+                        Cancel
+                      </button>
+                    </>
+                  ) : (
+                    <div className="border border-gray-300 px-4 py-2 flex gap-4">
+                      <button
+                      onClick={() => handleEditClick(category)}
+                      className="px-2 py-1 bg-blue-500 text-white rounded-md hover:bg-blue-600"
+                    >
+                      Edit
+                    </button>
+                    <button className="px-2 py-1 bg-red-500 text-white rounded-md hover:bg-red-600" onClick={() => deleteCategory(category._id)}>
+                    Delete
+                  </button>
+                    </div>
+                    
+                  )}
+                </td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+        <AddCategoryModal
+          isOpen={isModalOpen}
+          onClose={() => setIsModalOpen(false)}
+          fetchCategories={fetchCategories}
+        />
+      </div>
+    </div>
+  );
+};
+
+export default Categories;

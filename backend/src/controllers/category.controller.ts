@@ -3,7 +3,8 @@ import * as CategoryService from "../services/category.service.js";
 
 export const createCategory = async (req: Request, res: Response): Promise<void> => {
   try {
-    const category = await CategoryService.createCategory(req.body);
+    const imagePath = req.file?.path; 
+    const category = await CategoryService.createCategory(req.body, imagePath);
     res.status(201).json({ message: "Category created successfully", category });
   } catch (error: any) {
     res.status(500).json({ message: "Error creating category", error: error.message });
@@ -34,7 +35,10 @@ export const getCategoryById = async (req: Request<{ id: string }>, res: Respons
 
 export const updateCategory = async (req: Request<{ id: string }>, res: Response): Promise<void> => {
   try {
-    const updatedCategory = await CategoryService.updateCategory(req.params.id, req.body);
+    const imagePath = req.file?.path;
+    console.log(req.body);
+    console.log(imagePath);
+    const updatedCategory = await CategoryService.updateCategory(req.params.id, req.body, imagePath);
     if (!updatedCategory) {
       res.status(404).json({ message: "Category not found" });
       return;

@@ -2,6 +2,7 @@ import { Document, Model } from "mongoose";
 export interface CategoryInterface extends Document {
     name: string;
     description?: string;
+    imageUrl?: string | null;
     createdAt: Date;
     updatedAt: Date;
 }
