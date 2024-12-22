@@ -1,13 +1,12 @@
-import { loginUser, forgotPassword, verifyOTP, resetPassword, refreshToken as refeshTokenService, logout as logoutUserService, sigupDetails, } from "../services/auth.service.js";
-import { clearCookies, setTokensInCookies } from "../utils/jwt.utils.js";
+import { loginAdmin, forgotPassword, verifyOTP, resetPassword, refreshToken as refeshTokenService, logout as logoutAdminService, sigupDetails, } from "../../services/Admin/auth.service.js";
+import { clearCookies, setTokensInCookies } from "../../utils/jwt.utils.js";
 // import mongoose from "mongoose";
 //Handles the personal details Registration
 export const signup = async (req, res) => {
     try {
-        const user = await sigupDetails(req.body);
-        console.log("Registered User Details:", user);
+        await sigupDetails(req.body);
         res.status(201).json({
-            message: "User Registered Successfully"
+            message: "Adminr Registered Successfully"
         });
     }
     catch (error) {
@@ -15,15 +14,14 @@ export const signup = async (req, res) => {
         res.status(400).json({ message: error.message });
     }
 };
-// Handle user login
+// Handle Admin login
 export const login = async (req, res) => {
     try {
         const { email, password } = req.body;
-        //console.log(req.body);
-        const { user, accessToken, refreshToken } = await loginUser(email, password);
+        const { Admin, accessToken, refreshToken } = await loginAdmin(email, password);
         // Store tokens in cookies
         setTokensInCookies(res, accessToken, refreshToken);
-        res.json({ message: "Login successful", user });
+        res.json({ message: "Login successful", Admin });
     }
     catch (error) {
         res.status(400).json({ message: error.message });
@@ -69,13 +67,14 @@ export const githubAuthRedirect = (req, res) => {
 // Handle logout
 export const logout = async (req, res) => {
     try {
-        const { useremail } = req.body; // Get userId from the request body
-        if (!useremail) {
-            res.status(400).json({ message: "User email is required." });
+        const { adminemail } = req.body;
+        console.log("Email of Admin", adminemail);
+        if (!adminemail) {
+            res.status(400).json({ message: "Admin email is required." });
             return;
         }
         // Call the logout service to remove the refresh token
-        await logoutUserService(useremail);
+        await logoutAdminService(adminemail);
         // Clear cookies
         clearCookies(res);
         res.status(200).json({ message: "Logged out successfully." });

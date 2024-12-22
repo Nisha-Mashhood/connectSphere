@@ -1,6 +1,7 @@
 import jwt from "jsonwebtoken";
 import config from "../config/env.config.js";
 import { findUserByEmail, removeRefreshToken as removeRefreshTokenRepositry, } from "../repositories/user.repositry.js";
+import { findAdminByEmail, removeRefreshToken as removeRefreshTokenRepositryAdmin } from "../repositories/Admin/admin.repositry.js";
 // Generate JWT Access token (short-lived, 1 hour)
 export const generateAccessToken = (payload, expiresIn = "1h") => {
     if (!config.jwtSecret) {
@@ -76,6 +77,21 @@ export const removeRefreshToken = async (useremail) => {
             throw new Error("User not found");
         }
         await removeRefreshTokenRepositry(useremail);
+        return { message: "Refresh token removed successfully" };
+    }
+    catch (error) {
+        throw new Error("Error removing refresh token: " + error.message);
+    }
+};
+// Function to handle token removal for Admin model during logout
+export const removeRefreshTokenForAdmin = async (Adminemail) => {
+    try {
+        // Find the user by their ID
+        const user = await findAdminByEmail(Adminemail);
+        if (!user) {
+            throw new Error("User not found");
+        }
+        await removeRefreshTokenRepositryAdmin(Adminemail);
         return { message: "Refresh token removed successfully" };
     }
     catch (error) {

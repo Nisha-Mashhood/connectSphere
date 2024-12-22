@@ -3,6 +3,7 @@ import dotenv from "dotenv";
 import connectDB from "./config/db.config.js";
 import config from "./config/env.config.js";
 import authRoutes from "./routes/auth.routes.js";
+import authAdminRoutes from './routes/Admin/auth.routes.js'
 import categoryRoutes from "./routes/category.routes.js";
 import subCategoryRoutes from "./routes/sucategory.routes.js";
 import skillsRoutes from "./routes/skills.routes.js";
@@ -34,9 +35,10 @@ configurePassport();
 
 // Routes
 app.use("/api/auth", authRoutes);
-app.use("/api/category", categoryRoutes);
-app.use("/api/subcategory", subCategoryRoutes);
-app.use("/api/skills", skillsRoutes);
+app.use("/api/admin/auth", authAdminRoutes);
+app.use("/api/admin/category", categoryRoutes);
+app.use("/api/admin/subcategory", subCategoryRoutes);
+app.use("/api/admin/skills", skillsRoutes);
 app.use("/api/users", userRoutes);
 app.use("/api/mentors", mentorRoutes);
 

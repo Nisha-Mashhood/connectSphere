@@ -1,4 +1,4 @@
-import { Routes, Route } from "react-router-dom";
+import { Routes, Route, useLocation } from "react-router-dom";
 import Home from "./pages/User/Home";
 import Header from "./Components/User/Header";
 import Login from "./Components/User/Login";
@@ -10,6 +10,13 @@ import Profile from "./Components/User/Profile";
 import Categories from "./Components/Admin/Categories";
 import { Toaster } from "react-hot-toast";
 import PrivateRoute from "./Components/User/PrivateRoute";
+import AdminPrivateRoute from "./Components/Admin/AdminPrivateRout";
+import AdminDashboard from "./Components/Admin/AdminDashboard";
+import AdminLogin from "./Components/Admin/AdminLogin";
+import AdminSignUp from "./Components/Admin/AdminSignUp";
+import AdminProfile from "./Components/Admin/AdminProfile";
+import PageNotFound from "./Components/PageNotFound";
+import AdminHeader from "./Components/Admin/AdminHeader";
 // import { GoogleOAuthProvider } from '@react-oauth/google'
 
 function App() {
@@ -20,10 +27,13 @@ function App() {
   //     </GoogleOAuthProvider>
   //   )
   // }
+  const location = useLocation();
 
+  // Check if current path is an admin route
+  const isAdminRoute = location.pathname.startsWith('/admin');
   return (
     <>
-      <Header />
+      {isAdminRoute ? <AdminHeader /> : <Header />}
       <Routes>
         <Route path="/" element={<Home />} />
         <Route path="/login" element={<Login />} />
@@ -35,8 +45,19 @@ function App() {
         <Route element={<PrivateRoute />}>
           <Route path="/profile" element={<Profile />} />
         </Route>
+        <Route path="/admin">
+            <Route path="dashboard" element={<AdminDashboard />} />
+            <Route path="login" element={<AdminLogin />} />
+            <Route path="signup" element={<AdminSignUp />} />
+
+            <Route element={<AdminPrivateRoute />} >
+            <Route path="categories" element={<Categories />} />
+            <Route path="profile" element={<AdminProfile />} />
+            </Route>
+
+          </Route>
+          <Route path="*" element={<PageNotFound />} />
         
-        <Route path="/categories" element={<Categories />} />
       </Routes>
       <Toaster />
     </>
