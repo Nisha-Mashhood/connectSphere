@@ -7,13 +7,14 @@ import {
   addCategoryStart,
 } from "../../redux/Slice/categorySlice";
 import { RootState } from "../../redux/store";
-import { Link, useParams } from "react-router-dom";
+import { useParams } from "react-router-dom";
 
-const AddSubCategoryModal = ({
+const AddSkillModal = ({
   isOpen,
   onClose,
-  fetchSubCategories,
+  fetchSkills,
   parentCategoryId,
+  parentSubCategoryId,
 }) => {
   const dispatch = useDispatch();
   const { loading } = useSelector((state: RootState) => state.categories);
@@ -47,13 +48,11 @@ const AddSubCategoryModal = ({
       formData.append("description", description);
       formData.append("image", image);
       formData.append("categoryId", parentCategoryId);
+      formData.append("subcategoryId", parentSubCategoryId);
 
-      await axiosInstance.post(
-        `admin/subcategory/create-subcategory`,
-        formData
-      );
-      toast.success("SubCategory added successfully!");
-      fetchSubCategories(parentCategoryId);
+      await axiosInstance.post(`admin/skills/create-skill`, formData);
+      toast.success("Skill added successfully!");
+      fetchSkills(parentSubCategoryId);
       handleClose(); // Close the modal
     } catch (error) {
       dispatch(
@@ -70,7 +69,7 @@ const AddSubCategoryModal = ({
   return (
     <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center">
       <div className="bg-white p-6 rounded-lg shadow-lg w-96">
-        <h2 className="text-xl font-bold mb-4">Add Subcategory</h2>
+        <h2 className="text-xl font-bold mb-4">Add Skilly</h2>
         <form onSubmit={handleSubmit}>
           <div className="mb-4">
             <label className="block mb-2 font-medium">Name</label>
@@ -124,41 +123,41 @@ const AddSubCategoryModal = ({
   );
 };
 
-const SubCategories = () => {
+const Skills = () => {
   // State to store categories
-  const [subcategories, setSubCategories] = useState([]);
-  const { categoryId } = useParams();
+  const [skills, setSkills] = useState([]);
+  const { categoryId, subcategoryId } = useParams();
   const [isModalOpen, setIsModalOpen] = useState(false);
-  const [editingSubCategoryId, setEditingSubCategoryId] = useState(null);
-  const [editedSubCategory, setEditedSubCategory] = useState(null);
+  const [editingSkillId, setEditingSkillId] = useState(null);
+  const [editedSkill, setEditedSkill] = useState(null);
 
   // Fetch categories from the backend
-  const fetchSubCategories = async (categoryId: string) => {
+  const fetchSkills = async (subcategoryId: string) => {
     try {
       const response = await axiosInstance.get(
-        `/admin/subcategory/get-subcategories/${categoryId}`
+        `/admin/skills/get-skills/${subcategoryId}`
       );
       console.log(response);
-      setSubCategories(response.data); // Update state with fetched data
+      setSkills(response.data); // Update state with fetched data
     } catch (error) {
       console.error("Error fetching categories:", error);
     }
   };
   // Handle Edit Click
   const handleEditClick = (subcategory) => {
-    setEditingSubCategoryId(subcategory._id);
-    setEditedSubCategory({ ...subcategory }); // Set the current category for editing
+    setEditingSkillId(subcategory._id);
+    setEditedSkill({ ...subcategory }); // Set the current category for editing
   };
 
   // Handle Input Changes
   const handleInputChange = (e, field) => {
-    setEditedSubCategory((prev) => ({ ...prev, [field]: e.target.value }));
+    setEditedSkill((prev) => ({ ...prev, [field]: e.target.value }));
   };
 
   // Handle Image Change
   const handleImageChange = (e) => {
     const file = e.target.files[0];
-    setEditedSubCategory((prev) => ({
+    setEditedSkill((prev) => ({
       ...prev,
       image: file,
       preview: URL.createObjectURL(file),
@@ -169,22 +168,22 @@ const SubCategories = () => {
   const handleSave = async () => {
     try {
       const formData = new FormData();
-      formData.append("name", editedSubCategory.name);
-      formData.append("description", editedSubCategory.description);
-      if (editedSubCategory.image) {
-        formData.append("image", editedSubCategory.image);
+      formData.append("name", editedSkill.name);
+      formData.append("description", editedSkill.description);
+      if (editedSkill.image) {
+        formData.append("image", editedSkill.image);
       }
 
       console.log(formData);
 
       await axiosInstance.put(
-        `/admin/subcategory/update-subcategory/${editingSubCategoryId}`,
+        `/admin/skills/update-skill/${editingSkillId}`,
         formData
       );
 
-      toast.success("Sub-Category updated successfully!");
-      fetchSubCategories(categoryId); // Refresh categories after update
-      setEditingSubCategoryId(null); // Exit edit mode
+      toast.success("Skills updated successfully!");
+      fetchSkills(subcategoryId); // Refresh categories after update
+      setEditingSkillId(null); // Exit edit mode
     } catch (error) {
       toast.error(error.response?.data?.message || "Failed to update category");
     }
@@ -192,8 +191,8 @@ const SubCategories = () => {
 
   // Handle Cancel
   const handleCancel = () => {
-    setEditingSubCategoryId(null); // Exit edit mode
-    setEditedSubCategory(null);
+    setEditingSkillId(null); // Exit edit mode
+    setEditedSkill(null);
   };
 
   // Delete a subcategory
@@ -201,12 +200,12 @@ const SubCategories = () => {
     toast((t) => (
       <div className="p-4">
         <p className="text-lg font-medium">
-          Are you sure you want to delete this sub-category?
+          Are you sure you want to delete this skill?
         </p>
         <div className="mt-3 flex justify-end gap-2">
           <button
             onClick={() => {
-              confirmDeleteSubCategory(id);
+              confirmDeleteSkill(id);
               toast.dismiss(t.id); // Dismiss the toast
             }}
             className="px-4 py-2 bg-red-500 text-white rounded-md hover:bg-red-600"
@@ -224,11 +223,11 @@ const SubCategories = () => {
     ));
   };
 
-  const confirmDeleteSubCategory = async (id: string) => {
+  const confirmDeleteSkill = async (id: string) => {
     try {
-      await axiosInstance.delete(`/admin/subcategory/delete-subcategory/${id}`);
-      toast.success("Sub-Category deleted successfully!");
-      fetchSubCategories(categoryId); // Refresh categories after deletion
+      await axiosInstance.delete(`/admin/skills/delete-skill/${id}`);
+      toast.success("Skill deleted successfully!");
+      fetchSkills(subcategoryId); // Refresh categories after deletion
     } catch (error) {
       toast.error(
         error.response?.data?.message || "Failed to delete sub-category"
@@ -239,7 +238,7 @@ const SubCategories = () => {
   // Fetch categories when the component mounts
   useEffect(() => {
     if (categoryId) {
-      fetchSubCategories(categoryId);
+      fetchSkills(subcategoryId);
     }
   }, [categoryId]);
 
@@ -252,7 +251,7 @@ const SubCategories = () => {
             onClick={() => setIsModalOpen(true)}
             className="px-4 py-2 bg-green-500 text-white rounded-md hover:bg-green-600"
           >
-            Add Sub-Category
+            Add Skills
           </button>
         </div>
 
@@ -266,15 +265,15 @@ const SubCategories = () => {
             </tr>
           </thead>
           <tbody>
-            {subcategories.map((subcategory) => (
-              <tr key={subcategory._id} className="hover:bg-gray-100">
+            {skills.map((skill) => (
+              <tr key={skill._id} className="hover:bg-gray-100">
                 <td className="border border-gray-300 px-4 py-2">
-                  {editingSubCategoryId === subcategory._id ? (
+                  {editingSkillId === skill._id ? (
                     <>
                       <input type="file" onChange={handleImageChange} />
-                      {editedSubCategory?.preview && (
+                      {editedSkill?.preview && (
                         <img
-                          src={editedSubCategory.preview}
+                          src={editedSkill.preview}
                           alt="Preview"
                           className="mt-2 w-16 h-16 object-cover rounded-md"
                         />
@@ -282,42 +281,37 @@ const SubCategories = () => {
                     </>
                   ) : (
                     <img
-                      src={
-                        subcategory.imageUrl ||
-                        "https://via.placeholder.com/100"
-                      }
-                      alt={subcategory.name}
+                      src={skill.imageUrl || "https://via.placeholder.com/100"}
+                      alt={skill.name}
                       className="w-16 h-16 object-cover"
                     />
                   )}
                 </td>
                 <td className="border border-gray-300 px-4 py-2">
-                  {editingSubCategoryId === subcategory._id ? (
+                  {editingSkillId === skill._id ? (
                     <input
                       type="text"
-                      value={editedSubCategory.name}
+                      value={editedSkill.name}
                       onChange={(e) => handleInputChange(e, "name")}
                       className="border border-gray-300 rounded-md w-full p-2"
                     />
                   ) : (
-                    <Link to={`/admin/skills/${categoryId}/${subcategory._id}`}>
-                      {subcategory.name}{" "}
-                    </Link>
+                    skill.name
                   )}
                 </td>
                 <td className="border border-gray-300 px-4 py-2">
-                  {editingSubCategoryId === subcategory._id ? (
+                  {editingSkillId === skill._id ? (
                     <textarea
-                      value={editedSubCategory.description}
+                      value={editedSkill.description}
                       onChange={(e) => handleInputChange(e, "description")}
                       className="border border-gray-300 rounded-md w-full p-2"
                     />
                   ) : (
-                    subcategory.description
+                    skill.description
                   )}
                 </td>
                 <td className="border border-gray-300 px-4 py-2">
-                  {editingSubCategoryId === subcategory._id ? (
+                  {editingSkillId === skill._id ? (
                     <>
                       <button
                         onClick={handleSave}
@@ -335,14 +329,14 @@ const SubCategories = () => {
                   ) : (
                     <div className="border border-gray-300 px-4 py-2 flex gap-4">
                       <button
-                        onClick={() => handleEditClick(subcategory)}
+                        onClick={() => handleEditClick(skill)}
                         className="px-2 py-1 bg-blue-500 text-white rounded-md hover:bg-blue-600"
                       >
                         Edit
                       </button>
                       <button
                         className="px-2 py-1 bg-red-500 text-white rounded-md hover:bg-red-600"
-                        onClick={() => deleteSubCategory(subcategory._id)}
+                        onClick={() => deleteSubCategory(skill._id)}
                       >
                         Delete
                       </button>
@@ -353,15 +347,16 @@ const SubCategories = () => {
             ))}
           </tbody>
         </table>
-        <AddSubCategoryModal
+        <AddSkillModal
           isOpen={isModalOpen}
           onClose={() => setIsModalOpen(false)}
-          fetchSubCategories={fetchSubCategories}
+          fetchSkills={fetchSkills}
           parentCategoryId={categoryId}
+          parentSubCategoryId={subcategoryId}
         />
       </div>
     </div>
   );
 };
 
-export default SubCategories;
+export default Skills;

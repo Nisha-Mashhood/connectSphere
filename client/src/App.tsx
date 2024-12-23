@@ -18,7 +18,7 @@ import AdminProfile from "./Components/Admin/AdminProfile";
 import PageNotFound from "./Components/PageNotFound";
 import AdminHeader from "./Components/Admin/AdminHeader";
 import SubCategories from "./Components/Admin/SubCategories";
-// import Management from './Components/Modal';
+import Skills from "./Components/Admin/Skills";
 // import { GoogleOAuthProvider } from '@react-oauth/google'
 
 function App() {
@@ -47,6 +47,7 @@ function App() {
         <Route element={<PrivateRoute />}>
           <Route path="/profile" element={<Profile />} />
         </Route>
+
         <Route path="/admin">
           <Route path="dashboard" element={<AdminDashboard />} />
           <Route path="login" element={<AdminLogin />} />
@@ -55,11 +56,13 @@ function App() {
           <Route element={<AdminPrivateRoute />}>
             <Route path="profile" element={<AdminProfile />} />
           </Route>
+
+
           <Route path="categories" element={<Categories />} />
           <Route path="subcategories/:categoryId" element={<SubCategories/>} />
+          <Route path="skills/:categoryId/:subcategoryId" element={<Skills/>} />
         </Route>
         <Route path="*" element={<PageNotFound />} />
-        {/* <Route path="/modalopen" element={<Management />} /> */}
       </Routes>
       <Toaster />
     </>
