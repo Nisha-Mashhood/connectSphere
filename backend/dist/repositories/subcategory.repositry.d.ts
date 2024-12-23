@@ -4,7 +4,7 @@ export declare const createSubcategory: (data: Partial<SubcategoryInterface>) =>
 }> & {
     __v: number;
 }>;
-export declare const getAllSubcategories: () => Promise<(import("mongoose").Document<unknown, {}, SubcategoryInterface> & SubcategoryInterface & Required<{
+export declare const getAllSubcategories: (categoryId: string) => Promise<(import("mongoose").Document<unknown, {}, SubcategoryInterface> & SubcategoryInterface & Required<{
     _id: unknown;
 }> & {
     __v: number;

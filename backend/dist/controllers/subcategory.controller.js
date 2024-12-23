@@ -1,16 +1,20 @@
 import * as SubcategoryService from "../services/subcategory.service.js";
 export const createSubcategory = async (req, res) => {
     try {
-        const subcategory = await SubcategoryService.createSubcategory(req.body);
+        const imagePath = req.file?.path;
+        console.log(req.body);
+        console.log(imagePath);
+        const subcategory = await SubcategoryService.createSubcategory(req.body, imagePath);
         res.status(201).json({ message: "Subcategory created successfully", subcategory });
     }
     catch (error) {
         res.status(500).json({ message: "Error creating subcategory", error: error.message });
     }
 };
-export const getAllSubcategories = async (_, res) => {
+export const getAllSubcategories = async (req, res) => {
     try {
-        const subcategories = await SubcategoryService.getAllSubcategories();
+        console.log(req.params);
+        const subcategories = await SubcategoryService.getAllSubcategories(req.params.categoryId);
         res.status(200).json(subcategories);
     }
     catch (error) {
@@ -32,7 +36,10 @@ export const getSubcategoryById = async (req, res) => {
 };
 export const updateSubcategory = async (req, res) => {
     try {
-        const updatedSubcategory = await SubcategoryService.updateSubcategory(req.params.id, req.body);
+        const imagePath = req.file?.path;
+        console.log(req.body);
+        console.log(imagePath);
+        const updatedSubcategory = await SubcategoryService.updateSubcategory(req.params.id, req.body, imagePath);
         if (!updatedSubcategory) {
             res.status(404).json({ message: "Subcategory not found" });
             return;

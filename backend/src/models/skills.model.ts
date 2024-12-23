@@ -5,6 +5,7 @@ export interface SkillInterface extends Document {
     categoryId: mongoose.Types.ObjectId;
     subcategoryId: mongoose.Types.ObjectId;
     description?: string;
+    imageUrl?:string | null;
     createdAt: Date;
     updatedAt: Date;
   }
@@ -28,6 +29,10 @@ const skillSchema: Schema<SkillInterface> = new Schema(
       description: { 
         type: String, 
         default: null 
+    },
+    imageUrl: { 
+      type: String, 
+      default: null 
     },
     },
     { timestamps: true }

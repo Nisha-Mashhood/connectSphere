@@ -4,7 +4,7 @@ export declare const createSkill: (data: Partial<SkillInterface>) => Promise<imp
 }> & {
     __v: number;
 }>;
-export declare const getAllSkills: () => Promise<(import("mongoose").Document<unknown, {}, SkillInterface> & SkillInterface & Required<{
+export declare const getAllSkills: (subcategoryId: string) => Promise<(import("mongoose").Document<unknown, {}, SkillInterface> & SkillInterface & Required<{
     _id: unknown;
 }> & {
     __v: number;

@@ -2,6 +2,8 @@ import * as CategoryService from "../services/category.service.js";
 export const createCategory = async (req, res) => {
     try {
         const imagePath = req.file?.path;
+        console.log(req.body);
+        console.log(imagePath);
         const category = await CategoryService.createCategory(req.body, imagePath);
         res.status(201).json({ message: "Category created successfully", category });
     }

@@ -4,9 +4,9 @@ import toast from "react-hot-toast";
 import { useDispatch, useSelector } from "react-redux";
 import { addCategoryFailure, addCategoryStart, addCategorySuccess } from "../../redux/Slice/categorySlice";
 import { RootState } from "../../redux/store";
-import { Link } from "react-router-dom";
+import { useParams } from "react-router-dom";
 
-const AddCategoryModal = ({ isOpen, onClose, fetchCategories }) =>{
+const AddSubCategoryModal = ({ isOpen, onClose, fetchSubCategories,parentCategoryId }) =>{
   const dispatch = useDispatch();
   const { loading } = useSelector((state: RootState) => state.categories);
   const [name, setName] = useState("");
@@ -38,16 +38,17 @@ const AddCategoryModal = ({ isOpen, onClose, fetchCategories }) =>{
       formData.append("name", name);
       formData.append("description", description);
       formData.append("image", image);
+      formData.append("categoryId",parentCategoryId);
 
       const response = await axiosInstance.post(
-        "admin/category/create-category",
+        `admin/subcategory/create-subcategory`,
         formData
       );
       console.log(response)
 
       dispatch(addCategorySuccess(response.data.category)); // Update state with the new category
-      toast.success("Category added successfully!");
-      fetchCategories();
+      toast.success("SubCategory added successfully!");
+      fetchSubCategories(parentCategoryId);
       handleClose(); // Close the modal 
     } catch (error) {
       dispatch(addCategoryFailure(error.response?.data?.message || "Failed to add category"));
@@ -60,7 +61,7 @@ const AddCategoryModal = ({ isOpen, onClose, fetchCategories }) =>{
   return (
     <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center">
       <div className="bg-white p-6 rounded-lg shadow-lg w-96">
-        <h2 className="text-xl font-bold mb-4">Add Category</h2>
+        <h2 className="text-xl font-bold mb-4">Add Subcategory</h2>
         <form onSubmit={handleSubmit}>
           <div className="mb-4">
             <label className="block mb-2 font-medium">Name</label>
@@ -114,37 +115,39 @@ const AddCategoryModal = ({ isOpen, onClose, fetchCategories }) =>{
   );
 }
 
-const Categories = () => {
+const SubCategories = () => {
   // State to store categories
-  const [categories, setCategories] = useState([]);
+  const [subcategories, setSubCategories] = useState([]);
+  const { categoryId } = useParams();
   const [isModalOpen, setIsModalOpen] = useState(false);
-  const [editingCategoryId, setEditingCategoryId] = useState(null);
-  const [editedCategory, setEditedCategory] = useState(null);
+  const [editingSubCategoryId, setEditingSubCategoryId] = useState(null);
+  const [editedSubCategory, setEditedSubCategory] = useState(null);
 
   // Fetch categories from the backend
-  const fetchCategories = async () => {
+  const fetchSubCategories = async (categoryId:string) => {
     try {
-      const response = await axiosInstance.get("/admin/category/get-categories");
-      setCategories(response.data); // Update state with fetched data
+      const response = await axiosInstance.get(`/admin/subcategory/get-subcategories/${categoryId}`);
+      console.log(response);
+      setSubCategories(response.data); // Update state with fetched data
     } catch (error) {
       console.error("Error fetching categories:", error);
     }
   };
   // Handle Edit Click
-  const handleEditClick = (category) => {
-    setEditingCategoryId(category._id);
-    setEditedCategory({ ...category }); // Set the current category for editing
+  const handleEditClick = (subcategory) => {
+    setEditingSubCategoryId(subcategory._id);
+    setEditedSubCategory({ ...subcategory }); // Set the current category for editing
   };
 
   // Handle Input Changes
   const handleInputChange = (e, field) => {
-    setEditedCategory((prev) => ({ ...prev, [field]: e.target.value }));
+    setEditedSubCategory((prev) => ({ ...prev, [field]: e.target.value }));
   };
 
   // Handle Image Change
   const handleImageChange = (e) => {
     const file = e.target.files[0];
-    setEditedCategory((prev) => ({
+    setEditedSubCategory((prev) => ({
       ...prev,
       image: file,
       preview: URL.createObjectURL(file),
@@ -155,19 +158,19 @@ const Categories = () => {
   const handleSave = async () => {
     try {
       const formData = new FormData();
-      formData.append("name", editedCategory.name);
-      formData.append("description", editedCategory.description);
-      if (editedCategory.image) {
-        formData.append("image", editedCategory.image);
+      formData.append("name", editedSubCategory.name);
+      formData.append("description", editedSubCategory.description);
+      if (editedSubCategory.image) {
+        formData.append("image", editedSubCategory.image);
       }
 
       console.log(formData);
 
-      await axiosInstance.put(`/admin/category/update-category/${editingCategoryId}`, formData);
+      await axiosInstance.put(`/admin/subcategory/update-subcategory/${editingSubCategoryId}`, formData);
 
       toast.success("Category updated successfully!");
-      fetchCategories(); // Refresh categories after update
-      setEditingCategoryId(null); // Exit edit mode
+      fetchSubCategories(categoryId); // Refresh categories after update
+      setEditingSubCategoryId(null); // Exit edit mode
     } catch (error) {
       toast.error(error.response?.data?.message || "Failed to update category");
     }
@@ -175,19 +178,19 @@ const Categories = () => {
 
   // Handle Cancel
   const handleCancel = () => {
-    setEditingCategoryId(null); // Exit edit mode
-    setEditedCategory(null);
+    setEditingSubCategoryId(null); // Exit edit mode
+    setEditedSubCategory(null);
   };
 
-  // Delete a category
-  const deleteCategory = async (id) => {
+  // Delete a subcategory
+  const deleteSubCategory = async (id:string) => {
     toast((t) => (
       <div className="p-4">
         <p className="text-lg font-medium">Are you sure you want to delete this category?</p>
         <div className="mt-3 flex justify-end gap-2">
           <button
             onClick={() => {
-              confirmDeleteCategory(id);
+              confirmDeleteSubCategory(id);
               toast.dismiss(t.id); // Dismiss the toast
             }}
             className="px-4 py-2 bg-red-500 text-white rounded-md hover:bg-red-600"
@@ -205,32 +208,34 @@ const Categories = () => {
     ));
   };
 
-  const confirmDeleteCategory = async (id) => {
+  const confirmDeleteSubCategory = async (id:string) => {
     try {
-      await axiosInstance.delete(`/admin/category/delete-category/${id}`);
-      toast.success("Category deleted successfully!");
-      fetchCategories(); // Refresh categories after deletion
+      await axiosInstance.delete(`/admin/subcategory/delete-subcategory/${id}`);
+      toast.success("Sub-Category deleted successfully!");
+      fetchSubCategories(categoryId); // Refresh categories after deletion
     } catch (error) {
-      toast.error(error.response?.data?.message || "Failed to delete category");
+      toast.error(error.response?.data?.message || "Failed to delete sub-category");
     }
   };
 
    
   // Fetch categories when the component mounts
   useEffect(() => {
-    fetchCategories();
-  }, []);
+    if(categoryId){
+        fetchSubCategories(categoryId);
+    } 
+  }, [categoryId]);
 
   return (
     <div>
       <div className="p-6 bg-gray-100 min-h-screen">
       <div className="flex justify-between items-center mb-4">
-          <h1 className="text-2xl font-bold">Categories</h1>
+          <h1 className="text-2xl font-bold">Sub-Categories</h1>
           <button
             onClick={() => setIsModalOpen(true)}
             className="px-4 py-2 bg-green-500 text-white rounded-md hover:bg-green-600"
           >
-            Add Category
+            Add Sub-Category
           </button>
         </div>
 
@@ -244,15 +249,15 @@ const Categories = () => {
             </tr>
           </thead>
           <tbody>
-            {categories.map((category) => (
-              <tr key={category._id} className="hover:bg-gray-100">
+            {subcategories.map((subcategory) => (
+              <tr key={subcategory._id} className="hover:bg-gray-100">
                 <td className="border border-gray-300 px-4 py-2">
-                  {editingCategoryId === category._id ? (
+                  {editingSubCategoryId === subcategory._id ? (
                     <>
                       <input type="file" onChange={handleImageChange} />
-                      {editedCategory?.preview && (
+                      {editedSubCategory?.preview && (
                         <img
-                          src={editedCategory.preview}
+                          src={editedSubCategory.preview}
                           alt="Preview"
                           className="mt-2 w-16 h-16 object-cover rounded-md"
                         />
@@ -260,38 +265,37 @@ const Categories = () => {
                     </>
                   ) : (
                     <img
-                      src={category.imageUrl || "https://via.placeholder.com/100"}
-                      alt={category.name}
+                      src={subcategory.imageUrl || "https://via.placeholder.com/100"}
+                      alt={subcategory.name}
                       className="w-16 h-16 object-cover"
                     />
                   )}
                 </td>
                 <td className="border border-gray-300 px-4 py-2">
-                  {editingCategoryId === category._id ? (
+                  {editingSubCategoryId === subcategory._id ? (
                     <input
                       type="text"
-                      value={editedCategory.name}
+                      value={editedSubCategory.name}
                       onChange={(e) => handleInputChange(e, "name")}
                       className="border border-gray-300 rounded-md w-full p-2"
                     />
                   ) : (
-                    <Link to={`/admin/subcategories/${category._id}`}>
-                    {category.name} </Link>           //HERE PASS CATEGORY ID TO THE SUBCATEGORY COMPONENT
+                    subcategory.name
                   )}
                 </td>
                 <td className="border border-gray-300 px-4 py-2">
-                  {editingCategoryId === category._id ? (
+                  {editingSubCategoryId === subcategory._id ? (
                     <textarea
-                      value={editedCategory.description}
+                      value={editedSubCategory.description}
                       onChange={(e) => handleInputChange(e, "description")}
                       className="border border-gray-300 rounded-md w-full p-2"
                     />
                   ) : (
-                    category.description
+                    subcategory.description
                   )}
                 </td>
                 <td className="border border-gray-300 px-4 py-2">
-                  {editingCategoryId === category._id ? (
+                  {editingSubCategoryId === subcategory._id ? (
                     <>
                       <button
                         onClick={handleSave}
@@ -309,12 +313,12 @@ const Categories = () => {
                   ) : (
                     <div className="border border-gray-300 px-4 py-2 flex gap-4">
                       <button
-                      onClick={() => handleEditClick(category)}
+                      onClick={() => handleEditClick(subcategory)}
                       className="px-2 py-1 bg-blue-500 text-white rounded-md hover:bg-blue-600"
                     >
                       Edit
                     </button>
-                    <button className="px-2 py-1 bg-red-500 text-white rounded-md hover:bg-red-600" onClick={() => deleteCategory(category._id)}>
+                    <button className="px-2 py-1 bg-red-500 text-white rounded-md hover:bg-red-600" onClick={() => deleteSubCategory(subcategory._id)}>
                     Delete
                   </button>
                     </div>
@@ -325,14 +329,15 @@ const Categories = () => {
             ))}
           </tbody>
         </table>
-        <AddCategoryModal
+        <AddSubCategoryModal
           isOpen={isModalOpen}
           onClose={() => setIsModalOpen(false)}
-          fetchCategories={fetchCategories}
+          fetchSubCategories={fetchSubCategories}
+          parentCategoryId={categoryId}
         />
       </div>
     </div>
   );
 };
 
-export default Categories;
+export default SubCategories;

@@ -1,16 +1,19 @@
 import * as SkillService from "../services/skills.service.js";
 export const createSkill = async (req, res) => {
     try {
-        const skill = await SkillService.createSkill(req.body);
+        const imagePath = req.file?.path;
+        console.log(req.body);
+        console.log(imagePath);
+        const skill = await SkillService.createSkill(req.body, imagePath);
         res.status(201).json({ message: "Skill created successfully", skill });
     }
     catch (error) {
         res.status(500).json({ message: "Error creating skill", error: error.message });
     }
 };
-export const getAllSkills = async (_, res) => {
+export const getAllSkills = async (req, res) => {
     try {
-        const skills = await SkillService.getAllSkills();
+        const skills = await SkillService.getAllSkills(req.params.subcategoryId);
         res.status(200).json(skills);
     }
     catch (error) {
@@ -32,7 +35,10 @@ export const getSkillById = async (req, res) => {
 };
 export const updateSkill = async (req, res) => {
     try {
-        const updatedSkill = await SkillService.updateSkill(req.params.id, req.body);
+        const imagePath = req.file?.path;
+        console.log(req.body);
+        console.log(imagePath);
+        const updatedSkill = await SkillService.updateSkill(req.params.id, req.body, imagePath);
         if (!updatedSkill) {
             res.status(404).json({ message: "Skill not found" });
             return;

@@ -6,8 +6,8 @@ export const createSubcategory = async (data: Partial<SubcategoryInterface>) => 
 };
 
 // Get all subcategories
-export const getAllSubcategories = async () => {
-  return await Subcategory.find().populate("categoryId");
+export const getAllSubcategories = async (categoryId:string) => {
+  return await Subcategory.find({ categoryId }).populate("categoryId");
 };
 
 // Get a subcategory by ID

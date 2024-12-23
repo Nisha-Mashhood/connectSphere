@@ -4,8 +4,8 @@ export const createSkill = async (data) => {
     return await Skill.create(data);
 };
 // Get all skills
-export const getAllSkills = async () => {
-    return await Skill.find().populate("categoryId").populate("subcategoryId");
+export const getAllSkills = async (subcategoryId) => {
+    return await Skill.find({ subcategoryId }).populate("categoryId").populate("subcategoryId");
 };
 // Get a skill by ID
 export const getSkillById = async (id) => {

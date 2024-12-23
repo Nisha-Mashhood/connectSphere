@@ -19,6 +19,10 @@ const skillSchema = new Schema({
         type: String,
         default: null
     },
+    imageUrl: {
+        type: String,
+        default: null
+    },
 }, { timestamps: true });
 export const Skill = mongoose.model("Skill", skillSchema);
 //# sourceMappingURL=skills.model.js.map

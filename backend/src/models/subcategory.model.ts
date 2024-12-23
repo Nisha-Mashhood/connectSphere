@@ -4,6 +4,7 @@ export interface SubcategoryInterface extends Document {
     name: string;
     categoryId: mongoose.Types.ObjectId;
     description?: string;
+    imageUrl?:string | null;
     createdAt: Date;
     updatedAt: Date;
   }
@@ -25,6 +26,10 @@ const SubcategorySchema: Schema<SubcategoryInterface> = new mongoose.Schema(
       description: { 
         type: String, 
         default: null 
+    },
+    imageUrl: { 
+      type: String, 
+      default: null 
     },
     },
     { timestamps: true }

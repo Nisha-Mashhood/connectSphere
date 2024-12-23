@@ -6,8 +6,8 @@ export const createSkill = async (data: Partial<SkillInterface>) => {
 };
 
 // Get all skills
-export const getAllSkills = async () => {
-  return await Skill.find().populate("categoryId").populate("subcategoryId");
+export const getAllSkills = async (subcategoryId:string) => {
+  return await Skill.find({subcategoryId}).populate("categoryId").populate("subcategoryId");
 };
 
 // Get a skill by ID

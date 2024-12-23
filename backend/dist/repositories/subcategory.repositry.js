@@ -4,8 +4,8 @@ export const createSubcategory = async (data) => {
     return await Subcategory.create(data);
 };
 // Get all subcategories
-export const getAllSubcategories = async () => {
-    return await Subcategory.find().populate("categoryId");
+export const getAllSubcategories = async (categoryId) => {
+    return await Subcategory.find({ categoryId }).populate("categoryId");
 };
 // Get a subcategory by ID
 export const getSubcategoryById = async (id) => {

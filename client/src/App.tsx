@@ -17,7 +17,8 @@ import AdminSignUp from "./Components/Admin/AdminSignUp";
 import AdminProfile from "./Components/Admin/AdminProfile";
 import PageNotFound from "./Components/PageNotFound";
 import AdminHeader from "./Components/Admin/AdminHeader";
-// import ModalDummy from './Components/Modal';
+import SubCategories from "./Components/Admin/SubCategories";
+// import Management from './Components/Modal';
 // import { GoogleOAuthProvider } from '@react-oauth/google'
 
 function App() {
@@ -31,7 +32,7 @@ function App() {
   const location = useLocation();
 
   // Check if current path is an admin route
-  const isAdminRoute = location.pathname.startsWith('/admin');
+  const isAdminRoute = location.pathname.startsWith("/admin");
   return (
     <>
       {isAdminRoute ? <AdminHeader /> : <Header />}
@@ -47,20 +48,18 @@ function App() {
           <Route path="/profile" element={<Profile />} />
         </Route>
         <Route path="/admin">
-            <Route path="dashboard" element={<AdminDashboard />} />
-            <Route path="login" element={<AdminLogin />} />
-            <Route path="signup" element={<AdminSignUp />} />
+          <Route path="dashboard" element={<AdminDashboard />} />
+          <Route path="login" element={<AdminLogin />} />
+          <Route path="signup" element={<AdminSignUp />} />
 
-            <Route element={<AdminPrivateRoute />} >
-           
+          <Route element={<AdminPrivateRoute />}>
             <Route path="profile" element={<AdminProfile />} />
-            </Route>
-            <Route path="categories" element={<Categories />} />
-
           </Route>
-          <Route path="*" element={<PageNotFound />} />
-          {/* <Route path="/modalopen" element={<ModalDummy />} /> */}
-        
+          <Route path="categories" element={<Categories />} />
+          <Route path="subcategories/:categoryId" element={<SubCategories/>} />
+        </Route>
+        <Route path="*" element={<PageNotFound />} />
+        {/* <Route path="/modalopen" element={<Management />} /> */}
       </Routes>
       <Toaster />
     </>

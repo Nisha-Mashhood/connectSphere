@@ -4,6 +4,7 @@ export interface SkillInterface extends Document {
     categoryId: mongoose.Types.ObjectId;
     subcategoryId: mongoose.Types.ObjectId;
     description?: string;
+    imageUrl?: string | null;
     createdAt: Date;
     updatedAt: Date;
 }

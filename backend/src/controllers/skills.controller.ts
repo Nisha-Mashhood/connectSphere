@@ -3,16 +3,19 @@ import * as SkillService from "../services/skills.service.js";
 
 export const createSkill = async(req:Request, res:Response): Promise<void> => {
     try {
-        const skill = await SkillService.createSkill(req.body);
+      const imagePath = req.file?.path; 
+    console.log(req.body);
+    console.log(imagePath);
+        const skill = await SkillService.createSkill(req.body,imagePath);
         res.status(201).json({ message: "Skill created successfully", skill });
       } catch (error:any) {
         res.status(500).json({ message: "Error creating skill", error: error.message });
       }
 }
 
-export const getAllSkills = async(_:Request, res:Response): Promise<void> => {
+export const getAllSkills = async(req:Request, res:Response): Promise<void> => {
     try {
-        const skills = await SkillService.getAllSkills();
+        const skills = await SkillService.getAllSkills(req.params.subcategoryId);
         res.status(200).json(skills);
       } catch (error:any) {
         res.status(500).json({ message: "Error fetching skills", error: error.message });
@@ -34,7 +37,10 @@ export const getSkillById = async(req:Request, res:Response): Promise<void> => {
 
 export const updateSkill = async(req:Request, res:Response): Promise<void> => {
     try {
-        const updatedSkill = await SkillService.updateSkill(req.params.id, req.body);
+      const imagePath = req.file?.path; 
+    console.log(req.body);
+    console.log(imagePath);
+        const updatedSkill = await SkillService.updateSkill(req.params.id, req.body,imagePath);
         if (!updatedSkill) {
           res.status(404).json({ message: "Skill not found" });
           return 

@@ -15,6 +15,10 @@ const SubcategorySchema = new mongoose.Schema({
         type: String,
         default: null
     },
+    imageUrl: {
+        type: String,
+        default: null
+    },
 }, { timestamps: true });
 export const Subcategory = mongoose.model("Subcategory", SubcategorySchema);
 //# sourceMappingURL=subcategory.model.js.map
