@@ -63,3 +63,5 @@ export const deleteSkill = async(req:Request, res:Response): Promise<void> => {
         res.status(500).json({ message: "Error deleting skill", error: error.message });
       }
 }
+
+

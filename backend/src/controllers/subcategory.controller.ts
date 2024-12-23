@@ -64,3 +64,4 @@ export const deleteSubcategory = async(req:Request, res:Response): Promise<void>
         res.status(500).json({ message: "Error deleting subcategory", error: error.message });
       }
 }
+

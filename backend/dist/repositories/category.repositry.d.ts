@@ -24,4 +24,5 @@ export declare const deleteCategory: (id: string) => Promise<(import("mongoose")
 }> & {
     __v: number;
 }) | null>;
+export declare const isDuplicateCategoryName: (name: string, excludeId?: string) => Promise<boolean>;
 //# sourceMappingURL=category.repositry.d.ts.map

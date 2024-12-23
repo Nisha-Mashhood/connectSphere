@@ -1,127 +1,9 @@
 import { useEffect, useState } from "react";
 import { axiosInstance } from "../../lib/axios";
 import toast from "react-hot-toast";
-import { useDispatch, useSelector } from "react-redux";
-import {
-  addCategoryFailure,
-  addCategoryStart,
-} from "../../redux/Slice/categorySlice";
-import { RootState } from "../../redux/store";
 import { useParams } from "react-router-dom";
+import AddModal from "./AddCategoryModal";
 
-const AddSkillModal = ({
-  isOpen,
-  onClose,
-  fetchSkills,
-  parentCategoryId,
-  parentSubCategoryId,
-}) => {
-  const dispatch = useDispatch();
-  const { loading } = useSelector((state: RootState) => state.categories);
-  const [name, setName] = useState("");
-  const [description, setDescription] = useState("");
-  const [image, setImage] = useState(null);
-  const [preview, setPreview] = useState(null);
-
-  const handleImageChange = (e) => {
-    const file = e.target.files[0];
-    setImage(file);
-    setPreview(URL.createObjectURL(file));
-  };
-  const handleClose = () => {
-    setName("");
-    setDescription("");
-    setImage(null);
-    setPreview(null);
-    onClose();
-  };
-  const handleSubmit = async (e) => {
-    e.preventDefault();
-    if (!name || !description || !image) {
-      toast.error("All fields are required");
-      return;
-    }
-    dispatch(addCategoryStart());
-    try {
-      const formData = new FormData();
-      formData.append("name", name);
-      formData.append("description", description);
-      formData.append("image", image);
-      formData.append("categoryId", parentCategoryId);
-      formData.append("subcategoryId", parentSubCategoryId);
-
-      await axiosInstance.post(`admin/skills/create-skill`, formData);
-      toast.success("Skill added successfully!");
-      fetchSkills(parentSubCategoryId);
-      handleClose(); // Close the modal
-    } catch (error) {
-      dispatch(
-        addCategoryFailure(
-          error.response?.data?.message || "Failed to add category"
-        )
-      );
-      toast.error(error.response?.data?.message || "Failed to add category");
-    }
-  };
-
-  if (!isOpen) return null;
-
-  return (
-    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center">
-      <div className="bg-white p-6 rounded-lg shadow-lg w-96">
-        <h2 className="text-xl font-bold mb-4">Add Skilly</h2>
-        <form onSubmit={handleSubmit}>
-          <div className="mb-4">
-            <label className="block mb-2 font-medium">Name</label>
-            <input
-              type="text"
-              id="name"
-              className="border border-gray-300 rounded-md w-full p-2"
-              value={name}
-              onChange={(e) => setName(e.target.value)}
-            />
-          </div>
-          <div className="mb-4">
-            <label className="block mb-2 font-medium">Description</label>
-            <textarea
-              className="border border-gray-300 rounded-md w-full p-2"
-              id="description"
-              value={description}
-              onChange={(e) => setDescription(e.target.value)}
-            />
-          </div>
-          <div className="mb-4">
-            <label className="block mb-2 font-medium">Image</label>
-            <input type="file" id="image" onChange={handleImageChange} />
-            {preview && (
-              <img
-                src={preview}
-                alt="Preview"
-                className="mt-2 w-24 h-24 object-cover rounded-md"
-              />
-            )}
-          </div>
-          <div className="flex justify-end">
-            <button
-              type="button"
-              onClick={handleClose}
-              className="px-4 py-2 bg-gray-300 rounded-md mr-2"
-            >
-              Cancel
-            </button>
-            <button
-              type="submit"
-              className="px-4 py-2 bg-blue-500 text-white rounded-md hover:bg-blue-600"
-              disabled={loading}
-            >
-              {loading ? "Adding..." : "Add"}
-            </button>
-          </div>
-        </form>
-      </div>
-    </div>
-  );
-};
 
 const Skills = () => {
   // State to store categories
@@ -347,12 +229,13 @@ const Skills = () => {
             ))}
           </tbody>
         </table>
-        <AddSkillModal
+        <AddModal
           isOpen={isModalOpen}
           onClose={() => setIsModalOpen(false)}
-          fetchSkills={fetchSkills}
-          parentCategoryId={categoryId}
-          parentSubCategoryId={subcategoryId}
+          type='skill'
+          fetch={fetchSkills}
+          categoryId={categoryId}
+          subcategoryId={subcategoryId}
         />
       </div>
     </div>

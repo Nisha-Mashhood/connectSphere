@@ -1,4 +1,5 @@
 import { CategoryInterface } from "src/models/category.model.js";
+export declare const isDuplicateCategoryName: (name: string, excludeId?: string) => Promise<boolean>;
 export declare const createCategory: (data: Partial<CategoryInterface>, imagePath?: string) => Promise<import("mongoose").Document<unknown, {}, CategoryInterface> & CategoryInterface & Required<{
     _id: unknown;
 }> & {

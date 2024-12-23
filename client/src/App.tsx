@@ -56,8 +56,6 @@ function App() {
           <Route element={<AdminPrivateRoute />}>
             <Route path="profile" element={<AdminProfile />} />
           </Route>
-
-
           <Route path="categories" element={<Categories />} />
           <Route path="subcategories/:categoryId" element={<SubCategories/>} />
           <Route path="skills/:categoryId/:subcategoryId" element={<Skills/>} />

@@ -2,8 +2,13 @@ import * as CategoryService from "../services/category.service.js";
 export const createCategory = async (req, res) => {
     try {
         const imagePath = req.file?.path;
-        console.log(req.body);
-        console.log(imagePath);
+        // console.log(req.body);
+        // console.log(imagePath);
+        const isDuplicate = await CategoryService.isDuplicateCategoryName(req.body.name);
+        if (isDuplicate) {
+            res.status(400).json({ message: "Category name already exists" });
+            return;
+        }
         const category = await CategoryService.createCategory(req.body, imagePath);
         res.status(201).json({ message: "Category created successfully", category });
     }
@@ -36,8 +41,13 @@ export const getCategoryById = async (req, res) => {
 export const updateCategory = async (req, res) => {
     try {
         const imagePath = req.file?.path;
-        console.log(req.body);
-        console.log(imagePath);
+        // console.log(req.body);
+        // console.log(imagePath);
+        const isDuplicate = await CategoryService.isDuplicateCategoryName(req.body.name, req.params.id);
+        if (isDuplicate) {
+            res.status(400).json({ message: "Category name already exists" });
+            return;
+        }
         const updatedCategory = await CategoryService.updateCategory(req.params.id, req.body, imagePath);
         if (!updatedCategory) {
             res.status(404).json({ message: "Category not found" });

@@ -1,5 +1,8 @@
 import * as CategoryRepo from "../repositories/category.repositry.js";
 import { uploadImage } from "../utils/cloudinary.utils.js";
+export const isDuplicateCategoryName = async (name, excludeId) => {
+    return await CategoryRepo.isDuplicateCategoryName(name, excludeId);
+};
 // Create a new category with optional image upload
 export const createCategory = async (data, imagePath) => {
     let imageUrl = null;
