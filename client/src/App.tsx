@@ -20,6 +20,7 @@ import AdminHeader from "./Components/Admin/AdminHeader";
 import SubCategories from "./Components/Admin/SubCategories";
 import Skills from "./Components/Admin/Skills";
 import UserManage from "./Components/Admin/UserManage";
+import Dummy from "./Components/Admin/Dummy";
 // import { GoogleOAuthProvider } from '@react-oauth/google'
 
 function App() {
@@ -61,6 +62,8 @@ function App() {
             <Route path="skills/:categoryId/:subcategoryId" element={<Skills/>} />
             <Route path="user" element={<UserManage />} />
           </Route>
+
+          <Route path="dummy" element={<Dummy />} />
           
         </Route>
         <Route path="*" element={<PageNotFound />} />
