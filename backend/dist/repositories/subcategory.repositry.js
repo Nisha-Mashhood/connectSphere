@@ -19,4 +19,14 @@ export const updateSubcategory = async (id, data) => {
 export const deleteSubcategory = async (id) => {
     return await Subcategory.findByIdAndDelete(id);
 };
+// Delete many subcategories by categoryId
+export const deleteManySubcategories = async (categoryId) => {
+    try {
+        const result = await Subcategory.deleteMany({ categoryId });
+        return result;
+    }
+    catch (error) {
+        throw new Error(`Error deleting subcategories: ${error.message}`);
+    }
+};
 //# sourceMappingURL=subcategory.repositry.js.map

@@ -24,4 +24,6 @@ export declare const deleteSkill: (id: string) => Promise<(import("mongoose").Do
 }> & {
     __v: number;
 }) | null>;
+export declare const deleteManySkills: (categoryId: string) => Promise<import("mongodb").DeleteResult>;
+export declare const deleteManySkillsbySubcategoryId: (subcategoryId: string) => Promise<import("mongodb").DeleteResult>;
 //# sourceMappingURL=skills.repositry.d.ts.map

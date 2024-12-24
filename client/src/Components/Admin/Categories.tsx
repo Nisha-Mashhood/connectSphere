@@ -2,7 +2,7 @@ import { useEffect, useState } from "react";
 import { axiosInstance } from "../../lib/axios";
 import toast from "react-hot-toast";
 import { Link } from "react-router-dom";
-import AddCategoryModal from "./AddCategoryModal";
+import AddCategoryModal from "./AddModal";
 
 const Categories = () => {
   // State to store categories
@@ -166,7 +166,7 @@ const Categories = () => {
                     />
                   ) : (
                     <Link to={`/admin/subcategories/${category._id}`}>
-                    {category.name} </Link>           //HERE PASS CATEGORY ID TO THE SUBCATEGORY COMPONENT
+                    {category.name} </Link>           
                   )}
                 </td>
                 <td className="border border-gray-300 px-4 py-2">

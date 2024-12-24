@@ -24,3 +24,13 @@ export const updateSubcategory = async (id: string, data: Partial<SubcategoryInt
 export const deleteSubcategory = async (id: string) => {
   return await Subcategory.findByIdAndDelete(id);
 };
+
+// Delete many subcategories by categoryId
+export const deleteManySubcategories = async (categoryId:string) => {
+  try {
+    const result = await Subcategory.deleteMany({ categoryId });
+    return result;
+  } catch (error:any) {
+    throw new Error(`Error deleting subcategories: ${error.message}`);
+  }
+};

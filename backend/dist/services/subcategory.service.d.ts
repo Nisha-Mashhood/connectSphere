@@ -24,4 +24,9 @@ export declare const deleteSubcategory: (id: string) => Promise<(import("mongoos
 }> & {
     __v: number;
 }) | null>;
+export declare const deleteCategory: (id: string) => Promise<(import("mongoose").Document<unknown, {}, SubcategoryInterface> & SubcategoryInterface & Required<{
+    _id: unknown;
+}> & {
+    __v: number;
+}) | null>;
 //# sourceMappingURL=subcategory.service.d.ts.map

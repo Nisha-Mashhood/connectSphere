@@ -24,4 +24,5 @@ export declare const deleteSubcategory: (id: string) => Promise<(import("mongoos
 }> & {
     __v: number;
 }) | null>;
+export declare const deleteManySubcategories: (categoryId: string) => Promise<import("mongodb").DeleteResult>;
 //# sourceMappingURL=subcategory.repositry.d.ts.map

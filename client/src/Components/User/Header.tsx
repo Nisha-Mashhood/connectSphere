@@ -10,6 +10,7 @@ import {
   DropdownMenu,
   Avatar,
 } from "@nextui-org/react";
+import { Button } from "@nextui-org/react";
 import Logo from "../../assets/logo.svg";
 import { axiosInstance } from "../../lib/axios";
 import { useDispatch, useSelector } from "react-redux";
@@ -90,7 +91,7 @@ const Header = () => {
         </NavbarItem>
       </NavbarContent>
 
-      {currentUser && (
+      {currentUser ? (
         <NavbarContent as="div" justify="end">
           <Dropdown placement="bottom-end">
             <DropdownTrigger>
@@ -127,7 +128,7 @@ const Header = () => {
             </DropdownMenu>
           </Dropdown>
         </NavbarContent>
-      )}
+      ) : (<Button color="secondary" onPress={()=>navigate('/login')}> Login</Button>)}
     </Navbar>
   );
 };

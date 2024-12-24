@@ -19,6 +19,7 @@ import PageNotFound from "./Components/PageNotFound";
 import AdminHeader from "./Components/Admin/AdminHeader";
 import SubCategories from "./Components/Admin/SubCategories";
 import Skills from "./Components/Admin/Skills";
+import UserManage from "./Components/Admin/UserManage";
 // import { GoogleOAuthProvider } from '@react-oauth/google'
 
 function App() {
@@ -55,10 +56,12 @@ function App() {
 
           <Route element={<AdminPrivateRoute />}>
             <Route path="profile" element={<AdminProfile />} />
+            <Route path="categories" element={<Categories />} />
+            <Route path="subcategories/:categoryId" element={<SubCategories/>} />
+            <Route path="skills/:categoryId/:subcategoryId" element={<Skills/>} />
+            <Route path="user" element={<UserManage />} />
           </Route>
-          <Route path="categories" element={<Categories />} />
-          <Route path="subcategories/:categoryId" element={<SubCategories/>} />
-          <Route path="skills/:categoryId/:subcategoryId" element={<Skills/>} />
+          
         </Route>
         <Route path="*" element={<PageNotFound />} />
       </Routes>

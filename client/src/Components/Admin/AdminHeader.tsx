@@ -10,6 +10,7 @@ import {
     DropdownMenu,
     Avatar,
   } from "@nextui-org/react";
+  import { Button } from "@nextui-org/react";
   import Logo from '../../assets/logo.svg'
   import { axiosInstance } from "../../lib/axios";
   import { useDispatch, useSelector } from "react-redux";
@@ -64,14 +65,16 @@ import {
         </NavbarBrand>
   
         <NavbarContent className="hidden sm:flex gap-4" justify="center">
-          <NavbarItem isActive>
-            <Link color="secondary" href="/">
-              UserList
+          <NavbarItem 
+          // isActive
+          >
+            <Link color="secondary" href="/admin/user">
+              User Managemnt
             </Link>
           </NavbarItem>
           <NavbarItem >
-            <Link color="foreground" href="#">
-              Skill Manage
+            <Link color="foreground" href="/admin/categories">
+              Skill Management
             </Link>
           </NavbarItem>
           <NavbarItem>
@@ -86,7 +89,7 @@ import {
           </NavbarItem>
         </NavbarContent>
   
-        {currentUserAdmin && (
+        {currentUserAdmin ? (
           <NavbarContent as="div" justify="end">
           <Dropdown placement="bottom-end">
             <DropdownTrigger>
@@ -117,7 +120,7 @@ import {
             </DropdownMenu>
           </Dropdown>
         </NavbarContent>
-        )}
+        ) : (<Button color="secondary" onPress={()=>navigate('/admin/login')}> Login</Button>)}
       </Navbar>
     );
   };

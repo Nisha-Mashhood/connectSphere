@@ -5,11 +5,15 @@ export const createSkill = async (data) => {
 };
 // Get all skills
 export const getAllSkills = async (subcategoryId) => {
-    return await Skill.find({ subcategoryId }).populate("categoryId").populate("subcategoryId");
+    return await Skill.find({ subcategoryId })
+        .populate("categoryId")
+        .populate("subcategoryId");
 };
 // Get a skill by ID
 export const getSkillById = async (id) => {
-    return await Skill.findById(id).populate("categoryId").populate("subcategoryId");
+    return await Skill.findById(id)
+        .populate("categoryId")
+        .populate("subcategoryId");
 };
 // Update a skill
 export const updateSkill = async (id, data) => {
@@ -18,5 +22,25 @@ export const updateSkill = async (id, data) => {
 // Delete a skill
 export const deleteSkill = async (id) => {
     return await Skill.findByIdAndDelete(id);
+};
+// Delete many skills by categoryId
+export const deleteManySkills = async (categoryId) => {
+    try {
+        const result = await Skill.deleteMany({ categoryId });
+        return result;
+    }
+    catch (error) {
+        throw new Error(`Error deleting skills: ${error.message}`);
+    }
+};
+// Delete many skills by subactegoryId
+export const deleteManySkillsbySubcategoryId = async (subcategoryId) => {
+    try {
+        const result = await Skill.deleteMany({ subcategoryId });
+        return result;
+    }
+    catch (error) {
+        throw new Error(`Error deleting skills: ${error.message}`);
+    }
 };
 //# sourceMappingURL=skills.repositry.js.map

@@ -1,4 +1,6 @@
 import * as CategoryRepo from "../repositories/category.repositry.js";
+import { deleteManySubcategories } from "../repositories/subcategory.repositry.js";
+import { deleteManySkills } from "../repositories/skills.repositry.js";
 import { uploadImage } from "../utils/cloudinary.utils.js";
 export const isDuplicateCategoryName = async (name, excludeId) => {
     return await CategoryRepo.isDuplicateCategoryName(name, excludeId);
@@ -20,7 +22,22 @@ export const updateCategory = async (id, data, imagePath) => {
         const folder = "categories";
         imageUrl = await uploadImage(imagePath, folder);
     }
-    return await CategoryRepo.updateCategory(id, { ...data, ...(imageUrl && { imageUrl }) });
+    return await CategoryRepo.updateCategory(id, {
+        ...data,
+        ...(imageUrl && { imageUrl }),
+    });
 };
-export const deleteCategory = CategoryRepo.deleteCategory;
+export const deleteCategory = async (id) => {
+    try {
+        // Delete related subcategories first
+        await deleteManySubcategories(id);
+        // Delete related skills
+        await deleteManySkills(id);
+        // Now delete the category itself
+        return await CategoryRepo.deleteCategory(id);
+    }
+    catch (error) {
+        throw new Error(`Error deleting category and related data: ${error.message}`);
+    }
+};
 //# sourceMappingURL=category.service.js.map
