@@ -9,3 +9,7 @@ export const updateUserProfile = UserRepository.updateUserProfile;
 export const blockUser = UserRepository.blockUser;
 
 export const unblockUser = UserRepository.unblockUser;
+
+export const changeRole = async(Id: string, role: string) => {
+     await UserRepository.updateUserRole(Id, role);
+}

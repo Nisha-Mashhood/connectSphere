@@ -19,6 +19,7 @@ declare const config: {
     githubcallbackurl: string | undefined;
     baseurl: string | undefined;
     sessionsecret: string | undefined;
+    adminpasscode: string | undefined;
 };
 export default config;
 //# sourceMappingURL=env.config.d.ts.map

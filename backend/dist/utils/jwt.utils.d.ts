@@ -11,8 +11,5 @@ export declare const clearCookies: (res: Response) => void;
 export declare const removeRefreshToken: (useremail: string) => Promise<{
     message: string;
 }>;
-export declare const removeRefreshTokenForAdmin: (Adminemail: string) => Promise<{
-    message: string;
-}>;
 export {};
 //# sourceMappingURL=jwt.utils.d.ts.map

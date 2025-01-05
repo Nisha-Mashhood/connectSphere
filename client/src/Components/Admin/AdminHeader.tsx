@@ -1,127 +1,113 @@
-import {
-    Navbar,
-    NavbarBrand,
-    NavbarContent,
-    NavbarItem,
-    Link,
-    DropdownItem,
-    DropdownTrigger,
-    Dropdown,
-    DropdownMenu,
-    Avatar,
-  } from "@nextui-org/react";
-  import { Button } from "@nextui-org/react";
-  import Logo from '../../assets/logo.svg'
-  import { axiosInstance } from "../../lib/axios";
-  import { useDispatch, useSelector } from "react-redux";
-  import { useLocation, useNavigate } from "react-router-dom";
-  import { adminSignOut } from "../../redux/Slice/userSlice";
-  import toast from "react-hot-toast";
-  import { RootState } from "../../redux/store";
-  import { useEffect } from "react";
-  
-  export const ConnectSphereLogo = () => {
-    return (
-      <div className="navbar-logo h-5 w-20">
-          <img src={Logo} alt="Logo" />
-        </div>
-    );
-  };
-  const AdminHeader = () => {
-    const dispatch = useDispatch();
-    const navigate = useNavigate();
-    const location = useLocation();
-    const { currentUserAdmin } = useSelector((state: RootState) => state.user);
-  
-    useEffect(() => {
-        if (currentUserAdmin && location.pathname === "/admin/login" || location.pathname === "/admin/signup" ) {
-          navigate("/admin/dashboard", { replace: true });
-        }
-      }, [currentUserAdmin, location.pathname, navigate]);
+import { FaUser, FaTasks, FaChartBar, FaCog, FaSignOutAlt } from 'react-icons/fa'; // Example icons
+import { Button, Avatar } from "@nextui-org/react";
+import { useDispatch, useSelector } from "react-redux";
+import { useNavigate } from "react-router-dom";
+import { axiosInstance } from "../../lib/axios";
+import { unsetIsAdmin } from "../../redux/Slice/userSlice";
+import { RootState } from "../../redux/store";
+import Logo from "../../assets/logo.svg";
 
+export const ConnectSphereLogo = () => {
+  return (
+    <div className="navbar-logo h-5 w-20">
+      <img src={Logo} alt="Logo" />
+    </div>
+  );
+};
 
-  
-    const handleLogout = async() =>{
-      const adminemail = currentUserAdmin?.email;
-      try{
-    await axiosInstance.post("/admin/auth/logout", { adminemail });
-      dispatch(adminSignOut());
-      navigate("/admin/login",{replace: true});
-      toast.success("Logout successfully!");
-      }catch(err){
-        toast.error(err.response?.data?.message || "Logout Failed");
-      }
+const AdminSidebar = () => {
+  const dispatch = useDispatch();
+  const navigate = useNavigate();
+  const { currentAdmin } = useSelector((state: RootState) => state.user);
+
+  const handleLogout = async () => {
+    const email = currentAdmin?.email;
+    try {
+      await axiosInstance.post("/auth/logout", { email });
+      dispatch(unsetIsAdmin());
+      navigate("/login", { replace: true });
+    } catch (err) {
+      console.error(err.response?.data?.message || "Logout Failed");
     }
-    
-    const handleProfileClick = () => {
-      navigate("/admin/profile");
-    };
-    
-    return (
-      <Navbar className="bg-green-100">
-        <NavbarBrand>
-          <ConnectSphereLogo />
-         
-        </NavbarBrand>
-  
-        <NavbarContent className="hidden sm:flex gap-4" justify="center">
-          <NavbarItem >
-            <Link color="foreground" href="/admin/user">
-              User Managemnt
-            </Link>
-          </NavbarItem>
-          <NavbarItem >
-            <Link color="foreground" href="/admin/categories">
-              Skill Management
-            </Link>
-          </NavbarItem>
-          <NavbarItem>
-            <Link color="foreground" href="#">
-              Report
-            </Link>
-          </NavbarItem>
-          <NavbarItem>
-            <Link color="foreground" href="#">
-              Task Management
-            </Link>
-          </NavbarItem>
-        </NavbarContent>
-  
-        {currentUserAdmin ? (
-          <NavbarContent as="div" justify="end">
-          <Dropdown placement="bottom-end">
-            <DropdownTrigger>
-              <Avatar
-                isBordered
-                as="button"
-                className="transition-transform"
-                color="secondary"
-                name="Jason Hughes"
-                size="sm"
-                src={currentUserAdmin.profilePic}
-              />
-            </DropdownTrigger>
-            <DropdownMenu aria-label="Profile Actions" variant="flat">
-              <DropdownItem key="profile" className="h-14 gap-2" onPress={handleProfileClick}>
-                <p className="font-semibold">Signed in as</p>
-                <p className="font-semibold">{currentUserAdmin.name}</p>
-              </DropdownItem>
-              <DropdownItem key="settings">My Settings</DropdownItem>
-              <DropdownItem key="team_settings">Team Settings</DropdownItem>
-              <DropdownItem key="analytics">Analytics</DropdownItem>
-              <DropdownItem key="system">System</DropdownItem>
-              <DropdownItem key="configurations">Configurations</DropdownItem>
-              <DropdownItem key="help_and_feedback">Help & Feedback</DropdownItem>
-              <DropdownItem key="logout" color="danger" onPress={handleLogout}>
-                Log Out
-              </DropdownItem>
-            </DropdownMenu>
-          </Dropdown>
-        </NavbarContent>
-        ) : (<Button color="secondary" onPress={()=>navigate('/admin/login')}> Login</Button>)}
-      </Navbar>
-    );
   };
-  
-  export default AdminHeader;
-  
+
+  const handleProfileClick = () => {
+    navigate("/admin/profile");
+  };
+
+  return (
+    <div className="flex">
+      {/* Sidebar */}
+      <div className="sidebar bg-gray-800 text-white w-64 h-screen p-6 flex flex-col justify-between">
+        {/* Admin Avatar and Info */}
+        {currentAdmin && (
+          <div className="flex items-center space-x-4 mb-8">
+            <Avatar
+              isBordered
+              as="button"
+              color="secondary"
+              name={currentAdmin.name}
+              size="lg"
+              src={currentAdmin.profilePic}
+            />
+            <div>
+              <p className="font-semibold">{currentAdmin.name}</p>
+              <p className="text-sm">{currentAdmin.email}</p>
+            </div>
+          </div>
+        )}
+
+        {/* Sidebar Navigation */}
+        <div className="flex flex-col space-y-4 mb-auto">
+          <Button
+            color="secondary"
+            className="w-full text-left"
+            onPress={() => navigate("/admin/user")}
+            startContent={<FaUser />}
+          >
+            User Management
+          </Button>
+          <Button
+            color="secondary"
+            className="w-full text-left"
+            onPress={() => navigate("/admin/categories")}
+            startContent={<FaTasks />}
+          >
+            Skill Management
+          </Button>
+          <Button
+            color="secondary"
+            className="w-full text-left"
+            startContent={<FaChartBar />}
+          >
+            Report
+          </Button>
+          <Button
+            color="secondary"
+            className="w-full text-left"
+            startContent={<FaTasks />}
+          >
+            Task Management
+          </Button>
+        </div>
+
+        {/* Logout Button */}
+        <Button
+          color="danger"
+          className="w-full"
+          onPress={handleLogout}
+          startContent={<FaSignOutAlt />}
+        >
+          Log Out
+        </Button>
+      </div>
+
+      {/* Content */}
+      <div className="flex-1 p-6">
+        {/* Content will go here */}
+      </div>
+    </div>
+  );
+};
+
+export default AdminSidebar;

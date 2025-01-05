@@ -10,7 +10,7 @@ export interface UserInterface extends Document {
   jobTitle?: string;
   industry?: string;
   reasonForJoining?: string;
-  role?: "user" | "mentor";
+  role?: "user" | "mentor" |"admin";
   isBlocked: boolean;
   provider?: string;
   providerId?: string;

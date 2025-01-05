@@ -1,49 +1,82 @@
 import LoginImage from "../../assets/Login.png";
 import { Link, useLocation, useNavigate } from "react-router-dom";
 import { useForm } from "react-hook-form";
-import { useDispatch } from "react-redux";
+import { useDispatch, useSelector } from "react-redux";
 import {
+  setIsAdmin,
   signinFailure,
   signinStart,
   signinSuccess,
+  unsetIsAdmin,
 } from "../../redux/Slice/userSlice";
 import { axiosInstance } from "../../lib/axios";
 import toast from "react-hot-toast";
 import GoogleLogin from "./GoogleLogin";
 import GitHub from "./GitHub";
 import { useEffect } from "react";
+// import { RootState } from "../../redux/store";
 
 const Login = () => {
+  // const { isAdmin } = useSelector((state: RootState) => state.user);
   const dispatch = useDispatch();
   const navigate = useNavigate();
   const location = useLocation();
+
   const {
     register,
     handleSubmit,
     formState: { errors },
   } = useForm();
 
-  //Check for any error passed
+  // Display error message if passed through route state
   useEffect(() => {
     if (location.state?.error) {
       toast.error(location.state.error);
     }
   }, [location.state]);
 
-  //handle the submit of the form
+  // Handle login form submission
   const onSubmit = async (data: { email: string; password: string }) => {
     try {
       dispatch(signinStart());
       const response = await axiosInstance.post("/auth/login", data);
-      dispatch(signinSuccess(response.data.user));
+      const user = response.data.user;
+
+      if (user.role === "admin") {
+        const passkey = prompt("Enter the admin passkey:");
+        if (passkey) {
+          const isPasskeyValid = await axiosInstance.post(
+            "/auth/verify-admin-passkey",
+            { passkey }
+          );
+
+          if (isPasskeyValid.data.valid) {
+            toast.success("Welcome, Admin!");
+            dispatch(setIsAdmin(user));
+            navigate("/admin/dashboard", { replace: true });
+          } else {
+            toast.error("Invalid admin passkey. Contact support.");
+          }
+        } else {
+          toast.error("Admin passkey is required.");
+        }
+        return;
+      }
+
+      // Regular user login
+      toast.success("Login successful!");
+      dispatch(signinSuccess(user));
+      dispatch(unsetIsAdmin());
       navigate("/", { replace: true });
     } catch (error: any) {
-      // Using react-hot-toast to show error
-      toast.error(error.response?.data?.message || "Login failed");
+      if (error.response?.data?.message === "Blocked") {
+        toast.error("Your account is blocked. Please contact support.");
+      } else {
+        toast.error(error.response?.data?.message || "Login failed");
+      }
       dispatch(signinFailure(error.response?.data?.message || "Login failed"));
     }
   };
-  
 
   return (
     <div>

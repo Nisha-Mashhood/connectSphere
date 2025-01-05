@@ -3,7 +3,7 @@ import toast from "react-hot-toast";
 import { Link } from "react-router-dom";
 import { FaPencilAlt, FaTrashAlt, FaSave, FaTimes } from 'react-icons/fa';
 
-const ListManager = ({
+const TableComponent = ({
   type,
   datas,
   headers,
@@ -207,4 +207,4 @@ const ListManager = ({
   );
 };
 
-export default ListManager;
+export default TableComponent;

@@ -5,7 +5,7 @@ import {
   removeRefreshToken as removeRefreshTokenRepositry,
 } from "../repositories/user.repositry.js";
 import { Response } from "express";
-import { findAdminByEmail, removeRefreshToken as removeRefreshTokenRepositryAdmin } from "../repositories/Admin/admin.repositry.js"
+// import { findAdminByEmail, removeRefreshToken as removeRefreshTokenRepositryAdmin } from "../repositories/Admin/admin.repositry.js"
 
 interface JwtPayload {
   [key: string]: any;
@@ -105,17 +105,17 @@ export const removeRefreshToken = async (useremail: string) => {
   }
 };
 
-// Function to handle token removal for Admin model during logout
-export const removeRefreshTokenForAdmin = async (Adminemail: string) => {
-  try {
-    // Find the user by their ID
-    const user = await findAdminByEmail(Adminemail);
-    if (!user) {
-      throw new Error("User not found");
-    }
-    await removeRefreshTokenRepositryAdmin(Adminemail);
-    return { message: "Refresh token removed successfully" };
-  } catch (error: any) {
-    throw new Error("Error removing refresh token: " + error.message);
-  }
-};
+// // Function to handle token removal for Admin model during logout
+// export const removeRefreshTokenForAdmin = async (Adminemail: string) => {
+//   try {
+//     // Find the user by their ID
+//     const user = await findAdminByEmail(Adminemail);
+//     if (!user) {
+//       throw new Error("User not found");
+//     }
+//     await removeRefreshTokenRepositryAdmin(Adminemail);
+//     return { message: "Refresh token removed successfully" };
+//   } catch (error: any) {
+//     throw new Error("Error removing refresh token: " + error.message);
+//   }
+// };

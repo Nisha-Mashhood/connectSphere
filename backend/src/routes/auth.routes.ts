@@ -10,7 +10,11 @@ import {
   refreshToken,
   googleAuthRedirect,
   githubAuthRedirect,
+  // checkingBlockedStatus,
+  verifyPasskey,
+  
 } from '../controllers/auth.controller.js';
+
 
 const router = express.Router();
 
@@ -19,7 +23,11 @@ router.post('/register/forgot-password', handleForgotPassword);
 router.post('/register/verify-otp', handleVerifyOTP);
 router.post('/register/reset-password', handleResetPassword);
 router.post('/login', login);
+router.post('/verify-admin-passkey',verifyPasskey)
 router.post('/refresh-token', refreshToken);
+// router.post('/check-status',checkingBlockedStatus)
+
+
 // Google Authentication Routes
 router.get("/google", passport.authenticate("google", { scope: ["profile", "email"] }));
 router.get(

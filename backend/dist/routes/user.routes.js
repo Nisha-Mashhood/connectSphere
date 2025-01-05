@@ -10,5 +10,6 @@ router.put("updateuser/:id", upload.fields([
 ]), UserController.updateUserProfile);
 router.put("/blockuser/:id", UserController.blockUser);
 router.put("/unblockuser/:id", UserController.unblockUser);
+router.put("/changerole/:id", UserController.changeRole);
 export default router;
 //# sourceMappingURL=user.routes.js.map

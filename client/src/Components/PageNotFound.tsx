@@ -3,15 +3,15 @@ import { useNavigate } from "react-router-dom";
 import { RootState } from "../redux/store";
 
 const PageNotFound = () => {
-    const { currentUserAdmin } = useSelector((state: RootState) => state.user);
+    const { currentAdmin } = useSelector((state: RootState) => state.user);
     const { currentUser } = useSelector((state: RootState) => state.user);
   const navigate = useNavigate();
 
   const handleGoHome = () => {
-    if (currentUserAdmin) {
+    if (currentAdmin) {
       // Admin is logged in, redirect to admin dashboard
       navigate('/admin/dashboard');
-    } else if (!currentUserAdmin && !currentUser) {
+    } else if (!currentAdmin && !currentUser) {
       // No user or admin is logged in
       navigate('/login');
     } else if (currentUser) {

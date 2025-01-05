@@ -20,4 +20,9 @@ export const blockUser = async (id) => {
 export const unblockUser = async (id) => {
     await User.findByIdAndUpdate(id, { isBlocked: false });
 };
+//Update User Role
+export const updateUserRole = async (userId, role) => {
+    // Find the user by ID and update the role
+    await User.findByIdAndUpdate(userId, { role }, { new: true });
+};
 //# sourceMappingURL=usermanagemnt.repositry.js.map

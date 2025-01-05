@@ -7,7 +7,9 @@ export const getAllUsers = async (): Promise<UserInterface[]> => {
 };
 
 // Fetch user by ID
-export const getUserById = async (id: string): Promise<UserInterface | null> => {
+export const getUserById = async (
+  id: string
+): Promise<UserInterface | null> => {
   return await User.findById(id);
 };
 
@@ -27,4 +29,10 @@ export const blockUser = async (id: string): Promise<void> => {
 // Unblock a user
 export const unblockUser = async (id: string): Promise<void> => {
   await User.findByIdAndUpdate(id, { isBlocked: false });
+};
+
+//Update User Role
+export const updateUserRole = async (userId: string, role: string) => {
+  // Find the user by ID and update the role
+  await User.findByIdAndUpdate(userId, { role }, { new: true });
 };

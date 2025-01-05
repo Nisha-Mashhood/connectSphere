@@ -34,6 +34,29 @@ const Header = () => {
   const { currentUser } = useSelector((state: RootState) => state.user);
 
   useEffect(() => {
+    // const checkUserBlocked = async () => {
+    //   if (currentUser) {
+    //     try {
+    //       const response = await axiosInstance.post("/auth/check-status", {
+    //         email: currentUser.email,
+    //       });
+
+    //       if (response.status === 200) {
+    //         console.log("User is active");
+    //       }
+    //     } catch (err: any) {
+    //       if (err.response?.status === 403) {
+    //         toast.error("Your account has been blocked. Logging out...");
+    //         dispatch(signOut());
+    //         navigate("/login", { replace: true });
+    //       } else {
+    //         toast.error(err.response?.data?.message || "Failed to verify status");
+    //       }
+    //     }
+    //   }
+    // };
+
+    // checkUserBlocked();
     if (
       (currentUser && location.pathname === "/login") ||
       location.pathname === "/signup" ||
@@ -43,13 +66,13 @@ const Header = () => {
     ) {
       navigate("/", { replace: true });
     }
-  }, [currentUser, location.pathname, navigate]);
+  }, [currentUser, location.pathname, navigate, dispatch]);
 
   const handleLogout = async () => {
-    const useremail = currentUser?.email;
+    const email = currentUser?.email;
     //console.log("current userId :",userId);
     try {
-      await axiosInstance.post("/auth/logout", { useremail });
+      await axiosInstance.post("/auth/logout", { email });
       dispatch(signOut());
       navigate("/login", { replace: true });
       toast.success("Logout successfully!");

@@ -23,6 +23,7 @@ const config = {
   githubcallbackurl:process.env.GITHUB_CALLBACK_URL,
   baseurl: process.env.BASE_URL,
   sessionsecret: process.env.SESSION_SECRET,
+  adminpasscode:process.env.PASSKEY_ADMIN
   
 };
 

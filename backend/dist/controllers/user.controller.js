@@ -36,4 +36,14 @@ export const unblockUser = async (req, res) => {
     await UserService.unblockUser(req.params.id);
     res.json({ message: "User unblocked successfully" });
 };
+export const changeRole = async (req, res) => {
+    const { role } = req.body;
+    try {
+        await UserService.changeRole(req.params.id, role);
+        res.json({ message: 'Changed the role Successfully' });
+    }
+    catch (error) {
+        res.status(400).json({ error: error.message });
+    }
+};
 //# sourceMappingURL=user.controller.js.map

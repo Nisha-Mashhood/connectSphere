@@ -9,6 +9,7 @@ import bcrypt from "bcryptjs";
 import { generateAccessToken,generateRefreshToken, verifyRefreshToken,removeRefreshToken } from "../utils/jwt.utils.js";
 import { generateOTP } from "../utils/otp.utils.js";
 import { sendEmail } from "../utils/email.utils.js";
+import config from "../config/env.config.js";
 
 // Handle Registration with details 
 export const sigupDetails = async (data: {
@@ -34,10 +35,8 @@ export const loginUser = async (email: string, password: string) => {
   const user = await findUserByEmail(email);
   if (!user) throw new Error("User not found");
 
-
-  // Ensure user.password is defined
-  if (!user.password) {
-    throw new Error("Password not set for user");
+  if (user.isBlocked) {
+    throw new Error("Blocked");
   }
 
   // Check if password matches
@@ -124,3 +123,12 @@ export const logout = async(useremail:string) =>{;
     throw new Error('Error during logout: ' + error.message);
   }
 }
+
+//Check passcode for admin
+export const verifyAdminPasskey = (passkey: string) => {
+  if (passkey === config.adminpasscode) {
+    return true;
+  } else {
+    throw new Error("Invalid admin passkey");
+  }
+};

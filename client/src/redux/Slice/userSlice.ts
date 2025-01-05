@@ -2,12 +2,12 @@ import { createSlice } from "@reduxjs/toolkit";
 
 const initialState = {
   currentUser: null,
-  currentUserAdmin: null,
   users: [],
   loading: false,
   error: false,
   isAdmin: false,
   resetEmail: null,
+  currentAdmin:null,
 };
 
 const userSlice = createSlice({
@@ -28,7 +28,6 @@ const userSlice = createSlice({
       state.currentUser = action.payload;
       state.loading = false;
       state.error = false;
-      state.isAdmin = false;
     },
     signinFailure: (state, action) => {
       state.loading = false;
@@ -38,30 +37,19 @@ const userSlice = createSlice({
       state.currentUser = null;
       state.loading = false;
       state.error = false;
-      state.isAdmin = false;
     },
-
-    // Admin Sign-in Actions
-    adminSigninStart: (state) => {
-      state.loading = true;
-      state.error = false;
-    },
-    adminSigninSuccess: (state, action) => {
-      state.currentUserAdmin = action.payload;
-      state.loading = false;
-      state.error = false;
+    setIsAdmin: (state, action) => {
       state.isAdmin = true;
-    },
-    adminSigninFailure: (state, action) => {
+      state.currentAdmin = action.payload;
       state.loading = false;
-      state.error = action.payload;
-    },
-    adminSignOut: (state) => {
-      state.currentUserAdmin = null;
+      state.error = false;
+   },
+   unsetIsAdmin: (state) => {
+      state.currentAdmin = null;
       state.loading = false;
       state.error = false;
       state.isAdmin = false;
-    },
+   },
   },
 });
 
@@ -72,9 +60,11 @@ export const {
   signinSuccess,
   signinFailure,
   signOut,
-  adminSigninStart,
-  adminSigninSuccess,
-  adminSigninFailure,
-  adminSignOut
+  setIsAdmin,
+  unsetIsAdmin
+  // adminSigninStart,
+  // adminSigninSuccess,
+  // adminSigninFailure,
+  // adminSignOut
 } = userSlice.actions;
 export default userSlice.reducer;

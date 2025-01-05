@@ -7,9 +7,10 @@ import {
   refreshToken as refeshTokenService,
   logout as logoutUserService,
   sigupDetails,
+  verifyAdminPasskey,
 } from "../services/auth.service.js";
 import { clearCookies, setTokensInCookies } from "../utils/jwt.utils.js";
-// import mongoose from "mongoose";
+// import { findUserByEmail } from "../repositories/user.repositry.js";
 
 //Handles the personal details Registration
 export const signup = async (req: Request, res: Response) => {
@@ -40,9 +41,21 @@ export const login = async (req: Request, res: Response) => {
     setTokensInCookies(res, accessToken, refreshToken);
     res.json({ message: "Login successful", user });
   } catch (error: any) {
-    res.status(400).json({ message: error.message });
+    if (error.message === "User not found") {
+      res.status(404).json({ message: error.message });
+      return 
+    }
+    if (error.message === "Blocked") {
+      res.status(403).json({ message: error.message });
+      return 
+    }
+    if (error.message === "Invalid credentials") {
+      res.status(401).json({ message: error.message });
+      return 
+    }
+    res.status(500).json({ message: "Internal Server Error" });
   }
-};
+  }
 
 // Handle refresh token logic
 export const refreshToken = async (req: Request, res: Response) => {
@@ -87,13 +100,13 @@ export const githubAuthRedirect = (req: Request, res: Response) => {
 // Handle logout
 export const logout = async (req: Request, res: Response) => {
   try {
-    const { useremail } = req.body; // Get userId from the request body
-    if (!useremail) {
-       res.status(400).json({ message: "User email is required." });
+    const { email } = req.body; // Get email from the request body
+    if (!email) {
+       res.status(400).json({ message: "email is required." });
        return
     }
     // Call the logout service to remove the refresh token
-    await logoutUserService(useremail);
+    await logoutUserService(email);
     // Clear cookies
     clearCookies(res);
 
@@ -136,3 +149,44 @@ export const handleResetPassword = async (req: Request, res: Response) => {
   }
 };
 
+
+// export const checkingBlockedStatus = async(req:Request,res:Response) =>{
+//   const { email }= req.body;
+
+//   if(!email){
+//     res.status(400).json({ message: "Email is required" });
+//     return
+//   }
+
+//   try {
+//     const user = await findUserByEmail(email);
+//     if (!user) {
+//       res.status(404).json({ message: "User not found" });
+//       return
+//     }
+//     if (user.isBlocked) {
+//       res.status(403).json({ message: "User is blocked" });
+//       return
+//     }
+//     res.status(200).json({ message: "User is active" });
+//     return
+//   } catch (error) {
+//     res.status(500).json({ message: "Error checking user status", error });
+//     console.log("Error in checking status")
+//     return 
+//   }
+// }
+
+export const verifyPasskey = async(req:Request, res:Response) => {
+  try {
+    const { passkey } = req.body;
+    const isValid = verifyAdminPasskey(passkey);
+    res.status(200).json({ valid: isValid });
+  } catch (error:any) {
+    if (error.message === "Invalid admin passkey") {
+      res.status(401).json({ valid: false, message: error.message });
+      return 
+    }
+    res.status(500).json({ message: "Internal Server Error" });
+  }
+  }

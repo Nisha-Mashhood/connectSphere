@@ -24,4 +24,5 @@ export declare const forgotPassword: (email: string) => Promise<string>;
 export declare const verifyOTP: (email: string, otp: string) => Promise<string>;
 export declare const resetPassword: (email: string, newPassword: string) => Promise<void>;
 export declare const logout: (useremail: string) => Promise<void>;
+export declare const verifyAdminPasskey: (passkey: string) => boolean;
 //# sourceMappingURL=auth.service.d.ts.map

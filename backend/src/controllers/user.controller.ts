@@ -54,3 +54,13 @@ export const unblockUser = async (req: Request, res: Response) => {
   await UserService.unblockUser(req.params.id);
   res.json({ message: "User unblocked successfully" });
 };
+
+export const changeRole = async (req: Request, res: Response) => {
+  const { role } = req.body;
+  try {
+    await UserService.changeRole(req.params.id, role);
+    res.json({ message: 'Changed the role Successfully' });
+  } catch (error:any) {
+    res.status(400).json({ error: error.message });
+  }
+};
