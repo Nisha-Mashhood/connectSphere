@@ -34,8 +34,8 @@ const userSchema = new mongoose.Schema({
     },
     role: {
         type: String,
-        enum: ["user", "mentor"],
-        default: null
+        enum: ["user", "mentor", "admin"],
+        default: "user"
     },
     isBlocked: {
         type: Boolean,

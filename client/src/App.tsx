@@ -17,6 +17,8 @@ import AdminLayout from "./Components/Layouts/AdminLayout";
 import SubCategories from "./Components/Admin/SubCategories";
 import Skills from "./Components/Admin/Skills";
 import UserManage from "./Components/Admin/UserManage";
+import CompleteProfile from "./Components/User/CompleteProfile";
+import AdminPrivateRoute from "./Components/Admin/AdminPrivateRout";
 
 function App() {
   const location = useLocation();
@@ -30,12 +32,14 @@ function App() {
       {isAdminRoute ? (
         <Routes>
           <Route path="/admin" element={<AdminLayout />}>
+          <Route element={<AdminPrivateRoute />}>
             <Route path="dashboard" element={<AdminDashboard />} />
             <Route path="profile" element={<AdminProfile />} />
             <Route path="categories" element={<Categories />} />
             <Route path="subcategories/:categoryId" element={<SubCategories />} />
             <Route path="skills/:categoryId/:subcategoryId" element={<Skills />} />
             <Route path="user" element={<UserManage />} />
+            </Route>
           </Route>
           <Route path="*" element={<PageNotFound />} />
         </Routes>
@@ -50,6 +54,7 @@ function App() {
             <Route path="/forgot" element={<ForgotPassword />} />
             <Route path="/otp" element={<OTPVerification />} />
             <Route path="/reset" element={<ResetPassword />} />
+            <Route path='/complete-profile' element={<CompleteProfile/>} />
 
             <Route element={<PrivateRoute />}>
               <Route path="/profile" element={<Profile />} />

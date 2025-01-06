@@ -12,8 +12,12 @@ import {
   githubAuthRedirect,
   // checkingBlockedStatus,
   verifyPasskey,
+  checkProfile,
+  getprofileDetails,
+  updateUserDetails,
   
 } from '../controllers/auth.controller.js';
+import { upload } from '../utils/multer.utils.js';
 
 
 const router = express.Router();
@@ -25,6 +29,14 @@ router.post('/register/reset-password', handleResetPassword);
 router.post('/login', login);
 router.post('/verify-admin-passkey',verifyPasskey)
 router.post('/refresh-token', refreshToken);
+router.get('/check-profile/:id', checkProfile);
+router.get('/profiledetails/:id',getprofileDetails)
+router.put("/updateUserDetails/:Id",upload.fields([
+    { name: "profilePic", maxCount: 1 },
+    { name: "coverPic", maxCount: 1 },]),
+  updateUserDetails
+);
+
 // router.post('/check-status',checkingBlockedStatus)
 
 

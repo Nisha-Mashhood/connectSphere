@@ -1,7 +1,7 @@
 import LoginImage from "../../assets/Login.png";
 import { Link, useLocation, useNavigate } from "react-router-dom";
 import { useForm } from "react-hook-form";
-import { useDispatch, useSelector } from "react-redux";
+import { useDispatch } from "react-redux";
 import {
   setIsAdmin,
   signinFailure,
@@ -67,6 +67,16 @@ const Login = () => {
       toast.success("Login successful!");
       dispatch(signinSuccess(user));
       dispatch(unsetIsAdmin());
+
+      // Check if profile is complete
+    const profileResponse = await axiosInstance.get(`/auth/check-profile/${user._id}`);
+    const isProfileComplete = profileResponse.data.isProfileComplete;
+
+    if (!isProfileComplete) {
+      toast.error("Complete your profile before proceeding.");
+      navigate("/complete-profile", { replace: true }); 
+      return;
+    }
       navigate("/", { replace: true });
     } catch (error: any) {
       if (error.response?.data?.message === "Blocked") {

@@ -8,6 +8,9 @@ import {
   logout as logoutUserService,
   sigupDetails,
   verifyAdminPasskey,
+  checkProfileCompletion,
+  profileDetails,
+  updateUserProfile,
 } from "../services/auth.service.js";
 import { clearCookies, setTokensInCookies } from "../utils/jwt.utils.js";
 // import { findUserByEmail } from "../repositories/user.repositry.js";
@@ -63,6 +66,58 @@ export const refreshToken = async (req: Request, res: Response) => {
     const { refreshToken } = req.body; //refresh token is passed in the request body
     const { newAccessToken } = await refeshTokenService(refreshToken);
     res.json({ message: "Access token refreshed.", newAccessToken });
+  } catch (error: any) {
+    res.status(400).json({ message: error.message });
+  }
+};
+
+export const checkProfile = async (req: Request, res: Response) => {
+  try {
+    const userId = req.params.id;
+    const isComplete = await checkProfileCompletion(userId);
+    res.status(200).json({ isProfileComplete: isComplete });
+  } catch (error:any) {
+    res.status(500).json({ message: error.message || "Internal Server Error" });
+  }
+};
+
+export const getprofileDetails = async (req: Request, res: Response) => {
+  try {
+    const userId = req.params.id;
+    const userDetails = await profileDetails(userId);
+    res.status(200).json({
+      message: "Profile details accessed successfully",
+      userDetails,
+    });
+  } catch (error: any) {
+    res.status(400).json({ message: error.message });
+  }
+};
+
+export const updateUserDetails = async (req: Request, res: Response) => {
+  try {
+    const id = req.params.Id;
+    const { name, email, phone, dateOfBirth, jobTitle, industry, reasonForJoining } = req.body;
+
+    // Uploaded files (from multer)
+    const profilePicFile = (req.files as { [fieldname: string]: Express.Multer.File[] })?.["profilePic"]?.[0];
+    const coverPicFile = (req.files as { [fieldname: string]: Express.Multer.File[] })?.["coverPic"]?.[0];
+    console.log(profilePicFile);
+    console.log(coverPicFile);
+
+    const updatedUser = await updateUserProfile(id, {
+      name,
+      email,
+      phone,
+      dateOfBirth,
+      jobTitle,
+      industry,
+      reasonForJoining,
+      profilePicFile,
+      coverPicFile,
+    });
+
+    res.status(200).json({ message: "Profile updated successfully", user: updatedUser });
   } catch (error: any) {
     res.status(400).json({ message: error.message });
   }

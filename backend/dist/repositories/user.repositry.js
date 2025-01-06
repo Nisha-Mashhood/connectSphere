@@ -47,4 +47,16 @@ export const removeRefreshToken = async (useremail) => {
     await User.updateOne({ email: useremail }, { $unset: { refreshToken: "" } });
     return;
 };
+export const isProfileComplete = (user) => {
+    // Define required fields for a complete profile
+    const requiredFields = ["phone", "dateOfBirth", "jobTitle", "industry", "reasonForJoining"];
+    // Loop through each required field
+    for (const field of requiredFields) {
+        // Check if the field is missing or empty
+        if (!user[field]) {
+            return false; // Profile is incomplete
+        }
+    }
+    return true; // Profile is complete
+};
 //# sourceMappingURL=user.repositry.js.map

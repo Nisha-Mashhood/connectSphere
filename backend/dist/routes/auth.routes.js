@@ -2,7 +2,8 @@ import express from 'express';
 import passport from "passport";
 import { signup, login, handleForgotPassword, handleVerifyOTP, handleResetPassword, logout, refreshToken, googleAuthRedirect, githubAuthRedirect, 
 // checkingBlockedStatus,
-verifyPasskey, } from '../controllers/auth.controller.js';
+verifyPasskey, checkProfile, getprofileDetails, updateUserDetails, } from '../controllers/auth.controller.js';
+import { upload } from '../utils/multer.utils.js';
 const router = express.Router();
 router.post('/register/signup', signup);
 router.post('/register/forgot-password', handleForgotPassword);
@@ -11,6 +12,12 @@ router.post('/register/reset-password', handleResetPassword);
 router.post('/login', login);
 router.post('/verify-admin-passkey', verifyPasskey);
 router.post('/refresh-token', refreshToken);
+router.get('/check-profile/:id', checkProfile);
+router.get('/profiledetails/:id', getprofileDetails);
+router.put("/updateUserDetails/:Id", upload.fields([
+    { name: "profilePic", maxCount: 1 },
+    { name: "coverPic", maxCount: 1 },
+]), updateUserDetails);
 // router.post('/check-status',checkingBlockedStatus)
 // Google Authentication Routes
 router.get("/google", passport.authenticate("google", { scope: ["profile", "email"] }));

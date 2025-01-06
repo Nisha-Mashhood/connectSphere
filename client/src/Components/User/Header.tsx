@@ -84,6 +84,15 @@ const Header = () => {
   const handleProfileClick = () => {
     navigate("/profile");
   };
+  
+  const handleBecomeMentor = async () => {
+    if (!currentUser) {
+      toast.error("Please log in to apply as a mentor.");
+      navigate("/login");
+      return;
+    }
+
+  }
 
   return (
     <Navbar className="bg-green-100">
@@ -138,6 +147,9 @@ const Header = () => {
                 <p className="font-semibold">{currentUser.name}</p>
               </DropdownItem>
               <DropdownItem key="settings">My Settings</DropdownItem>
+              <DropdownItem key="become-mentor" onPress={handleBecomeMentor}>
+            Become a Mentor
+          </DropdownItem>
               <DropdownItem key="team_settings">Team Settings</DropdownItem>
               <DropdownItem key="analytics">Analytics</DropdownItem>
               <DropdownItem key="system">System</DropdownItem>

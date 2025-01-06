@@ -1,4 +1,4 @@
-import { loginUser, forgotPassword, verifyOTP, resetPassword, refreshToken as refeshTokenService, logout as logoutUserService, sigupDetails, verifyAdminPasskey, } from "../services/auth.service.js";
+import { loginUser, forgotPassword, verifyOTP, resetPassword, refreshToken as refeshTokenService, logout as logoutUserService, sigupDetails, verifyAdminPasskey, checkProfileCompletion, profileDetails, updateUserProfile, } from "../services/auth.service.js";
 import { clearCookies, setTokensInCookies } from "../utils/jwt.utils.js";
 // import { findUserByEmail } from "../repositories/user.repositry.js";
 //Handles the personal details Registration
@@ -47,6 +47,55 @@ export const refreshToken = async (req, res) => {
         const { refreshToken } = req.body; //refresh token is passed in the request body
         const { newAccessToken } = await refeshTokenService(refreshToken);
         res.json({ message: "Access token refreshed.", newAccessToken });
+    }
+    catch (error) {
+        res.status(400).json({ message: error.message });
+    }
+};
+export const checkProfile = async (req, res) => {
+    try {
+        const userId = req.params.id;
+        const isComplete = await checkProfileCompletion(userId);
+        res.status(200).json({ isProfileComplete: isComplete });
+    }
+    catch (error) {
+        res.status(500).json({ message: error.message || "Internal Server Error" });
+    }
+};
+export const getprofileDetails = async (req, res) => {
+    try {
+        const userId = req.params.id;
+        const userDetails = await profileDetails(userId);
+        res.status(200).json({
+            message: "Profile details accessed successfully",
+            userDetails,
+        });
+    }
+    catch (error) {
+        res.status(400).json({ message: error.message });
+    }
+};
+export const updateUserDetails = async (req, res) => {
+    try {
+        const id = req.params.Id;
+        const { name, email, phone, dateOfBirth, jobTitle, industry, reasonForJoining } = req.body;
+        // Uploaded files (from multer)
+        const profilePicFile = req.files?.["profilePic"]?.[0];
+        const coverPicFile = req.files?.["coverPic"]?.[0];
+        console.log(profilePicFile);
+        console.log(coverPicFile);
+        const updatedUser = await updateUserProfile(id, {
+            name,
+            email,
+            phone,
+            dateOfBirth,
+            jobTitle,
+            industry,
+            reasonForJoining,
+            profilePicFile,
+            coverPicFile,
+        });
+        res.status(200).json({ message: "Profile updated successfully", user: updatedUser });
     }
     catch (error) {
         res.status(400).json({ message: error.message });

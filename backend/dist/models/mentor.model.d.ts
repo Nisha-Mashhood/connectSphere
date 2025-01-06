@@ -1,7 +1,7 @@
 import mongoose, { Document } from "mongoose";
 export interface IMentor extends Document {
     userId: string;
-    isApproved?: boolean;
+    isApproved?: string;
     skills?: string[];
     certifications?: string[];
     specialization?: string;

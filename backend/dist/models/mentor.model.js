@@ -6,8 +6,9 @@ const MentorSchema = new Schema({
         required: true
     },
     isApproved: {
-        type: Boolean,
-        default: false
+        type: String,
+        enum: ["Processing", "Approved", "Rejected"],
+        default: "Processing"
     },
     skills: [
         {
@@ -26,8 +27,9 @@ const MentorSchema = new Schema({
     },
     availableSlots: [
         {
-            type: Object
-        }
+            day: { type: String },
+            timeSlots: [{ type: String }],
+        },
     ],
 }, { timestamps: true });
 export default mongoose.model("Mentor", MentorSchema);

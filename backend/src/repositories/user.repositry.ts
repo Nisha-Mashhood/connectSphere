@@ -59,3 +59,16 @@ export const removeRefreshToken = async (useremail: string) => {
     await User.updateOne({ email: useremail }, { $unset: { refreshToken: "" } });
   return 
 };
+
+export const isProfileComplete = (user: UserInterface): boolean => {
+  // Define required fields for a complete profile
+  const requiredFields = ["phone", "dateOfBirth", "jobTitle", "industry", "reasonForJoining"];
+  // Loop through each required field
+  for (const field of requiredFields) {
+    // Check if the field is missing or empty
+    if (!user[field as keyof UserInterface]) {
+      return false; // Profile is incomplete
+    }
+  }
+  return true; // Profile is complete
+};

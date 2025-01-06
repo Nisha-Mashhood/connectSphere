@@ -30,7 +30,7 @@ export const submitMentorRequest = async (req: Request, res: Response) => {
       skills, 
       specialization,
       certifications: uploadedCertificates,
-      isApproved: false, 
+      // isApproved: false, 
     });
 
     res.status(201).json({

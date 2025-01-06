@@ -5,7 +5,7 @@ import { RootState } from "../../redux/store";
  
 function AdminPrivateRoute() {
         const { isAdmin } = useSelector((state: RootState) => state.user);
-        return isAdmin ? <Outlet /> : <Navigate to="/admin/login" />;
+        return isAdmin ? <Outlet /> : <Navigate to="/login" />;
 }
 
 export default AdminPrivateRoute

@@ -26,7 +26,7 @@ export const submitMentorRequest = async (req, res) => {
             skills,
             specialization,
             certifications: uploadedCertificates,
-            isApproved: false,
+            // isApproved: false, 
         });
         res.status(201).json({
             message: "Mentor registration submitted successfully for admin review.",

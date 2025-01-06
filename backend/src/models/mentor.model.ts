@@ -2,7 +2,7 @@ import mongoose, { Schema, Document } from "mongoose";
 
 export interface IMentor extends Document {
   userId: string;
-  isApproved?: boolean;
+  isApproved?: string;
   skills?: string[];
   certifications?: string[];
   specialization?: string;
@@ -19,8 +19,9 @@ const MentorSchema: Schema = new Schema(
         required: true 
     },
     isApproved: { 
-        type: Boolean, 
-        default: false 
+        type: String, 
+        enum: ["Processing", "Approved", "Rejected"], 
+        default: "Processing" 
     },
     skills: [
         { 
@@ -38,10 +39,11 @@ const MentorSchema: Schema = new Schema(
         default:null 
     },
     availableSlots: [
-        { 
-            type: Object 
-        }
-    ],
+        {
+          day: { type: String },
+          timeSlots: [{ type: String }],
+        },
+      ],
   },
   { timestamps: true }
 );

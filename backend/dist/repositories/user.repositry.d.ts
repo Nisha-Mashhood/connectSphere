@@ -31,4 +31,5 @@ export declare const updateRefreshToken: (userId: string, refreshToken: string) 
     __v: number;
 }) | null>;
 export declare const removeRefreshToken: (useremail: string) => Promise<void>;
+export declare const isProfileComplete: (user: UserInterface) => boolean;
 //# sourceMappingURL=user.repositry.d.ts.map

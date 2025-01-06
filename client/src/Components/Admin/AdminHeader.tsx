@@ -1,4 +1,4 @@
-import { FaUser, FaTasks, FaChartBar, FaCog, FaSignOutAlt } from 'react-icons/fa'; // Example icons
+import { FaUser, FaTasks, FaChartBar, FaSignOutAlt } from 'react-icons/fa'; // Example icons
 import { Button, Avatar } from "@nextui-org/react";
 import { useDispatch, useSelector } from "react-redux";
 import { useNavigate } from "react-router-dom";
@@ -29,10 +29,6 @@ const AdminSidebar = () => {
     } catch (err) {
       console.error(err.response?.data?.message || "Logout Failed");
     }
-  };
-
-  const handleProfileClick = () => {
-    navigate("/admin/profile");
   };
 
   return (
