@@ -102,8 +102,6 @@ export const updateUserDetails = async (req: Request, res: Response) => {
     // Uploaded files (from multer)
     const profilePicFile = (req.files as { [fieldname: string]: Express.Multer.File[] })?.["profilePic"]?.[0];
     const coverPicFile = (req.files as { [fieldname: string]: Express.Multer.File[] })?.["coverPic"]?.[0];
-    console.log(profilePicFile);
-    console.log(coverPicFile);
 
     const updatedUser = await updateUserProfile(id, {
       name,

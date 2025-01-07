@@ -70,7 +70,6 @@ const Header = () => {
 
   const handleLogout = async () => {
     const email = currentUser?.email;
-    //console.log("current userId :",userId);
     try {
       await axiosInstance.post("/auth/logout", { email });
       dispatch(signOut());
@@ -91,7 +90,44 @@ const Header = () => {
       navigate("/login");
       return;
     }
-
+    try {
+      // Step 1: Check if the profile is complete
+      const profileResponse = await axiosInstance.get(`/auth/check-profile/${currentUser._id}`);
+      const isProfileComplete = profileResponse.data.isProfileComplete;
+  
+      if (!isProfileComplete) {
+        toast.error("For becoming a mentor, you should complete your profile first.");
+        navigate("/complete-profile", { replace: true });
+        return;
+      }
+  
+      // Step 2: Check if the user is already a mentor and the approval status
+      const mentorResponse = await axiosInstance.get(`/mentors/check-mentor/${currentUser._id}`);
+      const mentor = mentorResponse.data.mentor;
+      console.log(mentor);
+  
+      if (!mentor) {
+        // If there's no mentor record, show the mentor profile form
+        navigate("/mentorProfile");
+      }else {
+        switch (mentor.isApproved) {
+          case "Processing":
+            toast.success("Your mentor request is still under review.");
+            break;
+          case "Approved":
+            toast.success("You are an approved mentor!");
+            navigate("/mentorship");
+            break;
+          case "Rejected":
+            toast.error("Your mentor application has been rejected.");
+            break;
+          default:
+            toast.error("Unknown status. Please contact support.");
+        }
+      }
+    } catch (error) {
+      toast.error("An error occurred while checking your mentor status.");
+    }
   }
 
   return (

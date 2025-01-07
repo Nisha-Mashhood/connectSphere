@@ -21,7 +21,7 @@ const MentorSchema: Schema = new Schema(
     isApproved: { 
         type: String, 
         enum: ["Processing", "Approved", "Rejected"], 
-        default: "Processing" 
+        default: "Processing"
     },
     skills: [
         { 

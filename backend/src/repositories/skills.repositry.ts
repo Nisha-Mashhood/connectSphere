@@ -12,6 +12,7 @@ export const getAllSkills = async (subcategoryId: string) => {
     .populate("subcategoryId");
 };
 
+
 // Get a skill by ID
 export const getSkillById = async (id: string) => {
   return await Skill.findById(id)

@@ -19,6 +19,9 @@ import Skills from "./Components/Admin/Skills";
 import UserManage from "./Components/Admin/UserManage";
 import CompleteProfile from "./Components/User/CompleteProfile";
 import AdminPrivateRoute from "./Components/Admin/AdminPrivateRout";
+import MentorProfile from "./Components/User/MentorProfile";
+import Mentorship from "./Components/User/Mentorship";
+import AdminMentorRequests from "./Components/Admin/AdminMentorRequests";
 
 function App() {
   const location = useLocation();
@@ -32,6 +35,7 @@ function App() {
       {isAdminRoute ? (
         <Routes>
           <Route path="/admin" element={<AdminLayout />}>
+          
           <Route element={<AdminPrivateRoute />}>
             <Route path="dashboard" element={<AdminDashboard />} />
             <Route path="profile" element={<AdminProfile />} />
@@ -39,6 +43,7 @@ function App() {
             <Route path="subcategories/:categoryId" element={<SubCategories />} />
             <Route path="skills/:categoryId/:subcategoryId" element={<Skills />} />
             <Route path="user" element={<UserManage />} />
+            <Route path='mentormange' element={<AdminMentorRequests/>} />
             </Route>
           </Route>
           <Route path="*" element={<PageNotFound />} />
@@ -54,10 +59,14 @@ function App() {
             <Route path="/forgot" element={<ForgotPassword />} />
             <Route path="/otp" element={<OTPVerification />} />
             <Route path="/reset" element={<ResetPassword />} />
-            <Route path='/complete-profile' element={<CompleteProfile/>} />
+            
 
             <Route element={<PrivateRoute />}>
+              <Route path='/complete-profile' element={<CompleteProfile/>} />
               <Route path="/profile" element={<Profile />} />
+              <Route path ='/mentorProfile' element={<MentorProfile/>} />
+              <Route path ='/mentorship' element={<Mentorship/>} />
+              
             </Route>
 
             <Route path="*" element={<PageNotFound />} />

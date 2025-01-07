@@ -10,6 +10,7 @@ export const createSkill = async (data: Partial<SkillInterface>, imagePath?: str
     }
     return await SkillRepo.createSkill({ ...data, imageUrl });
   };
+
 export const getAllSkills = async (subcategoryId:string) => {
   return await SkillRepo.getAllSkills(subcategoryId);
 };

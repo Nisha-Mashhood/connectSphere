@@ -22,6 +22,8 @@ export const getAllSkills = async(req:Request, res:Response): Promise<void> => {
       }
 }
 
+
+
 export const getSkillById = async(req:Request, res:Response): Promise<void> => {
     try {
         const skill = await SkillService.getSkillById(req.params.id);

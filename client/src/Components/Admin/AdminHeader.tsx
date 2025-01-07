@@ -66,6 +66,14 @@ const AdminSidebar = () => {
           <Button
             color="secondary"
             className="w-full text-left"
+            onPress={() => navigate("/admin/mentormange")}
+            startContent={<FaUser />}
+          >
+            Mentor Management
+          </Button>
+          <Button
+            color="secondary"
+            className="w-full text-left"
             onPress={() => navigate("/admin/categories")}
             startContent={<FaTasks />}
           >
