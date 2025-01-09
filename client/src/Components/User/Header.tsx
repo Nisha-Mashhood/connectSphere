@@ -33,7 +33,7 @@ const Header = () => {
   const location = useLocation();
   const { currentUser } = useSelector((state: RootState) => state.user);
 
-  useEffect(() => {
+  // useEffect(() => {
     // const checkUserBlocked = async () => {
     //   if (currentUser) {
     //     try {
@@ -57,16 +57,16 @@ const Header = () => {
     // };
 
     // checkUserBlocked();
-    if (
-      (currentUser && location.pathname === "/login") ||
-      location.pathname === "/signup" ||
-      location.pathname === "/forgot" ||
-      location.pathname === "/otp" ||
-      location.pathname === "/reset"
-    ) {
-      navigate("/", { replace: true });
-    }
-  }, [currentUser, location.pathname, navigate, dispatch]);
+    // if (
+    //   (currentUser && location.pathname === "/login") ||
+    //   location.pathname === "/signup" ||
+    //   location.pathname === "/forgot" ||
+    //   location.pathname === "/otp" ||
+    //   location.pathname === "/reset"
+    // ) {
+    //   navigate("/", { replace: true });
+    // }
+  // }, [currentUser, location.pathname, navigate, dispatch]);
 
   const handleLogout = async () => {
     const email = currentUser?.email;
@@ -104,7 +104,7 @@ const Header = () => {
       // Step 2: Check if the user is already a mentor and the approval status
       const mentorResponse = await axiosInstance.get(`/mentors/check-mentor/${currentUser._id}`);
       const mentor = mentorResponse.data.mentor;
-      console.log(mentor);
+      console.log(mentorResponse);
   
       if (!mentor) {
         // If there's no mentor record, show the mentor profile form
@@ -114,7 +114,7 @@ const Header = () => {
           case "Processing":
             toast.success("Your mentor request is still under review.");
             break;
-          case "Approved":
+          case "Completed":
             toast.success("You are an approved mentor!");
             navigate("/mentorship");
             break;

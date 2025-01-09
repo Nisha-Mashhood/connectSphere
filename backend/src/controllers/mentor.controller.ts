@@ -1,14 +1,15 @@
 import { Request, Response } from "express";
 import * as MentorService from "../services/mentor.service.js";
 import { uploadImage } from "../utils/cloudinary.utils.js";
-import mentorModel from "../models/mentor.model.js";
 import * as UserService from '../services/user.service.js';
 
 
 export const checkMentorStatus = async (req: Request, res: Response) => {
-  const userId = req.params.userId;
+  const userId = req.params.id;
   try {
-    const mentor = await mentorModel.findOne({ userId });
+    console.log("Received userId:", req.params.userId);
+    const mentor = await MentorService.getMentorByUserId(userId);
+    console.log(mentor);
     if (!mentor) {
       res.status(200).json({ mentor: null });
       return 
@@ -124,11 +125,36 @@ export const getMentorByUserId = async (req: Request, res: Response) => {
 
 
 export const approveMentorRequest = async (req: Request, res: Response) => {
-  await MentorService.approveMentorRequest(req.params.id);
-  res.json({ message: "Mentor request approved successfully" });
+  try {
+    await MentorService.approveMentorRequest(req.params.id);
+    res.json({ message: "Mentor request approved successfully. \n Mail has been send to the user" });
+  } catch (error: any) {
+    res.status(400).json({ message: error.message });
+  }
 };
 
 export const rejectMentorRequest = async (req: Request, res: Response) => {
-  await MentorService.rejectMentorRequest(req.params.id);
-  res.json({ message: "Mentor request rejected successfully" });
+  const { reason } = req.body;
+  if (!reason) {
+    res.status(400).json({ message: "Rejection reason is required. \n Mail has been send to the user" });
+    return;
+  }
+
+  try {
+    await MentorService.rejectMentorRequest(req.params.id, reason);
+    res.json({ message: "Mentor request rejected successfully." });
+  } catch (error: any) {
+    res.status(400).json({ message: error.message });
+  }
+};
+
+// Cancel mentorship
+export const cancelMentorship = async (req:Request, res:Response) => {
+  try {
+    const { mentorId } = req.params;
+    await MentorService.cancelMentorship(mentorId);
+    res.status(200).json({ message: 'Mentorship canceled successfully.' });
+  } catch (error:any) {
+    res.status(500).json({ error: error.message });
+  }
 };

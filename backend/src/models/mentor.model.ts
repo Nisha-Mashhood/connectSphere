@@ -1,8 +1,14 @@
 import mongoose, { Schema, Document } from "mongoose";
 
+interface IUser {
+  name: string;
+  email: string;
+}
+
 export interface IMentor extends Document {
-  userId: string;
+  userId: string | IUser;
   isApproved?: string;
+  rejectionReason?:string;
   skills?: string[];
   certifications?: string[];
   specialization?: string;
@@ -22,6 +28,10 @@ const MentorSchema: Schema = new Schema(
         type: String, 
         enum: ["Processing", "Approved", "Rejected"], 
         default: "Processing"
+    },
+    rejectionReason: { 
+      type: String, 
+      default: null 
     },
     skills: [
         { 

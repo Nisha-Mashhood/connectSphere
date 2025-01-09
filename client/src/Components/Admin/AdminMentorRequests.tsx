@@ -34,6 +34,17 @@ const AdminMentorRequests = () => {
     }
   };
 
+   // Cancel mentorship
+   const cancelMentorship = async (mentorId) => {
+    try {
+      await axiosInstance.put(`/mentors/cancelmentorship/${mentorId}`);
+      toast.success("Mentorship canceled successfully.");
+      fetchMentorRequests(); // Refresh data
+    } catch (error) {
+      toast.error("Failed to cancel mentorship.");
+    }
+  };
+
   // Open rejection modal
   const handleReject = (mentorId) => {
     setSelectedMentorId(mentorId);
@@ -49,7 +60,7 @@ const AdminMentorRequests = () => {
 
     try {
       await axiosInstance.delete(`/mentors/rejectmentorrequest/${selectedMentorId}`, {
-        data: { message: rejectionReason },
+        data: { rejectionReason },
       });
       toast.success("Mentor rejected successfully.");
       setRejectionModal(false);
@@ -107,18 +118,44 @@ const AdminMentorRequests = () => {
                   ))}
                 </td>
                 <td className="py-2 px-4 border-b">
-                  <button
-                    className="bg-green-500 text-white py-1 px-3 rounded hover:bg-green-600 mr-2"
-                    onClick={() => approveMentor(mentor._id)}
-                  >
-                    Approve
-                  </button>
-                  <button
-                    className="bg-red-500 text-white py-1 px-3 rounded hover:bg-red-600"
-                    onClick={() => handleReject(mentor._id)}
-                  >
-                    Reject
-                  </button>
+                {mentor.isApproved === "Completed" ? (
+                    <>
+                      <button
+                        className="bg-gray-300 text-gray-700 py-1 px-3 rounded cursor-not-allowed"
+                        disabled
+                      >
+                        Approved
+                      </button>
+                      <button
+                        className="bg-red-500 text-white py-1 px-3 rounded hover:bg-red-600"
+                        onClick={() => cancelMentorship(mentor._id)}
+                      >
+                        Cancel Mentorship
+                      </button>
+                    </>
+                  ) : mentor.isApproved === "Rejected" ? (
+                    <button
+                      className="bg-gray-300 text-gray-700 py-1 px-3 rounded cursor-not-allowed"
+                      disabled
+                    >
+                      Rejected
+                    </button>
+                  ) : (
+                    <>
+                      <button
+                        className="bg-green-500 text-white py-1 px-3 rounded hover:bg-green-600 mr-2"
+                        onClick={() => approveMentor(mentor._id)}
+                      >
+                        Approve
+                      </button>
+                      <button
+                        className="bg-red-500 text-white py-1 px-3 rounded hover:bg-red-600"
+                        onClick={() => handleReject(mentor._id)}
+                      >
+                        Reject
+                      </button>
+                    </>
+                  )}
                 </td>
               </tr>
             ))}

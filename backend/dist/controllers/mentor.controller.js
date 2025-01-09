@@ -1,11 +1,12 @@
 import * as MentorService from "../services/mentor.service.js";
 import { uploadImage } from "../utils/cloudinary.utils.js";
-import mentorModel from "../models/mentor.model.js";
 import * as UserService from '../services/user.service.js';
 export const checkMentorStatus = async (req, res) => {
-    const userId = req.params.userId;
+    const userId = req.params.id;
     try {
-        const mentor = await mentorModel.findOne({ userId });
+        console.log("Received userId:", req.params.userId);
+        const mentor = await MentorService.getMentorByUserId(userId);
+        console.log(mentor);
         if (!mentor) {
             res.status(200).json({ mentor: null });
             return;
@@ -108,11 +109,26 @@ export const getMentorByUserId = async (req, res) => {
     }
 };
 export const approveMentorRequest = async (req, res) => {
-    await MentorService.approveMentorRequest(req.params.id);
-    res.json({ message: "Mentor request approved successfully" });
+    try {
+        await MentorService.approveMentorRequest(req.params.id);
+        res.json({ message: "Mentor request approved successfully." });
+    }
+    catch (error) {
+        res.status(400).json({ message: error.message });
+    }
 };
 export const rejectMentorRequest = async (req, res) => {
-    await MentorService.rejectMentorRequest(req.params.id);
-    res.json({ message: "Mentor request rejected successfully" });
+    const { reason } = req.body;
+    if (!reason) {
+        res.status(400).json({ message: "Rejection reason is required." });
+        return;
+    }
+    try {
+        await MentorService.rejectMentorRequest(req.params.id, reason);
+        res.json({ message: "Mentor request rejected successfully." });
+    }
+    catch (error) {
+        res.status(400).json({ message: error.message });
+    }
 };
 //# sourceMappingURL=mentor.controller.js.map

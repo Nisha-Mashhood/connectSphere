@@ -12,19 +12,20 @@ export const getAllMentorRequests = async () => {
 };
 // Approve mentor request
 export const approveMentorRequest = async (id) => {
-    await Mentor.findByIdAndUpdate(id, { isApproved: "completed" }, { new: true });
+    await Mentor.findByIdAndUpdate(id, { isApproved: "Completed" }, { new: true });
     return;
 };
 // Reject mentor request
 export const rejectMentorRequest = async (id) => {
-    await Mentor.findByIdAndUpdate(id, { isApproved: "rejected" }, { new: true });
+    await Mentor.findByIdAndUpdate(id, { isApproved: "Rejected" }, { new: true });
     return;
 };
 // Get mentor by userId
-export const getMentorByUserId = async (userId) => {
-    return await Mentor.findOne({ userId })
+export const getMentorByUserId = async (id) => {
+    const mentor = await Mentor.findById(id)
         .populate("userId", "name email")
         .populate("skills", "name");
+    return mentor;
 };
 // Update  for mentor with mentorId
 export const updateMentorById = async (mentorId, updateData) => {

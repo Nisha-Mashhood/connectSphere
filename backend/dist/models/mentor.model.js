@@ -10,6 +10,10 @@ const MentorSchema = new Schema({
         enum: ["Processing", "Approved", "Rejected"],
         default: "Processing"
     },
+    rejectionReason: {
+        type: String,
+        default: null
+    },
     skills: [
         {
             type: Schema.Types.ObjectId,

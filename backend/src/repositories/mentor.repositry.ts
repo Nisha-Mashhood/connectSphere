@@ -17,7 +17,7 @@ export const getAllMentorRequests = async (): Promise<IMentor[]> => {
 export const approveMentorRequest = async (id: string): Promise<void> => {
   await Mentor.findByIdAndUpdate(
     id,
-    { isApproved: "completed" },
+    { isApproved: "Completed" },
     { new: true }
   );
   return 
@@ -27,17 +27,27 @@ export const approveMentorRequest = async (id: string): Promise<void> => {
 export const rejectMentorRequest = async (id: string): Promise<void> => {
   await Mentor.findByIdAndUpdate(
     id,
-    { isApproved: "rejected" },
+    { isApproved: "Rejected" },
     { new: true }
   );
   return 
 };
 
+// Cancel mentorship
+export const cancelMentorship = async (id: string) => {
+  return await Mentor.findByIdAndUpdate(
+    id,
+    { isApproved: "Processing" },
+    { new: true }  
+  );
+};
+
 // Get mentor by userId
-export const getMentorByUserId = async (userId: string): Promise<IMentor | null> => {
-  return await Mentor.findOne({ userId })
+export const getMentorByUserId = async (id: string): Promise<IMentor | null> => {
+  const mentor =  await Mentor.findById(id)
     .populate("userId", "name email") 
     .populate("skills", "name"); 
+    return mentor;
 };
 
 // Update  for mentor with mentorId
