@@ -13,6 +13,7 @@ export declare const submitMentorRequest: (mentorData: {
 export declare const getAllMentorRequests: () => Promise<IMentor[]>;
 export declare const approveMentorRequest: (id: string) => Promise<void>;
 export declare const rejectMentorRequest: (id: string, reason: string) => Promise<void>;
+export declare const cancelMentorship: (id: string) => Promise<void>;
 export declare const getMentorByUserId: (userId: string) => Promise<IMentor | null>;
 export declare const updateMentorById: (mentorId: string, updateData: Partial<IMentor>) => Promise<IMentor | null>;
 export declare const getSkills: () => Promise<(import("mongoose").Document<unknown, {}, import("../models/skills.model.js").SkillInterface> & import("../models/skills.model.js").SkillInterface & Required<{

@@ -23,7 +23,7 @@ export const getAllMentorRequests = async () => {
 // Approve a mentor request
 export const approveMentorRequest = async (id) => {
     try {
-        //await MentorRepository.approveMentorRequest(id);
+        await MentorRepository.approveMentorRequest(id);
         // Fetch mentor data to send email
         const mentor = await MentorRepository.getMentorByUserId(id);
         if (!mentor) {
@@ -35,7 +35,7 @@ export const approveMentorRequest = async (id) => {
         if (mentor) {
             const userEmail = mentor.userId.email;
             const userName = mentor.userId.name;
-            await sendEmail(userEmail, "Mentor Request Approved", `Hello ${userName},\n\nCongratulations! Your mentor request has been approved.\n\nBest regards,\nAdmin`);
+            await sendEmail(userEmail, "Mentor Request Approved", `Hello ${userName},\n\nCongratulations! Your mentor request has been approved.\n\nBest regards,\n Admin \n ConnectSphere`);
         }
     }
     catch (error) {
@@ -48,21 +48,43 @@ export const rejectMentorRequest = async (id, reason) => {
         await MentorRepository.rejectMentorRequest(id);
         // Fetch mentor data to send email
         const mentor = await MentorRepository.getMentorByUserId(id);
-        console.log(mentor);
-        console.log(reason);
-        // if (mentor) {
-        //   const { userId } = mentor;
-        //   if (userId?.email) {
-        //     await sendEmail(
-        //       userId.email,
-        //       "Mentor Request Rejected",
-        //       `Hello ${userId.name},\n\nWe regret to inform you that your mentor request has been rejected.\nReason: ${reason}\n\nBest regards,\nAdmin`
-        //     );
-        //   }
-        // }
+        if (!mentor) {
+            throw new Error("Mentor not found.");
+        }
+        if (typeof mentor.userId === "string") {
+            throw new Error("User details are not populated.");
+        }
+        if (mentor) {
+            const userEmail = mentor.userId.email;
+            const userName = mentor.userId.name;
+            await sendEmail(userEmail, "Mentor Request Rejected", `Hello ${userName},\n\nWe regret to inform you that your mentor request has been rejected.\n\nReason: ${reason}\n\nBest regards,\nAdmin \n ConnectSphere`);
+        }
     }
     catch (error) {
         throw new Error("Error rejecting mentor request: " + error.message);
+    }
+};
+// Cancel mentorship
+export const cancelMentorship = async (id) => {
+    try {
+        // Update mentor status to "Cancelled"
+        await MentorRepository.cancelMentorship(id);
+        // Fetch mentor data to send email
+        const mentor = await MentorRepository.getMentorByUserId(id);
+        if (!mentor) {
+            throw new Error("Mentor not found.");
+        }
+        if (typeof mentor.userId === "string") {
+            throw new Error("User details are not populated.");
+        }
+        if (mentor) {
+            const userEmail = mentor.userId.email;
+            const userName = mentor.userId.name;
+            await sendEmail(userEmail, "Mentorship Cancelled", `Hello ${userName},\n\nWe regret to inform you that your mentorship has been cancelled by the admin. If you have any questions, please contact support.\n\nBest regards,\nAdmin \nConnectSphere`);
+        }
+    }
+    catch (error) {
+        throw new Error("Error cancelling mentorship: " + error.message);
     }
 };
 // Get mentor details by userId

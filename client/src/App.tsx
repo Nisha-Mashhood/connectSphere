@@ -22,6 +22,7 @@ import AdminPrivateRoute from "./Components/Admin/AdminPrivateRout";
 import MentorProfile from "./Components/User/MentorProfile";
 import Mentorship from "./Components/User/Mentorship";
 import AdminMentorRequests from "./Components/Admin/AdminMentorRequests";
+import AdminLogin from "./Components/Admin/AdminLogin";
 
 function App() {
   const location = useLocation();
@@ -34,6 +35,7 @@ function App() {
       {/* Only render AdminSidebar when it's an admin route */}
       {isAdminRoute ? (
         <Routes>
+          <Route path="/admin/login" element={<AdminLogin />} />
           <Route path="/admin" element={<AdminLayout />}>
           
           <Route element={<AdminPrivateRoute />}>

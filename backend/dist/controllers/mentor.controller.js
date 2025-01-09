@@ -111,7 +111,7 @@ export const getMentorByUserId = async (req, res) => {
 export const approveMentorRequest = async (req, res) => {
     try {
         await MentorService.approveMentorRequest(req.params.id);
-        res.json({ message: "Mentor request approved successfully." });
+        res.json({ message: "Mentor request approved successfully. \n Mail has been send to the user" });
     }
     catch (error) {
         res.status(400).json({ message: error.message });
@@ -120,7 +120,7 @@ export const approveMentorRequest = async (req, res) => {
 export const rejectMentorRequest = async (req, res) => {
     const { reason } = req.body;
     if (!reason) {
-        res.status(400).json({ message: "Rejection reason is required." });
+        res.status(400).json({ message: "Rejection reason is required. \n Mail has been send to the user" });
         return;
     }
     try {
@@ -129,6 +129,17 @@ export const rejectMentorRequest = async (req, res) => {
     }
     catch (error) {
         res.status(400).json({ message: error.message });
+    }
+};
+// Cancel mentorship
+export const cancelMentorship = async (req, res) => {
+    try {
+        const { mentorId } = req.params;
+        await MentorService.cancelMentorship(mentorId);
+        res.status(200).json({ message: 'Mentorship canceled successfully.' });
+    }
+    catch (error) {
+        res.status(500).json({ error: error.message });
     }
 };
 //# sourceMappingURL=mentor.controller.js.map

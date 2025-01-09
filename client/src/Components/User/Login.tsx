@@ -3,7 +3,6 @@ import { Link, useLocation, useNavigate } from "react-router-dom";
 import { useForm } from "react-hook-form";
 import { useDispatch } from "react-redux";
 import {
-  setIsAdmin,
   signinFailure,
   signinStart,
   signinSuccess,
@@ -42,28 +41,8 @@ const Login = () => {
       const response = await axiosInstance.post("/auth/login", data);
       const user = response.data.user;
 
-      if (user.role === "admin") {
-        const passkey = prompt("Enter the admin passkey:");
-        if (passkey) {
-          const isPasskeyValid = await axiosInstance.post(
-            "/auth/verify-admin-passkey",
-            { passkey }
-          );
-
-          if (isPasskeyValid.data.valid) {
-            toast.success("Welcome, Admin!");
-            dispatch(setIsAdmin(user));
-            navigate("/admin/dashboard", { replace: true });
-          } else {
-            toast.error("Invalid admin passkey. Contact support.");
-          }
-        } else {
-          toast.error("Admin passkey is required.");
-        }
-        return;
-      }
-
       // Regular user login
+      if (user.role !== "admin") {
       toast.success("Login successful!");
       dispatch(signinSuccess(user));
       dispatch(unsetIsAdmin());
@@ -78,6 +57,9 @@ const Login = () => {
       return;
     }
       navigate("/", { replace: true });
+  }else{
+    toast.error('Wrong Credentials.')
+  }
     } catch (error: any) {
       if (error.response?.data?.message === "Blocked") {
         toast.error("Your account is blocked. Please contact support.");

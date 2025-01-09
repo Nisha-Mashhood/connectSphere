@@ -20,6 +20,10 @@ export const rejectMentorRequest = async (id) => {
     await Mentor.findByIdAndUpdate(id, { isApproved: "Rejected" }, { new: true });
     return;
 };
+// Cancel mentorship
+export const cancelMentorship = async (id) => {
+    return await Mentor.findByIdAndUpdate(id, { isApproved: "Processing" }, { new: true });
+};
 // Get mentor by userId
 export const getMentorByUserId = async (id) => {
     const mentor = await Mentor.findById(id)
