@@ -3,10 +3,10 @@ import otpImage from "../../assets/OTP verification.png";
 import { InputOtp } from "@nextui-org/input-otp";
 import { useDispatch, useSelector } from "react-redux";
 import { Link, useNavigate } from "react-router-dom";
-import { axiosInstance } from "../../lib/axios";
 import { signinStart } from "../../redux/Slice/userSlice";
 import { RootState } from "../../redux/store";
 import toast from "react-hot-toast";
+import { sentOTP, verifyOTP } from "../../Service/Auth.service";
 
 const OTPVerification = () => {
   const resetEmail = useSelector((state: RootState) => state.user.resetEmail);
@@ -26,10 +26,12 @@ const OTPVerification = () => {
       return;
     }
 
+
     const data = { email: resetEmail, otp: value };
     try {
       dispatch(signinStart());
-      const otpSuccess = await axiosInstance.post("/auth/register/verify-otp", data);
+      const otpSuccess = await verifyOTP(data)
+      // const otpSuccess = await axiosInstance.post("/auth/register/verify-otp", data);
 
       if (otpSuccess.status === 200) {
         toast.success("OTP verified successfully!");
@@ -61,7 +63,8 @@ const OTPVerification = () => {
   const handleResendOtp = async () => {
     if (!isResendEnabled) return; // Don't resend if not enabled
     try {
-      await axiosInstance.post("/auth/register/forgot-password", { email: resetEmail });
+      sentOTP(resetEmail)
+      // await axiosInstance.post("/auth/register/forgot-password", { email: resetEmail });
       toast.success("OTP has been resent!");
       setTimeLeft(120); // Reset the timer
       setIsResendEnabled(false); // Disable resend until the timer resets

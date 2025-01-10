@@ -1,9 +1,10 @@
 import { useState, useEffect } from "react";
 import toast from "react-hot-toast";
-import { axiosInstance } from "../../lib/axios";
 import { useSelector } from "react-redux";
 import { RootState } from "../../redux/store";
 import { useNavigate } from "react-router-dom";
+import { getAllSkills } from "../../Service/Category.Service";
+import { createMentorProfile } from "../../Service/Mentor.Service";
 
 const MentorProfile = () => {
   const navigate = useNavigate();
@@ -21,11 +22,11 @@ const MentorProfile = () => {
   useEffect(() => {
     const fetchSkills = async () => {
       try {
-        const response = await axiosInstance.get("/mentors/get-allSkills");
-        console.log("Response data:", response.data.skills);
+        const data = await getAllSkills();
+        console.log("Response data:", data.skills);
 
         // Save the skills array directly to the state
-        setSkills(response.data.skills);
+        setSkills(data.skills);
       } catch (error) {
         toast.error("Failed to fetch skills");
       }
@@ -229,7 +230,7 @@ const handleCertificateUpload = (e) => {
 
     try {
       toast.success("All validations passed. Submitting...");
-      await axiosInstance.post("/mentors/create-mentorprofile", formData);
+      await createMentorProfile(formData)
       toast.success("Profile created successfully!");
       // Reset state to initial values
     setSpecialization("");

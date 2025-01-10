@@ -1,9 +1,9 @@
 import { useEffect, useState } from "react";
-import { axiosInstance } from "../../lib/axios";
 import toast from "react-hot-toast";
 import TableComponent from "./Table";
 import { useParams } from "react-router-dom";
 import AddModal from "./AddModal";
+import { deleteSubCategory, fetchSubCategoriesService, updateSubCategory } from "../../Service/Category.Service";
 
 
 const SubCategories = () => {
@@ -15,11 +15,8 @@ const SubCategories = () => {
   // Fetch categories from the backend
   const fetchSubCategories = async (categoryId: string) => {
     try {
-      const response = await axiosInstance.get(
-        `/admin/subcategory/get-subcategories/${categoryId}`
-      );
-      console.log(response);
-      setSubCategories(response.data); // Update state with fetched data
+      const data = await fetchSubCategoriesService(categoryId);
+      setSubCategories(data); // Update state with fetched data
     } catch (error) {
       console.error("Error fetching categories:", error);
     }
@@ -28,13 +25,9 @@ const SubCategories = () => {
   // Handle Save
   const handleUpdate = async (editingsubCategoryId, formData) => {
     try {
-      const response = await axiosInstance.put(
-        `/admin/subcategory/update-subcategory/${editingsubCategoryId}`,
-        formData
-      );
+      await updateSubCategory(editingsubCategoryId, formData);
       toast.success("Sub-Category updated successfully!");
       fetchSubCategories(categoryId);
-      return response;
     } catch (error) {
       toast.error(error.response?.data?.message || "Failed to update sub-category");
     }
@@ -42,12 +35,9 @@ const SubCategories = () => {
 
   const handleDelete = async (id) => {
     try {
-      const response = await axiosInstance.delete(
-        `/admin/subcategory/delete-subcategory/${id}`
-      );
+      await deleteSubCategory(id);
       toast.success("sub-category deleted successfully!");
-      fetchSubCategories(categoryId); // Refresh sub-categories after delete
-      return response;
+      fetchSubCategories(categoryId); 
     } catch (error) {
       toast.error(error.response?.data?.message || "Failed to delete category");
     }

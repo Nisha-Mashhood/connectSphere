@@ -1,6 +1,6 @@
-import React, { useState, useEffect } from "react";
+import { useState, useEffect } from "react";
 import { toast } from "react-hot-toast";
-import { axiosInstance } from "../../lib/axios";
+import { fetchAllUsers, fetchUserDetails, updateUserRoleService, verifyAdminPasskey } from "../../Service/User.Service";
 
 const UserManage = () => {
   const [users, setUsers] = useState([]);
@@ -10,51 +10,50 @@ const UserManage = () => {
 
   // Fetch all users when the component mounts
   useEffect(() => {
-    axiosInstance
-      .get("/users/getallusers")
-      .then((response) => setUsers(response.data))
-      .catch((error) => toast.error("Failed to fetch users"));
+    const getUsers = async () => {
+      try {
+        const data = await fetchAllUsers();
+        setUsers(data);
+      } catch (error) {
+        toast.error("Failed to fetch users");
+      }
+    };
+    getUsers();
   }, []);
 
   // Fetch user details when a user is selected
-  const getUserDetails = (userId) => {
-    axiosInstance
-      .get(`/users/getuser/${userId}`)
-      .then((response) => {
-        setSelectedUser(response.data);
-        setIsModalOpen(true); // Open modal after getting user details
-      })
-      .catch((error) => toast.error("Failed to fetch user details"));
+  const getUserDetails = async (userId) => {
+    try {
+      const data = await fetchUserDetails(userId);
+      setSelectedUser(data);
+      setIsModalOpen(true); // Open modal after getting user details
+    } catch (error) {
+      toast.error("Failed to fetch user details");
+    }
   };
 
   // Block a user
-  const blockUser = (userId) => {
-    axiosInstance
-      .put(`/users/blockuser/${userId}`)
-      .then(() => {
-        toast.success("User blocked successfully");
-        setUsers(
-          users.map((user) =>
-            user._id === userId ? { ...user, isBlocked: true } : user
-          )
-        );
-      })
-      .catch((error) => toast.error("Failed to block user"));
+  const blockUser = async(userId) => {
+    try {
+      await blockUser(userId);
+      setUsers(users.map((user) =>
+        user._id === userId ? { ...user, isBlocked: true } : user
+      ));
+    } catch (error) {
+      toast.error("Failed to block user");
+    }
   };
 
   // Unblock a user
-  const unblockUser = (userId) => {
-    axiosInstance
-      .put(`/users/unblockuser/${userId}`)
-      .then(() => {
-        toast.success("User unblocked successfully");
-        setUsers(
-          users.map((user) =>
-            user._id === userId ? { ...user, isBlocked: false } : user
-          )
-        );
-      })
-      .catch((error) => toast.error("Failed to unblock user"));
+  const unblockUser = async(userId) => {
+    try {
+      await unblockUser(userId);
+      setUsers(users.map((user) =>
+        user._id === userId ? { ...user, isBlocked: false } : user
+      ));
+    } catch (error) {
+      toast.error("Failed to unblock user");
+    }
   };
 
   // Update user role
@@ -64,11 +63,8 @@ const UserManage = () => {
       const passkey = prompt("Enter the admin passkey:");
       if (passkey) {
         try {
-          const response = await axiosInstance.post(
-            "/auth/verify-admin-passkey",
-            { passkey }
-          );
-          if (!response.data.valid) {
+          const isValid = await verifyAdminPasskey(passkey);
+          if (!isValid) {
             toast.error("Invalid admin passkey. Role update canceled.");
             return;
           }
@@ -83,7 +79,7 @@ const UserManage = () => {
     }
 
     try {
-      await axiosInstance.put(`/users/changerole/${id}`, { role });
+      await updateUserRoleService(id, role);
       toast.success("User role updated successfully");
       setUsers(
         users.map((user) =>

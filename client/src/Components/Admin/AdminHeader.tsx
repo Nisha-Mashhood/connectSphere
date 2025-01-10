@@ -1,11 +1,11 @@
-import { FaUser, FaTasks, FaChartBar, FaSignOutAlt } from 'react-icons/fa'; // Example icons
+import { FaUser, FaTasks, FaChartBar, FaSignOutAlt } from 'react-icons/fa';
 import { Button, Avatar } from "@nextui-org/react";
 import { useDispatch, useSelector } from "react-redux";
 import { useNavigate } from "react-router-dom";
-import { axiosInstance } from "../../lib/axios";
 import { unsetIsAdmin } from "../../redux/Slice/userSlice";
 import { RootState } from "../../redux/store";
 import Logo from "../../assets/logo.svg";
+import { logout } from '../../Service/Auth.service';
 
 export const ConnectSphereLogo = () => {
   return (
@@ -23,7 +23,7 @@ const AdminSidebar = () => {
   const handleLogout = async () => {
     const email = currentAdmin?.email;
     try {
-      await axiosInstance.post("/auth/logout", { email });
+      await logout(email);
       dispatch(unsetIsAdmin());
       navigate("/login", { replace: true });
     } catch (err) {

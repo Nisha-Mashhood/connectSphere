@@ -2,13 +2,13 @@ import { useDispatch } from "react-redux";
 import forgotImage from "../../assets/Forgot password.png";
 import { Link, useNavigate } from "react-router-dom";
 import { useForm } from "react-hook-form";
-import { axiosInstance } from "../../lib/axios";
 import {
   setResetEmail,
   signinFailure,
   signinStart,
 } from "../../redux/Slice/userSlice";
 import toast from "react-hot-toast";
+import { sentOTP } from "../../Service/Auth.service";
 const ForgotPassword = () => {
   const dispatch = useDispatch();
   const navigate = useNavigate();
@@ -21,7 +21,11 @@ const ForgotPassword = () => {
   const onSubmit = async (data: { email: string }) => {
     try {
       dispatch(signinStart());
-      await axiosInstance.post("/auth/register/forgot-password", data);
+      // await axiosInstance.post("/auth/register/forgot-password", data);
+      
+      //service function
+      sentOTP(data.email)
+      
       dispatch(setResetEmail(data.email));
       toast.success("OTP sent successfully!");
       navigate("/otp"); // Navigate to the dashboard or home page

@@ -1,13 +1,12 @@
 import React, { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { axiosInstance } from "../../lib/axios";
 import toast from "react-hot-toast";
-import { useDispatch, useSelector } from "react-redux";
+import { useSelector } from "react-redux";
 import { RootState } from "../../redux/store";
+import { fetchUserDetails, updateUserDetails } from "../../Service/Auth.service";
 
 const CompleteProfile: React.FC = () => {
   const { currentUser } = useSelector((state: RootState) => state.user);
-  const dispatch = useDispatch();
   const navigate = useNavigate();
 
   const [userDetails, setUserDetails] = useState({
@@ -30,8 +29,12 @@ const CompleteProfile: React.FC = () => {
   // Fetch user details
   const getUserDetails = async () => {
     try {
-      const response = await axiosInstance.get(`/auth/profiledetails/${currentUser?._id}`);
-      const user = response.data.userDetails;
+      // const response = await axiosInstance.get(`/auth/profiledetails/${currentUser?._id}`);
+      // const user = response.data.userDetails;
+
+      const data = await fetchUserDetails(currentUser?._id);
+      const user = data.userDetails;
+
       setUserDetails({
         name: user.name || "",
         email: user.email || "",
@@ -152,15 +155,18 @@ const handleFileChange = (e, type) => {
     setIsLoading(true);
     try {
       // Call API to update user details
-      await axiosInstance.put(
-        `/auth/updateUserDetails/${currentUser._id}`,
-        formData,
-        {
-          headers: {
-            "Content-Type": "multipart/form-data",
-          },
-        }
-      );
+      // await axiosInstance.put(
+      //   `/auth/updateUserDetails/${currentUser._id}`,
+      //   formData,
+      //   {
+      //     headers: {
+      //       "Content-Type": "multipart/form-data",
+      //     },
+      //   }
+      // );
+
+      const updatedUser = await updateUserDetails(currentUser._id, formData);
+      setUserDetails(updatedUser);
   
       toast.success("Profile updated successfully!");
       navigate("/");

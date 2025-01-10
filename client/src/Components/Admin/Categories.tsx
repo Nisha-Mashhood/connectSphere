@@ -1,8 +1,8 @@
 import { useEffect, useState } from "react";
-import { axiosInstance } from "../../lib/axios";
 import toast from "react-hot-toast";
 import TableComponent from "./Table";
 import AddCategoryModal from "./AddModal";
+import { deleteCategory, fetchCategoriesService, updateCategory } from "../../Service/Category.Service";
 
 const Categories = () => {
   // State to store categories
@@ -12,11 +12,8 @@ const Categories = () => {
   // Fetch categories from the backend
   const fetchCategories = async () => {
     try {
-      const response = await axiosInstance.get(
-        "/admin/category/get-categories"
-      );
-      setCategories(response.data);
-      return response.data // Update categories state
+      const data = await fetchCategoriesService();
+      setCategories(data);
     } catch (error) {
       console.error("Error fetching categories:", error);
       toast.error("Failed to fetch categories");
@@ -31,13 +28,9 @@ const Categories = () => {
   // Handle Save
   const handleUpdate = async (editingCategoryId, formData) => {
     try {
-      const response = await axiosInstance.put(
-        `/admin/category/update-category/${editingCategoryId}`,
-        formData
-      );
+      await updateCategory(editingCategoryId, formData);
       toast.success("Category updated successfully!");
       fetchCategories(); // Refresh categories after update
-      return response;
     } catch (error) {
       toast.error(error.response?.data?.message || "Failed to update category");
     }
@@ -45,12 +38,9 @@ const Categories = () => {
 
   const handleDelete = async (id) => {
     try {
-      const response = await axiosInstance.delete(
-        `/admin/category/delete-category/${id}`
-      );
+      await deleteCategory(id);
       toast.success("Category deleted successfully!");
       fetchCategories(); // Refresh categories after delete
-      return response;
     } catch (error) {
       toast.error(error.response?.data?.message || "Failed to delete category");
     }

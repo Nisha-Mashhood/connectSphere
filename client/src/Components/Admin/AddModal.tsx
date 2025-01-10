@@ -1,6 +1,6 @@
 import toast from "react-hot-toast";
-import { axiosInstance } from "../../lib/axios";
 import { useState } from "react";
+import { createCategory, createSkill, createSubCategory } from "../../Service/Category.Service";
 
 const AddModal = ({ isOpen, onClose, type, fetch, categoryId=null, subcategoryId=null }) => {
     const [loading, setLoading] = useState(false)
@@ -74,18 +74,18 @@ const AddModal = ({ isOpen, onClose, type, fetch, categoryId=null, subcategoryId
       
           // Handle different types
           if (type === 'Category') {
-            await axiosInstance.post("admin/category/create-category", formData);
+            await createCategory(formData);
             fetch();
             handleClose();
           } else if (type === 'sub-category') {
             formData.append("categoryId", categoryId);
-            await axiosInstance.post("admin/subcategory/create-subcategory", formData);
+            await createSubCategory(formData);
             fetch(categoryId);
             handleClose();
           } else if (type === 'skill') {
             formData.append("categoryId", categoryId);
             formData.append("subcategoryId", subcategoryId);
-            await axiosInstance.post("admin/skills/create-skill", formData);
+            await createSkill(formData);
             fetch(subcategoryId);
             handleClose();
           }

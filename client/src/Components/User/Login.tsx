@@ -8,12 +8,12 @@ import {
   signinSuccess,
   unsetIsAdmin,
 } from "../../redux/Slice/userSlice";
-import { axiosInstance } from "../../lib/axios";
+// import { axiosInstance } from "../../lib/axios";
 import toast from "react-hot-toast";
 import GoogleLogin from "./GoogleLogin";
 import GitHub from "./GitHub";
 import { useEffect } from "react";
-// import { RootState } from "../../redux/store";
+import { login, checkProfile } from "../../Service/Auth.service";
 
 const Login = () => {
   // const { isAdmin } = useSelector((state: RootState) => state.user);
@@ -38,28 +38,33 @@ const Login = () => {
   const onSubmit = async (data: { email: string; password: string }) => {
     try {
       dispatch(signinStart());
-      const response = await axiosInstance.post("/auth/login", data);
-      const user = response.data.user;
+      // const response = await axiosInstance.post("/auth/login", data);
+      // const user = response.data.user;
+
+      const { user } = await login(data);
 
       // Regular user login
       if (user.role !== "admin") {
-      toast.success("Login successful!");
-      dispatch(signinSuccess(user));
-      dispatch(unsetIsAdmin());
+        toast.success("Login successful!");
+        dispatch(signinSuccess(user));
+        dispatch(unsetIsAdmin());
 
-      // Check if profile is complete
-    const profileResponse = await axiosInstance.get(`/auth/check-profile/${user._id}`);
-    const isProfileComplete = profileResponse.data.isProfileComplete;
+        // Check if profile is complete
+        //const profileResponse = await axiosInstance.get(`/auth/check-profile/${user._id}`);
+        //const isProfileComplete = profileResponse.data.isProfileComplete;
 
-    if (!isProfileComplete) {
-      toast.error("Complete your profile before proceeding.");
-      navigate("/complete-profile", { replace: true }); 
-      return;
-    }
-      navigate("/", { replace: true });
-  }else{
-    toast.error('Wrong Credentials.')
-  }
+        const profileResponse = await checkProfile(user._id);
+        const isProfileComplete = profileResponse.isProfileComplete;
+
+        if (!isProfileComplete) {
+          toast.error("Complete your profile before proceeding.");
+          navigate("/complete-profile", { replace: true });
+          return;
+        }
+        navigate("/", { replace: true });
+      } else {
+        toast.error("Wrong Credentials.");
+      }
     } catch (error: any) {
       if (error.response?.data?.message === "Blocked") {
         toast.error("Your account is blocked. Please contact support.");

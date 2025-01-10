@@ -1,9 +1,9 @@
 import { useEffect, useState } from "react";
-import { axiosInstance } from "../../lib/axios";
 import toast from "react-hot-toast";
 import { useParams } from "react-router-dom";
 import AddModal from "./AddModal";
 import TableComponent from "./Table";
+import { deleteSkill, fetchSkillsService, updateSkill } from "../../Service/Category.Service";
 
 const Skills = () => {
   // State to store categories
@@ -14,11 +14,8 @@ const Skills = () => {
   // Fetch categories from the backend
   const fetchSkills = async (subcategoryId: string) => {
     try {
-      const response = await axiosInstance.get(
-        `/admin/skills/get-skills/${subcategoryId}`
-      );
-      console.log(response);
-      setSkills(response.data); // Update state with fetched data
+      const data = await fetchSkillsService(subcategoryId);
+      setSkills(data); 
     } catch (error) {
       console.error("Error fetching categories:", error);
     }
@@ -27,13 +24,9 @@ const Skills = () => {
   // Handle Save
   const handleUpdate = async (editingSkillId, formData) => {
     try {
-      const response = await axiosInstance.put(
-        `/admin/skills/update-skill/${editingSkillId}`,
-        formData
-      );
+      await updateSkill(editingSkillId, formData);
       toast.success("Skill updated successfully!");
       fetchSkills(subcategoryId); // Refresh skill after update
-      return response;
     } catch (error) {
       toast.error(error.response?.data?.message || "Failed to update category");
     }
@@ -41,12 +34,9 @@ const Skills = () => {
 
   const handleDelete = async (id) => {
     try {
-      const response = await axiosInstance.delete(
-        `/admin/skills/delete-skill/${id}`
-      );
+      await deleteSkill(id);
       toast.success("Skill deleted successfully!");
       fetchSkills(subcategoryId); // Refresh skill after delete
-      return response;
     } catch (error) {
       toast.error(error.response?.data?.message || "Failed to delete category");
     }

@@ -1,7 +1,11 @@
 import { useEffect, useState } from "react";
 import { toast } from "react-hot-toast";
-import { axiosInstance } from "../../lib/axios"; 
-// import { Modal, Button, Input, Table } from "@nextui-org/react"; 
+import {
+  fetchMentorRequests as fetchMentorRequestsService,
+  approveMentor as approveMentorService,
+  cancelMentorship as cancelMentorshipService,
+  rejectMentor,
+} from "../../Service/Mentor.Service";
 
 const AdminMentorRequests = () => {
   const [mentorRequests, setMentorRequests] = useState([]);
@@ -13,8 +17,7 @@ const AdminMentorRequests = () => {
   // Fetch mentor requests
   const fetchMentorRequests = async () => {
     try {
-      const { data } = await axiosInstance.get("/mentors/getallmentorrequest");
-      console.log(data);
+      const data = await fetchMentorRequestsService();
       setMentorRequests(data);
     } catch (error) {
       toast.error("Failed to fetch mentor requests.");
@@ -25,7 +28,7 @@ const AdminMentorRequests = () => {
   // Approve mentor request
   const approveMentor = async (mentorId) => {
     try {
-      await axiosInstance.put(`/mentors/approvementorrequest/${mentorId}`);
+      await approveMentorService(mentorId);
       toast.success("Mentor approved successfully.");
       fetchMentorRequests(); // Refresh data
     } catch (error) {
@@ -34,10 +37,10 @@ const AdminMentorRequests = () => {
     }
   };
 
-   // Cancel mentorship
-   const cancelMentorship = async (mentorId) => {
+  // Cancel mentorship
+  const cancelMentorship = async (mentorId) => {
     try {
-      await axiosInstance.put(`/mentors/cancelmentorship/${mentorId}`);
+      await cancelMentorshipService(mentorId);
       toast.success("Mentorship canceled successfully.");
       fetchMentorRequests(); // Refresh data
     } catch (error) {
@@ -59,19 +62,17 @@ const AdminMentorRequests = () => {
     }
 
     try {
-      await axiosInstance.delete(`/mentors/rejectmentorrequest/${selectedMentorId}`, {
-        data: { rejectionReason },
-      });
+      await rejectMentor(selectedMentorId as string, rejectionReason);
       toast.success("Mentor rejected successfully.");
       setRejectionModal(false);
       setRejectionReason("");
-      fetchMentorRequests(); 
+      fetchMentorRequests();
     } catch (error) {
       toast.error("Failed to reject mentor.");
       console.error("Error:", error);
     }
   };
-  
+
   const handleCertificateClick = (certificateUrl) => {
     setSelectedCertificate(certificateUrl);
   };
@@ -104,7 +105,7 @@ const AdminMentorRequests = () => {
                 <td className="py-2 px-4 border-b">{mentor.userId.email}</td>
                 <td className="py-2 px-4 border-b">{mentor.specialization}</td>
                 <td className="py-2 px-4 border-b">
-                {mentor.skills.map((skill) => skill.name).join(", ")}
+                  {mentor.skills.map((skill) => skill.name).join(", ")}
                 </td>
                 <td className="py-2 px-4 border-b">
                   {mentor.certifications.map((cert, index) => (
@@ -118,7 +119,7 @@ const AdminMentorRequests = () => {
                   ))}
                 </td>
                 <td className="py-2 px-4 border-b">
-                {mentor.isApproved === "Completed" ? (
+                  {mentor.isApproved === "Completed" ? (
                     <>
                       <button
                         className="bg-gray-300 text-gray-700 py-1 px-3 rounded cursor-not-allowed"
@@ -192,8 +193,6 @@ const AdminMentorRequests = () => {
         </div>
       )}
 
-
-
       {/* Certificate Modal */}
       {selectedCertificate && (
         <div className="fixed inset-0 flex items-center justify-center bg-black bg-opacity-50 z-50">
@@ -212,8 +211,6 @@ const AdminMentorRequests = () => {
           </div>
         </div>
       )}
-
-
     </div>
   );
 };

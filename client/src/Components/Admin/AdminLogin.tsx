@@ -2,8 +2,13 @@ import { useForm } from "react-hook-form";
 import { useDispatch } from "react-redux";
 import { useNavigate } from "react-router-dom";
 import toast from "react-hot-toast";
-import { signinStart, setIsAdmin, signinFailure } from "../../redux/Slice/userSlice";
-import { axiosInstance } from "../../lib/axios";
+import {
+  signinStart,
+  setIsAdmin,
+  signinFailure,
+} from "../../redux/Slice/userSlice";
+import { login } from "../../Service/Auth.service";
+import { AdminPasscodeCheck } from "../../Service/Admin.Service";
 
 const AdminLogin = () => {
   const dispatch = useDispatch();
@@ -18,15 +23,14 @@ const AdminLogin = () => {
   const onSubmit = async (data: { email: string; password: string }) => {
     try {
       dispatch(signinStart());
-      const response = await axiosInstance.post("/auth/login", data);
-      const user = response.data.user;
+      const { user } = await login(data);
 
       if (user.role === "admin") {
         const passkey = prompt("Enter the admin passkey:");
         if (passkey) {
-          const isPasskeyValid = await axiosInstance.post("/auth/verify-admin-passkey", { passkey });
+          const isPasskeyValid = await AdminPasscodeCheck(passkey);
 
-          if (isPasskeyValid.data.valid) {
+          if (isPasskeyValid.valid) {
             toast.success("Welcome, Admin!");
             dispatch(setIsAdmin(user));
             navigate("/admin/dashboard", { replace: true });
@@ -39,7 +43,9 @@ const AdminLogin = () => {
       }
     } catch (error: any) {
       toast.error(error.response?.data?.message || "Admin login failed");
-      dispatch(signinFailure(error.response?.data?.message || "Admin login failed"));
+      dispatch(
+        signinFailure(error.response?.data?.message || "Admin login failed")
+      );
     }
   };
 
@@ -68,8 +74,8 @@ const AdminLogin = () => {
               })}
             />
             {errors.email && typeof errors.email.message === "string" && (
-                  <p className="text-red-500 text-sm">{errors.email.message}</p>
-                )}
+              <p className="text-red-500 text-sm">{errors.email.message}</p>
+            )}
           </div>
           <div className="mb-4">
             <label htmlFor="password" className="block text-sm font-medium">
@@ -90,12 +96,9 @@ const AdminLogin = () => {
                 },
               })}
             />
-            {errors.password &&
-                  typeof errors.password.message === "string" && (
-                    <p className="text-red-500 text-sm">
-                      {errors.password.message}
-                    </p>
-                  )}
+            {errors.password && typeof errors.password.message === "string" && (
+              <p className="text-red-500 text-sm">{errors.password.message}</p>
+            )}
           </div>
           <button
             type="submit"

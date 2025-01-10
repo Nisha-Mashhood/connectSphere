@@ -1,141 +1,94 @@
-import { useState } from "react";
-import SignupImage from "../../assets/Signup.png";
+import { Formik, Form, Field, ErrorMessage } from "formik";
+import * as Yup from "yup";
 import { Link, useNavigate } from "react-router-dom";
-import { axiosInstance } from "../../lib/axios.ts";
+import { toast } from "react-hot-toast";
 import { useDispatch } from "react-redux";
-import { signinFailure, signinStart } from "../../redux/Slice/userSlice.ts";
-import toast from "react-hot-toast";
+import { signinStart, signinFailure } from "../../redux/Slice/userSlice.ts";
+import { register } from "../../Service/Auth.service.ts";
+import SignupImage from "../../assets/Signup.png";
 
-interface FormData {
-  name: string;
-  email: string;
-  password: string;
-}
 const Signup = () => {
-  const [formData, setFormData] = useState<FormData>({
-    name: "",
-    email: "",
-    password: "",
-  });
-  const [error, setError] = useState(false);
-  const [loading, setLoading] = useState(false);
   const Navigate = useNavigate();
   const dispatch = useDispatch();
 
-  const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    setFormData({ ...formData, [e.target.id]: e.target.value });
-  };
-  const ValidateForm = () => {
-    // Name Validation
-    if (!formData.name.trim()) {
-      toast.error("Full name is required");
-      return false;
-    }
-    if (!/^[A-Za-z ]+$/.test(formData.name.trim())) {
-      toast.error("Full name can only contain alphabets");
-      return false;
-    }
-    if (formData.name.trim().length < 3) {
-      toast.error("Name must be at least 3 characters long");
-      return false;
-    }
-    if (formData.name.trim().length > 50) {
-      toast.error("Name cannot exceed 50 characters");
-      return false;
-    }
-    if (/ {2,}/.test(formData.name)) {
-      toast.error("Name cannot contain multiple consecutive spaces");
-      return false;
-    }
-  
-    // Email Validation
-    if (!formData.email.trim()) {
-      toast.error("Email is required");
-      return false;
-    }
-    if (
-      !/^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/.test(formData.email)
-    ) {
-      toast.error("Invalid email format");
-      return false;
-    }
-    if (formData.email.endsWith("@example.com")) {
-      toast.error("Email from @example.com domain is not allowed");
-      return false;
-    }
-    if (formData.email.length > 100) {
-      toast.error("Email cannot exceed 100 characters");
-      return false;
-    }
-    if (/ {2,}/.test(formData.email)) {
-      toast.error("Email cannot contain multiple consecutive spaces");
-      return false;
-    }
-  
-    // Password Validation
-    if (!formData.password) {
-      toast.error("Password is required");
-      return false;
-    }
-    if (!/^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[!@#$%^&*])[A-Za-z\d!@#$%^&*]{8,20}$/.test(formData.password)) {
-      toast.error(
+  // Yup validation schema
+  const validationSchema = Yup.object({
+    name: Yup.string()
+      .required("Full name is required")
+      .matches(/^[A-Za-z ]+$/, "Full name can only contain alphabets")
+      .min(3, "Name must be at least 3 characters long")
+      .max(50, "Name cannot exceed 50 characters")
+      .test(
+        "no-multiple-spaces",
+        "Name cannot contain multiple consecutive spaces",
+        (value) => !/\s{2,}/.test(value)
+      ),
+    email: Yup.string()
+      .required("Email is required")
+      .email("Invalid email format")
+      .max(100, "Email cannot exceed 100 characters")
+      .notOneOf(
+        ["@example.com"],
+        "Email from @example.com domain is not allowed"
+      )
+      .test(
+        "no-multiple-spaces",
+        "Email cannot contain multiple consecutive spaces",
+        (value) => !/\s{2,}/.test(value)
+      ),
+    password: Yup.string()
+      .required("Password is required")
+      .matches(
+        /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[!@#$%^&*])[A-Za-z\d!@#$%^&*]{8,20}$/,
         "Password must be 8-20 characters long, include at least one uppercase letter, one lowercase letter, one number, and one special character"
-      );
-      return false;
-    }
-    if (/(\d)\1{2,}/.test(formData.password)) {
-      toast.error("Password cannot contain sequential repeated digits");
-      return false;
-    }
-    if (/([A-Za-z])\1{2,}/.test(formData.password)) {
-      toast.error("Password cannot contain sequential repeated letters");
-      return false;
-    }
-    if (formData.password.includes(formData.name.trim())) {
-      toast.error("Password cannot contain your name");
-      return false;
-    }
-    if (formData.password.includes(formData.email.split("@")[0])) {
-      toast.error("Password cannot contain parts of your email");
-      return false;
-    }
-    if (/ {2,}/.test(formData.password)) {
-      toast.error("Password cannot contain multiple consecutive spaces");
-      return false;
-    }
-  
-    return true; // All validations passed
-  };
-  
+      )
+      .test(
+        "no-sequential-repeated-digits",
+        "Password cannot contain sequential repeated digits",
+        (value) => !/(\d)\1{2,}/.test(value)
+      )
+      .test(
+        "no-sequential-repeated-letters",
+        "Password cannot contain sequential repeated letters",
+        (value) => !/([A-Za-z])\1{2,}/.test(value)
+      )
+      .test(
+        "no-name-in-password",
+        "Password cannot contain your name",
+        function (value) {
+          const { name } = this.parent;
+          return !value.includes(name.trim());
+        }
+      )
+      .test(
+        "no-email-in-password",
+        "Password cannot contain parts of your email",
+        function (value) {
+          const { email } = this.parent;
+          return !value.includes(email.split("@")[0]);
+        }
+      )
+      .test(
+        "no-multiple-spaces",
+        "Password cannot contain multiple consecutive spaces",
+        (value) => !/\s{2,}/.test(value)
+      ),
+  });
 
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    const success = ValidateForm();
-    
-    if (success === true){
-      // console.log("validataion success");
-
-      setLoading(true);
-      setError(false);
-    dispatch(signinStart());
+  const handleSubmit = async (values: any, { setSubmitting }: any) => {
     try {
-      await axiosInstance.post("/auth/register/signup", {
-        name: formData.name,
-        email: formData.email,
-        password: formData.password,
-      });
+      dispatch(signinStart());
+      await register(values);
       Navigate("/login");
       toast.success("User Registered Successfully");
     } catch (err: any) {
       console.error(err);
       dispatch(signinFailure(err.response?.data?.message || "Signup failed"));
-      setError(true);
+      toast.error(err.response?.data?.message || "Signup failed");
     } finally {
-      setLoading(false);
+      setSubmitting(false);
     }
-    } 
   };
-
 
   return (
     <div>
@@ -147,47 +100,72 @@ const Signup = () => {
               Create an Account
             </h1>
 
-            <form className="mt-6" onSubmit={handleSubmit} method="POST">
-              <div>
-                <label className="block text-gray-700">Full Name</label>
-                <input
-                  type="text"
-                  placeholder="Enter Full Name"
-                  id="name"
-                  className="w-full px-4 py-3 rounded-lg bg-gray-200 mt-2 border focus:border-blue-500 focus:bg-white focus:outline-none"
-                  onChange={handleChange}
-                />
-              </div>
+            <Formik
+              initialValues={{
+                name: "",
+                email: "",
+                password: "",
+              }}
+              validationSchema={validationSchema}
+              onSubmit={handleSubmit}
+            >
+              {({ isSubmitting }) => (
+                <Form className="mt-6">
+                  <div>
+                    <label className="block text-gray-700">Full Name</label>
+                    <Field
+                      type="text"
+                      name="name"
+                      placeholder="Enter Full Name"
+                      className="w-full px-4 py-3 rounded-lg bg-gray-200 mt-2 border focus:border-blue-500 focus:bg-white focus:outline-none"
+                    />
+                    <ErrorMessage
+                      name="name"
+                      component="div"
+                      className="text-red-600 text-sm"
+                    />
+                  </div>
 
-              <div className="mt-4">
-                <label className="block text-gray-700">Email Address</label>
-                <input
-                  type="email"
-                  placeholder="Enter Email Address"
-                  id="email"
-                  className="w-full px-4 py-3 rounded-lg bg-gray-200 mt-2 border focus:border-blue-500 focus:bg-white focus:outline-none"
-                  onChange={handleChange}
-                />
-              </div>
+                  <div className="mt-4">
+                    <label className="block text-gray-700">Email Address</label>
+                    <Field
+                      type="email"
+                      name="email"
+                      placeholder="Enter Email Address"
+                      className="w-full px-4 py-3 rounded-lg bg-gray-200 mt-2 border focus:border-blue-500 focus:bg-white focus:outline-none"
+                    />
+                    <ErrorMessage
+                      name="email"
+                      component="div"
+                      className="text-red-600 text-sm"
+                    />
+                  </div>
 
-              <div className="mt-4">
-                <label className="block text-gray-700">Password</label>
-                <input
-                  type="password"
-                  placeholder="Create Password"
-                  id="password"
-                  className="w-full px-4 py-3 rounded-lg bg-gray-200 mt-2 border focus:border-blue-500 focus:bg-white focus:outline-none"
-                  onChange={handleChange}
-                />
-              </div>
+                  <div className="mt-4">
+                    <label className="block text-gray-700">Password</label>
+                    <Field
+                      type="password"
+                      name="password"
+                      placeholder="Create Password"
+                      className="w-full px-4 py-3 rounded-lg bg-gray-200 mt-2 border focus:border-blue-500 focus:bg-white focus:outline-none"
+                    />
+                    <ErrorMessage
+                      name="password"
+                      component="div"
+                      className="text-red-600 text-sm"
+                    />
+                  </div>
 
-              <button
-                disabled={loading}
-                className="w-full block bg-indigo-500 hover:bg-indigo-400 focus:bg-indigo-400 text-white font-semibold rounded-lg px-4 py-3 mt-6"
-              >
-                {loading ? "Loading..." : "Sign Up"}
-              </button>
-            </form>
+                  <button
+                    type="submit"
+                    disabled={isSubmitting}
+                    className="w-full block bg-indigo-500 hover:bg-indigo-400 focus:bg-indigo-400 text-white font-semibold rounded-lg px-4 py-3 mt-6"
+                  >
+                    {isSubmitting ? "Loading..." : "Sign Up"}
+                  </button>
+                </Form>
+              )}
+            </Formik>
             <hr className="my-6 border-gray-300 w-full" />
 
             {/* Google Signup Button */}
@@ -237,9 +215,8 @@ const Signup = () => {
               </Link>
             </p>
           </div>
-          <p className="text-center text-red-600 mt-4">{error}</p>
-          {/* <p className="text-center text-red-600 mt-4">{error && "Something went wrong"}</p> */}
         </div>
+
         {/* Right Section with Image */}
         <div className="bg-indigo-600 hidden lg:block w-full md:w-1/2 xl:w-2/3 h-screen">
           <img

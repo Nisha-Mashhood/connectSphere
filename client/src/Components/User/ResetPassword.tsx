@@ -9,7 +9,7 @@ import {
   signinFailure,
   signinStart,
 } from "../../redux/Slice/userSlice";
-import { axiosInstance } from "../../lib/axios";
+import { resetPassword } from "../../Service/Auth.service";
 const ResetPassword = () => {
   const resetEmail = useSelector((state: RootState) => state.user.resetEmail);
   const dispatch = useDispatch();
@@ -36,7 +36,8 @@ const ResetPassword = () => {
     try {
       dispatch(signinStart());
       const payload = { email: resetEmail, newPassword: data.newPassword };
-      await axiosInstance.post("/auth/register/reset-password", payload);
+      // await axiosInstance.post("/auth/register/reset-password", payload);
+      await resetPassword(payload)
       toast.success("Password reset successfully!");
       dispatch(clearResetEmail()); // Clear email from Redux
       navigate("/login"); // Redirect to login page

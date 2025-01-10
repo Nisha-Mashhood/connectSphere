@@ -12,13 +12,14 @@ import {
 } from "@nextui-org/react";
 import { Button } from "@nextui-org/react";
 import Logo from "../../assets/logo.svg";
-import { axiosInstance } from "../../lib/axios";
 import { useDispatch, useSelector } from "react-redux";
-import { useLocation, useNavigate } from "react-router-dom";
+import { useNavigate } from "react-router-dom";
 import { signOut } from "../../redux/Slice/userSlice";
 import toast from "react-hot-toast";
 import { RootState } from "../../redux/store";
-import { useEffect } from "react";
+import { checkProfile, logout } from "../../Service/Auth.service";
+import { checkMentorProfile } from "../../Service/Mentor.Service";
+// import { useEffect } from "react";
 
 export const ConnectSphereLogo = () => {
   return (
@@ -30,7 +31,7 @@ export const ConnectSphereLogo = () => {
 const Header = () => {
   const dispatch = useDispatch();
   const navigate = useNavigate();
-  const location = useLocation();
+  // const location = useLocation();
   const { currentUser } = useSelector((state: RootState) => state.user);
 
   // useEffect(() => {
@@ -71,7 +72,7 @@ const Header = () => {
   const handleLogout = async () => {
     const email = currentUser?.email;
     try {
-      await axiosInstance.post("/auth/logout", { email });
+      logout(email);
       dispatch(signOut());
       navigate("/login", { replace: true });
       toast.success("Logout successfully!");
@@ -92,8 +93,10 @@ const Header = () => {
     }
     try {
       // Step 1: Check if the profile is complete
-      const profileResponse = await axiosInstance.get(`/auth/check-profile/${currentUser._id}`);
-      const isProfileComplete = profileResponse.data.isProfileComplete;
+      // await axiosInstance.get(`/auth/check-profile/${currentUser._id}`);
+
+      const profileResponse = await checkProfile(currentUser._id);
+      const isProfileComplete = profileResponse.isProfileComplete;
   
       if (!isProfileComplete) {
         toast.error("For becoming a mentor, you should complete your profile first.");
@@ -102,9 +105,10 @@ const Header = () => {
       }
   
       // Step 2: Check if the user is already a mentor and the approval status
-      const mentorResponse = await axiosInstance.get(`/mentors/check-mentor/${currentUser._id}`);
-      const mentor = mentorResponse.data.mentor;
-      console.log(mentorResponse);
+      // const mentorResponse = await axiosInstance.get(`/mentors/check-mentor/${currentUser._id}`);
+
+      const mentorResponse = await checkMentorProfile(currentUser._id);
+      const mentor = mentorResponse.mentor;
   
       if (!mentor) {
         // If there's no mentor record, show the mentor profile form

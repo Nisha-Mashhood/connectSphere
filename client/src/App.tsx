@@ -1,5 +1,5 @@
 import { useLocation } from "react-router-dom";
-import { AdminRoutes, UserRoutes } from "./routes/index";
+import { AdminRoutes, UserRoutes } from "./routes/routes";
 import { Toaster } from "react-hot-toast";
 
 function App() {
