@@ -146,6 +146,7 @@ export const logout = async (req, res) => {
 //Handle forgot password
 export const handleForgotPassword = async (req, res) => {
     try {
+        console.log(req.body);
         const { email } = req.body;
         const otp = await forgotPassword(email);
         res.status(200).json({ message: "OTP sent to email.", otp });
@@ -168,6 +169,7 @@ export const handleVerifyOTP = async (req, res) => {
 //Handles Reset Password
 export const handleResetPassword = async (req, res) => {
     try {
+        console.log(req.body);
         const { email, newPassword } = req.body;
         await resetPassword(email, newPassword);
         res.status(200).json({ message: "Password reset successfully." });

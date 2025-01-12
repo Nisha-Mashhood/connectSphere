@@ -60,6 +60,7 @@ export const login = async (req: Request, res: Response) => {
   }
   }
 
+
 // Handle refresh token logic
 export const refreshToken = async (req: Request, res: Response) => {
   try {
@@ -172,6 +173,7 @@ export const logout = async (req: Request, res: Response) => {
 //Handle forgot password
 export const handleForgotPassword = async (req: Request, res: Response) => {
   try {
+    console.log(req.body);
     const { email } = req.body;
     const otp = await forgotPassword(email);
     res.status(200).json({ message: "OTP sent to email.", otp });
@@ -194,6 +196,7 @@ export const handleVerifyOTP = async (req: Request, res: Response) => {
 //Handles Reset Password
 export const handleResetPassword = async (req: Request, res: Response) => {
   try {
+    console.log(req.body);
     const { email, newPassword } = req.body;
     await resetPassword(email, newPassword);
     res.status(200).json({ message: "Password reset successfully." });

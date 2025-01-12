@@ -1,6 +1,5 @@
 import LoginImage from "../../assets/Login.png";
 import { Link, useLocation, useNavigate } from "react-router-dom";
-import { useForm } from "react-hook-form";
 import { useDispatch } from "react-redux";
 import {
   signinFailure,
@@ -8,72 +7,76 @@ import {
   signinSuccess,
   unsetIsAdmin,
 } from "../../redux/Slice/userSlice";
-// import { axiosInstance } from "../../lib/axios";
 import toast from "react-hot-toast";
 import GoogleLogin from "./GoogleLogin";
 import GitHub from "./GitHub";
 import { useEffect } from "react";
 import { login, checkProfile } from "../../Service/Auth.service";
+import { Formik, Field, Form, ErrorMessage } from "formik";
+import * as Yup from "yup";
 
 const Login = () => {
-  // const { isAdmin } = useSelector((state: RootState) => state.user);
   const dispatch = useDispatch();
   const navigate = useNavigate();
   const location = useLocation();
 
-  const {
-    register,
-    handleSubmit,
-    formState: { errors },
-  } = useForm();
-
-  // Display error message if passed through route state
   useEffect(() => {
     if (location.state?.error) {
       toast.error(location.state.error);
     }
   }, [location.state]);
 
+  // Form validation schema with Yup
+  const validationSchema = Yup.object({
+    email: Yup.string()
+      .email("Invalid email address")
+      .required("Email is required"),
+    password: Yup.string()
+      .min(8, "Password must be at least 8 characters long")
+      .required("Password is required"),
+  });
+
   // Handle login form submission
-  const onSubmit = async (data: { email: string; password: string }) => {
+  const onSubmit = async (values: { email: string; password: string; role: 'user' }) => {
     try {
       dispatch(signinStart());
-      // const response = await axiosInstance.post("/auth/login", data);
-      // const user = response.data.user;
-
-      const { user } = await login(data);
-
-      // Regular user login
-      if (user.role !== "admin") {
-        toast.success("Login successful!");
-        dispatch(signinSuccess(user));
-        dispatch(unsetIsAdmin());
-
-        // Check if profile is complete
-        //const profileResponse = await axiosInstance.get(`/auth/check-profile/${user._id}`);
-        //const isProfileComplete = profileResponse.data.isProfileComplete;
-
-        const profileResponse = await checkProfile(user._id);
-        const isProfileComplete = profileResponse.isProfileComplete;
-
-        if (!isProfileComplete) {
-          toast.error("Complete your profile before proceeding.");
-          navigate("/complete-profile", { replace: true });
-          return;
-        }
-        navigate("/", { replace: true });
-      } else {
-        toast.error("Wrong Credentials.");
+      const { user } = await login(values);
+  
+      // Check user role
+      if (user.role !== 'user') {
+        toast.error("Invalid credentials for user login");
+        return;
       }
+  
+      // Check if user is blocked
+      if (user.isBlocked) {
+        toast.error("Your account has been blocked. Please contact support.");
+        return;
+      }
+  
+      toast.success("Login successful!");
+      dispatch(signinSuccess(user));
+      dispatch(unsetIsAdmin());
+  
+      const profileResponse = await checkProfile(user._id);
+      const isProfileComplete = profileResponse.isProfileComplete;
+  
+      if (!isProfileComplete) {
+        navigate("/complete-profile", { replace: true });
+        return;
+      }
+      navigate("/", { replace: true });
     } catch (error: any) {
-      if (error.response?.data?.message === "Blocked") {
-        toast.error("Your account is blocked. Please contact support.");
-      } else {
-        toast.error(error.response?.data?.message || "Login failed");
-      }
-      dispatch(signinFailure(error.response?.data?.message || "Login failed"));
+      handleLoginError(error, dispatch);
     }
   };
+
+  // Error handling function
+const handleLoginError = (error: any, dispatch: any) => {
+  const errorMessage = error.message || "Login failed";
+  toast.error(errorMessage);
+  dispatch(signinFailure(errorMessage));
+};
 
   return (
     <div>
@@ -95,69 +98,61 @@ const Login = () => {
               Log in to your account
             </h1>
 
-            <form className="mt-6" onSubmit={handleSubmit(onSubmit)}>
-              <div>
-                <label className="block text-gray-700">Email Address</label>
-                <input
-                  type="email"
-                  placeholder="Enter Email Address"
-                  className={`w-full px-4 py-3 rounded-lg bg-gray-200 mt-2 border ${
-                    errors.email ? "border-red-500" : "border-gray-300"
-                  } focus:border-blue-500 focus:bg-white focus:outline-none`}
-                  {...register("email", {
-                    required: "Email is required",
-                    pattern: {
-                      value: /^[^\s@]+@[^\s@]+\.[^\s@]+$/,
-                      message: "Invalid email address",
-                    },
-                  })}
-                />
-                {errors.email && typeof errors.email.message === "string" && (
-                  <p className="text-red-500 text-sm">{errors.email.message}</p>
-                )}
-              </div>
+            {/* Formik Form */}
+            <Formik
+              initialValues={{ email: "", password: "",role:"" }}
+              validationSchema={validationSchema}
+              onSubmit={onSubmit}
+            >
+              <Form className="mt-6" noValidate>
+                <div>
+                  <label className="block text-gray-700">Email Address</label>
+                  <Field
+                    type="email"
+                    name="email"
+                    placeholder="Enter Email Address"
+                    className="w-full px-4 py-3 rounded-lg bg-gray-200 mt-2 border focus:border-blue-500 focus:bg-white focus:outline-none"
+                  />
+                  <ErrorMessage
+                    name="email"
+                    component="p"
+                    className="text-red-500 text-sm"
+                  />
+                </div>
 
-              <div className="mt-4">
-                <label className="block text-gray-700">Password</label>
-                <input
-                  type="password"
-                  placeholder="Enter Password"
-                  className={`w-full px-4 py-3 rounded-lg bg-gray-200 mt-2 border ${
-                    errors.password ? "border-red-500" : "border-gray-300"
-                  } focus:border-blue-500 focus:bg-white focus:outline-none`}
-                  {...register("password", {
-                    required: "Password is required",
-                    minLength: {
-                      value: 8,
-                      message: "Password must be at least 8 characters long",
-                    },
-                  })}
-                />
-                {errors.password &&
-                  typeof errors.password.message === "string" && (
-                    <p className="text-red-500 text-sm">
-                      {errors.password.message}
-                    </p>
-                  )}
-              </div>
+                <div className="mt-4">
+                  <label className="block text-gray-700">Password</label>
+                  <Field
+                    type="password"
+                    name="password"
+                    placeholder="Enter Password"
+                    className="w-full px-4 py-3 rounded-lg bg-gray-200 mt-2 border focus:border-blue-500 focus:bg-white focus:outline-none"
+                  />
+                  <ErrorMessage
+                    name="password"
+                    component="p"
+                    className="text-red-500 text-sm"
+                  />
+                </div>
 
-              <div className="text-right mt-2">
-                <Link
-                  to="/forgot"
-                  className="text-sm font-semibold text-gray-700 hover:text-blue-700 focus:text-blue-700"
-                >
-                  Forgot Password?
-                </Link>
-              </div>
+                <div className="text-right mt-2">
+                  <Link
+                    to="/forgot"
+                    className="text-sm font-semibold text-gray-700 hover:text-blue-700 focus:text-blue-700"
+                  >
+                    Forgot Password?
+                  </Link>
+                </div>
 
-              <button
-                type="submit"
-                className="w-full block bg-indigo-500 hover:bg-indigo-400 focus:bg-indigo-400 text-white font-semibold rounded-lg
+                <button
+                  type="submit"
+                  className="w-full block bg-indigo-500 hover:bg-indigo-400 focus:bg-indigo-400 text-white font-semibold rounded-lg
               px-4 py-3 mt-6"
-              >
-                Log In
-              </button>
-            </form>
+                >
+                  Log In
+                </button>
+              </Form>
+            </Formik>
 
             <hr className="my-6 border-gray-300 w-full" />
 

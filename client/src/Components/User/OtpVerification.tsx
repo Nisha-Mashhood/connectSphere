@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import  { useState, useEffect } from "react";
 import otpImage from "../../assets/OTP verification.png";
 import { InputOtp } from "@nextui-org/input-otp";
 import { useDispatch, useSelector } from "react-redux";
@@ -7,40 +7,39 @@ import { signinStart } from "../../redux/Slice/userSlice";
 import { RootState } from "../../redux/store";
 import toast from "react-hot-toast";
 import { sentOTP, verifyOTP } from "../../Service/Auth.service";
+import { Formik, Form, ErrorMessage } from "formik";
+import * as Yup from "yup";
 
 const OTPVerification = () => {
   const resetEmail = useSelector((state: RootState) => state.user.resetEmail);
-  const [value, setValue] = useState("");
-  const [error, setError] = useState(""); // State to track OTP errors
   const [timeLeft, setTimeLeft] = useState(120); // Timer for 2 minutes
   const [isResendEnabled, setIsResendEnabled] = useState(false); // State for enabling resend OTP
   const dispatch = useDispatch();
   const navigate = useNavigate();
 
+  // OTP validation schema using Yup
+  const validationSchema = Yup.object({
+    otp: Yup.string()
+      .length(6, "OTP must be exactly 6 digits")
+      .matches(/^[0-9]+$/, "OTP must only contain digits")
+      .required("OTP is required"),
+  });
+
   // Handle OTP submission
-  const onSubmit = async (event: React.FormEvent) => {
-    event.preventDefault(); // Prevent form reload
-
-    if (value.length !== 6) {
-      setError("Please enter a valid 6-digit OTP."); // Validate OTP length
-      return;
-    }
-
-
-    const data = { email: resetEmail, otp: value };
+  const onSubmit = async (values: { otp: string }) => {
+    const data = { email: resetEmail, otp: values.otp };
     try {
       dispatch(signinStart());
-      const otpSuccess = await verifyOTP(data)
-      // const otpSuccess = await axiosInstance.post("/auth/register/verify-otp", data);
+      const otpSuccess = await verifyOTP(data);
 
       if (otpSuccess.status === 200) {
         toast.success("OTP verified successfully!");
         navigate("/reset");
       } else {
-        setError("Invalid OTP. Please try again."); // Show error if OTP fails
+        toast.error("Invalid OTP. Please try again.");
       }
     } catch (error: any) {
-      setError(error.response?.data?.message || "Submission failed"); // Handle server errors
+      toast.error(error.response?.data?.message || "Submission failed");
     }
   };
 
@@ -63,8 +62,7 @@ const OTPVerification = () => {
   const handleResendOtp = async () => {
     if (!isResendEnabled) return; // Don't resend if not enabled
     try {
-      sentOTP(resetEmail)
-      // await axiosInstance.post("/auth/register/forgot-password", { email: resetEmail });
+      await sentOTP(resetEmail);
       toast.success("OTP has been resent!");
       setTimeLeft(120); // Reset the timer
       setIsResendEnabled(false); // Disable resend until the timer resets
@@ -95,53 +93,65 @@ const OTPVerification = () => {
               We’ve sent a code to your email <strong>{resetEmail}</strong>. Enter it below to verify.
             </p>
 
-            <form className="mt-6" onSubmit={onSubmit}>
-              <div className="flex flex-col items-start gap-2">
-                <InputOtp
-                  length={6}
-                  value={value}
-                  onValueChange={(val) => {
-                    setValue(val);
-                    if (error) setError(""); // Clear error when typing
-                  }}
-                />
-                {error && <p className="text-red-500 text-sm">{error}</p>}
-                <div className="text-small text-default-500">
-                  OTP value: <span className="text-md font-medium">{value}</span>
-                </div>
+            <Formik
+              initialValues={{ otp: "" }}
+              validationSchema={validationSchema}
+              onSubmit={onSubmit}
+            >
+              {({ values, handleChange, handleBlur }) => (
+                <Form className="mt-6">
+                  <div className="flex flex-col items-start gap-2">
+                    {/* OTP Input */}
+                    <InputOtp
+                      length={6}
+                      value={values.otp}
+                      onValueChange={(val) => handleChange({ target: { name: "otp", value: val } })}
+                      onBlur={handleBlur}
+                    />
+                    <ErrorMessage
+                      name="otp"
+                      component="p"
+                      className="text-red-500 text-sm"
+                    />
 
-                {/* Resend OTP Section */}
-                {isResendEnabled ? (
+                    <div className="text-small text-default-500">
+                      OTP value: <span className="text-md font-medium">{values.otp}</span>
+                    </div>
+
+                    {/* Resend OTP Section */}
+                    {isResendEnabled ? (
+                      <button
+                        type="button"
+                        onClick={handleResendOtp}
+                        className="text-indigo-600 mt-2"
+                      >
+                        Resend OTP
+                      </button>
+                    ) : (
+                      <p className="text-sm text-gray-500">
+                        You can resend OTP in {timeLeft} seconds
+                      </p>
+                    )}
+
+                    <div className="text-right mt-2">
+                      <Link
+                        to="/forgot"
+                        className="text-sm font-semibold text-gray-700 hover:text-blue-700 focus:text-blue-700"
+                      >
+                        Forgot Password?
+                      </Link>
+                    </div>
+                  </div>
+
                   <button
-                    type="button"
-                    onClick={handleResendOtp}
-                    className="text-indigo-600 mt-2"
+                    type="submit"
+                    className="w-full block bg-indigo-500 hover:bg-indigo-400 focus:bg-indigo-400 text-white font-semibold rounded-lg px-4 py-3 mt-6"
                   >
-                    Resend OTP
+                    Verify
                   </button>
-                ) : (
-                  <p className="text-sm text-gray-500">
-                    You can resend OTP in {timeLeft} seconds
-                  </p>
-                )}
-
-                <div className="text-right mt-2">
-                  <Link
-                    to="/forgot"
-                    className="text-sm font-semibold text-gray-700 hover:text-blue-700 focus:text-blue-700"
-                  >
-                    Forgot Password?
-                  </Link>
-                </div>
-              </div>
-
-              <button
-                type="submit"
-                className="w-full block bg-indigo-500 hover:bg-indigo-400 focus:bg-indigo-400 text-white font-semibold rounded-lg px-4 py-3 mt-6"
-              >
-                Verify
-              </button>
-            </form>
+                </Form>
+              )}
+            </Formik>
           </div>
         </div>
       </section>

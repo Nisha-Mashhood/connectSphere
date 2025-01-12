@@ -2,6 +2,8 @@ import React, { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import toast from "react-hot-toast";
 import { useSelector } from "react-redux";
+import { Formik, Form, Field, ErrorMessage } from "formik";
+import * as Yup from "yup";
 import { RootState } from "../../redux/store";
 import { fetchUserDetails, updateUserDetails } from "../../Service/Auth.service";
 
@@ -9,43 +11,31 @@ const CompleteProfile: React.FC = () => {
   const { currentUser } = useSelector((state: RootState) => state.user);
   const navigate = useNavigate();
 
-  const [userDetails, setUserDetails] = useState({
-    name: "",
-    email: "",
-    phone: "",
-    profilePic: "",
-    coverPic: "",
-    dateOfBirth: "",
-    jobTitle: "",
-    industry: "",
-    reasonForJoining: "",
-  });
-  const[profilePic,setProfilePic] = useState(null);
-  const[coverPic, setCoverPic] = useState(null);
   const [profilePicPreview, setProfilePicPreview] = useState<string | null>(null);
   const [coverPicPreview, setCoverPicPreview] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(false);
+  const [initialValues, setInitialValues] = useState<any>(null); // Added state to hold initial form values
+
+  const validImageTypes = ["image/jpeg", "image/png", "image/jpg"];
 
   // Fetch user details
   const getUserDetails = async () => {
     try {
-      // const response = await axiosInstance.get(`/auth/profiledetails/${currentUser?._id}`);
-      // const user = response.data.userDetails;
-
       const data = await fetchUserDetails(currentUser?._id);
       const user = data.userDetails;
 
-      setUserDetails({
+      setInitialValues({
         name: user.name || "",
         email: user.email || "",
         phone: user.phone || "",
-        profilePic: user.profilePic || "",
-        coverPic: user.coverPic || "",
         dateOfBirth: user.dateOfBirth || "",
         jobTitle: user.jobTitle || "",
         industry: user.industry || "",
         reasonForJoining: user.reasonForJoining || "",
+        profilePic: "",
+        coverPic: "",
       });
+
       setProfilePicPreview(user.profilePic || null);
       setCoverPicPreview(user.coverPic || null);
     } catch (error) {
@@ -61,113 +51,51 @@ const CompleteProfile: React.FC = () => {
     }
   }, [currentUser, navigate]);
 
-  const validImageTypes = ["image/jpeg", "image/png", "image/jpg"];
-const handleFileChange = (e, type) => {
-  const file = e.target.files[0];
+  // Handle file changes
+  const handleFileChange = (
+    e: React.ChangeEvent<HTMLInputElement>,
+    type: "profilePic" | "coverPic",
+    setFieldValue: any
+  ) => {
+    const file = e.target.files?.[0];
 
-  // Validate image type
-  if (!validImageTypes.includes(file.type)) {
-    toast.error("Only JPEG, JPG, and PNG images are allowed");
-    return;
-  }
-
-  // Set the image file and preview
-  if (type === "profile") {
-    setProfilePic(file);
-    setProfilePicPreview(URL.createObjectURL(file));
-  } else {
-    setCoverPic(file);
-    setCoverPicPreview(URL.createObjectURL(file));
-  }
-};
-
-  
-
-  // Handle skip action
-  const handleSkip = () => {
-    if (
-      !userDetails.name ||
-      !userDetails.email ||
-      !userDetails.phone ||
-      !userDetails.dateOfBirth ||
-      !userDetails.jobTitle ||
-      !userDetails.industry ||
-      !userDetails.reasonForJoining ||
-      !userDetails.profilePic ||
-      !userDetails.coverPic
-    ) {
-      if (
-        window.confirm(
-          "Your profile is incomplete. Are you sure you want to skip?"
-        )
-      ) {
-        navigate("/");
-      }
+    if (file && validImageTypes.includes(file.type)) {
+      setFieldValue(type, file);
+      const previewUrl = URL.createObjectURL(file);
+      type === "profilePic"
+        ? setProfilePicPreview(previewUrl)
+        : setCoverPicPreview(previewUrl);
     } else {
-      navigate("/");
+      toast.error("Only JPEG, JPG, and PNG images are allowed");
     }
   };
 
-  // Handle save action
-  const handleSave = async () => {
-    const {
-      name,
-      email,
-      phone,
-      dateOfBirth,
-      jobTitle,
-      industry,
-      reasonForJoining,
-    } = userDetails;
-  
-    
-    // Validate that all fields are filled
-    if (
-      !name ||
-      !email ||
-      !phone ||
-      !dateOfBirth ||
-      !jobTitle ||
-      !industry ||
-      !reasonForJoining
-    ) {
-      toast.error("Please complete all required fields.");
-      return;
-    }
-  
-    const formData = new FormData();
-    formData.append("name", name);
-    formData.append("email", email);
-    formData.append("phone", phone);
-    formData.append("dateOfBirth", dateOfBirth);
-    formData.append("jobTitle", jobTitle);
-    formData.append("industry", industry);
-    formData.append("reasonForJoining", reasonForJoining);
-  
-   // Add images only if updated
-  if (profilePic && profilePic !== userDetails.profilePic) {
-    formData.append("profilePic", profilePic);
-  }
-  if (coverPic && coverPic !== userDetails.coverPic) {
-    formData.append("coverPic", coverPic);
-  }
-    
-    setIsLoading(true);
-    try {
-      // Call API to update user details
-      // await axiosInstance.put(
-      //   `/auth/updateUserDetails/${currentUser._id}`,
-      //   formData,
-      //   {
-      //     headers: {
-      //       "Content-Type": "multipart/form-data",
-      //     },
-      //   }
-      // );
+  // Yup validation schema
+  const validationSchema = Yup.object({
+    name: Yup.string().required("Full Name is required"),
+    email: Yup.string().email("Invalid email format").required("Email is required"),
+    phone: Yup.string().required("Phone number is required"),
+    dateOfBirth: Yup.string().required("Date of Birth is required"),
+    jobTitle: Yup.string().required("Job Title is required"),
+    industry: Yup.string().required("Industry is required"),
+    reasonForJoining: Yup.string().required("Reason for Joining is required"),
+  });
 
-      const updatedUser = await updateUserDetails(currentUser._id, formData);
-      setUserDetails(updatedUser);
-  
+  // Handle form submission
+  const handleSubmit = async (values: any) => {
+    setIsLoading(true);
+    const formData = new FormData();
+
+    Object.keys(values).forEach((key) => {
+      if (key === "profilePic" || key === "coverPic") {
+        if (values[key]) formData.append(key, values[key]);
+      } else {
+        formData.append(key, values[key]);
+      }
+    });
+
+    try {
+      await updateUserDetails(currentUser._id, formData);
       toast.success("Profile updated successfully!");
       navigate("/");
     } catch (error) {
@@ -177,6 +105,10 @@ const handleFileChange = (e, type) => {
     }
   };
 
+  // If initial values are null, render loading state
+  if (!initialValues) {
+    return <div>Loading...</div>;
+  }
 
   return (
     <div className="min-h-screen flex items-center justify-center bg-gray-50">
@@ -184,168 +116,177 @@ const handleFileChange = (e, type) => {
         <h2 className="text-2xl font-semibold text-gray-800 mb-4 text-center">
           Complete Your Profile
         </h2>
-        <p className="text-gray-500 mb-6 text-center">
-          Fill out the required fields to complete your profile.
-        </p>
-        <form className="space-y-6">
-          {/* Full Name */}
-          <div>
-            <label className="block text-gray-600 font-medium">Full Name</label>
-            <input
-              type="text"
-              value={userDetails.name}
-              onChange={(e) =>
-                setUserDetails({ ...userDetails, name: e.target.value })
-              }
-              className="w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:outline-none"
-              placeholder="Enter your full name"
-              required
-            />
-          </div>
+        <Formik
+          initialValues={initialValues}
+          validationSchema={validationSchema}
+          onSubmit={handleSubmit}
+        >
+          {({ setFieldValue }) => (
+            <Form className="space-y-6">
+              {/* Full Name */}
+              <div>
+                <label className="block text-gray-600 font-medium">Full Name</label>
+                <Field
+                  type="text"
+                  name="name"
+                  className="w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:outline-none"
+                  placeholder="Enter your full name"
+                />
+                <ErrorMessage
+                  name="name"
+                  component="div"
+                  className="text-red-500 text-sm mt-1"
+                />
+              </div>
 
-          {/* Email */}
-          <div>
-            <label className="block text-gray-600 font-medium">Email</label>
-            <input
-              type="email"
-              value={userDetails.email}
-              onChange={(e) =>
-                setUserDetails({ ...userDetails, email: e.target.value })
-              }
-              className="w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:outline-none"
-              placeholder="Enter your email address"
-              disabled
-            />
-          </div>
+              {/* Email */}
+              <div>
+                <label className="block text-gray-600 font-medium">Email</label>
+                <Field
+                  type="text"
+                  name="email"
+                  className="w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:outline-none"
+                  placeholder="Enter your email address"
+                />
+                <ErrorMessage
+                  name="email"
+                  component="div"
+                  className="text-red-500 text-sm mt-1"
+                />
+              </div>
 
-          {/* Phone */}
-          <div>
-            <label className="block text-gray-600 font-medium">Phone</label>
-            <input
-              type="tel"
-              value={userDetails.phone}
-              onChange={(e) =>
-                setUserDetails({ ...userDetails, phone: e.target.value })
-              }
-              className="w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:outline-none"
-              placeholder="Enter your phone number"
-              required
-            />
-          </div>
-          {/* Date of Birth */}
-          <div>
-            <label className="block text-gray-600 font-medium">Date of Birth</label>
-            <input
-              type="date"
-              value={userDetails.dateOfBirth}
-              onChange={(e) =>
-                setUserDetails({ ...userDetails, dateOfBirth: e.target.value })
-              }
-              className="w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:outline-none"
-              placeholder="DD/MM/YYYY"
-              required
-            />
-          </div>
+              {/* Phone */}
+              <div>
+                <label className="block text-gray-600 font-medium">Phone</label>
+                <Field
+                  type="tel"
+                  name="phone"
+                  className="w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:outline-none"
+                  placeholder="Enter your phone number"
+                />
+                <ErrorMessage
+                  name="phone"
+                  component="div"
+                  className="text-red-500 text-sm mt-1"
+                />
+              </div>
 
-          {/* Job Title */}
-          <div>
-            <label className="block text-gray-600 font-medium">Job Title</label>
-            <input
-              type="text"
-              value={userDetails.jobTitle}
-              onChange={(e) =>
-                setUserDetails({ ...userDetails, jobTitle: e.target.value })
-              }
-              className="w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:outline-none"
-              placeholder="Enter your Job Title"
-              required
-            />
-          </div>
-          {/* Industry */}
-          <div>
-            <label className="block text-gray-600 font-medium">Industry</label>
-            <input
-              type="text"
-              value={userDetails.industry}
-              onChange={(e) =>
-                setUserDetails({ ...userDetails, industry: e.target.value })
-              }
-              className="w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:outline-none"
-              placeholder="Enter the industry of your job"
-              required
-            />
-          </div>
-          {/* Reason for Joining */}
-          <div>
-            <label className="block text-gray-600 font-medium">Reason for Joining</label>
-            <input
-              type="text"
-              value={userDetails.reasonForJoining}
-              onChange={(e) =>
-                setUserDetails({ ...userDetails, reasonForJoining: e.target.value })
-              }
-              className="w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:outline-none"
-              placeholder="Enter th ereason why you wantto join this community"
-              required
-            />
-          </div>
+              {/* Date of Birth */}
+              <div>
+                <label className="block text-gray-600 font-medium">Date of Birth</label>
+                <Field
+                  type="date"
+                  name="dateOfBirth"
+                  className="w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:outline-none"
+                />
+                <ErrorMessage
+                  name="dateOfBirth"
+                  component="div"
+                  className="text-red-500 text-sm mt-1"
+                />
+              </div>
 
-          {/* Profile Picture */}
-          <div>
-            <label className="block text-gray-600 font-medium">
-              Profile Picture
-            </label>
-            <input
-              type="file"
-              onChange={(e) => handleFileChange(e, "profile")}
-              className="w-full py-2"
-            />
-            {profilePicPreview && (
-              <img
-                src={profilePicPreview}
-                alt="Profile Preview"
-                className="mt-4 w-32 h-32 object-cover rounded-full border"
-              />
-            )}
-          </div>
+              {/* Job Title */}
+              <div>
+                <label className="block text-gray-600 font-medium">Job Title</label>
+                <Field
+                  type="text"
+                  name="jobTitle"
+                  className="w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:outline-none"
+                  placeholder="Enter your job title"
+                />
+                <ErrorMessage
+                  name="jobTitle"
+                  component="div"
+                  className="text-red-500 text-sm mt-1"
+                />
+              </div>
 
-          {/* Cover Picture */}
-          <div>
-            <label className="block text-gray-600 font-medium">
-              Cover Picture
-            </label>
-            <input
-              type="file"
-              onChange={(e) => handleFileChange(e, "cover")}
-              className="w-full py-2"
-            />
-            {coverPicPreview && (
-              <img
-                src={coverPicPreview}
-                alt="Cover Preview"
-                className="mt-4 w-full h-32 object-cover rounded-lg border"
-              />
-            )}
-          </div>
+              {/* Industry */}
+              <div>
+                <label className="block text-gray-600 font-medium">Industry</label>
+                <Field
+                  type="text"
+                  name="industry"
+                  className="w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:outline-none"
+                  placeholder="Enter your industry"
+                />
+                <ErrorMessage
+                  name="industry"
+                  component="div"
+                  className="text-red-500 text-sm mt-1"
+                />
+              </div>
 
-          {/* Form Actions */}
-          <div className="flex justify-between items-center">
-            <button
-              type="button"
-              onClick={handleSkip}
-              className="px-4 py-2 bg-gray-200 text-gray-700 rounded-lg hover:bg-gray-300"
-            >
-              Skip
-            </button>
-            <button
-              type="button"
-              onClick={handleSave}
-              className="px-6 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700"
-            >
-             {isLoading ? "Saving..." : "Save and Continue"}
-            </button>
-          </div>
-        </form>
+              {/* Reason for joining */}
+              <div>
+                <label className="block text-gray-600 font-medium">Reason for Joining</label>
+                <Field
+                  as="textarea"
+                  name="reasonForJoining"
+                  className="w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:outline-none"
+                  placeholder="Why are you joining this platform?"
+                />
+                <ErrorMessage
+                  name="reasonForJoining"
+                  component="div"
+                  className="text-red-500 text-sm mt-1"
+                />
+              </div>
+
+              {/* Profile Picture */}
+              <div>
+                <label className="block text-gray-600 font-medium">Profile Picture</label>
+                <input
+                  type="file"
+                  onChange={(e) => handleFileChange(e, "profilePic", setFieldValue)}
+                  className="w-full py-2"
+                />
+                {profilePicPreview && (
+                  <img
+                    src={profilePicPreview}
+                    alt="Profile Preview"
+                    className="mt-4 w-32 h-32 object-cover rounded-full border"
+                  />
+                )}
+              </div>
+
+              {/* Cover Picture */}
+              <div>
+                <label className="block text-gray-600 font-medium">Cover Picture</label>
+                <input
+                  type="file"
+                  onChange={(e) => handleFileChange(e, "coverPic", setFieldValue)}
+                  className="w-full py-2"
+                />
+                {coverPicPreview && (
+                  <img
+                    src={coverPicPreview}
+                    alt="Cover Preview"
+                    className="mt-4 w-full h-32 object-cover rounded-lg border"
+                  />
+                )}
+              </div>
+
+              {/* Form Actions */}
+              <div className="flex justify-between items-center">
+                <button
+                  type="button"
+                  onClick={() => navigate("/")}
+                  className="px-4 py-2 bg-gray-200 text-gray-700 rounded-lg hover:bg-gray-300"
+                >
+                  Skip
+                </button>
+                <button
+                  type="submit"
+                  className="px-6 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700"
+                >
+                  {isLoading ? "Saving..." : "Save and Continue"}
+                </button>
+              </div>
+            </Form>
+          )}
+        </Formik>
       </div>
     </div>
   );

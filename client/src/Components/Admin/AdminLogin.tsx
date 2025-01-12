@@ -20,33 +20,42 @@ const AdminLogin = () => {
     formState: { errors },
   } = useForm();
 
-  const onSubmit = async (data: { email: string; password: string }) => {
+  //handle login for Admin
+  const onSubmit = async (data: { email: string; password: string; role: 'admin' }) => {
     try {
       dispatch(signinStart());
-      const { user } = await login(data);
-
-      if (user.role === "admin") {
-        const passkey = prompt("Enter the admin passkey:");
-        if (passkey) {
-          const isPasskeyValid = await AdminPasscodeCheck(passkey);
-
-          if (isPasskeyValid.valid) {
-            toast.success("Welcome, Admin!");
-            dispatch(setIsAdmin(user));
-            navigate("/admin/dashboard", { replace: true });
-          } else {
-            toast.error("Invalid admin passkey.");
-          }
-        } else {
-          toast.error("Admin passkey is required.");
-        }
+      const { user } = await login({ ...data, role: 'admin' });
+  
+      if (user.role !== 'admin') {
+        toast.error("Invalid credentials for admin login");
+        return;
       }
+  
+      const passkey = prompt("Enter the admin passkey:");
+      if (!passkey) {
+        toast.error("Admin passkey is required.");
+        return;
+      }
+  
+      const isPasskeyValid = await AdminPasscodeCheck(passkey);
+      if (!isPasskeyValid.valid) {
+        toast.error("Invalid admin passkey.");
+        return;
+      }
+  
+      toast.success("Welcome, Admin!");
+      dispatch(setIsAdmin(user));
+      navigate("/admin/dashboard", { replace: true });
     } catch (error: any) {
-      toast.error(error.response?.data?.message || "Admin login failed");
-      dispatch(
-        signinFailure(error.response?.data?.message || "Admin login failed")
-      );
+      handleLoginError(error, dispatch);
     }
+  };
+  
+  // Error handling function
+  const handleLoginError = (error: any, dispatch: any) => {
+    const errorMessage = error.message || "Login failed";
+    toast.error(errorMessage);
+    dispatch(signinFailure(errorMessage));
   };
 
   return (

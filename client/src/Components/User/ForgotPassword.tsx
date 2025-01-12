@@ -1,36 +1,39 @@
 import { useDispatch } from "react-redux";
 import forgotImage from "../../assets/Forgot password.png";
 import { Link, useNavigate } from "react-router-dom";
-import { useForm } from "react-hook-form";
-import {
-  setResetEmail,
-  signinFailure,
-  signinStart,
-} from "../../redux/Slice/userSlice";
 import toast from "react-hot-toast";
+import { setResetEmail, signinFailure, signinStart } from "../../redux/Slice/userSlice";
 import { sentOTP } from "../../Service/Auth.service";
+import { Formik, Field, Form, ErrorMessage } from "formik";
+import * as Yup from "yup";
+
 const ForgotPassword = () => {
   const dispatch = useDispatch();
   const navigate = useNavigate();
-  const {
-    register,
-    handleSubmit,
-    formState: { errors },
-  } = useForm();
 
-  const onSubmit = async (data: { email: string }) => {
+  const initialValues = {
+    email: "",
+  };
+
+  const validationSchema = Yup.object({
+    email: Yup.string()
+      .email("Invalid email address")
+      .required("Email is required"),
+  });
+
+  const onSubmit = async (values: { email: string }) => {
     try {
       dispatch(signinStart());
-      // await axiosInstance.post("/auth/register/forgot-password", data);
-      
-      //service function
-      sentOTP(data.email)
-      
-      dispatch(setResetEmail(data.email));
+
+      // Send OTP using service function
+      await sentOTP(values.email);
+
+      // Dispatch action to set the email
+      dispatch(setResetEmail(values.email));
+
       toast.success("OTP sent successfully!");
-      navigate("/otp"); // Navigate to the dashboard or home page
+      navigate("/otp"); // Navigate to OTP page
     } catch (error: any) {
-      // Using react-hot-toast to show error
       toast.error(error.response?.data?.message || "Submission failed");
       dispatch(
         signinFailure(error.response?.data?.message || "Submission failed")
@@ -61,43 +64,47 @@ const ForgotPassword = () => {
               password.
             </p>
 
-            <form className="mt-6" onSubmit={handleSubmit(onSubmit)}>
-              <div>
-                <label className="block text-gray-700">Email Address</label>
-                <input
-                  type="email"
-                  placeholder="Enter Email Address"
-                  className={`w-full px-4 py-3 rounded-lg bg-gray-200 mt-2 border ${
-                    errors.email ? "border-red-500" : "border-gray-300"
-                  } focus:border-blue-500 focus:bg-white focus:outline-none`}
-                  {...register("email", {
-                    required: "Email is required",
-                    pattern: {
-                      value: /^[^\s@]+@[^\s@]+\.[^\s@]+$/,
-                      message: "Invalid email address",
-                    },
-                  })}
-                />
-                {errors.email && typeof errors.email.message === "string" && (
-                  <p className="text-red-500 text-sm">{errors.email.message}</p>
-                )}
-              </div>
-              <div className="text-right mt-2">
-                <Link
-                  to="/login"
-                  className="text-blue-500 hover:text-blue-700 font-semibold"
-                >
-                  Log In
-                </Link>
-              </div>
+            {/* Formik Form */}
+            <Formik
+              initialValues={initialValues}
+              validationSchema={validationSchema}
+              onSubmit={onSubmit}
+            >
+              {() => (
+                <Form className="mt-6">
+                  <div>
+                    <label className="block text-gray-700">Email Address</label>
+                    <Field
+                      type="email"
+                      name="email"
+                      placeholder="Enter Email Address"
+                      className="w-full px-4 py-3 rounded-lg bg-gray-200 mt-2 border border-gray-300 focus:border-blue-500 focus:bg-white focus:outline-none"
+                    />
+                    <ErrorMessage
+                      name="email"
+                      component="p"
+                      className="text-red-500 text-sm"
+                    />
+                  </div>
 
-              <button
-                type="submit"
-                className="w-full block bg-indigo-500 hover:bg-indigo-400 focus:bg-indigo-400 text-white font-semibold rounded-lg px-4 py-3 mt-6"
-              >
-                Send OTP
-              </button>
-            </form>
+                  <div className="text-right mt-2">
+                    <Link
+                      to="/login"
+                      className="text-blue-500 hover:text-blue-700 font-semibold"
+                    >
+                      Log In
+                    </Link>
+                  </div>
+
+                  <button
+                    type="submit"
+                    className="w-full block bg-indigo-500 hover:bg-indigo-400 focus:bg-indigo-400 text-white font-semibold rounded-lg px-4 py-3 mt-6"
+                  >
+                    Send OTP
+                  </button>
+                </Form>
+              )}
+            </Formik>
           </div>
         </div>
       </section>

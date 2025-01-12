@@ -10,34 +10,51 @@ import {
   refreshToken,
   googleAuthRedirect,
   githubAuthRedirect,
-  // checkingBlockedStatus,
   verifyPasskey,
   checkProfile,
   getprofileDetails,
   updateUserDetails,
   
 } from '../controllers/auth.controller.js';
+import {
+  verifyToken,
+  checkBlockedStatus,
+  verifyRefreshTokenMiddleware,
+  authorize
+} from '../middlewares/auth.middleware.js';
 import { upload } from '../utils/multer.utils.js';
 
 
 const router = express.Router();
 
+// Public routes
 router.post('/register/signup', signup);
+router.post('/login', login);
 router.post('/register/forgot-password', handleForgotPassword);
 router.post('/register/verify-otp', handleVerifyOTP);
 router.post('/register/reset-password', handleResetPassword);
-router.post('/login', login);
-router.post('/verify-admin-passkey',verifyPasskey)
-router.post('/refresh-token', refreshToken);
-router.get('/check-profile/:id', checkProfile);
-router.get('/profiledetails/:id',getprofileDetails)
-router.put("/updateUserDetails/:Id",upload.fields([
-    { name: "profilePic", maxCount: 1 },
-    { name: "coverPic", maxCount: 1 },]),
+
+// Protected routes
+router.post('/verify-admin-passkey', [verifyToken, authorize('admin')], verifyPasskey);
+router.post('/refresh-token', verifyRefreshTokenMiddleware, refreshToken);
+router.post('/logout', [verifyToken], logout);
+
+// Protected user routes
+router.get('/check-profile/:id', [verifyToken, checkBlockedStatus], checkProfile);
+router.get('/profiledetails/:id', [verifyToken, checkBlockedStatus], getprofileDetails);
+router.put(
+  '/updateUserDetails/:Id',
+  [
+    verifyToken,
+    checkBlockedStatus,
+    upload.fields([
+      { name: "profilePic", maxCount: 1 },
+      { name: "coverPic", maxCount: 1 },
+    ])
+  ],
   updateUserDetails
 );
 
-// router.post('/check-status',checkingBlockedStatus)
 
 
 // Google Authentication Routes
@@ -57,6 +74,5 @@ router.get(
   githubAuthRedirect
 );
 
-router.post('/logout', logout);
 
 export default router;
