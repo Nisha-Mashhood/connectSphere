@@ -41,9 +41,10 @@ const Login = () => {
     try {
       dispatch(signinStart());
       const { user } = await login(values);
+      console.log(user);
   
       // Check user role
-      if (user.role !== 'user') {
+      if (user.role === 'admin') {
         toast.error("Invalid credentials for user login");
         return;
       }

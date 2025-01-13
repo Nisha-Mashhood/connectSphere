@@ -48,8 +48,8 @@ export const loginUser = async (email: string, password: string) => {
   if (!isMatch) throw new Error("Invalid credentials");
 
   // Generate JWT token
-  const accessToken = generateAccessToken({ userId: user._id });
-  const refreshToken = generateRefreshToken({ userId: user._id });
+  const accessToken = generateAccessToken({ userId: user._id, userRole: user.role});
+  const refreshToken = generateRefreshToken({ userId: user._id, userRole: user.role });
 
   // Save the refresh token in the database
   await updateRefreshToken(user._id.toString(), refreshToken);

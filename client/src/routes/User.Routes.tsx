@@ -12,6 +12,8 @@ import CompleteProfile from "../Components/User/CompleteProfile";
 import MentorProfile from "../Components/User/MentorProfile";
 import Mentorship from "../Components/User/Mentorship";
 import PageNotFound from "../Components/PageNotFound";
+import { ForbiddenPage } from "../Components/User/ForebiddenPage";
+
 
 const UserRoutes = () => (
   <>
@@ -32,6 +34,7 @@ const UserRoutes = () => (
       </Route>
 
       <Route path="*" element={<PageNotFound />} />
+      <Route path='/forbidden' element={<ForbiddenPage/>} />
     </Routes>
   </>
 );

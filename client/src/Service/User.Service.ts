@@ -1,6 +1,7 @@
 // services/userService.js
 import { axiosInstance } from "../lib/axios";
 import toast from "react-hot-toast";
+import { handleError } from "./ErrorHandler";
 
 // Fetch all users
 export const fetchAllUsers = async () => {
@@ -8,8 +9,7 @@ export const fetchAllUsers = async () => {
     const response = await axiosInstance.get("/users/getallusers");
     return response.data;
   } catch (error) {
-    toast.error("Failed to fetch users");
-    throw error;
+    handleError(error)
   }
 };
 
@@ -19,8 +19,7 @@ export const fetchUserDetails = async (userId) => {
     const response = await axiosInstance.get(`/users/getuser/${userId}`);
     return response.data;
   } catch (error) {
-    toast.error("Failed to fetch user details");
-    throw error;
+    handleError(error)
   }
 };
 
@@ -30,8 +29,7 @@ export const blockUser = async (userId) => {
     await axiosInstance.put(`/users/blockuser/${userId}`);
     toast.success("User blocked successfully");
   } catch (error) {
-    toast.error("Failed to block user");
-    throw error;
+    handleError(error)
   }
 };
 
@@ -41,8 +39,7 @@ export const unblockUser = async (userId) => {
     await axiosInstance.put(`/users/unblockuser/${userId}`);
     toast.success("User unblocked successfully");
   } catch (error) {
-    toast.error("Failed to unblock user");
-    throw error;
+    handleError(error)
   }
 };
 
@@ -53,8 +50,7 @@ export const updateUserRoleService = async (id, role) => {
     toast.success("User role updated successfully");
     return response.data;
   } catch (error) {
-    toast.error("Failed to update user role");
-    throw error;
+    handleError(error)
   }
 };
 
@@ -64,7 +60,6 @@ export const verifyAdminPasskey = async (passkey) => {
     const response = await axiosInstance.post("/auth/verify-admin-passkey", { passkey });
     return response.data.valid;
   } catch (error) {
-    toast.error("Failed to verify admin passkey");
-    throw error;
+    handleError(error)
   }
 };

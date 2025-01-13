@@ -1,11 +1,12 @@
 import { axiosInstance } from "../lib/axios";
+import { handleError } from "./ErrorHandler";
 
 // Fetch mentor requests
 export const createMentorProfile = async (formdata:FormData) => {
   try {
     await axiosInstance.post("/mentors/create-mentorprofile",formdata);
   } catch (error) {
-    throw new Error("Failed to create mentor Profile.");
+    handleError(error)
   }
 };
 
@@ -15,7 +16,7 @@ export const fetchMentorRequests = async () => {
     const { data } = await axiosInstance.get("/mentors/getallmentorrequest");
     return data;
   } catch (error) {
-    throw new Error("Failed to fetch mentor requests.");
+    handleError(error)
   }
 };
 
@@ -24,7 +25,7 @@ export const approveMentor = async (mentorId) => {
   try {
     await axiosInstance.put(`/mentors/approvementorrequest/${mentorId}`);
   } catch (error) {
-    throw new Error("Failed to approve mentor.");
+    handleError(error)
   }
 };
 
@@ -33,7 +34,7 @@ export const cancelMentorship = async (mentorId) => {
   try {
     await axiosInstance.put(`/mentors/cancelmentorship/${mentorId}`);
   } catch (error) {
-    throw new Error("Failed to cancel mentorship.");
+    handleError(error)
   }
 };
 
@@ -44,7 +45,7 @@ export const rejectMentor = async (mentorId:string, rejectionReason) => {
       data: { rejectionReason },
     });
   } catch (error) {
-    throw new Error("Failed to reject mentor.");
+    handleError(error)
   }
 };
 
@@ -53,7 +54,7 @@ export const checkMentorProfile = async (userId) => {
     const response = await axiosInstance.get(`/auth/check-profile/${userId}`);
     return response.data;
   } catch (error) {
-    throw error.response?.data?.message || "Mentor Profile check failed";
+    handleError(error)
   }
 };
 
@@ -62,6 +63,6 @@ export const getAllMentorProfile = async (userId) => {
     const response = await axiosInstance.get(`/auth/check-profile/${userId}`);
     return response.data;
   } catch (error) {
-    throw error.response?.data?.message || "Mentor Profile check failed";
+    handleError(error)
   }
 };

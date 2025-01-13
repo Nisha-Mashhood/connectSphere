@@ -2,6 +2,7 @@
 import express from "express";
 import * as MentorController from "../controllers/mentor.controller.js";
 import { upload } from "../utils/multer.utils.js";
+import { authorize, verifyToken } from "../middlewares/auth.middleware.js";
 const router = express.Router();
 
 
@@ -10,9 +11,9 @@ const router = express.Router();
 router.post("/create-mentorprofile",upload.array("certificates", 2), MentorController.createMentor);
 router.get('/get-allSkills',MentorController.getSkills)
 router.get('/check-mentor/:id',MentorController.checkMentorStatus)
-router.get("/getallmentorrequest", MentorController.getAllMentorRequests);
-router.put("/approvementorrequest/:id", MentorController.approveMentorRequest);
-router.delete("/rejectmentorrequest/:id", MentorController.rejectMentorRequest);
-router.put("/cancelmentorship/:mentorId", MentorController.cancelMentorship);
+router.get("/getallmentorrequest", [verifyToken, authorize('admin')], MentorController.getAllMentorRequests);
+router.put("/approvementorrequest/:id",[verifyToken, authorize('admin')], MentorController.approveMentorRequest);
+router.delete("/rejectmentorrequest/:id",[verifyToken, authorize('admin')], MentorController.rejectMentorRequest);
+router.put("/cancelmentorship/:mentorId",[verifyToken, authorize('admin')], MentorController.cancelMentorship);
 
 export default router;

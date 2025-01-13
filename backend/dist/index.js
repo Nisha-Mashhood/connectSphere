@@ -3,7 +3,6 @@ import dotenv from "dotenv";
 import connectDB from "./config/db.config.js";
 import config from "./config/env.config.js";
 import authRoutes from "./routes/auth.routes.js";
-// import authAdminRoutes from './routes/Admin/auth.routes.js'
 import categoryRoutes from "./routes/category.routes.js";
 import subCategoryRoutes from "./routes/sucategory.routes.js";
 import skillsRoutes from "./routes/skills.routes.js";
@@ -13,12 +12,14 @@ import passport from "passport";
 import configurePassport from "./utils/passport.utils.js";
 import helmet from "helmet";
 import cors from "cors";
+import cookieParser from "cookie-parser";
 dotenv.config();
 const app = express();
 // Connect to DB
 connectDB();
 // Middleware
 app.use(express.json());
+app.use(cookieParser());
 app.use(helmet());
 app.use(cors({
     origin: process.env.FRONTEND_URL || "http://localhost:5173",

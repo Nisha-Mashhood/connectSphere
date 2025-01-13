@@ -1,10 +1,11 @@
 import { axiosInstance } from "../lib/axios";
+import { handleError } from "./ErrorHandler";
 
 export const createCategory = async (formData) => {
     try {
         await axiosInstance.post("admin/category/create-category",formData);
     } catch (error) {
-      throw error.response?.data?.message || "Category Creation Failed"; 
+      handleError(error)
     }
   };
 
@@ -12,7 +13,7 @@ export const createCategory = async (formData) => {
     try {
          await axiosInstance.post("admin/subcategory/create-subcategory", formData);
     } catch (error) {
-      throw error.response?.data?.message || "Sub-Category Creation Failed"; 
+      handleError(error) 
     }
   };
 
@@ -20,7 +21,7 @@ export const createCategory = async (formData) => {
     try {
         await axiosInstance.post("admin/skills/create-skill", formData);
     } catch (error) {
-      throw error.response?.data?.message || "Skill Creation Failed"; 
+      handleError(error) 
     }
   };
 
@@ -30,7 +31,7 @@ export const createCategory = async (formData) => {
       const { data } = await axiosInstance.get("/admin/category/get-categories");
       return data;
     } catch (error) {
-      throw new Error("Failed to fetch categories");
+      handleError(error)
     }
   };
 
@@ -43,7 +44,7 @@ export const updateCategory = async (editingCategoryId: string, formData: any) =
       );
       return response.data;
     } catch (error) {
-      throw new Error("Failed to update category");
+      handleError(error)
     }
   };
   
@@ -55,7 +56,7 @@ export const updateCategory = async (editingCategoryId: string, formData: any) =
       );
       return response.data;
     } catch (error) {
-      throw new Error("Failed to delete category");
+      handleError(error)
     }
   };
 
@@ -67,7 +68,7 @@ export const fetchSubCategoriesService = async (categoryId: string): Promise<any
       );
       return data;
     } catch (error) {
-      throw new Error("Failed to fetch subcategories");
+      handleError(error)
     }
   };
   
@@ -80,7 +81,7 @@ export const fetchSubCategoriesService = async (categoryId: string): Promise<any
       );
       return response.data;
     } catch (error) {
-      throw new Error("Failed to update subcategory");
+      handleError(error)
     }
   };
   
@@ -92,7 +93,7 @@ export const fetchSubCategoriesService = async (categoryId: string): Promise<any
       );
       return response.data;
     } catch (error) {
-      throw new Error("Failed to delete subcategory");
+      handleError(error)
     }
   };
   
@@ -104,7 +105,7 @@ export const fetchSubCategoriesService = async (categoryId: string): Promise<any
       );
       return data;
     } catch (error) {
-      throw new Error("Failed to fetch skills");
+      handleError(error)
     }
   };
   
@@ -117,7 +118,7 @@ export const fetchSubCategoriesService = async (categoryId: string): Promise<any
       );
       return response.data;
     } catch (error) {
-      throw new Error("Failed to update skill");
+      handleError(error)
     }
   };
   
@@ -129,7 +130,7 @@ export const fetchSubCategoriesService = async (categoryId: string): Promise<any
       );
       return response.data;
     } catch (error) {
-      throw new Error("Failed to delete skill");
+      handleError(error)
     }
   };
 
@@ -141,7 +142,7 @@ export const fetchSubCategoriesService = async (categoryId: string): Promise<any
       );
       return response.data;
     } catch (error) {
-      throw new Error("Failed to get skills");
+      handleError(error)
     }
   };
 
