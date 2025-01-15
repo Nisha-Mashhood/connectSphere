@@ -1,6 +1,8 @@
 import { Request, Response } from "express";
 export declare const signup: (req: Request, res: Response) => Promise<void>;
 export declare const login: (req: Request, res: Response) => Promise<void>;
+export declare const googleSignup: (req: Request, res: Response) => Promise<void>;
+export declare const googleLogin: (req: Request, res: Response) => Promise<void>;
 export declare const refreshToken: (req: Request, res: Response) => Promise<void>;
 export declare const checkProfile: (req: Request, res: Response) => Promise<void>;
 export declare const getprofileDetails: (req: Request, res: Response) => Promise<void>;

@@ -8,6 +8,7 @@ import { createMentorProfile } from "../../Service/Mentor.Service";
 
 const MentorProfile = () => {
   const navigate = useNavigate();
+  const [loading, setLoading] = useState(false);
   const { currentUser } = useSelector((state: RootState) => state.user);
   const [skills, setSkills] = useState([]); // Skills for dropdown
   const [selectedSkills, setSelectedSkills] = useState([]);
@@ -187,6 +188,8 @@ const handleCertificateUpload = (e) => {
   // Submit Handler with Validation
   const handleSubmit = async(e) => {
     e.preventDefault();
+
+    if (loading) return;
   
     // Validation for specialization
   if (!specialization.trim()) {
@@ -229,6 +232,7 @@ const handleCertificateUpload = (e) => {
     formData.append("availableSlots", JSON.stringify(availableSlots));
 
     try {
+      setLoading(true);
       toast.success("All validations passed. Submitting...");
       await createMentorProfile(formData)
       toast.success("Profile created successfully!");
@@ -246,6 +250,8 @@ const handleCertificateUpload = (e) => {
         toast.error("An unexpected error occurred. Please try again later.");
       }
       console.error("Error:", error);
+    }finally {
+      setLoading(false); 
     }
   };
 
@@ -400,9 +406,14 @@ const handleCertificateUpload = (e) => {
         {/* Submit */}
         <button
           type="submit"
-          className="w-full px-4 py-2 bg-green-500 text-white font-bold rounded-md"
+          disabled={loading}
+          className={`w-full px-4 py-2 font-bold rounded-md ${
+            loading
+              ? "bg-gray-400 text-white cursor-not-allowed"
+              : "bg-green-500 text-white"
+          }`}
         >
-          Submit
+          {loading ? "Submitting..." : "Submit"}
         </button>
       </form>
     </div>

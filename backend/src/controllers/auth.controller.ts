@@ -12,8 +12,10 @@ import {
   profileDetails,
   updateUserProfile,
 } from "../services/auth.service.js";
-import { clearCookies, setTokensInCookies } from "../utils/jwt.utils.js";
-// import { findUserByEmail } from "../repositories/user.repositry.js";
+import { clearCookies, generateAccessToken, generateRefreshToken, setTokensInCookies } from "../utils/jwt.utils.js";
+import { OAuth2Client } from 'google-auth-library';
+import {  findUserByEmail, updateRefreshToken } from "../repositories/user.repositry.js";
+import config from '../config/env.config.js';
 
 //Handles the personal details Registration
 export const signup = async (req: Request, res: Response) => {
@@ -59,6 +61,155 @@ export const login = async (req: Request, res: Response) => {
     res.status(500).json({ message: "Internal Server Error" });
   }
   }
+
+  const client = new OAuth2Client({
+    clientId: config.googleclientid,
+    clientSecret: config.googleclientsecret,
+    redirectUri: config.googleredirecturi
+  });
+  
+  // Google Signup Controller
+  export const googleSignup = async (req: Request, res: Response) => {
+    try {
+      const { code } = req.body;
+    console.log("code:", code);
+    console.log("redirect URI:", config.googleredirecturi); // Debug log
+
+    const { tokens } = await client.getToken({
+      code,
+      redirect_uri: config.googleredirecturi
+    });
+
+    if (!tokens.id_token) {
+      res.status(400).json({ success: false, message: 'Invalid ID token' });
+      return 
+    }
+
+    const ticket = await client.verifyIdToken({
+      idToken: tokens.id_token,
+      audience: config.googleclientid,
+    });
+
+    const payload = ticket.getPayload();
+    if (!payload) {
+      res.status(400).json({ success: false, message: 'Unable to retrieve user details' });
+      return 
+    }
+
+    console.log("Google User Payload:", payload);
+    
+
+    // Exchange the authorization code for tokens
+    // const { tokens } = await client.getToken(code);
+    // if (!tokens.id_token) {
+    //   res.status(400).json({ success: false, message: 'Invalid ID token' });
+    //   return 
+    // }
+      
+    //   // Verify Google token
+    //   const ticket = await client.verifyIdToken({
+    //     idToken: tokens.id_token,
+    //     audience: '262075947289-6uk3rlr59rq0218rf8nqggmgeb6aibtv.apps.googleusercontent.com',
+    //   });
+      
+    //   const payload = ticket.getPayload();
+    //   if (!payload) {
+    //     res.status(400).json({ success: false, message: 'Unable to retrieve user details' });
+    //     return 
+    //   }
+  
+    //   const { email, name, picture, sub } = payload;
+  
+    //   // Check if user already exists
+    //   const userExists = await findUserByEmail(email!);
+    //   if (userExists) {
+    //     res.status(400).json({ 
+    //       message: "Email already registered. Please login instead."  
+    //     });
+    //     return 
+    //   }
+  
+    //   // Create new user
+    //   const newUser = await createUser({
+    //     name,
+    //     email,
+    //     profilePic: picture,
+    //     provider: 'google',
+    //     providerId: sub
+    //   });
+  
+    //   res.status(201).json({
+    //     message: "User registered successfully",
+    //     user: newUser
+    //   });
+  
+    } catch (error: any) {
+      console.error("Google Signup Error:", error);
+      res.status(400).json({ message: error.message });
+    }
+  };
+  
+  // Google Login Controller
+  export const googleLogin = async (req: Request, res: Response) => {
+    try {
+      const { credential } = req.body;
+      
+      // Verify Google token
+      const ticket = await client.verifyIdToken({
+        idToken: credential,
+        audience: "262075947289-6uk3rlr59rq0218rf8nqggmgeb6aibtv.apps.googleusercontent.com"
+      });
+      
+      const payload = ticket.getPayload();
+      if (!payload) {
+        throw new Error("Invalid Google token");
+      }
+  
+      const { email } = payload;
+  
+      // Find user by email
+      const user = await findUserByEmail(email!);
+      if (!user) {
+        res.status(404).json({ 
+          message: "No account found with this email. Please sign up first." 
+        });
+        return 
+      }
+  
+      if (user.isBlocked) {
+        throw new Error("Blocked");
+      }
+  
+      // Generate tokens
+      const accessToken = generateAccessToken({ 
+        userId: user._id, 
+        userRole: user.role 
+      });
+      const refreshToken = generateRefreshToken({ 
+        userId: user._id, 
+        userRole: user.role 
+      });
+  
+      // Save refresh token
+      await updateRefreshToken(user._id.toString(), refreshToken);
+  
+      // Set cookies
+      setTokensInCookies(res, accessToken, refreshToken);
+  
+      res.json({ 
+        message: "Login successful", 
+        user 
+      });
+  
+    } catch (error: any) {
+      console.error("Google Login Error:", error);
+      if (error.message === "Blocked") {
+        res.status(403).json({ message: "Your account has been blocked" });
+        return 
+      }
+      res.status(400).json({ message: error.message });
+    }
+  };
 
 
 // Handle refresh token logic
@@ -122,34 +273,6 @@ export const updateUserDetails = async (req: Request, res: Response) => {
   }
 };
 
-// Google Auth Redirect
-export const googleAuthRedirect = (req: Request, res: Response) => {
-  const user: any = req.user;
-  setTokensInCookies(res, user.accessToken, user.refreshToken);
-  res.json({
-    message: "Google login successful",
-    user: {
-      id: user._id,
-      email: user.email,
-      fullName: user.fullName,
-    },
-  });
-};
-
-// GitHub Auth Redirect
-export const githubAuthRedirect = (req: Request, res: Response) => {
-  const user: any = req.user;
-  setTokensInCookies(res, user.accessToken, user.refreshToken);
-
-  res.json({
-    message: "GitHub login successful",
-    user: {
-      id: user._id,
-      email: user.email,
-      fullName: user.fullName,
-    },
-  });
-};
 
 // Handle logout
 export const logout = async (req: Request, res: Response) => {

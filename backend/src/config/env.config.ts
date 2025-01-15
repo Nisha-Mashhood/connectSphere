@@ -17,7 +17,7 @@ const config = {
   cloudinaryApiSecret: process.env.CLOUDINARY_API_SECRET,
   googleclientid: process.env.GOOGLE_CLIENT_ID,
   googleclientsecret: process.env.GOOGLE_CLIENT_SECRET,
-  googlecallbackurl:process.env.GOOGLE_CALLBACK_URL,
+  googleredirecturi:process.env.GOOGLE_REDIRECT_URI,
   githubclientid: process.env.GITHUB_CLIENT_ID,
   githubclientsecret: process.env.GITHUB_CLIENT_SECRET,
   githubcallbackurl:process.env.GITHUB_CALLBACK_URL,

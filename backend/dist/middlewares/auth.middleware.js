@@ -10,6 +10,7 @@ export const verifyToken = async (req, res, next) => {
     try {
         const decoded = verifyAccessToken(accessToken);
         const user = await findUserById(decoded.userId);
+        // console.log("current user",user);
         if (!user) {
             res.status(401).json({ message: "User not found" });
             return;
@@ -56,8 +57,6 @@ export const checkBlockedStatus = async (req, res, next) => {
 export const authorize = (...allowedRoles) => {
     return (req, res, next) => {
         console.log("Entered in to the authentication middleware");
-        console.log("Allowed roles", allowedRoles);
-        console.log("current User", req.currentUser);
         if (!req.currentUser) {
             res.status(401).json({ message: "Authentication required" });
             return;

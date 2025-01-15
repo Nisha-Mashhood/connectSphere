@@ -87,3 +87,28 @@ export const resetPassword = async (data) => {
     handleError(error)
   }
 };
+
+
+export const googleLogin = async (codeResponse: any) => {
+  try {
+    const response = await axiosInstance.post('/auth/google-login', {
+      code: codeResponse.code, 
+    });
+    return response.data;
+  } catch (error) {
+    handleError(error);
+  }
+};
+
+export const googleSignup = async (code: any) => {
+  try {
+    const response = await axiosInstance.post('/auth/google-signup', {
+      code,
+      redirect_uri: 'http://localhost:3000/auth/google/callback' 
+    });
+    return response.data;
+  } catch (error) {
+    console.log(error)
+    handleError(error);
+  }
+};

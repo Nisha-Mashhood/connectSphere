@@ -13,7 +13,7 @@ declare const config: {
     cloudinaryApiSecret: string | undefined;
     googleclientid: string | undefined;
     googleclientsecret: string | undefined;
-    googlecallbackurl: string | undefined;
+    googleredirecturi: string | undefined;
     githubclientid: string | undefined;
     githubclientsecret: string | undefined;
     githubcallbackurl: string | undefined;

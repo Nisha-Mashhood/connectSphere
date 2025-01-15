@@ -134,7 +134,7 @@ export const fetchSubCategoriesService = async (categoryId: string): Promise<any
     }
   };
 
-  // Delete skill
+  // Get all skills
   export const getAllSkills = async () => {
     try {
       const response = await axiosInstance.get(

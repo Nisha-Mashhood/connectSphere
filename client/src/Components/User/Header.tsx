@@ -35,29 +35,6 @@ const Header = () => {
   const { currentUser } = useSelector((state: RootState) => state.user);
 
   // useEffect(() => {
-    // const checkUserBlocked = async () => {
-    //   if (currentUser) {
-    //     try {
-    //       const response = await axiosInstance.post("/auth/check-status", {
-    //         email: currentUser.email,
-    //       });
-
-    //       if (response.status === 200) {
-    //         console.log("User is active");
-    //       }
-    //     } catch (err: any) {
-    //       if (err.response?.status === 403) {
-    //         toast.error("Your account has been blocked. Logging out...");
-    //         dispatch(signOut());
-    //         navigate("/login", { replace: true });
-    //       } else {
-    //         toast.error(err.response?.data?.message || "Failed to verify status");
-    //       }
-    //     }
-    //   }
-    // };
-
-    // checkUserBlocked();
     // if (
     //   (currentUser && location.pathname === "/login") ||
     //   location.pathname === "/signup" ||
@@ -67,7 +44,7 @@ const Header = () => {
     // ) {
     //   navigate("/", { replace: true });
     // }
-  // }, [currentUser, location.pathname, navigate, dispatch]);
+  // }, [currentUser, location.pathname, navigate]);
 
   const handleLogout = async () => {
     const email = currentUser?.email;
@@ -93,7 +70,6 @@ const Header = () => {
     }
     try {
       // Step 1: Check if the profile is complete
-      // await axiosInstance.get(`/auth/check-profile/${currentUser._id}`);
 
       const profileResponse = await checkProfile(currentUser._id);
       const isProfileComplete = profileResponse.isProfileComplete;
@@ -105,7 +81,6 @@ const Header = () => {
       }
   
       // Step 2: Check if the user is already a mentor and the approval status
-      // const mentorResponse = await axiosInstance.get(`/mentors/check-mentor/${currentUser._id}`);
 
       const mentorResponse = await checkMentorProfile(currentUser._id);
       const mentor = mentorResponse.mentor;

@@ -9,7 +9,7 @@ const configurePassport = () => {
     passport.use(new GoogleStrategy({
         clientID: config.googleclientid,
         clientSecret: config.githubclientsecret,
-        callbackURL: config.googlecallbackurl,
+        callbackURL: config.googleredirecturi,
     }, async (_accessToken, _refreshToken, profile, done) => {
         try {
             const user = await findOrCreateUserforPassport(profile, "google");
