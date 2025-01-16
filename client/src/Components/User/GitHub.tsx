@@ -1,8 +1,20 @@
 const GitHub = () => {
+
+ const loginWithGithub = () => {
+    const clientId = "Ov23livTA0yK7iMC3x1A"; 
+    const redirectUri = "http://localhost:5173/github/callback"; 
+    const state = encodeURIComponent("login");
+    const githubUrl = `https://github.com/login/oauth/authorize?client_id=${clientId}&redirect_uri=${redirectUri}&state=${state}&scope=user:email`;
+    
+    console.log("Signup URL:", githubUrl); 
+    window.location.assign(githubUrl)
+  };
+
   return (
     <div><button
     type="button"
     className="w-full block bg-black hover:bg-gray-800 focus:bg-gray-800 text-white font-semibold rounded-lg px-4 py-3 mt-4"
+    onClick={loginWithGithub}
   >
     <div className="flex items-center justify-center">
       <svg

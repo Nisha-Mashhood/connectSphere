@@ -89,26 +89,49 @@ export const resetPassword = async (data) => {
 };
 
 
-export const googleLogin = async (codeResponse: any) => {
-  try {
-    const response = await axiosInstance.post('/auth/google-login', {
-      code: codeResponse.code, 
-    });
-    return response.data;
-  } catch (error) {
-    handleError(error);
-  }
-};
-
 export const googleSignup = async (code: any) => {
   try {
-    const response = await axiosInstance.post('/auth/google-signup', {
-      code,
-      redirect_uri: 'http://localhost:3000/auth/google/callback' 
-    });
+    const response = await axiosInstance.post('/auth/google-signup', {code});
     return response.data;
   } catch (error) {
     console.log(error)
     handleError(error);
+  }
+};
+
+export const googleLogin = async (code: string) => {
+  try {
+    const response = await axiosInstance.post('/auth/google-login', { code });
+    return response.data;
+  } catch (error) {
+    console.error('Google Login Error:', error);
+    handleError(error);
+  }
+};
+
+// Handles git signup
+export const githubSignup = async (code: string) => {
+  try {
+    console.log("Calling github signup with code:", code);
+    const response = await axiosInstance.post('/auth/github-signup', { code });
+    return response.data; 
+  } catch (error) {
+    if (error.response?.data?.message === "Email already registered.") {
+      throw new Error("Email already registered. Please login instead.");
+    }
+    console.error("Error during GitHub signup:", error);
+    throw error;
+  }
+};
+
+// Handles git Login
+export const githubLogin = async (code: string) => {
+  try {
+    console.log("Calling github login with code:", code);
+    const response = await axiosInstance.post('/auth/github-login', { code });
+    return response.data; 
+  } catch (error) {
+    console.error("Error during GitHub login:", error);
+    throw error;
   }
 };

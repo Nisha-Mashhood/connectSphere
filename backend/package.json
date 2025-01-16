@@ -23,6 +23,7 @@
   },
   "description": "Backend for Connect Sphere platform, supporting user authentication, collaboration management, and mentor features.",
   "dependencies": {
+    "axios": "^1.7.9",
     "bcrypt": "^5.1.1",
     "bcryptjs": "^2.4.3",
     "body-parser": "^1.20.3",
@@ -35,6 +36,7 @@
     "express-rate-limit": "^7.5.0",
     "express-session": "^1.18.1",
     "google-auth-library": "^9.15.0",
+    "googleapis": "^144.0.0",
     "helmet": "^8.0.0",
     "joi": "^17.13.3",
     "jsonwebtoken": "^9.0.2",

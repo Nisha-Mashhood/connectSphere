@@ -11,13 +11,14 @@ import {
   checkProfileCompletion,
   profileDetails,
   updateUserProfile,
+  googleSignupService,
+  googleLoginService,
+  githubLoginService,
+  githubSignupService
 } from "../services/auth.service.js";
-import { clearCookies, generateAccessToken, generateRefreshToken, setTokensInCookies } from "../utils/jwt.utils.js";
-import { OAuth2Client } from 'google-auth-library';
-import {  findUserByEmail, updateRefreshToken } from "../repositories/user.repositry.js";
-import config from '../config/env.config.js';
+import { clearCookies, setTokensInCookies } from "../utils/jwt.utils.js";
 
-//Handles the personal details Registration
+//Handles the Registration
 export const signup = async (req: Request, res: Response) => {
   try {
     
@@ -58,159 +59,97 @@ export const login = async (req: Request, res: Response) => {
       res.status(401).json({ message: error.message });
       return 
     }
+    if (error.message === "This account is registered using a third-party provider. Please log in with your provider.") {
+      res.status(404).json({ message: error.message });
+      return 
+    }
     res.status(500).json({ message: "Internal Server Error" });
   }
   }
 
-  const client = new OAuth2Client({
-    clientId: config.googleclientid,
-    clientSecret: config.googleclientsecret,
-    redirectUri: config.googleredirecturi
-  });
-  
-  // Google Signup Controller
-  export const googleSignup = async (req: Request, res: Response) => {
-    try {
-      const { code } = req.body;
-    console.log("code:", code);
-    console.log("redirect URI:", config.googleredirecturi); // Debug log
+// Google Signup Controller
+export const googleSignup = async (req: Request, res: Response) => {
+  try {
+    const { code } = req.body;
+    console.log("Code received for signup:", code);
 
-    const { tokens } = await client.getToken({
-      code,
-      redirect_uri: config.googleredirecturi
+    const newUser = await googleSignupService(code);
+    res.status(201).json({ message: "User signed up successfully", user: newUser });
+  } catch (error: any) {
+    console.error("Google Signup Error:", error.message);
+    res.status(500).json({ message: "Google signup failed.", error: error.message });
+  }
+};
+
+// Google Login Controller
+export const googleLogin = async (req: Request, res: Response) => {
+  try {
+    const { code } = req.body;
+
+    const { user, accessToken, refreshToken } = await googleLoginService(code);
+
+    // Store tokens in cookies
+    setTokensInCookies(res, accessToken, refreshToken);
+
+    res.status(200).json({
+      message: "Google login successful",
+      user,
+      accessToken,
+      refreshToken,
     });
 
-    if (!tokens.id_token) {
-      res.status(400).json({ success: false, message: 'Invalid ID token' });
-      return 
+  } catch (error: any) {
+    if (error.message === "Email not registered") {
+      res.status(404).json({ message: error.message });
+    } else {
+      res.status(500).json({ message: "Google login failed.", error: error.message });
     }
+    return
+  }
+};
 
-    const ticket = await client.verifyIdToken({
-      idToken: tokens.id_token,
-      audience: config.googleclientid,
+//Handles github Signup
+export const githubSignup = async (req: Request, res: Response) =>{
+  try {
+    const { code } = req.body;
+    console.log("Code received for signup:", code);
+
+    const newUser = await githubSignupService(code);
+    res.status(201).json({ message: "User signed up successfully", user: newUser });
+
+  } catch (error:any) {
+    console.error("Github Signup Error:", error.message);
+    res.status(500).json({ message: "Github signup failed.", error: error.message });
+    return
+  }
+}
+
+//Handles github login
+export const githubLogin = async (req: Request, res: Response) =>{
+  try {
+    const { code } = req.body;
+    console.log("Code received for login:", code);
+    const { user, accessToken, refreshToken } = await githubLoginService(code);
+
+    // Store tokens in cookies
+    setTokensInCookies(res, accessToken, refreshToken);
+
+    res.status(200).json({
+      message: "Github login successful",
+      user,
+      accessToken,
+      refreshToken,
     });
 
-    const payload = ticket.getPayload();
-    if (!payload) {
-      res.status(400).json({ success: false, message: 'Unable to retrieve user details' });
-      return 
+  } catch (error:any) {
+    if (error.message === "Email not registered") {
+      res.status(404).json({ message: error.message });
+    } else {
+      res.status(500).json({ message: "Github login failed.", error: error.message });
     }
-
-    console.log("Google User Payload:", payload);
-    
-
-    // Exchange the authorization code for tokens
-    // const { tokens } = await client.getToken(code);
-    // if (!tokens.id_token) {
-    //   res.status(400).json({ success: false, message: 'Invalid ID token' });
-    //   return 
-    // }
-      
-    //   // Verify Google token
-    //   const ticket = await client.verifyIdToken({
-    //     idToken: tokens.id_token,
-    //     audience: '262075947289-6uk3rlr59rq0218rf8nqggmgeb6aibtv.apps.googleusercontent.com',
-    //   });
-      
-    //   const payload = ticket.getPayload();
-    //   if (!payload) {
-    //     res.status(400).json({ success: false, message: 'Unable to retrieve user details' });
-    //     return 
-    //   }
-  
-    //   const { email, name, picture, sub } = payload;
-  
-    //   // Check if user already exists
-    //   const userExists = await findUserByEmail(email!);
-    //   if (userExists) {
-    //     res.status(400).json({ 
-    //       message: "Email already registered. Please login instead."  
-    //     });
-    //     return 
-    //   }
-  
-    //   // Create new user
-    //   const newUser = await createUser({
-    //     name,
-    //     email,
-    //     profilePic: picture,
-    //     provider: 'google',
-    //     providerId: sub
-    //   });
-  
-    //   res.status(201).json({
-    //     message: "User registered successfully",
-    //     user: newUser
-    //   });
-  
-    } catch (error: any) {
-      console.error("Google Signup Error:", error);
-      res.status(400).json({ message: error.message });
-    }
-  };
-  
-  // Google Login Controller
-  export const googleLogin = async (req: Request, res: Response) => {
-    try {
-      const { credential } = req.body;
-      
-      // Verify Google token
-      const ticket = await client.verifyIdToken({
-        idToken: credential,
-        audience: "262075947289-6uk3rlr59rq0218rf8nqggmgeb6aibtv.apps.googleusercontent.com"
-      });
-      
-      const payload = ticket.getPayload();
-      if (!payload) {
-        throw new Error("Invalid Google token");
-      }
-  
-      const { email } = payload;
-  
-      // Find user by email
-      const user = await findUserByEmail(email!);
-      if (!user) {
-        res.status(404).json({ 
-          message: "No account found with this email. Please sign up first." 
-        });
-        return 
-      }
-  
-      if (user.isBlocked) {
-        throw new Error("Blocked");
-      }
-  
-      // Generate tokens
-      const accessToken = generateAccessToken({ 
-        userId: user._id, 
-        userRole: user.role 
-      });
-      const refreshToken = generateRefreshToken({ 
-        userId: user._id, 
-        userRole: user.role 
-      });
-  
-      // Save refresh token
-      await updateRefreshToken(user._id.toString(), refreshToken);
-  
-      // Set cookies
-      setTokensInCookies(res, accessToken, refreshToken);
-  
-      res.json({ 
-        message: "Login successful", 
-        user 
-      });
-  
-    } catch (error: any) {
-      console.error("Google Login Error:", error);
-      if (error.message === "Blocked") {
-        res.status(403).json({ message: "Your account has been blocked" });
-        return 
-      }
-      res.status(400).json({ message: error.message });
-    }
-  };
-
+    return
+  }
+}
 
 // Handle refresh token logic
 export const refreshToken = async (req: Request, res: Response) => {
@@ -328,33 +267,6 @@ export const handleResetPassword = async (req: Request, res: Response) => {
   }
 };
 
-
-// export const checkingBlockedStatus = async(req:Request,res:Response) =>{
-//   const { email }= req.body;
-
-//   if(!email){
-//     res.status(400).json({ message: "Email is required" });
-//     return
-//   }
-
-//   try {
-//     const user = await findUserByEmail(email);
-//     if (!user) {
-//       res.status(404).json({ message: "User not found" });
-//       return
-//     }
-//     if (user.isBlocked) {
-//       res.status(403).json({ message: "User is blocked" });
-//       return
-//     }
-//     res.status(200).json({ message: "User is active" });
-//     return
-//   } catch (error) {
-//     res.status(500).json({ message: "Error checking user status", error });
-//     console.log("Error in checking status")
-//     return 
-//   }
-// }
 
 export const verifyPasskey = async(req:Request, res:Response) => {
   try {

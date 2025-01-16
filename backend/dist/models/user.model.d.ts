@@ -4,14 +4,14 @@ export interface UserInterface extends Document {
     email: string;
     phone?: string;
     dateOfBirth?: Date;
-    password: string;
+    password: string | null;
     jobTitle?: string;
     industry?: string;
     reasonForJoining?: string;
     role?: "user" | "mentor" | "admin";
     isBlocked: boolean;
     provider?: string;
-    providerId?: string;
+    providerId?: string | null;
     profilePic?: string;
     coverPic?: string;
     accessToken?: string;

@@ -8,8 +8,6 @@ import subCategoryRoutes from "./routes/sucategory.routes.js";
 import skillsRoutes from "./routes/skills.routes.js";
 import userRoutes from "./routes/user.routes.js";
 import mentorRoutes from "./routes/mentor.routes.js";
-import passport from "passport";
-import configurePassport from "./utils/passport.utils.js";
 import helmet from "helmet";
 import cors from "cors";
 import cookieParser from "cookie-parser";
@@ -30,9 +28,6 @@ app.use(cors({
   credentials:true
 }))
 
-// Passport Configuration
-app.use(passport.initialize());
-configurePassport();
 
 // Routes
 app.use("/api/auth", authRoutes);

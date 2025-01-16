@@ -8,8 +8,6 @@ import subCategoryRoutes from "./routes/sucategory.routes.js";
 import skillsRoutes from "./routes/skills.routes.js";
 import userRoutes from "./routes/user.routes.js";
 import mentorRoutes from "./routes/mentor.routes.js";
-import passport from "passport";
-import configurePassport from "./utils/passport.utils.js";
 import helmet from "helmet";
 import cors from "cors";
 import cookieParser from "cookie-parser";
@@ -25,9 +23,6 @@ app.use(cors({
     origin: process.env.FRONTEND_URL || "http://localhost:5173",
     credentials: true
 }));
-// Passport Configuration
-app.use(passport.initialize());
-configurePassport();
 // Routes
 app.use("/api/auth", authRoutes);
 // app.use("/api/admin/auth", authAdminRoutes);

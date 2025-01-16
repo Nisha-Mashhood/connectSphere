@@ -1,69 +1,27 @@
 import { useGoogleLogin } from '@react-oauth/google';
 import { useDispatch } from 'react-redux';
-// import { useNavigate } from 'react-router-dom';
-import { signinFailure } from '../../redux/Slice/userSlice';
+import { useNavigate } from 'react-router-dom';
+import { signinFailure, signinStart } from '../../redux/Slice/userSlice';
 import { googleSignup } from '../../Service/Auth.service';
 import toast from 'react-hot-toast';
-// import axios from 'axios';
 
 const GoogleSignup = () => {
   const dispatch = useDispatch();
-  // const navigate = useNavigate();
+  const navigate = useNavigate();
 
   const signup = useGoogleLogin({
     scope: 'openid email profile',
-  flow: 'auth-code',
-  redirect_uri: 'http://localhost:3000/auth/google/callback',
-    // onSuccess: async (tokenResponse) => {
-    //   try {
-    //     dispatch(signinStart());
-    //     // Get user info from Google using the access token
-    //     const userInfo = await axios.get(
-    //       'https://www.googleapis.com/oauth2/v3/userinfo',
-    //       {
-    //         headers: { Authorization: `Bearer ${tokenResponse.access_token}` }
-    //       }
-    //     );
-    //     console.log(userInfo);
-
-
-    //     // Now send the user data to your backend
-    //     const response = await axiosInstance.post('/auth/google-login', {
-    //       googleData: userInfo.data
-    //     });
-
-    //     if (response.data.user) {
-    //       dispatch(signinSuccess(response.data.user));
-    //       toast.success('Login successful!');
-          
-    //       // Check if profile is complete
-    //       const profileResponse = await checkProfile(response.data.user._id);
-    //       if (!profileResponse.isProfileComplete) {
-    //         navigate('/complete-profile');
-    //         return;
-    //       }
-          
-    //       navigate('/');
-    //     }
-    //   } catch (error: any) {
-    //     dispatch(signinFailure(error.message));
-    //     toast.error(error.message || 'Google login failed');
-    //   }
-    // },
-    // onError: () => {
-    //   toast.error('Google login failed');
-    // }
-
+    flow: 'auth-code',
     onSuccess: async (response) => {
       try {
         console.log(response);
 
-        // dispatch(signinStart());
+        dispatch(signinStart());
          const data = await googleSignup(response.code);
          console.log("data:",data);
 
-        // toast.success('Signup successful! Please login to continue');
-        // navigate('/login');
+         toast.success('Signup successful! Please login to continue');
+        navigate('/login');
       } catch (error: any) {
         dispatch(signinFailure(error.message));
         toast.error(error.message || 'Google signup failed');

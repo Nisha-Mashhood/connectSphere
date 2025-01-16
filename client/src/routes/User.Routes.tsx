@@ -13,6 +13,7 @@ import MentorProfile from "../Components/User/MentorProfile";
 import Mentorship from "../Components/User/Mentorship";
 import PageNotFound from "../Components/PageNotFound";
 import { ForbiddenPage } from "../Components/User/ForebiddenPage";
+import GithubCallback from "../Components/User/GithubCallback";
 
 
 const UserRoutes = () => (
@@ -25,6 +26,7 @@ const UserRoutes = () => (
       <Route path="/forgot" element={<ForgotPassword />} />
       <Route path="/otp" element={<OTPVerification />} />
       <Route path="/reset" element={<ResetPassword />} />
+      <Route path="/github/callback" element={<GithubCallback />} />
 
       <Route element={<PrivateRoute />}>
         <Route path="/complete-profile" element={<CompleteProfile />} />
