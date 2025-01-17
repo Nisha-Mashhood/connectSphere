@@ -1,7 +1,7 @@
 import { Button } from "@nextui-org/react";
-import BannerImage from '../../assets/Banner.webp'
+import BannerImage from '../../../assets/Banner.webp'
 import { useNavigate } from "react-router-dom";
-import { RootState } from "../../redux/store";
+import { RootState } from "../../../redux/store";
 import { useSelector } from "react-redux";
 
 const Banner = () => {

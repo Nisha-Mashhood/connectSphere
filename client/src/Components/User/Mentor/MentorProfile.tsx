@@ -1,10 +1,10 @@
 import { useState, useEffect } from "react";
 import toast from "react-hot-toast";
 import { useSelector } from "react-redux";
-import { RootState } from "../../redux/store";
+import { RootState } from "../../../redux/store";
 import { useNavigate } from "react-router-dom";
-import { getAllSkills } from "../../Service/Category.Service";
-import { createMentorProfile } from "../../Service/Mentor.Service";
+import { getAllSkills } from "../../../Service/Category.Service";
+import { checkMentorProfile, createMentorProfile } from "../../../Service/Mentor.Service";
 
 const MentorProfile = () => {
   const navigate = useNavigate();
@@ -18,6 +18,45 @@ const MentorProfile = () => {
     { day: "", timeSlots: [""] },
   ]);
   const [dropdownOpen, setDropdownOpen] = useState(false); 
+
+  useEffect(() => {
+    const checkMentorStatus = async () => {
+      try {
+        const mentorResponse = await checkMentorProfile(currentUser._id);
+        const mentor = mentorResponse.mentor;
+
+        if (!mentor) {
+          // If no mentor record exists, show the mentor profile form
+          return;
+        } else {
+          switch (mentor.isApproved) {
+            case "Processing":
+              toast.success("Your mentor request is still under review.");
+              navigate("/");
+              break;
+            case "Completed":
+              toast.success("You are an approved mentor!");
+              navigate("/mentorship");
+              break;
+            case "Rejected":
+              toast.error("Your mentor application has been rejected.");
+              navigate("/");
+              break;
+            default:
+              toast.error("Unknown status. Please contact support.");
+              navigate("/");
+          }
+        }
+      } catch (error) {
+        toast.error("An error occurred while checking your mentor status.");
+        navigate("/");
+      }
+    };
+
+    if (currentUser._id) {
+      checkMentorStatus();
+    }
+  }, [currentUser, navigate]);
 
   // Fetch skills from the Skill collection
   useEffect(() => {

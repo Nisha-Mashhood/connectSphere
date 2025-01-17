@@ -25,7 +25,7 @@ export const approveMentorRequest = async (id) => {
     try {
         await MentorRepository.approveMentorRequest(id);
         // Fetch mentor data to send email
-        const mentor = await MentorRepository.getMentorByUserId(id);
+        const mentor = await MentorRepository.getMentorById(id);
         if (!mentor) {
             throw new Error("Mentor not found.");
         }
@@ -47,7 +47,7 @@ export const rejectMentorRequest = async (id, reason) => {
     try {
         await MentorRepository.rejectMentorRequest(id);
         // Fetch mentor data to send email
-        const mentor = await MentorRepository.getMentorByUserId(id);
+        const mentor = await MentorRepository.getMentorById(id);
         if (!mentor) {
             throw new Error("Mentor not found.");
         }
@@ -70,7 +70,7 @@ export const cancelMentorship = async (id) => {
         // Update mentor status to "Cancelled"
         await MentorRepository.cancelMentorship(id);
         // Fetch mentor data to send email
-        const mentor = await MentorRepository.getMentorByUserId(id);
+        const mentor = await MentorRepository.getMentorById(id);
         if (!mentor) {
             throw new Error("Mentor not found.");
         }

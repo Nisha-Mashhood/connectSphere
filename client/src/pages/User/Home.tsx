@@ -1,9 +1,9 @@
-import Banner from "../../Components/User/Banner"
-import Contact from "../../Components/User/Contact"
-import FeatureSection from "../../Components/User/FeatureSection"
-import Footer from "../../Components/User/Footer"
-import FreqAskedQuestions from "../../Components/User/FreqAskedQuestions"
-import Reviews from "../../Components/User/Reveiws"
+import Banner from "../../Components/User/Home/Banner"
+import Contact from "../../Components/User/Home/Contact"
+import FeatureSection from "../../Components/User/Home/FeatureSection"
+import Footer from "../../Components/User/Common/Footer"
+import FreqAskedQuestions from "../../Components/User/Home/FreqAskedQuestions"
+import Reviews from "../../Components/User/Home/Reveiws"
 
 
 const Home = () => {

@@ -6,7 +6,7 @@ const GitHub = () => {
     const state = encodeURIComponent("login");
     const githubUrl = `https://github.com/login/oauth/authorize?client_id=${clientId}&redirect_uri=${redirectUri}&state=${state}&scope=user:email`;
     
-    console.log("Signup URL:", githubUrl); 
+    console.log("Login URL:", githubUrl); 
     window.location.assign(githubUrl)
   };
 

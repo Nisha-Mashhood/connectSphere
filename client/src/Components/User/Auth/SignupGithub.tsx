@@ -3,7 +3,6 @@ const SignupGithub = () => {
   const signupWithGithub = () => {
     const clientId = "Ov23livTA0yK7iMC3x1A"; 
     const redirectUri = "http://localhost:5173/github/callback"; 
-    const state = encodeURIComponent("signup");
     
     // Make sure to construct the URL exactly like the login URL
     const githubUrl = new URL('https://github.com/login/oauth/authorize');
@@ -12,7 +11,6 @@ const SignupGithub = () => {
     githubUrl.searchParams.append('state', 'signup'); // This is the key part
     githubUrl.searchParams.append('scope', 'user:email read:user');
     
-    console.log("Signup URL:", githubUrl.toString()); // Debug log
     window.location.assign(githubUrl.toString());
   };
 

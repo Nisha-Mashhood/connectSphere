@@ -51,7 +51,7 @@ export const rejectMentor = async (mentorId:string, rejectionReason) => {
 
 export const checkMentorProfile = async (userId) => {
   try {
-    const response = await axiosInstance.get(`/auth/check-profile/${userId}`);
+    const response = await axiosInstance.get(`/mentors/check-mentor/${userId}`);
     return response.data;
   } catch (error) {
     handleError(error)

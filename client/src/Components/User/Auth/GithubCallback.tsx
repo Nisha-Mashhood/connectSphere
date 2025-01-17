@@ -4,12 +4,12 @@ import {
   checkProfile,
   githubLogin,
   githubSignup,
-} from "../../Service/Auth.service";
+} from "../../../Service/Auth.service";
 import {
   signinStart,
   signinFailure,
   signinSuccess,
-} from "../../redux/Slice/userSlice";
+} from "../../../redux/Slice/userSlice";
 import toast from "react-hot-toast";
 import { useDispatch } from "react-redux";
 

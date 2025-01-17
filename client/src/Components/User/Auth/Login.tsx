@@ -1,4 +1,4 @@
-import LoginImage from "../../assets/Login.png";
+import LoginImage from "../../../assets/Login.png";
 import { Link, useLocation, useNavigate } from "react-router-dom";
 import { useDispatch } from "react-redux";
 import {
@@ -6,12 +6,12 @@ import {
   signinStart,
   signinSuccess,
   unsetIsAdmin,
-} from "../../redux/Slice/userSlice";
+} from "../../../redux/Slice/userSlice";
 import toast from "react-hot-toast";
 import GoogleLogin from "./GoogleLogin";
 import GitHub from "./GitHub";
 import { useEffect } from "react";
-import { login, checkProfile } from "../../Service/Auth.service";
+import { login, checkProfile } from "../../../Service/Auth.service";
 import { Formik, Field, Form, ErrorMessage } from "formik";
 import * as Yup from "yup";
 

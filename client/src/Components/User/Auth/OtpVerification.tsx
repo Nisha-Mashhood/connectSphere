@@ -1,12 +1,12 @@
 import  { useState, useEffect } from "react";
-import otpImage from "../../assets/OTP verification.png";
+import otpImage from "../../../assets/OTP verification.png";
 import { InputOtp } from "@nextui-org/input-otp";
 import { useDispatch, useSelector } from "react-redux";
 import { Link, useNavigate } from "react-router-dom";
-import { signinStart } from "../../redux/Slice/userSlice";
-import { RootState } from "../../redux/store";
+import { signinStart } from "../../../redux/Slice/userSlice";
+import { RootState } from "../../../redux/store";
 import toast from "react-hot-toast";
-import { sentOTP, verifyOTP } from "../../Service/Auth.service";
+import { sentOTP, verifyOTP } from "../../../Service/Auth.service";
 import { Formik, Form, ErrorMessage } from "formik";
 import * as Yup from "yup";
 

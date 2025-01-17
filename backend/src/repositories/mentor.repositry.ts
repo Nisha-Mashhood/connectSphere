@@ -43,12 +43,19 @@ export const cancelMentorship = async (id: string) => {
 };
 
 // Get mentor by userId
-export const getMentorByUserId = async (id: string): Promise<IMentor | null> => {
+export const getMentorById = async (id: string): Promise<IMentor | null> => {
   const mentor =  await Mentor.findById(id)
     .populate("userId", "name email") 
     .populate("skills", "name"); 
     return mentor;
 };
+
+export const getMentorByUserId = async(id: string) :Promise<IMentor | null> => {
+  const mentor = await Mentor.findOne({ userId: id })
+  .populate("userId")
+  .populate("skills");
+  return mentor
+}
 
 // Update  for mentor with mentorId
 export const updateMentorById = async (

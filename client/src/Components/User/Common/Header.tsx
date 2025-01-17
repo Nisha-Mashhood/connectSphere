@@ -11,14 +11,14 @@ import {
   Avatar,
 } from "@nextui-org/react";
 import { Button } from "@nextui-org/react";
-import Logo from "../../assets/logo.svg";
+import Logo from "../../../assets/logo.svg";
 import { useDispatch, useSelector } from "react-redux";
 import { useNavigate } from "react-router-dom";
-import { signOut } from "../../redux/Slice/userSlice";
+import { signOut } from "../../../redux/Slice/userSlice";
 import toast from "react-hot-toast";
-import { RootState } from "../../redux/store";
-import { checkProfile, logout } from "../../Service/Auth.service";
-import { checkMentorProfile } from "../../Service/Mentor.Service";
+import { RootState } from "../../../redux/store";
+import { checkProfile, logout } from "../../../Service/Auth.service";
+import { checkMentorProfile } from "../../../Service/Mentor.Service";
 // import { useEffect } from "react";
 
 export const ConnectSphereLogo = () => {
@@ -84,6 +84,7 @@ const Header = () => {
 
       const mentorResponse = await checkMentorProfile(currentUser._id);
       const mentor = mentorResponse.mentor;
+      console.log(mentor);
   
       if (!mentor) {
         // If there's no mentor record, show the mentor profile form
@@ -127,8 +128,8 @@ const Header = () => {
           </Link>
         </NavbarItem>
         <NavbarItem>
-          <Link color="foreground" href="#">
-            Explore
+          <Link color="foreground" href="/explorementor">
+            Explore Mentor
           </Link>
         </NavbarItem>
         <NavbarItem>

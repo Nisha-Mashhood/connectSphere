@@ -1,19 +1,20 @@
 import { Routes, Route } from "react-router-dom";
 import Home from "../pages/User/Home";
-import Header from "../Components/User/Header";
-import Login from "../Components/User/Login";
-import Signup from "../Components/User/Signup";
-import ForgotPassword from "../Components/User/ForgotPassword";
-import OTPVerification from "../Components/User/OtpVerification";
-import ResetPassword from "../Components/User/ResetPassword";
-import Profile from "../Components/User/Profile";
+import Header from "../Components/User/Common/Header";
+import Login from "../Components/User/Auth/Login";
+import Signup from "../Components/User/Auth/Signup";
+import ForgotPassword from "../Components/User/Auth/ForgotPassword";
+import OTPVerification from "../Components/User/Auth/OtpVerification";
+import ResetPassword from "../Components/User/Auth/ResetPassword";
+import Profile from "../Components/User/Common/Profile";
 import PrivateRoute from "../Components/User/PrivateRoute";
-import CompleteProfile from "../Components/User/CompleteProfile";
-import MentorProfile from "../Components/User/MentorProfile";
-import Mentorship from "../Components/User/Mentorship";
+import CompleteProfile from "../Components/User/UserComponents/CompleteProfile";
+import MentorProfile from "../Components/User/Mentor/MentorProfile";
+import Mentorship from "../Components/User/Mentor/Mentorship";
 import PageNotFound from "../Components/PageNotFound";
-import { ForbiddenPage } from "../Components/User/ForebiddenPage";
-import GithubCallback from "../Components/User/GithubCallback";
+import { ForbiddenPage } from "../Components/ForebiddenPage";
+import GithubCallback from "../Components/User/Auth/GithubCallback";
+import ExploreMentor from "../Components/User/UserComponents/ExploreMentor";
 
 
 const UserRoutes = () => (
@@ -33,6 +34,7 @@ const UserRoutes = () => (
         <Route path="/profile" element={<Profile />} />
         <Route path="/mentorProfile" element={<MentorProfile />} />
         <Route path="/mentorship" element={<Mentorship />} />
+        <Route path="/explorementor" element={<ExploreMentor />} />
       </Route>
 
       <Route path="*" element={<PageNotFound />} />

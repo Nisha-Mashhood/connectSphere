@@ -1,8 +1,8 @@
 import { useGoogleLogin } from '@react-oauth/google';
 import { useDispatch } from 'react-redux';
 import { useNavigate } from 'react-router-dom';
-import { signinFailure, signinStart } from '../../redux/Slice/userSlice';
-import { googleSignup } from '../../Service/Auth.service';
+import { signinFailure, signinStart } from '../../../redux/Slice/userSlice';
+import { googleSignup } from '../../../Service/Auth.service';
 import toast from 'react-hot-toast';
 
 const GoogleSignup = () => {

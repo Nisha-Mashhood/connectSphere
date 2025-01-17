@@ -25,10 +25,16 @@ export const cancelMentorship = async (id) => {
     return await Mentor.findByIdAndUpdate(id, { isApproved: "Processing" }, { new: true });
 };
 // Get mentor by userId
-export const getMentorByUserId = async (id) => {
+export const getMentorById = async (id) => {
     const mentor = await Mentor.findById(id)
         .populate("userId", "name email")
         .populate("skills", "name");
+    return mentor;
+};
+export const getMentorByUserId = async (id) => {
+    const mentor = await Mentor.findOne({ userId: id })
+        .populate("userId")
+        .populate("skills");
     return mentor;
 };
 // Update  for mentor with mentorId

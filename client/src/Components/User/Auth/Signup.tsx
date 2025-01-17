@@ -3,9 +3,9 @@ import * as Yup from "yup";
 import { Link, useNavigate } from "react-router-dom";
 import { toast } from "react-hot-toast";
 import { useDispatch } from "react-redux";
-import { signinStart, signinFailure } from "../../redux/Slice/userSlice.ts";
-import { register } from "../../Service/Auth.service.ts";
-import SignupImage from "../../assets/Signup.png";
+import { signinStart, signinFailure } from "../../../redux/Slice/userSlice.ts";
+import { register } from "../../../Service/Auth.service.ts";
+import SignupImage from "../../../assets/Signup.png";
 import SignupGoogle from "./SignupGoogle.tsx";
 import SignupGithub from "./SignupGithub.tsx";
 

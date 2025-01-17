@@ -4,8 +4,8 @@ import toast from "react-hot-toast";
 import { useSelector } from "react-redux";
 import { Formik, Form, Field, ErrorMessage } from "formik";
 import * as Yup from "yup";
-import { RootState } from "../../redux/store";
-import { fetchUserDetails, updateUserDetails } from "../../Service/Auth.service";
+import { RootState } from "../../../redux/store";
+import { fetchUserDetails, updateUserDetails } from "../../../Service/Auth.service";
 
 const CompleteProfile: React.FC = () => {
   const { currentUser } = useSelector((state: RootState) => state.user);

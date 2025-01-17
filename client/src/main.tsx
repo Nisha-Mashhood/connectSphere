@@ -1,6 +1,7 @@
 import { BrowserRouter } from "react-router-dom";
 import { createRoot } from "react-dom/client";
 import { NextUIProvider } from "@nextui-org/react";
+import {HeroUIProvider} from '@heroui/react'
 import { persistor, store } from "./redux/store.js";
 import { PersistGate } from "redux-persist/integration/react";
 import { Provider } from "react-redux";

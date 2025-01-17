@@ -1,9 +1,9 @@
 import { useDispatch } from "react-redux";
-import forgotImage from "../../assets/Forgot password.png";
+import forgotImage from "../../../assets/Forgot password.png";
 import { Link, useNavigate } from "react-router-dom";
 import toast from "react-hot-toast";
-import { setResetEmail, signinFailure, signinStart } from "../../redux/Slice/userSlice";
-import { sentOTP } from "../../Service/Auth.service";
+import { setResetEmail, signinFailure, signinStart } from "../../../redux/Slice/userSlice";
+import { sentOTP } from "../../../Service/Auth.service";
 import { Formik, Field, Form, ErrorMessage } from "formik";
 import * as Yup from "yup";
 

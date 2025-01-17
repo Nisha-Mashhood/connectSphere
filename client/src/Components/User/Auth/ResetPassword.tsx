@@ -1,10 +1,10 @@
 import { useDispatch, useSelector } from "react-redux";
-import restImage from "../../assets/Reset Password.png";
+import restImage from "../../../assets/Reset Password.png";
 import { Link, useNavigate } from "react-router-dom";
-import { RootState } from "../../redux/store";
+import { RootState } from "../../../redux/store";
 import toast from "react-hot-toast";
-import { clearResetEmail, signinFailure, signinStart } from "../../redux/Slice/userSlice";
-import { resetPassword } from "../../Service/Auth.service";
+import { clearResetEmail, signinFailure, signinStart } from "../../../redux/Slice/userSlice";
+import { resetPassword } from "../../../Service/Auth.service";
 import { Formik, Field, Form, ErrorMessage } from "formik";
 import * as Yup from "yup";
 

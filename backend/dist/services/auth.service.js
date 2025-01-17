@@ -187,7 +187,7 @@ export const githubSignupService = async (code) => {
 // Handles GitHub login
 export const githubLoginService = async (code) => {
     try {
-        // Step 1: Exchange code for access token
+        //Exchange code for access token
         const tokenResponse = await axios.post(`https://github.com/login/oauth/access_token`, {
             client_id: gitclientId,
             client_secret: gitclientSecret,
@@ -198,7 +198,7 @@ export const githubLoginService = async (code) => {
             },
         });
         const { access_token } = tokenResponse.data; // Extract the access token
-        // Step 2: Fetch user details from GitHub
+        // Fetch user details from GitHub
         const userResponse = await axios.get("https://api.github.com/user", {
             headers: {
                 Authorization: `Bearer ${access_token}`,
@@ -206,7 +206,7 @@ export const githubLoginService = async (code) => {
         });
         const { email: initialEmail } = userResponse.data;
         let email = initialEmail;
-        // Step 3: Fetch emails explicitly if email is not provided in the user object
+        //Fetch emails explicitly if email is not provided in the user object
         if (!email) {
             const emailsResponse = await axios.get("https://api.github.com/user/emails", {
                 headers: {
@@ -222,12 +222,12 @@ export const githubLoginService = async (code) => {
                 throw new Error("Email not found for GitHub user.");
             }
         }
-        // Step 4: Check if the email exists in the database
+        // Check if the email exists in the database
         const existingUser = await findUserByEmail(email);
         if (!existingUser) {
             throw new Error("Email not registered.");
         }
-        // Step 5: Generate JWT tokens
+        //Generate JWT tokens
         const accessToken = generateAccessToken({
             userId: existingUser._id,
             userRole: existingUser.role,
@@ -236,9 +236,9 @@ export const githubLoginService = async (code) => {
             userId: existingUser._id,
             userRole: existingUser.role,
         });
-        // Step 6: Save the refresh token to the database
+        //Save the refresh token to the database
         await updateRefreshToken(existingUser._id.toString(), refreshToken);
-        // Step 7: Return the user data and tokens
+        //Return the user data and tokens
         return { user: existingUser, accessToken, refreshToken };
     }
     catch (error) {

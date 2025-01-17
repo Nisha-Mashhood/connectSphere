@@ -8,6 +8,7 @@ export declare const cancelMentorship: (id: string) => Promise<(import("mongoose
 }> & {
     __v: number;
 }) | null>;
+export declare const getMentorById: (id: string) => Promise<IMentor | null>;
 export declare const getMentorByUserId: (id: string) => Promise<IMentor | null>;
 export declare const updateMentorById: (mentorId: string, updateData: Partial<IMentor>) => Promise<IMentor | null>;
 export declare const getSkills: () => Promise<(import("mongoose").Document<unknown, {}, import("../models/skills.model.js").SkillInterface> & import("../models/skills.model.js").SkillInterface & Required<{
