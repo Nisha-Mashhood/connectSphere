@@ -27,3 +27,15 @@ export const getRelativeTime = (dateString: string) => {
     
     return `${Math.floor(diffInMonths / 12)}y ago`;
 };
+
+  // Function to calculate time left
+  export const calculateTimeLeft = (endDate: string) => {
+    const end = new Date(endDate);
+    const now = new Date();
+    const diff = end.getTime() - now.getTime();
+    
+    if (diff <= 0) return "Expired";
+    
+    const days = Math.floor(diff / (1000 * 60 * 60 * 24));
+    return `${days} days left`;
+  };

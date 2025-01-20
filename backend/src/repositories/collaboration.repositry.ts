@@ -65,3 +65,31 @@ export const createCollaboration = async (collaborationData: Partial<ICollaborat
 export const deleteMentorRequest = async (requestId: string): Promise<void> => {
   await MentorRequest.findByIdAndDelete(requestId);
 };
+
+//Get collab data For user
+export const getCollabDataForUser = async (userId: string) => {
+  try {
+    const collabData = await Collaboration.find({ userId })
+    .populate({
+      path: 'mentorId',  
+      populate: {
+        path: 'userId',
+        select: 'name email profilePic'
+      }
+    })
+    return collabData;
+  } catch (error:any) {
+    throw new Error(`Error getting collaboration data for user: ${error.message}`);
+  }
+};
+
+//get collab data for mentor
+export const getCollabDataForMentor = async (mentorId: string) => {
+  try {
+    const collabData = await Collaboration.find({ mentorId })
+      .populate("userId", "name email profilePic") 
+    return collabData;
+  } catch (error:any) {
+    throw new Error(`Error getting collaboration data for mentor: ${error.message}`);
+  }
+};

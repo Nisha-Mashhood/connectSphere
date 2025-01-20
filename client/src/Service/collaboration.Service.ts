@@ -62,3 +62,23 @@ export const SendRequsetToMentor = async (data) => {
      handleError(error)
     }
   }
+
+    //get collab data for user
+    export const getCollabDataforUser = async (userId) => {
+      try {
+        const response = await axiosInstance.get(`/collaboration/get-collabData-user/${userId}`);
+        return response.data;
+      } catch (error) {
+       handleError(error)
+      }
+    }
+
+      //get collab data for mentor
+  export const getCollabDataforMentor = async (mentorId) => {
+    try {
+      const response = await axiosInstance.get(`/collaboration/get-collabData-mentor/${mentorId}`);
+      return response.data;
+    } catch (error) {
+     handleError(error)
+    }
+  }

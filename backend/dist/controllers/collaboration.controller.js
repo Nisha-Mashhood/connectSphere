@@ -1,4 +1,4 @@
-import { acceptRequest, getMentorRequests, getRequsetForUser, processPaymentService, rejectRequest, TemporaryRequestService } from "../services/collaboration.service.js";
+import { acceptRequest, getCollabDataForMentorService, getCollabDataForUserService, getMentorRequests, getRequsetForUser, processPaymentService, rejectRequest, TemporaryRequestService } from "../services/collaboration.service.js";
 import mentorRequset from "../models/mentorRequset.js";
 export const TemporaryRequestController = async (req, res) => {
     try {
@@ -92,6 +92,40 @@ export const makeStripePaymentController = async (req, res) => {
     catch (error) {
         console.error('Payment error:', error.message);
         res.status(500).json({ status: 'failure', error: error.message });
+        return;
+    }
+};
+//get collab data for user
+export const getCollabDataForUserController = async (req, res) => {
+    try {
+        const userId = req.params.id;
+        const collabData = await getCollabDataForUserService(userId);
+        if (!collabData || collabData.length === 0) {
+            res.status(404).json({ message: "No collaboration data found for this user." });
+            return;
+        }
+        res.status(200).json({ collabData });
+        return;
+    }
+    catch (error) {
+        res.status(500).json({ message: error.message });
+        return;
+    }
+};
+//Get collab data for mentor
+export const getCollabDataForMentorController = async (req, res) => {
+    try {
+        const mentorId = req.params.id;
+        const collabData = await getCollabDataForMentorService(mentorId);
+        if (!collabData || collabData.length === 0) {
+            res.status(404).json({ message: "No collaboration data found for this mentor." });
+            return;
+        }
+        res.status(200).json({ collabData });
+        return;
+    }
+    catch (error) {
+        res.status(500).json({ message: error.message });
         return;
     }
 };

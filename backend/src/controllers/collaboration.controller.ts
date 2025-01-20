@@ -1,5 +1,5 @@
 import { Request, Response } from "express";
-import { acceptRequest,  getMentorRequests,  getRequsetForUser,  processPaymentService,  rejectRequest, TemporaryRequestService } from "../services/collaboration.service.js";
+import { acceptRequest,  getCollabDataForMentorService,  getCollabDataForUserService,  getMentorRequests,  getRequsetForUser,  processPaymentService,  rejectRequest, TemporaryRequestService } from "../services/collaboration.service.js";
 import mentorRequset from "../models/mentorRequset.js";
 
 export const TemporaryRequestController = async (req: Request, res: Response) => {
@@ -104,3 +104,30 @@ export const TemporaryRequestController = async (req: Request, res: Response) =>
         return 
     }
     }
+
+    //get collab data for user
+    export const getCollabDataForUserController = async (req: Request, res: Response) => {
+      try {
+        const userId = req.params.id; 
+        const collabData = await getCollabDataForUserService(userId); 
+        res.status(200).json({ collabData });
+        return 
+      } catch (error:any) {
+       res.status(500).json({ message: error.message });
+        return
+      }
+    };
+
+
+    //Get collab data for mentor
+    export const getCollabDataForMentorController = async (req: Request, res: Response) => {
+      try {
+        const mentorId = req.params.id; 
+        const collabData = await getCollabDataForMentorService(mentorId); 
+       res.status(200).json({ collabData }); 
+       return 
+      } catch (error:any) {
+        res.status(500).json({ message: error.message }); 
+        return 
+      }
+    };

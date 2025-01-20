@@ -1,4 +1,4 @@
-import { createCollaboration, createTemporaryRequest, deleteMentorRequest, getMentorRequestsByMentorId, getRequestByUserId, updateMentorRequestStatus } from "../repositories/collaboration.repositry.js";
+import { createCollaboration, createTemporaryRequest, deleteMentorRequest, getCollabDataForMentor, getCollabDataForUser, getMentorRequestsByMentorId, getRequestByUserId, updateMentorRequestStatus } from "../repositories/collaboration.repositry.js";
 import stripe from '../utils/stripe.utils.js';
 import { v4 as uuid } from 'uuid';
 export const TemporaryRequestService = async (requestData) => {
@@ -89,6 +89,26 @@ export const processPaymentService = async (token, amount, requestId, mentorRequ
     }
     catch (error) {
         throw new Error(error.message);
+    }
+};
+//Get collab data for user
+export const getCollabDataForUserService = async (userId) => {
+    try {
+        const collabData = await getCollabDataForUser(userId);
+        return collabData;
+    }
+    catch (error) {
+        throw new Error(`Error getting collaboration data for user: ${error.message}`);
+    }
+};
+//get collab data for mentor
+export const getCollabDataForMentorService = async (mentorId) => {
+    try {
+        const collabData = await getCollabDataForMentor(mentorId); // Call the repository for data
+        return collabData;
+    }
+    catch (error) {
+        throw new Error(`Error getting collaboration data for mentor: ${error.message}`);
     }
 };
 //# sourceMappingURL=collaboration.service.js.map

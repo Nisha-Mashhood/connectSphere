@@ -61,4 +61,32 @@ export const createCollaboration = async (collaborationData) => {
 export const deleteMentorRequest = async (requestId) => {
     await MentorRequest.findByIdAndDelete(requestId);
 };
+//Get collab data For user
+export const getCollabDataForUser = async (userId) => {
+    try {
+        const collabData = await Collaboration.find({ userId })
+            .populate({
+            path: 'mentorId',
+            populate: {
+                path: 'userId',
+                select: 'name email profilePic'
+            }
+        });
+        return collabData;
+    }
+    catch (error) {
+        throw new Error(`Error getting collaboration data for user: ${error.message}`);
+    }
+};
+//get collab data for mentor
+export const getCollabDataForMentor = async (mentorId) => {
+    try {
+        const collabData = await Collaboration.find({ mentorId })
+            .populate("userId", "name email profilePic");
+        return collabData;
+    }
+    catch (error) {
+        throw new Error(`Error getting collaboration data for mentor: ${error.message}`);
+    }
+};
 //# sourceMappingURL=collaboration.repositry.js.map

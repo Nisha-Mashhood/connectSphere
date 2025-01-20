@@ -1,4 +1,4 @@
-import { createCollaboration, createTemporaryRequest, deleteMentorRequest, getMentorRequestsByMentorId, getRequestByUserId, updateMentorRequestStatus } from "../repositories/collaboration.repositry.js";
+import { createCollaboration, createTemporaryRequest, deleteMentorRequest, getCollabDataForMentor, getCollabDataForUser, getMentorRequestsByMentorId, getRequestByUserId, updateMentorRequestStatus } from "../repositories/collaboration.repositry.js";
 import  stripe  from '../utils/stripe.utils.js'; 
 import { v4 as uuid } from 'uuid';
 
@@ -100,4 +100,24 @@ export const getMentorRequests = async (mentorId: string) => {
       } catch (error:any) {
           throw new Error(error.message);
       }
+  };
+
+  //Get collab data for user
+  export const getCollabDataForUserService = async (userId: string) => {
+    try {
+      const collabData = await getCollabDataForUser(userId);
+      return  collabData;
+    } catch (error:any) {
+      throw new Error(`Error getting collaboration data for user: ${error.message}`);
+    }
+  };
+
+  //get collab data for mentor
+  export const getCollabDataForMentorService = async (mentorId: string) => {
+    try {
+      const collabData = await getCollabDataForMentor(mentorId);
+      return  collabData;
+    } catch (error:any) {
+      throw new Error(`Error getting collaboration data for mentor: ${error.message}`); 
+    }
   };

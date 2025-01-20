@@ -26,4 +26,14 @@ export declare const getRequestByUserId: (userId: string) => Promise<(import("mo
 })[]>;
 export declare const createCollaboration: (collaborationData: Partial<ICollaboration>) => Promise<ICollaboration>;
 export declare const deleteMentorRequest: (requestId: string) => Promise<void>;
+export declare const getCollabDataForUser: (userId: string) => Promise<(import("mongoose").Document<unknown, {}, ICollaboration> & ICollaboration & Required<{
+    _id: unknown;
+}> & {
+    __v: number;
+})[]>;
+export declare const getCollabDataForMentor: (mentorId: string) => Promise<(import("mongoose").Document<unknown, {}, ICollaboration> & ICollaboration & Required<{
+    _id: unknown;
+}> & {
+    __v: number;
+})[]>;
 //# sourceMappingURL=collaboration.repositry.d.ts.map

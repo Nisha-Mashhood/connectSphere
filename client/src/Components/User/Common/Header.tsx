@@ -96,7 +96,7 @@ const Header = () => {
             break;
           case "Completed":
             toast.success("You are an approved mentor!");
-            navigate("/mymentorProfilePage");
+            navigate("/profile");
             break;
           case "Rejected":
             toast.error("Your mentor application has been rejected.");

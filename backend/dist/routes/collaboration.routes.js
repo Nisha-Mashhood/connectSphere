@@ -9,5 +9,7 @@ router.post("/accept-request/:id", [apiLimiter, verifyToken, checkBlockedStatus]
 router.post("/reject-request/:id", [apiLimiter, verifyToken, checkBlockedStatus], collaborationController.rejectRequestController);
 router.get("/get-user-requests/:id", [apiLimiter, verifyToken, checkBlockedStatus], collaborationController.getRequsetForUserController);
 router.post("/process-payment", [apiLimiter, verifyToken, checkBlockedStatus], collaborationController.makeStripePaymentController);
+router.get('/get-collabData-user/:id', [apiLimiter, verifyToken, checkBlockedStatus], collaborationController.getCollabDataForUserController);
+router.get('/get-collabData-mentor/:id', [apiLimiter, verifyToken, checkBlockedStatus], collaborationController.getCollabDataForMentorController);
 export default router;
 //# sourceMappingURL=collaboration.routes.js.map
