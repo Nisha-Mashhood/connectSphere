@@ -7,7 +7,7 @@ const MentorSchema = new Schema({
     },
     isApproved: {
         type: String,
-        enum: ["Processing", "Approved", "Rejected"],
+        enum: ["Processing", "Completed", "Rejected"],
         default: "Processing"
     },
     rejectionReason: {
@@ -28,6 +28,14 @@ const MentorSchema = new Schema({
     specialization: {
         type: String,
         default: null
+    },
+    bio: {
+        type: String,
+        required: true,
+    },
+    price: {
+        type: Number,
+        required: true,
     },
     availableSlots: [
         {

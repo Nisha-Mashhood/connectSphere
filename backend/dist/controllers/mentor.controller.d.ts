@@ -1,8 +1,9 @@
 import { Request, Response } from "express";
 export declare const checkMentorStatus: (req: Request, res: Response) => Promise<void>;
-export declare const getSkills: (_: Request, res: Response) => Promise<void>;
+export declare const getMentorDetails: (req: Request, res: Response) => Promise<void>;
 export declare const createMentor: (req: Request, res: Response) => Promise<void>;
 export declare const getAllMentorRequests: (_req: Request, res: Response) => Promise<void>;
+export declare const getAllMentors: (_req: Request, res: Response) => Promise<void>;
 export declare const getMentorByUserId: (req: Request, res: Response) => Promise<void>;
 export declare const approveMentorRequest: (req: Request, res: Response) => Promise<void>;
 export declare const rejectMentorRequest: (req: Request, res: Response) => Promise<void>;

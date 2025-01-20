@@ -52,3 +52,8 @@ export const deleteManySkillsbySubcategoryId = async ( subcategoryId: string) =>
     throw new Error(`Error deleting skills: ${error.message}`);
   }
 };
+
+//get all skills
+export const getSkills = async() =>{
+  return await Skill.find({}, { name: 1, _id: 1 });
+}

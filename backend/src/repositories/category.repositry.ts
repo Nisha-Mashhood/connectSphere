@@ -15,6 +15,7 @@ export const getCategoryById = async (id: string) => {
   return await Category.findById(id);
 };
 
+
 // Update a category
 export const updateCategory = async (id: string, data: Partial<CategoryInterface>) => {
   return await Category.findByIdAndUpdate(id, data, { new: true });

@@ -4,9 +4,7 @@ import * as UserService from '../services/user.service.js';
 export const checkMentorStatus = async (req, res) => {
     const userId = req.params.id;
     try {
-        console.log("Received userId:", req.params.userId);
         const mentor = await MentorService.getMentorByUserId(userId);
-        console.log(mentor);
         if (!mentor) {
             res.status(200).json({ mentor: null });
             return;
@@ -19,20 +17,22 @@ export const checkMentorStatus = async (req, res) => {
         return;
     }
 };
-//fetch skills for mentor creation
-export const getSkills = async (_, res) => {
+//Get mentor details using mentorId
+export const getMentorDetails = async (req, res) => {
+    const { mentorId } = req.params;
     try {
-        const skills = await MentorService.getSkills();
-        res.status(200).json({ skills });
+        const mentor = await MentorService.getMentorBymentorId(mentorId);
+        res.status(200).json({ mentor });
+        return;
     }
     catch (error) {
-        console.error('Error fetching skills:', error.message);
-        res.status(500).json({ message: "Error fetching skills", error: error.message });
+        res.status(400).json({ message: "Error fetching mentor Details", error: error.message });
+        return;
     }
 };
 //create mentor record
 export const createMentor = async (req, res) => {
-    const { userId, specialization, skills, availableSlots } = req.body;
+    const { userId, specialization, bio, price, skills, availableSlots } = req.body;
     try {
         const user = await UserService.getUserById(userId);
         if (!user) {
@@ -66,10 +66,11 @@ export const createMentor = async (req, res) => {
             userId,
             skills: JSON.parse(skills),
             specialization,
+            bio,
+            price,
             availableSlots: JSON.parse(availableSlots),
             certifications: uploadedCertificates,
         });
-        console.log("newMentor", newMentor);
         res.status(201).json({
             message: "Mentor registration submitted successfully for admin review.",
             data: newMentor,
@@ -90,6 +91,16 @@ export const getAllMentorRequests = async (_req, res) => {
     catch (error) {
         console.error("Error fetching mentor requests:", error);
         res.status(500).json({ message: "Server error. Please try again later." });
+    }
+};
+export const getAllMentors = async (_req, res) => {
+    try {
+        const mentors = await MentorService.getAllMentors();
+        res.json(mentors);
+    }
+    catch (error) {
+        console.log("Error in fetching Mentors", error);
+        res.status(500).json({ message: "Server error. Please Try again later. " });
     }
 };
 // Get mentor by userId

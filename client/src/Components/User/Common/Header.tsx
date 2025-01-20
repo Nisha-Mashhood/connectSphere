@@ -96,7 +96,7 @@ const Header = () => {
             break;
           case "Completed":
             toast.success("You are an approved mentor!");
-            navigate("/mentorship");
+            navigate("/mymentorProfilePage");
             break;
           case "Rejected":
             toast.error("Your mentor application has been rejected.");
@@ -123,7 +123,7 @@ const Header = () => {
           </Link>
         </NavbarItem>
         <NavbarItem>
-          <Link color="foreground" href="#">
+          <Link color="foreground" href="/about">
             About
           </Link>
         </NavbarItem>

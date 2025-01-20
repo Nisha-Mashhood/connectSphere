@@ -12,6 +12,8 @@ export interface IMentor extends Document {
   skills?: string[];
   certifications?: string[];
   specialization?: string;
+  bio:string;
+  price:number;
   availableSlots?: object[];
   createdAt: Date;
   updatedAt: Date;
@@ -26,7 +28,7 @@ const MentorSchema: Schema = new Schema(
     },
     isApproved: { 
         type: String, 
-        enum: ["Processing", "Approved", "Rejected"], 
+        enum: ["Processing", "Completed", "Rejected"], 
         default: "Processing"
     },
     rejectionReason: { 
@@ -47,6 +49,14 @@ const MentorSchema: Schema = new Schema(
     specialization: { 
         type: String, 
         default:null 
+    },
+    bio: { 
+      type: String, 
+      required: true,
+    },
+    price: { 
+      type: Number, 
+      required: true,
     },
     availableSlots: [
         {

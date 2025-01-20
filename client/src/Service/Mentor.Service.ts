@@ -20,6 +20,26 @@ export const fetchMentorRequests = async () => {
   }
 };
 
+//Fetch Mentor Deatils using mentor Id
+export const fetchMentorById = async (mentorId) => {
+  try {
+    const { data } = await axiosInstance.get(`/mentors/getmentorDetails/${mentorId}`);
+    return data;
+  } catch (error) {
+    handleError(error)
+  }
+}
+
+//Fetch All Mentors
+export const fetchAllMentors = async () =>{
+  try {
+    const { data } = await axiosInstance.get("/mentors/getAllMentors")
+    return data
+  } catch (error) {
+    handleError(error)
+  }
+}
+
 // Approve mentor request
 export const approveMentor = async (mentorId) => {
   try {

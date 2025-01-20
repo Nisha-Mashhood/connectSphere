@@ -10,6 +10,8 @@ export interface IMentor extends Document {
     skills?: string[];
     certifications?: string[];
     specialization?: string;
+    bio: string;
+    price: number;
     availableSlots?: object[];
     createdAt: Date;
     updatedAt: Date;

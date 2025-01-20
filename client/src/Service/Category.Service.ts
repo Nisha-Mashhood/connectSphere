@@ -3,7 +3,7 @@ import { handleError } from "./ErrorHandler";
 
 export const createCategory = async (formData) => {
     try {
-        await axiosInstance.post("admin/category/create-category",formData);
+        await axiosInstance.post("category/create-category",formData);
     } catch (error) {
       handleError(error)
     }
@@ -11,7 +11,7 @@ export const createCategory = async (formData) => {
 
   export const createSubCategory = async (formData) => {
     try {
-         await axiosInstance.post("admin/subcategory/create-subcategory", formData);
+         await axiosInstance.post("subcategory/create-subcategory", formData);
     } catch (error) {
       handleError(error) 
     }
@@ -19,16 +19,17 @@ export const createCategory = async (formData) => {
 
   export const createSkill = async (formData) => {
     try {
-        await axiosInstance.post("admin/skills/create-skill", formData);
+        await axiosInstance.post("skills/create-skill", formData);
     } catch (error) {
       handleError(error) 
     }
   };
 
+  
   //Fetch categories
   export const fetchCategoriesService = async (): Promise<any[]> => {
     try {
-      const { data } = await axiosInstance.get("/admin/category/get-categories");
+      const { data } = await axiosInstance.get("category/get-categories");
       return data;
     } catch (error) {
       handleError(error)
@@ -39,7 +40,7 @@ export const createCategory = async (formData) => {
 export const updateCategory = async (editingCategoryId: string, formData: any) => {
     try {
       const response = await axiosInstance.put(
-        `/admin/category/update-category/${editingCategoryId}`,
+        `category/update-category/${editingCategoryId}`,
         formData
       );
       return response.data;
@@ -52,7 +53,7 @@ export const updateCategory = async (editingCategoryId: string, formData: any) =
   export const deleteCategory = async (id: string) => {
     try {
       const response = await axiosInstance.delete(
-        `/admin/category/delete-category/${id}`
+        `category/delete-category/${id}`
       );
       return response.data;
     } catch (error) {
@@ -64,7 +65,7 @@ export const updateCategory = async (editingCategoryId: string, formData: any) =
 export const fetchSubCategoriesService = async (categoryId: string): Promise<any[]> => {
     try {
       const { data } = await axiosInstance.get(
-        `/admin/subcategory/get-subcategories/${categoryId}`
+        `subcategory/get-subcategories/${categoryId}`
       );
       return data;
     } catch (error) {
@@ -76,7 +77,7 @@ export const fetchSubCategoriesService = async (categoryId: string): Promise<any
   export const updateSubCategory = async (editingSubCategoryId: string, formData: any) => {
     try {
       const response = await axiosInstance.put(
-        `/admin/subcategory/update-subcategory/${editingSubCategoryId}`,
+        `subcategory/update-subcategory/${editingSubCategoryId}`,
         formData
       );
       return response.data;
@@ -89,7 +90,7 @@ export const fetchSubCategoriesService = async (categoryId: string): Promise<any
   export const deleteSubCategory = async (id: string) => {
     try {
       const response = await axiosInstance.delete(
-        `/admin/subcategory/delete-subcategory/${id}`
+        `subcategory/delete-subcategory/${id}`
       );
       return response.data;
     } catch (error) {
@@ -101,7 +102,7 @@ export const fetchSubCategoriesService = async (categoryId: string): Promise<any
   export const fetchSkillsService = async (subcategoryId: string): Promise<any[]> => {
     try {
       const { data } = await axiosInstance.get(
-        `/admin/skills/get-skills/${subcategoryId}`
+        `skills/get-skills/${subcategoryId}`
       );
       return data;
     } catch (error) {
@@ -113,7 +114,7 @@ export const fetchSubCategoriesService = async (categoryId: string): Promise<any
   export const updateSkill = async (editingSkillId: string, formData: any) => {
     try {
       const response = await axiosInstance.put(
-        `/admin/skills/update-skill/${editingSkillId}`,
+        `skills/update-skill/${editingSkillId}`,
         formData
       );
       return response.data;
@@ -126,7 +127,7 @@ export const fetchSubCategoriesService = async (categoryId: string): Promise<any
   export const deleteSkill = async (id: string) => {
     try {
       const response = await axiosInstance.delete(
-        `/admin/skills/delete-skill/${id}`
+        `skills/delete-skill/${id}`
       );
       return response.data;
     } catch (error) {
@@ -134,11 +135,12 @@ export const fetchSubCategoriesService = async (categoryId: string): Promise<any
     }
   };
 
+
   // Get all skills
   export const getAllSkills = async () => {
     try {
       const response = await axiosInstance.get(
-        `/mentors/get-allSkills`
+        `/skills/get-allSkills`
       );
       return response.data;
     } catch (error) {

@@ -12,7 +12,6 @@ const gitclientSecret = config.githubclientsecret;
 // Handle Registration with details
 export const sigupDetails = async (data) => {
     const { name, email, password } = data;
-    console.log("data at service file :", data);
     // Check if the email already exists
     const userExists = await findUserByEmail(email);
     if (userExists)
@@ -71,7 +70,6 @@ export const googleSignupService = async (code) => {
     // Fetch user info from Google
     const userRes = await axios.get(`https://www.googleapis.com/oauth2/v1/userinfo?alt=json&access_token=${tokens.access_token}`);
     const { email, name, picture } = userRes.data;
-    console.log("Google User Info during signup:", { email, name, picture });
     // Check if the email already exists
     const existingUser = await findUserByEmail(email);
     if (existingUser) {

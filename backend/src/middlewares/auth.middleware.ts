@@ -79,14 +79,11 @@ export const checkBlockedStatus = async (req: Request, res: Response, next: Next
 // Role-based authorization middleware
 export const authorize = (...allowedRoles: string[]) => {
   return (req: Request, res: Response, next: NextFunction) => {
-    console.log("Entered in to the authentication middleware");
     if (!req.currentUser) {
       res.status(401).json({ message: "Authentication required" });
       return 
     }
     const userRole = req.currentUser.role ?? "";
-    
-    console.log("Role",userRole);
 
     if (!allowedRoles.includes(userRole)) {
       res.status(403).json({ message: "Access forbidden" });

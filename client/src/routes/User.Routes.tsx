@@ -10,11 +10,15 @@ import Profile from "../Components/User/Common/Profile";
 import PrivateRoute from "../Components/User/PrivateRoute";
 import CompleteProfile from "../Components/User/UserComponents/CompleteProfile";
 import MentorProfile from "../Components/User/Mentor/MentorProfile";
-import Mentorship from "../Components/User/Mentor/Mentorship";
+import  MentorProfilePage from "../Components/User/Mentor/Mentorship";
 import PageNotFound from "../Components/PageNotFound";
 import { ForbiddenPage } from "../Components/ForebiddenPage";
 import GithubCallback from "../Components/User/Auth/GithubCallback";
 import ExploreMentor from "../Components/User/UserComponents/ExploreMentor";
+import MyMentorProfilePage from "../Components/User/Mentor/MyMentorProfilePage";
+import UserProfile from "../Components/User/UserComponents/UserProfile";
+import About from "../Components/User/Common/About";
+
 
 
 const UserRoutes = () => (
@@ -22,6 +26,7 @@ const UserRoutes = () => (
     <Header />
     <Routes>
       <Route path="/" element={<Home />} />
+      <Route path="/about" element={<About />} />
       <Route path="/login" element={<Login />} />
       <Route path="/signup" element={<Signup />} />
       <Route path="/forgot" element={<ForgotPassword />} />
@@ -33,8 +38,10 @@ const UserRoutes = () => (
         <Route path="/complete-profile" element={<CompleteProfile />} />
         <Route path="/profile" element={<Profile />} />
         <Route path="/mentorProfile" element={<MentorProfile />} />
-        <Route path="/mentorship" element={<Mentorship />} />
+        <Route path="/mentorship/:mentorId" element={< MentorProfilePage />} />
+        <Route path="/mymentorProfilePage" element={< MyMentorProfilePage />} />
         <Route path="/explorementor" element={<ExploreMentor />} />
+        <Route path="/userProfile/:userId" element={<UserProfile />} />
       </Route>
 
       <Route path="*" element={<PageNotFound />} />

@@ -1,0 +1,115 @@
+import { useState, useEffect } from "react";
+import { useNavigate } from "react-router-dom";
+import { useSelector } from "react-redux";
+import { RootState } from "../../../redux/store";
+import { checkMentorProfile } from "../../../Service/Mentor.Service";
+import { acceptTheRequest, getAllRequest, rejectTheRequest } from "../../../Service/collaboration.Service";
+import { FaCheckCircle, FaTimesCircle } from "react-icons/fa"; 
+import toast from "react-hot-toast";
+
+const MyMentorProfilePage = () => {
+  const { currentUser } = useSelector((state: RootState) => state.user);
+  const [requests, setRequests] = useState<any[]>([]);
+  const [mentor, setMentor] = useState<any>(null);
+  const navigate = useNavigate();
+
+  // Fetch mentor profile and requests
+  const fetchRequests = async () => {
+    try {
+      const mentorResponse = await checkMentorProfile(currentUser._id);
+      const mentor = mentorResponse.mentor;
+      console.log("Mentor ID:", mentor._id);
+      setMentor(mentor);
+
+      const data = await getAllRequest(mentor._id);
+      setRequests(data.requests);
+      console.log("Requests:", data);
+    } catch (error: any) {
+      console.error("Error fetching requests:", error.message);
+    }
+  };
+
+  useEffect(() => {
+    fetchRequests();
+  }, []);
+
+  // Handle accept button
+  const handleAccept = async (requestId: string) => {
+    try {
+      await acceptTheRequest(requestId);
+      toast.success("Request Accepted!");
+      fetchRequests(); // Refresh the requests list
+    } catch (error: any) {
+      console.error("Error accepting the request:", error.message);
+    }
+  };
+
+  // Handle reject button
+  const handleReject = async (requestId: string) => {
+    try {
+      await rejectTheRequest(requestId);
+      toast.success("Request Rejected!");
+      fetchRequests(); // Refresh the requests list
+    } catch (error: any) {
+      console.error("Error rejecting the request:", error.message);
+    }
+  };
+
+  // Navigate to user profile page
+  const handleUserProfileClick = (userId: string) => {
+    navigate(`/userProfile/${userId}`);
+  };
+
+  return (
+    <div className="p-6 bg-gray-100">
+      <h1 className="text-2xl font-bold mb-4">My Mentor Profile</h1>
+      <h2 className="text-xl font-semibold mb-6">Requests</h2>
+      {requests.length > 0 ? (
+        <div className="space-y-4">
+          {requests.map((request) => (
+            <div key={request._id} className="flex justify-between items-center bg-white p-4 rounded-lg shadow-md">
+              {/* Profile Section */}
+              <div className="flex items-center space-x-4">
+                <img
+                  src={request.userId.profilePic}
+                  alt={request.userId.name}
+                  className="w-16 h-16 rounded-full object-cover cursor-pointer"
+                  onClick={() => handleUserProfileClick(request.userId._id)}
+                />
+                <span
+                  className="text-lg font-medium cursor-pointer"
+                  onClick={() => handleUserProfileClick(request.userId._id)}
+                >
+                  {request.userId.name}
+                </span>
+              </div>
+              {/* Details Section */}
+              <div className="flex flex-col items-end space-y-2">
+                <p className="text-sm text-gray-600"><strong>Slot:</strong> {request.selectedSlot.day} - {request.selectedSlot.timeSlots}</p>
+                <p className="text-sm text-gray-600"><strong>Price:</strong> ${request.price}</p>
+                <div className="flex space-x-4">
+                  <button
+                    className="text-green-500 hover:text-green-700"
+                    onClick={() => handleAccept(request._id)}
+                  >
+                    <FaCheckCircle size={24} />
+                  </button>
+                  <button
+                    className="text-red-500 hover:text-red-700"
+                    onClick={() => handleReject(request._id)}
+                  >
+                    <FaTimesCircle size={24} />
+                  </button>
+                </div>
+              </div>
+            </div>
+          ))}
+        </div>
+      ) : (
+        <p>No requests found.</p>
+      )}
+    </div>
+  );
+};
+
+export default MyMentorProfilePage;

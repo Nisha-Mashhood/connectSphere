@@ -24,4 +24,9 @@ export declare const deleteSkill: (id: string) => Promise<(import("mongoose").Do
 }> & {
     __v: number;
 }) | null>;
+export declare const getSkills: () => Promise<(import("mongoose").Document<unknown, {}, SkillInterface> & SkillInterface & Required<{
+    _id: unknown;
+}> & {
+    __v: number;
+})[]>;
 //# sourceMappingURL=skills.service.d.ts.map

@@ -19,6 +19,7 @@ export const createCategory = async (req: Request, res: Response): Promise<void>
   }
 };
 
+
 export const getAllCategories = async (_: Request, res: Response): Promise<void> => {
   try {
     const categories = await CategoryService.getAllCategories();
@@ -74,4 +75,5 @@ export const deleteCategory = async (req: Request<{ id: string }>, res: Response
     res.status(500).json({ message: "Error deleting category", error: error.message });
   }
 };
+
 

@@ -26,8 +26,10 @@
     "react-hook-form": "^7.54.1",
     "react-hot-toast": "^2.4.1",
     "react-icons": "^5.4.0",
+    "react-modal": "^3.16.3",
     "react-redux": "^9.2.0",
     "react-router-dom": "^7.0.2",
+    "react-stripe-checkout": "^2.6.3",
     "redux-persist": "^6.0.0",
     "yup": "^1.6.1"
   },

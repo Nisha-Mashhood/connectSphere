@@ -4,59 +4,22 @@ import { useSelector } from "react-redux";
 import { RootState } from "../../../redux/store";
 import { useNavigate } from "react-router-dom";
 import { getAllSkills } from "../../../Service/Category.Service";
-import { checkMentorProfile, createMentorProfile } from "../../../Service/Mentor.Service";
+import { createMentorProfile } from "../../../Service/Mentor.Service";
 
 const MentorProfile = () => {
   const navigate = useNavigate();
   const [loading, setLoading] = useState(false);
   const { currentUser } = useSelector((state: RootState) => state.user);
   const [skills, setSkills] = useState([]); // Skills for dropdown
+  const [bio, setBio] = useState("");
+  const [price, setPrice] = useState("");
   const [selectedSkills, setSelectedSkills] = useState([]);
   const [specialization, setSpecialization] = useState("");
   const [certificates, setCertificates] = useState([]);
   const [availableSlots, setAvailableSlots] = useState([
     { day: "", timeSlots: [""] },
   ]);
-  const [dropdownOpen, setDropdownOpen] = useState(false); 
-
-  useEffect(() => {
-    const checkMentorStatus = async () => {
-      try {
-        const mentorResponse = await checkMentorProfile(currentUser._id);
-        const mentor = mentorResponse.mentor;
-
-        if (!mentor) {
-          // If no mentor record exists, show the mentor profile form
-          return;
-        } else {
-          switch (mentor.isApproved) {
-            case "Processing":
-              toast.success("Your mentor request is still under review.");
-              navigate("/");
-              break;
-            case "Completed":
-              toast.success("You are an approved mentor!");
-              navigate("/mentorship");
-              break;
-            case "Rejected":
-              toast.error("Your mentor application has been rejected.");
-              navigate("/");
-              break;
-            default:
-              toast.error("Unknown status. Please contact support.");
-              navigate("/");
-          }
-        }
-      } catch (error) {
-        toast.error("An error occurred while checking your mentor status.");
-        navigate("/");
-      }
-    };
-
-    if (currentUser._id) {
-      checkMentorStatus();
-    }
-  }, [currentUser, navigate]);
+  const [dropdownOpen, setDropdownOpen] = useState(false);
 
   // Fetch skills from the Skill collection
   useEffect(() => {
@@ -76,12 +39,12 @@ const MentorProfile = () => {
     }
   }, [currentUser]);
 
-useEffect(() => {
+  useEffect(() => {
     console.log("Updated skills state:", skills);
   }, [skills]);
 
-   // Handle skill selection
-   const handleSkillChange = (skillId) => {
+  // Handle skill selection
+  const handleSkillChange = (skillId) => {
     setSelectedSkills((prevSelectedSkills) => {
       if (prevSelectedSkills.includes(skillId)) {
         return prevSelectedSkills.filter((id) => id !== skillId); // Remove skill if already selected
@@ -92,17 +55,17 @@ useEffect(() => {
   };
 
   // Handle certificate upload
-const handleCertificateUpload = (e) => {
-  const files = Array.from(e.target.files);
-  
-  if (files.length > 2) {
-    toast.error("You can only upload a maximum of 2 certificates.");
-    setCertificates([]); // Reset state to an empty array
-    return;
-  }
+  const handleCertificateUpload = (e) => {
+    const files = Array.from(e.target.files);
 
-  setCertificates(files);
-};
+    if (files.length > 2) {
+      toast.error("You can only upload a maximum of 2 certificates.");
+      setCertificates([]); // Reset state to an empty array
+      return;
+    }
+
+    setCertificates(files);
+  };
   // Handle day input
   const handleDayChange = (index, value) => {
     const updatedSlots = [...availableSlots];
@@ -171,7 +134,7 @@ const handleCertificateUpload = (e) => {
       "saturday",
       "sunday",
     ];
-  
+
     // Check if day is valid (case-insensitive)
     if (!validDays.includes(slot.day.toLowerCase())) {
       toast.error(
@@ -179,10 +142,11 @@ const handleCertificateUpload = (e) => {
       );
       return false;
     }
-  
+
     // Regular expression for time slot format (e.g., "09:00 AM - 10:30 AM")
-    const timeSlotRegex = /^([0-9]{1,2}:[0-9]{2} (AM|PM)) - ([0-9]{1,2}:[0-9]{2} (AM|PM))$/i;
-  
+    const timeSlotRegex =
+      /^([0-9]{1,2}:[0-9]{2} (AM|PM)) - ([0-9]{1,2}:[0-9]{2} (AM|PM))$/i;
+
     // Validate each time slot for the day
     for (let timeSlot of slot.timeSlots) {
       if (!timeSlotRegex.test(timeSlot)) {
@@ -191,13 +155,14 @@ const handleCertificateUpload = (e) => {
         );
         return false;
       }
-  
+
       // Check if duration is within the 1.5-hour limit
       const [start, end] = timeSlot.split(" - ");
       const startTime = new Date(`1970-01-01T${convertTo24Hour(start)}`);
       const endTime = new Date(`1970-01-01T${convertTo24Hour(end)}`);
-      const diffInMinutes = (endTime.getTime() - startTime.getTime()) / (1000 * 60);
-  
+      const diffInMinutes =
+        (endTime.getTime() - startTime.getTime()) / (1000 * 60);
+
       if (diffInMinutes > 90) {
         toast.error(
           `Time slot duration for ${slot.day} exceeds 1.5 hours. Please adjust the time slot "${timeSlot}".`
@@ -205,54 +170,63 @@ const handleCertificateUpload = (e) => {
         return false;
       }
     }
-  
+
     return true;
   };
-  
+
   // Helper function to convert "hh:mm AM/PM" to 24-hour format
   const convertTo24Hour = (time) => {
     const [hour, minutePeriod] = time.split(":");
     const [minute, period] = minutePeriod.split(" ");
     let hour24 = parseInt(hour, 10);
-  
+
     if (period === "PM" && hour24 !== 12) {
       hour24 += 12;
     } else if (period === "AM" && hour24 === 12) {
       hour24 = 0;
     }
-  
+
     return `${hour24.toString().padStart(2, "0")}:${minute}`;
   };
-  
+
   // Submit Handler with Validation
-  const handleSubmit = async(e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
 
     if (loading) return;
-  
+
     // Validation for specialization
-  if (!specialization.trim()) {
-    toast.error("Specialization is required.");
-    return;
-  }
+    if (!specialization.trim()) {
+      toast.error("Specialization is required.");
+      return;
+    }
+    if (!bio.trim()) {
+      toast.error("Bio is required.");
+      return;
+    }
 
-  // Validation for selected skills
-  if (selectedSkills.length === 0) {
-    toast.error("Please select at least one skill.");
-    return;
-  }
+    if (!price || Number(price) <= 100) {
+      toast.error("Price must be greater than ₹100 to cover platform fees.");
+      return;
+    }
 
-  // Validation for certificates
-  if (certificates.length === 0) {
-    toast.error("Please upload at least one certificate.");
-    return;
-  }
+    // Validation for selected skills
+    if (selectedSkills.length === 0) {
+      toast.error("Please select at least one skill.");
+      return;
+    }
 
-  // Validation for available slots
-  if (availableSlots.length === 0) {
-    toast.error("Please add at least one available slot.");
-    return;
-  }
+    // Validation for certificates
+    if (certificates.length === 0) {
+      toast.error("Please upload at least one certificate.");
+      return;
+    }
+
+    // Validation for available slots
+    if (availableSlots.length === 0) {
+      toast.error("Please add at least one available slot.");
+      return;
+    }
 
     // Validate each slot
     for (let slot of availableSlots) {
@@ -260,37 +234,45 @@ const handleCertificateUpload = (e) => {
         return; // Stop submission if any slot is invalid
       }
     }
-  
+
     // Proceed with form submission if all validations pass
-    
+
     const formData = new FormData();
     certificates.forEach((file) => formData.append("certificates", file));
     formData.append("userId", currentUser._id);
     formData.append("specialization", specialization);
+    formData.append("bio", bio);
+    formData.append("price", price);
     formData.append("skills", JSON.stringify(selectedSkills));
     formData.append("availableSlots", JSON.stringify(availableSlots));
 
     try {
       setLoading(true);
       toast.success("All validations passed. Submitting...");
-      await createMentorProfile(formData)
+      await createMentorProfile(formData);
       toast.success("Profile created successfully!");
       // Reset state to initial values
-    setSpecialization("");
-    setSelectedSkills([]);
-    setCertificates([]);
-    setAvailableSlots([{ day: "", timeSlots: [""] }]);
-    
-      navigate('/')
+      setSpecialization("");
+      setBio("");
+      setPrice("");
+      setSelectedSkills([]);
+      setCertificates([]);
+      setAvailableSlots([{ day: "", timeSlots: [""] }]);
+
+      navigate("/");
     } catch (error) {
-      if (error.response && error.response.data && error.response.data.message) {
+      if (
+        error.response &&
+        error.response.data &&
+        error.response.data.message
+      ) {
         toast.error(error.response.data.message);
       } else {
         toast.error("An unexpected error occurred. Please try again later.");
       }
       console.error("Error:", error);
-    }finally {
-      setLoading(false); 
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -310,6 +292,51 @@ const handleCertificateUpload = (e) => {
             placeholder="Enter your specialization"
             className="w-full px-4 py-2 border rounded-md"
           />
+        </div>
+        {/* Bio */}
+        <div className="form-group">
+          <label className="block font-medium mb-2">
+            Bio
+            <span className="block text-sm font-normal text-gray-600 mt-1">
+              Write a brief introduction about yourself, your experience, and
+              what students can expect from your mentorship sessions. This will
+              help students understand your teaching style and expertise.
+            </span>
+          </label>
+          <textarea
+            value={bio}
+            onChange={(e) => setBio(e.target.value)}
+            placeholder="Enter your bio"
+            className="w-full px-4 py-2 border rounded-md min-h-[120px]"
+          />
+        </div>
+
+        {/* Price */}
+        <div className="form-group">
+          <label className="block font-medium mb-2">
+            Session Price (in ₹)
+            <span className="block text-sm font-normal text-gray-600 mt-1">
+              Set your per-hour mentorship fee. Note: ₹100 will be deducted as
+              platform fee for each session, so please set your price
+              accordingly. For example, if you want to earn ₹900 per session,
+              set the price as ₹1000.
+            </span>
+          </label>
+          <div className="relative">
+            <span className="absolute left-3 top-2 text-gray-500">₹</span>
+            <input
+              type="number"
+              value={price}
+              onChange={(e) => setPrice(e.target.value)}
+              placeholder="Enter price per hour"
+              className="w-full pl-8 pr-4 py-2 border rounded-md"
+              min="0"
+            />
+          </div>
+          <p className="text-sm text-gray-500 mt-1">
+            Your earnings per session: ₹
+            {price ? (Number(price) - 100).toString() : "0"}
+          </p>
         </div>
 
         {/* Skills Dropdown */}
@@ -350,37 +377,37 @@ const handleCertificateUpload = (e) => {
         </div>
 
         {/* Certificate preview */}
-<div className="form-group">
-  <label className="block font-medium mb-2">Certificates</label>
-  <input
-    type="file"
-    accept=".pdf,.jpg,.png"
-    multiple
-    onChange={handleCertificateUpload}
-    className="w-full px-4 py-2 border rounded-md"
-  />
-  <p className="text-sm text-gray-500 mt-1">
-    You can upload a maximum of 2 certificates.
-  </p>
-  <div className="mt-4">
-    {certificates.map((certificate, index) => (
-      <div key={index} className="flex items-center gap-4 mb-2">
-        <a
-          href={URL.createObjectURL(certificate)}
-          target="_blank"
-          rel="noopener noreferrer"
-          className="text-blue-500 underline"
-        >
-          View Certificate {index + 1}
-        </a>
-        <p>{certificate.name}</p>
-      </div>
-    ))}
-  </div>
-</div>
+        <div className="form-group">
+          <label className="block font-medium mb-2">Certificates</label>
+          <input
+            type="file"
+            accept=".pdf,.jpg,.png"
+            multiple
+            onChange={handleCertificateUpload}
+            className="w-full px-4 py-2 border rounded-md"
+          />
+          <p className="text-sm text-gray-500 mt-1">
+            You can upload a maximum of 2 certificates.
+          </p>
+          <div className="mt-4">
+            {certificates.map((certificate, index) => (
+              <div key={index} className="flex items-center gap-4 mb-2">
+                <a
+                  href={URL.createObjectURL(certificate)}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="text-blue-500 underline"
+                >
+                  View Certificate {index + 1}
+                </a>
+                <p>{certificate.name}</p>
+              </div>
+            ))}
+          </div>
+        </div>
 
-       {/* Available Slots */}
-       <div className="form-group">
+        {/* Available Slots */}
+        <div className="form-group">
           <label className="block font-medium mb-2">Available Slots</label>
           {availableSlots.map((slot, index) => (
             <div key={index} className="mb-4 p-4 border rounded-md">

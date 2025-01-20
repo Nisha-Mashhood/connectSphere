@@ -21,4 +21,13 @@ export const updateSkill = async (id, data, imagePath) => {
     return await SkillRepo.updateSkill(id, { ...data, ...(imageUrl && { imageUrl }) });
 };
 export const deleteSkill = SkillRepo.deleteSkill;
+// Get available skills
+export const getSkills = async () => {
+    try {
+        return await SkillRepo.getSkills();
+    }
+    catch (error) {
+        throw new Error("Error fetching skills: " + error.message);
+    }
+};
 //# sourceMappingURL=skills.service.js.map

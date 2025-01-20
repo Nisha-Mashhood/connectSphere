@@ -27,3 +27,12 @@ export const updateSkill = async (id: string, data: Partial<SkillInterface>, ima
     return await SkillRepo.updateSkill(id, { ...data, ...(imageUrl && { imageUrl }) });
   };
 export const deleteSkill = SkillRepo.deleteSkill;
+
+// Get available skills
+export const getSkills = async () => {
+  try {
+    return await SkillRepo.getSkills();
+  } catch (error: any) {
+    throw new Error("Error fetching skills: " + error.message);
+  }
+};

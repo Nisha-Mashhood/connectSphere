@@ -1,4 +1,3 @@
-import { Skill } from "../models/skills.model.js";
 import Mentor from "../models/mentor.model.js";
 // Submit mentor request
 export const submitMentorRequest = async (data) => {
@@ -7,8 +6,22 @@ export const submitMentorRequest = async (data) => {
 //get all mentor request
 export const getAllMentorRequests = async () => {
     return await Mentor.find()
-        .populate("userId", "name email") // Populate user details
+        .populate("userId") // Populate user details
         .populate("skills", "name"); // Populate skills with only the 'name' field
+};
+//get All Mentors
+export const getAllMentors = async () => {
+    const mentor = await Mentor.find({ isApproved: "Completed" })
+        .populate("userId")
+        .populate("skills");
+    return mentor;
+};
+//Get mentor Details
+export const getMentorDetails = async (id) => {
+    const mentor = await Mentor.findById(id)
+        .populate("userId")
+        .populate("skills");
+    return mentor;
 };
 // Approve mentor request
 export const approveMentorRequest = async (id) => {
@@ -40,9 +53,6 @@ export const getMentorByUserId = async (id) => {
 // Update  for mentor with mentorId
 export const updateMentorById = async (mentorId, updateData) => {
     return await Mentor.findByIdAndUpdate(mentorId, updateData, { new: true });
-};
-export const getSkills = async () => {
-    return await Skill.find({}, { name: 1, _id: 1 });
 };
 // Function to save a new mentor request (pending admin review)
 export const saveMentorRequest = async (mentorData) => {

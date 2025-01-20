@@ -8,6 +8,7 @@ import subCategoryRoutes from "./routes/sucategory.routes.js";
 import skillsRoutes from "./routes/skills.routes.js";
 import userRoutes from "./routes/user.routes.js";
 import mentorRoutes from "./routes/mentor.routes.js";
+import collaborationRoutes from "./routes/collaboration.routes.js";
 import helmet from "helmet";
 import cors from "cors";
 import cookieParser from "cookie-parser";
@@ -25,12 +26,12 @@ app.use(cors({
 }));
 // Routes
 app.use("/api/auth", authRoutes);
-// app.use("/api/admin/auth", authAdminRoutes);
-app.use("/api/admin/category", categoryRoutes);
-app.use("/api/admin/subcategory", subCategoryRoutes);
-app.use("/api/admin/skills", skillsRoutes);
+app.use("/api/category", categoryRoutes);
+app.use("/api/subcategory", subCategoryRoutes);
+app.use("/api/skills", skillsRoutes);
 app.use("/api/users", userRoutes);
 app.use("/api/mentors", mentorRoutes);
+app.use("/api/collaboration", collaborationRoutes);
 // Placeholder route
 app.get("/", (_req, res) => {
     res.send("Connect Sphere Backend is running!");

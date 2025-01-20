@@ -1,4 +1,3 @@
-import { Skill } from "../models/skills.model.js";
 import Mentor, { IMentor } from "../models/mentor.model.js";
 
 // Submit mentor request
@@ -9,9 +8,25 @@ export const submitMentorRequest = async (data: Partial<IMentor>): Promise<IMent
 //get all mentor request
 export const getAllMentorRequests = async (): Promise<IMentor[]> => {
   return await Mentor.find()
-    .populate("userId", "name email") // Populate user details
+    .populate("userId") // Populate user details
     .populate("skills", "name"); // Populate skills with only the 'name' field
 };
+
+//get All Mentors
+export const getAllMentors = async (): Promise<IMentor[]> => { 
+  const mentor = await Mentor.find({ isApproved: "Completed" })
+  .populate("userId")
+  .populate("skills");
+  return mentor
+}
+
+//Get mentor Details
+export const getMentorDetails = async(id : string): Promise<IMentor | null> => {
+  const mentor =  await Mentor.findById(id)
+    .populate("userId") 
+    .populate("skills"); 
+    return mentor;
+ }
 
 // Approve mentor request
 export const approveMentorRequest = async (id: string): Promise<void> => {
@@ -65,9 +80,6 @@ export const updateMentorById = async (
   return await Mentor.findByIdAndUpdate(mentorId, updateData, { new: true });
 };
 
-export const getSkills = async() =>{
-  return await Skill.find({}, { name: 1, _id: 1 });
-}
 
 
 // Function to save a new mentor request (pending admin review)

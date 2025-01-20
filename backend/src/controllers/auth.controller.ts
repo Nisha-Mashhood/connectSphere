@@ -22,8 +22,7 @@ import { clearCookies, setTokensInCookies } from "../utils/jwt.utils.js";
 export const signup = async (req: Request, res: Response) => {
   try {
     
-    const user = await sigupDetails(req.body)
-    console.log("Registered User Details:",user);
+    await sigupDetails(req.body)
     res.status(201).json({
       message:"User Registered Successfully"
     })
@@ -71,7 +70,6 @@ export const login = async (req: Request, res: Response) => {
 export const googleSignup = async (req: Request, res: Response) => {
   try {
     const { code } = req.body;
-    console.log("Code received for signup:", code);
 
     const newUser = await googleSignupService(code);
     res.status(201).json({ message: "User signed up successfully", user: newUser });
@@ -128,7 +126,6 @@ export const githubSignup = async (req: Request, res: Response) =>{
 export const githubLogin = async (req: Request, res: Response) =>{
   try {
     const { code } = req.body;
-    console.log("Code received for login:", code);
     const { user, accessToken, refreshToken } = await githubLoginService(code);
 
     // Store tokens in cookies
@@ -235,7 +232,6 @@ export const logout = async (req: Request, res: Response) => {
 //Handle forgot password
 export const handleForgotPassword = async (req: Request, res: Response) => {
   try {
-    console.log(req.body);
     const { email } = req.body;
     const otp = await forgotPassword(email);
     res.status(200).json({ message: "OTP sent to email.", otp });
@@ -258,7 +254,6 @@ export const handleVerifyOTP = async (req: Request, res: Response) => {
 //Handles Reset Password
 export const handleResetPassword = async (req: Request, res: Response) => {
   try {
-    console.log(req.body);
     const { email, newPassword } = req.body;
     await resetPassword(email, newPassword);
     res.status(200).json({ message: "Password reset successfully." });

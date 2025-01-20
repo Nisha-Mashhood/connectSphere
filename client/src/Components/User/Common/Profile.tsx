@@ -1,151 +1,217 @@
+import { useEffect, useState } from "react";
+import { useSelector } from "react-redux";
+import {
+  getRequestStatusColor,
+  getRelativeTime,
+} from "../../../lib/helperforprofile";
+import StripeCheckout from "react-stripe-checkout";
+import {
+  getTheRequestByUser,
+  processStripePayment,
+} from "../../../Service/collaboration.Service";
+import { RootState } from "../../../redux/store";
+import toast from "react-hot-toast";
+
 const Profile = () => {
+  const { currentUser } = useSelector((state: RootState) => state.user);
+  const [requests, setRequests] = useState<any[]>([]);
+  const [selectedRequest, setSelectedRequest] = useState<any>(null);
+
+  const fetchRequests = async () => {
+    try {
+      const data = await getTheRequestByUser(currentUser._id);
+      setRequests(data.requests);
+    } catch (error: any) {
+      console.error("Error fetching requests:", error.message);
+    }
+  };
+
+  useEffect(() => {
+    fetchRequests();
+  }, []);
+
+  const handlePayment = async (token: any) => {
+    try {
+      const response = await processStripePayment({
+        token,
+        amount: selectedRequest.price * 100, 
+        requestId: selectedRequest._id,
+      });
+
+      if (response.status === "success") {
+        toast.succes("Payment successful!");
+        fetchRequests(); // Refresh requests after payment
+      } else {
+        toast.error("Payment failed. Please try again.");
+      }
+    } catch (error: any) {
+      console.error("Error processing payment:", error.message);
+    }
+  };
+
   return (
-    <div>
-        <section className="w-full overflow-hidden dark:bg-gray-900">
-    <div className="flex flex-col">
-        {/* <!-- Cover Image --> */}
-        <img src="" alt="User Cover"
-                className="w-full xl:h-[20rem] lg:h-[18rem] md:h-[16rem] sm:h-[14rem] xs:h-[11rem]" />
+    <div className="w-full min-h-screen bg-gray-50 dark:bg-gray-900">
+      {/* Cover and Profile Section */}
+      <div className="relative w-full">
+        <img
+          src={currentUser.coverPic || "/api/placeholder/1200/300"}
+          alt="Cover"
+          className="w-full h-[20rem] object-cover"
+        />
+        <div className="absolute left-1/2 -translate-x-1/2 -bottom-16">
+          <img
+            src={currentUser.profilePic || "/api/placeholder/200/200"}
+            alt="Profile"
+            className="rounded-full w-32 h-32 object-cover ring-4 ring-white dark:ring-gray-800"
+          />
+        </div>
+      </div>
 
-        {/* <!-- Profile Image --> */}
-        <div className="sm:w-[80%] xs:w-[90%] mx-auto flex">
-            <img src="" alt="User Profile"
-                    className="rounded-md lg:w-[12rem] lg:h-[12rem] md:w-[10rem] md:h-[10rem] sm:w-[8rem] sm:h-[8rem] xs:w-[7rem] xs:h-[7rem] outline outline-2 outline-offset-2 outline-blue-500 relative lg:bottom-[5rem] sm:bottom-[4rem] xs:bottom-[3rem]" />
+      <div className="mt-20 text-center">
+        <h1 className="text-3xl font-bold text-gray-800 dark:text-white">
+          {currentUser.name}
+        </h1>
+        <p className="text-gray-600 dark:text-gray-400">
+          {currentUser.jobTitle}
+        </p>
+      </div>
 
-            {/* <!-- FullName --> */}
-            <h1
-                className="w-full text-left my-4 sm:mx-4 xs:pl-4 text-gray-800 dark:text-white lg:text-4xl md:text-3xl sm:text-3xl xs:text-xl font-serif">
-                Full Name</h1>
+      {/* Main Content - Side by Side Layout */}
+      <div className="max-w-7xl mx-auto px-4 py-8 grid grid-cols-1 md:grid-cols-2 gap-6">
+        {/* Left Side - User Details */}
+        <div className="space-y-6">
+          <div className="bg-white dark:bg-gray-800 p-6 rounded-lg shadow">
+            <h2 className="text-2xl font-semibold mb-4 dark:text-white">
+              Professional Info
+            </h2>
+            <div className="space-y-4">
+              <div>
+                <p className="text-gray-500 dark:text-gray-400">Industry</p>
+                <p className="font-semibold dark:text-white">
+                  {currentUser.industry}
+                </p>
+              </div>
+              <div>
+                <p className="text-gray-500 dark:text-gray-400">
+                  Reason for Joining
+                </p>
+                <p className="font-semibold dark:text-white">
+                  {currentUser.reasonForJoining}
+                </p>
+              </div>
+            </div>
+          </div>
 
+          <div className="bg-white dark:bg-gray-800 p-6 rounded-lg shadow">
+            <h2 className="text-2xl font-semibold mb-4 dark:text-white">
+              Contact Information
+            </h2>
+            <div className="space-y-4">
+              <div>
+                <p className="text-gray-500 dark:text-gray-400">Email</p>
+                <p className="font-semibold dark:text-white">
+                  {currentUser.email}
+                </p>
+              </div>
+              <div>
+                <p className="text-gray-500 dark:text-gray-400">Phone</p>
+                <p className="font-semibold dark:text-white">
+                  {currentUser.phone}
+                </p>
+              </div>
+              <div>
+                <p className="text-gray-500 dark:text-gray-400">
+                  Date of Birth
+                </p>
+                <p className="font-semibold dark:text-white">
+                  {new Date(currentUser.dateOfBirth).toLocaleDateString()}
+                </p>
+              </div>
+            </div>
+          </div>
         </div>
 
-        <div
-            className="xl:w-[80%] lg:w-[90%] md:w-[90%] sm:w-[92%] xs:w-[90%] mx-auto flex flex-col gap-4 items-center relative lg:-top-8 md:-top-6 sm:-top-4 xs:-top-4">
-            {/* <!-- Description --> */}
-            <p className="w-fit text-gray-700 dark:text-gray-400 text-md">Lorem, ipsum dolor sit amet
-                consectetur adipisicing elit. Quisquam debitis labore consectetur voluptatibus mollitia dolorem
-                veniam omnis ut quibusdam minima sapiente repellendus asperiores explicabo, eligendi odit, dolore
-                similique fugiat dolor, doloremque eveniet. Odit, consequatur. Ratione voluptate exercitationem hic
-                eligendi vitae animi nam in, est earum culpa illum aliquam.</p>
-
-
-            {/* <!-- Detail --> */}
-            <div className="w-full my-auto py-6 flex flex-col justify-center gap-2">
-                <div className="w-full flex sm:flex-row xs:flex-col gap-2 justify-center">
-                    <div className="w-full">
-                        <dl className="text-gray-900 divide-y divide-gray-200 dark:text-white dark:divide-gray-700">
-                            <div className="flex flex-col pb-3">
-                                <dt className="mb-1 text-gray-500 md:text-lg dark:text-gray-400">First Name</dt>
-                                <dd className="text-lg font-semibold">Full</dd>
-                            </div>
-                            <div className="flex flex-col py-3">
-                                <dt className="mb-1 text-gray-500 md:text-lg dark:text-gray-400">Last Name</dt>
-                                <dd className="text-lg font-semibold">Name</dd>
-                            </div>
-                            <div className="flex flex-col py-3">
-                                <dt className="mb-1 text-gray-500 md:text-lg dark:text-gray-400">Date Of Birth</dt>
-                                <dd className="text-lg font-semibold">21/02/1997</dd>
-                            </div>
-                            <div className="flex flex-col py-3">
-                                <dt className="mb-1 text-gray-500 md:text-lg dark:text-gray-400">Gender</dt>
-                                <dd className="text-lg font-semibold">Female</dd>
-                            </div>
-                        </dl>
-                    </div>
-                    <div className="w-full">
-                        <dl className="text-gray-900 divide-y divide-gray-200 dark:text-white dark:divide-gray-700">
-                            <div className="flex flex-col pb-3">
-                                <dt className="mb-1 text-gray-500 md:text-lg dark:text-gray-400">Location</dt>
-                                <dd className="text-lg font-semibold">Ethiopia, Addis Ababa</dd>
-                            </div>
-
-                            <div className="flex flex-col pt-3">
-                                <dt className="mb-1 text-gray-500 md:text-lg dark:text-gray-400">Phone Number</dt>
-                                <dd className="text-lg font-semibold">+251913****30</dd>
-                            </div>
-                            <div className="flex flex-col pt-3">
-                                <dt className="mb-1 text-gray-500 md:text-lg dark:text-gray-400">Email</dt>
-                                <dd className="text-lg font-semibold">fullname@gmail.com</dd>
-                            </div>
-
-                            <div className="flex flex-col pt-3">
-                                <dt className="mb-1 text-gray-500 md:text-lg dark:text-gray-400">Website</dt>
-                                <dd className="text-lg font-semibold hover:text-blue-500"><a href="https://techakim.com">https://www.teclick.com</a></dd>
-                            </div>
-                        </dl>
-                    </div>
+        {/* Right Side - Requests */}
+        <div className="bg-white dark:bg-gray-800 p-6 rounded-lg shadow">
+          <h2 className="text-2xl font-semibold mb-4 dark:text-white">
+            Mentorship Requests
+          </h2>
+          <div className="space-y-4">
+            {requests.map((request) => (
+              <div
+                key={request._id}
+                className={`p-4 rounded-lg ${getRequestStatusColor(
+                  request.isAccepted
+                )}`}
+                onMouseEnter={() => {
+                  if (request.isAccepted === "Accepted")
+                    setSelectedRequest(request);
+                }}
+                onMouseLeave={() => setSelectedRequest(null)}
+              >
+                <div className="flex items-center space-x-4">
+                  <img
+                    src={
+                      request.mentorId?.userId?.profilePic ||
+                      "/api/placeholder/40/40"
+                    }
+                    alt="Mentor"
+                    className="w-12 h-12 rounded-full"
+                  />
+                  <div className="flex-1">
+                    <p className="font-semibold">
+                      {request.mentorId?.userId?.name}
+                    </p>
+                    <p className="text-sm">
+                      {request.selectedSlot.day} at{" "}
+                      {request.selectedSlot.timeSlots}
+                    </p>
+                    <p className="text-xs opacity-75 mt-1">
+                      {getRelativeTime(request.createdAt)}
+                    </p>
+                  </div>
+                  <span
+                    className={`
+                      ${
+                        request.isAccepted === "Accepted"
+                          ? "text-green-600 dark:text-green-400"
+                          : ""
+                      }
+                      ${
+                        request.isAccepted === "Rejected"
+                          ? "text-red-600 dark:text-red-400"
+                          : ""
+                      }
+                      ${
+                        request.isAccepted === "Pending"
+                          ? "text-yellow-600 dark:text-yellow-400"
+                          : ""
+                      }
+                    `}
+                  >
+                    {request.isAccepted}
+                  </span>
                 </div>
-                
-                <div className="my-10 lg:w-[70%] md:h-[14rem] xs:w-full xs:h-[10rem]">
-                    {/* <!--  --> */}
-                    <h1
-                        className="w-fit font-serif my-4 pb-1 pr-2 rounded-b-md border-b-4 border-blue-600 dark:border-b-4 dark:border-yellow-600 dark:text-white lg:text-4xl md:text-3xl xs:text-xl">
-                        My Location</h1>
-
-                    {/* <!-- Location --> */}
-                    <iframe
-                        src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d252230.02028974562!2d38.613328040215286!3d8.963479542403238!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x164b85cef5ab402d%3A0x8467b6b037a24d49!2sAddis%20Ababa!5e0!3m2!1sen!2set!4v1710567234587!5m2!1sen!2set"
-                        className="rounded-lg w-full h-full"  loading="lazy"></iframe>
-
-                </div>
-            </div>
-
-            {/* <!-- Social Links --> */}
-            <div
-                className="fixed right-2 bottom-20 flex flex-col rounded-sm bg-gray-200 text-gray-500 dark:bg-gray-200/80 dark:text-gray-700 hover:text-gray-600 hover:dark:text-gray-400">
-                <a href="https://www.linkedin.com/in/samuel-abera-6593a2209/">
-                    <div className="p-2 hover:text-primary hover:dark:text-primary">
-                        <svg className="lg:w-6 lg:h-6 xs:w-4 xs:h-4 text-blue-500" aria-hidden="true"
-                            xmlns="http://www.w3.org/2000/svg" width="24" height="24" fill="currentColor"
-                            viewBox="0 0 24 24">
-                            <path fill-rule="evenodd"
-                                d="M12.51 8.796v1.697a3.738 3.738 0 0 1 3.288-1.684c3.455 0 4.202 2.16 4.202 4.97V19.5h-3.2v-5.072c0-1.21-.244-2.766-2.128-2.766-1.827 0-2.139 1.317-2.139 2.676V19.5h-3.19V8.796h3.168ZM7.2 6.106a1.61 1.61 0 0 1-.988 1.483 1.595 1.595 0 0 1-1.743-.348A1.607 1.607 0 0 1 5.6 4.5a1.601 1.601 0 0 1 1.6 1.606Z"
-                                clip-rule="evenodd" />
-                            <path d="M7.2 8.809H4V19.5h3.2V8.809Z" />
-                        </svg>
-
+                {selectedRequest?._id === request._id &&
+                  request.isAccepted === "Accepted" && (
+                    <div className="mt-4">
+                      <StripeCheckout
+                        stripeKey="pk_test_51QjEUpLJKggnYdjdkq6nC53RrJ8U0Uti4Qwvw1CYK7VDzo7hqF8CVldtejMOhiJblOeipP7uwgxU8JGFMo1bD6aZ00XOGuBYhU"
+                        token={handlePayment}
+                        amount={request.price * 100}
+                        name="ConnectSphere Mentorship"
+                        description={`Book a slot with ${request.mentorId?.userId?.name}`}
+                        currency="INR"
+                      ></StripeCheckout>
                     </div>
-                </a>
-                <a href="https://twitter.com/Samuel7Abera7">
-                    <div className="p-2 hover:text-primary hover:dark:text-primary">
-                        <svg className="lg:w-6 lg:h-6 xs:w-4 xs:h-4 text-gray-900" aria-hidden="true"
-                            xmlns="http://www.w3.org/2000/svg" width="24" height="24" fill="currentColor"
-                            viewBox="0 0 24 24">
-                            <path
-                                d="M13.795 10.533 20.68 2h-3.073l-5.255 6.517L7.69 2H1l7.806 10.91L1.47 22h3.074l5.705-7.07L15.31 22H22l-8.205-11.467Zm-2.38 2.95L9.97 11.464 4.36 3.627h2.31l4.528 6.317 1.443 2.02 6.018 8.409h-2.31l-4.934-6.89Z" />
-                        </svg>
-
-                    </div>
-                </a>
-                <a href="">
-                    <div className="p-2 hover:text-blue-500 hover:dark:text-blue-500">
-                        <svg className="lg:w-6 lg:h-6 xs:w-4 xs:h-4 text-blue-700" aria-hidden="true"
-                            xmlns="http://www.w3.org/2000/svg" width="24" height="24" fill="currentColor"
-                            viewBox="0 0 24 24">
-                            <path fill-rule="evenodd"
-                                d="M13.135 6H15V3h-1.865a4.147 4.147 0 0 0-4.142 4.142V9H7v3h2v9.938h3V12h2.021l.592-3H12V6.591A.6.6 0 0 1 12.592 6h.543Z"
-                                clip-rule="evenodd" />
-                        </svg>
-                    </div>
-                </a>
-                <a href="https://www.youtube.com/@silentcoder7">
-                    <div className="p-2 hover:text-primary hover:dark:text-primary">
-                        <svg className="lg:w-6 lg:h-6 xs:w-4 xs:h-4 text-red-600" aria-hidden="true"
-                            xmlns="http://www.w3.org/2000/svg" width="24" height="24" fill="currentColor"
-                            viewBox="0 0 24 24">
-                            <path fill-rule="evenodd"
-                                d="M21.7 8.037a4.26 4.26 0 0 0-.789-1.964 2.84 2.84 0 0 0-1.984-.839c-2.767-.2-6.926-.2-6.926-.2s-4.157 0-6.928.2a2.836 2.836 0 0 0-1.983.839 4.225 4.225 0 0 0-.79 1.965 30.146 30.146 0 0 0-.2 3.206v1.5a30.12 30.12 0 0 0 .2 3.206c.094.712.364 1.39.784 1.972.604.536 1.38.837 2.187.848 1.583.151 6.731.2 6.731.2s4.161 0 6.928-.2a2.844 2.844 0 0 0 1.985-.84 4.27 4.27 0 0 0 .787-1.965 30.12 30.12 0 0 0 .2-3.206v-1.516a30.672 30.672 0 0 0-.202-3.206Zm-11.692 6.554v-5.62l5.4 2.819-5.4 2.801Z"
-                                clip-rule="evenodd" />
-                        </svg>
-                    </div>
-                </a>
-            </div>
-
+                  )}
+              </div>
+            ))}
+          </div>
         </div>
+      </div>
     </div>
-</section>
-    </div>
-  )
-}
+  );
+};
 
-export default Profile
+export default Profile;

@@ -20,6 +20,25 @@ export const getAllMentorRequests = async () => {
         throw new Error("Error fetching mentor requests: " + error.message);
     }
 };
+//Get All Mentors
+export const getAllMentors = async () => {
+    try {
+        return await MentorRepository.getAllMentors();
+    }
+    catch (error) {
+        throw new Error("Error fetching mentors: " + error.message);
+    }
+};
+//get Mentor Details using mentorId
+export const getMentorBymentorId = async (mentorId) => {
+    try {
+        const mentor = await MentorRepository.getMentorDetails(mentorId);
+        return mentor;
+    }
+    catch (error) {
+        throw new Error("Error fetching mentor details: " + error.message);
+    }
+};
 // Approve a mentor request
 export const approveMentorRequest = async (id) => {
     try {
@@ -103,15 +122,6 @@ export const updateMentorById = async (mentorId, updateData) => {
     }
     catch (error) {
         throw new Error("Error updating mentor details: " + error.message);
-    }
-};
-// Get available skills
-export const getSkills = async () => {
-    try {
-        return await MentorRepository.getSkills();
-    }
-    catch (error) {
-        throw new Error("Error fetching skills: " + error.message);
     }
 };
 //# sourceMappingURL=mentor.service.js.map

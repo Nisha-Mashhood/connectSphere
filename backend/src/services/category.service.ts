@@ -11,6 +11,7 @@ export const isDuplicateCategoryName = async (
   return await CategoryRepo.isDuplicateCategoryName(name, excludeId);
 };
 
+
 // Create a new category with optional image upload
 export const createCategory = async (
   data: Partial<CategoryInterface>,

@@ -8,6 +8,8 @@ export const submitMentorRequest = async (mentorData: {
   userId: string;
   skills: string[];
   specialization: string;
+  bio:string,
+  price:number,
   availableSlots: string[];
   certifications: string[];
 }) => {
@@ -29,6 +31,24 @@ export const getAllMentorRequests = async () => {
   }
 };
 
+//Get All Mentors
+export const getAllMentors = async() =>{
+  try {
+    return await MentorRepository.getAllMentors();
+  } catch (error:any) {
+    throw new Error("Error fetching mentors: " + error.message);
+  }
+}
+
+//get Mentor Details using mentorId
+export const getMentorBymentorId = async(mentorId: string) =>{
+  try {
+    const mentor = await MentorRepository.getMentorDetails(mentorId);
+    return mentor;
+  } catch (error:any) {
+    throw new Error("Error fetching mentor details: " + error.message);
+  }
+}
 // Approve a mentor request
 export const approveMentorRequest = async (id: string) => {
   try {
@@ -137,11 +157,3 @@ export const updateMentorById = async (mentorId: string, updateData: Partial<IMe
   }
 };
 
-// Get available skills
-export const getSkills = async () => {
-  try {
-    return await MentorRepository.getSkills();
-  } catch (error: any) {
-    throw new Error("Error fetching skills: " + error.message);
-  }
-};

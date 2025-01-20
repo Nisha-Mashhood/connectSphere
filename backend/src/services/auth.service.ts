@@ -31,7 +31,6 @@ export const sigupDetails = async (data: {
   password: string;
 }) => {
   const { name, email, password } = data;
-  console.log("data at service file :", data);
   // Check if the email already exists
   const userExists = await findUserByEmail(email);
   if (userExists) throw new Error("User already exists.");
@@ -102,8 +101,6 @@ export const googleSignupService = async (code: string) => {
     `https://www.googleapis.com/oauth2/v1/userinfo?alt=json&access_token=${tokens.access_token}`
   );
   const { email, name, picture } = userRes.data;
-
-  console.log("Google User Info during signup:", { email, name, picture });
 
   // Check if the email already exists
   const existingUser = await findUserByEmail(email);
