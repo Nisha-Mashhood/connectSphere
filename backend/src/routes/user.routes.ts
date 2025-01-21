@@ -24,3 +24,4 @@ router.put("/unblockuser/:id", [apiLimiter, verifyToken, authorize('admin')], Us
 router.put("/changerole/:id", [apiLimiter, verifyToken, authorize('admin')], UserController.changeRole);
 
 export default router;
+

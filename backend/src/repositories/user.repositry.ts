@@ -15,6 +15,7 @@ export const findUserById = async (id: string) => {
   return await User.findById(id);
 };
 
+
 // Find or create a user by OAuth profile
 export const findOrCreateUser = async (profile: any, provider: string): Promise<UserInterface> => {
   if (!profile.email) {

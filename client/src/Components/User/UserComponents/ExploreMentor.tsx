@@ -109,36 +109,6 @@ const ExploreMentors = () => {
             className="flex-1"
             size="lg"
           />
-          {/* <div className="flex gap-4">
-            <Select
-              placeholder="Category"
-              value={selectedCategory}
-              onChange={(e) => setSelectedCategory(e.target.value)}
-              className="w-40"
-            >
-              <SelectItem key="all" value="">All Categories</SelectItem>
-              {categories.map((category) => (
-                <SelectItem key={category._id} value={category._id}>
-                  {category.name}
-                </SelectItem>
-              ))}
-            </Select>
-            <Select
-              placeholder="Skill"
-              value={selectedSkill}
-              onChange={(e) => setSelectedSkill(e.target.value)}
-              className="w-40"
-            >
-              <SelectItem key="all" value="">All Skills</SelectItem>
-              {skills.map((skill) => (
-                <SelectItem key={skill._id} value={skill._id}>
-                  {skill.name}
-                </SelectItem>
-              ))}
-            </Select>
-          </div>
-        </div>
-      </div> */}
 
 <div className="flex gap-4">
             {/* Category Select with Tailwind */}
@@ -182,7 +152,7 @@ const ExploreMentors = () => {
           {filteredMentors.map((mentor) => (
             <Card key={mentor._id} className="hover:shadow-lg transition-shadow">
               <CardHeader className="p-0">
-                <Link to={`/mentorship/${mentor._id}`}>
+                <Link to={`/profileDispaly/${mentor._id}`}>
                   <img
                     src={mentor.userId?.profilePic || "/api/placeholder/400/400"}
                     alt={mentor.userId?.name}
@@ -191,7 +161,7 @@ const ExploreMentors = () => {
                 </Link>
               </CardHeader>
               <CardBody className="space-y-4">
-                <Link to={`/mentorship/${mentor._id}`}>
+                <Link to={`/profileDispaly/${mentor._id}`}>
                   <h3 className="text-xl font-semibold">{mentor.userId?.name}</h3>
                 </Link>
                 <p className="text-gray-600">{mentor.specialization}</p>

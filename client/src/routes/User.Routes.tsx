@@ -10,7 +10,7 @@ import Profile from "../Components/User/Common/Profile";
 import PrivateRoute from "../Components/User/PrivateRoute";
 import CompleteProfile from "../Components/User/UserComponents/CompleteProfile";
 import MentorProfile from "../Components/User/Mentor/MentorProfile";
-import  MentorProfilePage from "../Components/User/Mentor/Mentorship";
+import ProfileDisplay from "../Components/User/Mentor/Mentorship";
 import PageNotFound from "../Components/PageNotFound";
 import { ForbiddenPage } from "../Components/ForebiddenPage";
 import GithubCallback from "../Components/User/Auth/GithubCallback";
@@ -38,7 +38,7 @@ const UserRoutes = () => (
         <Route path="/complete-profile" element={<CompleteProfile />} />
         <Route path="/profile" element={<Profile />} />
         <Route path="/mentorProfile" element={<MentorProfile />} />
-        <Route path="/mentorship/:mentorId" element={< MentorProfilePage />} />
+        <Route path="/profileDispaly/:Id" element={< ProfileDisplay />} />
         <Route path="/mymentorProfilePage" element={< MyMentorProfilePage />} />
         <Route path="/explorementor" element={<ExploreMentor />} />
         <Route path="/userProfile/:userId" element={<UserProfile />} />

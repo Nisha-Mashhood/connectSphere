@@ -104,7 +104,7 @@ export const getCollabDataForUserService = async (userId) => {
 //get collab data for mentor
 export const getCollabDataForMentorService = async (mentorId) => {
     try {
-        const collabData = await getCollabDataForMentor(mentorId); // Call the repository for data
+        const collabData = await getCollabDataForMentor(mentorId);
         return collabData;
     }
     catch (error) {

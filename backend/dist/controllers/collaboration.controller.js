@@ -100,10 +100,6 @@ export const getCollabDataForUserController = async (req, res) => {
     try {
         const userId = req.params.id;
         const collabData = await getCollabDataForUserService(userId);
-        if (!collabData || collabData.length === 0) {
-            res.status(404).json({ message: "No collaboration data found for this user." });
-            return;
-        }
         res.status(200).json({ collabData });
         return;
     }
@@ -117,10 +113,6 @@ export const getCollabDataForMentorController = async (req, res) => {
     try {
         const mentorId = req.params.id;
         const collabData = await getCollabDataForMentorService(mentorId);
-        if (!collabData || collabData.length === 0) {
-            res.status(404).json({ message: "No collaboration data found for this mentor." });
-            return;
-        }
         res.status(200).json({ collabData });
         return;
     }
