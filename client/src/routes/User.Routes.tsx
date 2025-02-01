@@ -6,7 +6,7 @@ import Signup from "../Components/User/Auth/Signup";
 import ForgotPassword from "../Components/User/Auth/ForgotPassword";
 import OTPVerification from "../Components/User/Auth/OtpVerification";
 import ResetPassword from "../Components/User/Auth/ResetPassword";
-import Profile from "../Components/User/Common/Profile";
+import Profile from "../Components/User/Common/Profile/Profile";
 import PrivateRoute from "../Components/User/PrivateRoute";
 import CompleteProfile from "../Components/User/UserComponents/CompleteProfile";
 import MentorProfile from "../Components/User/Mentor/MentorProfile";
@@ -15,9 +15,10 @@ import PageNotFound from "../Components/PageNotFound";
 import { ForbiddenPage } from "../Components/ForebiddenPage";
 import GithubCallback from "../Components/User/Auth/GithubCallback";
 import ExploreMentor from "../Components/User/UserComponents/ExploreMentor";
-import MyMentorProfilePage from "../Components/User/Mentor/MyMentorProfilePage";
+// import MyMentorProfilePage from "../Components/User/Mentor/MyMentorProfilePage";
 import UserProfile from "../Components/User/UserComponents/UserProfile";
 import About from "../Components/User/Common/About";
+import CreateGroupForm from "../Components/User/Groups/CreateGroupForm";
 
 
 
@@ -39,9 +40,10 @@ const UserRoutes = () => (
         <Route path="/profile" element={<Profile />} />
         <Route path="/mentorProfile" element={<MentorProfile />} />
         <Route path="/profileDispaly/:Id" element={< ProfileDisplay />} />
-        <Route path="/mymentorProfilePage" element={< MyMentorProfilePage />} />
+        {/* <Route path="/mymentorProfilePage" element={< MyMentorProfilePage />} /> */}
         <Route path="/explorementor" element={<ExploreMentor />} />
         <Route path="/userProfile/:userId" element={<UserProfile />} />
+        <Route path="/create-group" element={<CreateGroupForm />} />
       </Route>
 
       <Route path="*" element={<PageNotFound />} />

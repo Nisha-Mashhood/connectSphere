@@ -8,6 +8,7 @@ const initialState = {
   isAdmin: false,
   resetEmail: null,
   currentAdmin:null,
+  isLoggingOutAdmin:false,
 };
 
 const userSlice = createSlice({
@@ -35,6 +36,9 @@ const userSlice = createSlice({
     },
     signOut: (state) => {
       state.currentUser = null;
+      state.currentAdmin = null;
+      state.isAdmin = false;
+      state.isLoggingOutAdmin = false;
       state.loading = false;
       state.error = false;
     },
@@ -46,10 +50,13 @@ const userSlice = createSlice({
    },
    unsetIsAdmin: (state) => {
       state.currentAdmin = null;
-      state.loading = false;
-      state.error = false;
       state.isAdmin = false;
    },
+   AdminLogout: (state) => {
+    state.currentAdmin = null;
+    state.isAdmin = false;
+    state.isLoggingOutAdmin = true; 
+  },
   },
 });
 
@@ -61,8 +68,8 @@ export const {
   signinFailure,
   signOut,
   setIsAdmin,
-  unsetIsAdmin
-  // adminSigninStart,
+  unsetIsAdmin,
+  AdminLogout,
   // adminSigninSuccess,
   // adminSigninFailure,
   // adminSignOut

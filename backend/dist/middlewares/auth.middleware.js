@@ -48,7 +48,7 @@ export const verifyRefreshTokenMiddleware = async (req, res, next) => {
 // Check if user is blocked
 export const checkBlockedStatus = async (req, res, next) => {
     if (req.currentUser?.isBlocked) {
-        res.status(403).json({ message: "Your account has been blocked" });
+        res.status(403).json({ message: "Your account has been blocked. Please contact support." });
         return;
     }
     next();

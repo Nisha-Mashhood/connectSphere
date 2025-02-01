@@ -3,7 +3,7 @@ import User, { UserInterface } from "../models/user.model.js";
 
 // Fetch all users
 export const getAllUsers = async (): Promise<UserInterface[]> => {
-  return await User.find();
+  return await User.find({ role: { $ne: "admin" } });
 };
 
 // Fetch user by ID

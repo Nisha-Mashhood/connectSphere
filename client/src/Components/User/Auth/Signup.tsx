@@ -81,8 +81,8 @@ const Signup = () => {
     try {
       dispatch(signinStart());
       await register(values);
-      Navigate("/login");
       toast.success("User Registered Successfully");
+      Navigate("/login");
     } catch (err: any) {
       console.error(err);
       dispatch(signinFailure(err.response?.data?.message || "Signup failed"));

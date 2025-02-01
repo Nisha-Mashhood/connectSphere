@@ -8,7 +8,8 @@ import subCategoryRoutes from "./routes/sucategory.routes.js";
 import skillsRoutes from "./routes/skills.routes.js";
 import userRoutes from "./routes/user.routes.js";
 import mentorRoutes from "./routes/mentor.routes.js";
-import collaborationRoutes from "./routes/collaboration.routes.js"
+import collaborationRoutes from "./routes/collaboration.routes.js";
+import groupRoutes from "./routes/group.routes.js";
 import helmet from "helmet";
 import cors from "cors";
 import cookieParser from "cookie-parser";
@@ -38,7 +39,8 @@ app.use("/api/subcategory", subCategoryRoutes);
 app.use("/api/skills", skillsRoutes);
 app.use("/api/users", userRoutes);
 app.use("/api/mentors", mentorRoutes);
-app.use("/api/collaboration",collaborationRoutes)
+app.use("/api/collaboration",collaborationRoutes);
+app.use("/api/group", groupRoutes);
 
 // Placeholder route
 app.get("/", (_req, res) => {

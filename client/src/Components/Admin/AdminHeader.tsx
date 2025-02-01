@@ -2,10 +2,11 @@ import { FaUser, FaTasks, FaChartBar, FaSignOutAlt } from 'react-icons/fa';
 import { Button, Avatar } from "@nextui-org/react";
 import { useDispatch, useSelector } from "react-redux";
 import { useNavigate } from "react-router-dom";
-import { unsetIsAdmin } from "../../redux/Slice/userSlice";
 import { RootState } from "../../redux/store";
 import Logo from "../../assets/logo.svg";
 import { logout } from '../../Service/Auth.service';
+import toast from 'react-hot-toast';
+import { AdminLogout } from '../../redux/Slice/userSlice';
 
 export const ConnectSphereLogo = () => {
   return (
@@ -24,8 +25,9 @@ const AdminSidebar = () => {
     const email = currentAdmin?.email;
     try {
       await logout(email);
-      dispatch(unsetIsAdmin());
-      navigate("/login", { replace: true });
+      dispatch(AdminLogout());
+      toast.success("Logout successfully!");
+      navigate("/admin/login", { replace: true });
     } catch (err) {
       console.error(err.response?.data?.message || "Logout Failed");
     }

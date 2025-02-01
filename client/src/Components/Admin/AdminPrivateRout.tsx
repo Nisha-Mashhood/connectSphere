@@ -5,10 +5,10 @@ import toast from "react-hot-toast";
 
  
 function AdminPrivateRoute() {
-        const { isAdmin } = useSelector((state: RootState) => state.user);
+        const { isAdmin, isLoggingOutAdmin } = useSelector((state: RootState) => state.user);
         const location = useLocation();
 
-        if (!isAdmin) {
+        if (!isAdmin && !isLoggingOutAdmin) {
                 toast.error("Access Forbidden - Admin rights required", {
                   position: "top-right",
                   duration: 3000,

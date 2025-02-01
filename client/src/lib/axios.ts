@@ -2,6 +2,7 @@ import axios from "axios";
 import axiosRetry from "axios-retry";
 import { store } from "../redux/store"; 
 import { signOut } from "../redux/Slice/userSlice";
+import toast from "react-hot-toast";
 
 export const axiosInstance = axios.create({
   baseURL: "http://localhost:3000/api",
@@ -69,7 +70,7 @@ export const setupInterceptors = (navigate) => {
     },
     async (error) => {
       const originalRequest = error.config;
-      
+
       // Clean up the pending request on error
       if (originalRequest) {
         const requestKey = getRequestKey(originalRequest);
@@ -77,7 +78,25 @@ export const setupInterceptors = (navigate) => {
       }
 
       if (axios.isCancel(error)) {
-        return Promise.reject(new Error("Request cancelled"));
+        throw new Error("Request cancelled - previous request was still pending");
+      }
+
+      if (error.response?.status === 429) {
+        toast.error("Too many requests. Please try again later.", { duration: 3000 });
+        console.log(error.response.data?.message);
+        throw new Error("Too many requests. Please wait before trying again.");
+      }
+
+      if (error.response?.status === 403) {
+        console.log(error.response.data?.message);
+        throw new Error(error.response?.data?.message || "Access forbidden");
+      }
+
+      if (error.response?.status === 403 && error.response.data?.message === "Your account has been blocked. Please contact support.") {
+        toast.error("Your account has been blocked. Please contact support.");
+        store.dispatch(signOut());
+        navigate("/login");
+        throw new Error("Your account has been blocked. Please contact support.");
       }
 
       if (error.response?.status === 401 && !originalRequest._retry) {
@@ -95,7 +114,8 @@ export const setupInterceptors = (navigate) => {
       }
 
       // Let the error handler deal with specific error cases
-      return Promise.reject(error);
+      console.log(error.response?.data?.message);
+      throw new Error(error.response?.data?.message || "An error occurred");
     }
   );
 };

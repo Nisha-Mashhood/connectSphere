@@ -5,7 +5,7 @@ import { upload } from "../utils/multer.utils.js";
 import { authorize, checkBlockedStatus, verifyToken } from "../middlewares/auth.middleware.js";
 const router = express.Router();
 
-router.get("/getallusers", [apiLimiter, verifyToken, authorize('admin')], UserController.getAllUsers);
+router.get("/getallusers", [apiLimiter, verifyToken], UserController.getAllUsers);
 router.get("/getuser/:id", [apiLimiter, verifyToken], UserController.getUserById);
 router.put(
   "updateuser/:id",

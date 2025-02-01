@@ -1,6 +1,7 @@
 import LoginImage from "../../../assets/Login.png";
-import { Link, useLocation, useNavigate } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import { useDispatch } from "react-redux";
+import { AppDispatch } from '../../../redux/store';
 import {
   signinFailure,
   signinStart,
@@ -10,21 +11,15 @@ import {
 import toast from "react-hot-toast";
 import GoogleLogin from "./GoogleLogin";
 import GitHub from "./GitHub";
-import { useEffect } from "react";
 import { login, checkProfile } from "../../../Service/Auth.service";
 import { Formik, Field, Form, ErrorMessage } from "formik";
 import * as Yup from "yup";
+import { fetchCollabDetails, fetchMentorDetails } from "../../../redux/Slice/profileSlice";
 
 const Login = () => {
-  const dispatch = useDispatch();
+  const dispatch = useDispatch<AppDispatch>();
   const navigate = useNavigate();
-  const location = useLocation();
 
-  useEffect(() => {
-    if (location.state?.error) {
-      toast.error(location.state.error);
-    }
-  }, [location.state]);
 
   // Form validation schema with Yup
   const validationSchema = Yup.object({
@@ -55,17 +50,35 @@ const Login = () => {
         return;
       }
   
-      toast.success("Login successful!");
       dispatch(signinSuccess(user));
       dispatch(unsetIsAdmin());
+
+      // Fetch profile data based on user role
+    if (user.role === 'mentor') {
+      // Fetch mentor details
+      const mentorDetails = await dispatch(fetchMentorDetails(user._id)).unwrap();
+
+      // Fetch collaboration data for mentors
+      if (mentorDetails?._id) {
+        await dispatch(fetchCollabDetails({ userId: mentorDetails._id, role: "mentor" }));
+      } else {
+        console.error("Unable to retrieve mentor details");
+      }
+    } else {
+      // Fetch collaboration data for users
+      dispatch(fetchCollabDetails({ userId: user._id, role: 'user' }));
+    }
   
+    //Check if profile is complete
       const profileResponse = await checkProfile(user._id);
       const isProfileComplete = profileResponse.isProfileComplete;
   
       if (!isProfileComplete) {
+        toast.success("Login successful!");
         navigate("/complete-profile", { replace: true });
         return;
       }
+      toast.success("Login successful!");
       navigate("/", { replace: true });
     } catch (error: any) {
       handleLoginError(error, dispatch);

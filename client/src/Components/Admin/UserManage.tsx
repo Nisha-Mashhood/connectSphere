@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 import { toast } from "react-hot-toast";
-import { fetchAllUsers, fetchUserDetails, updateUserRoleService, verifyAdminPasskey } from "../../Service/User.Service";
+import { blockUserService, fetchAllUsers, fetchUserDetails, unblockUserService, updateUserRoleService, verifyAdminPasskey } from "../../Service/User.Service";
 
 const UserManage = () => {
   const [users, setUsers] = useState([]);
@@ -8,16 +8,18 @@ const UserManage = () => {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [newRole, setNewRole] = useState("");
 
+
+  const getUsers = async () => {
+    try {
+      const data = await fetchAllUsers();
+      setUsers(data);
+    } catch (error) {
+      toast.error("Failed to fetch users");
+    }
+  };
+
   // Fetch all users when the component mounts
   useEffect(() => {
-    const getUsers = async () => {
-      try {
-        const data = await fetchAllUsers();
-        setUsers(data);
-      } catch (error) {
-        toast.error("Failed to fetch users");
-      }
-    };
     getUsers();
   }, []);
 
@@ -35,10 +37,10 @@ const UserManage = () => {
   // Block a user
   const blockUser = async(userId) => {
     try {
-      await blockUser(userId);
-      setUsers(users.map((user) =>
-        user._id === userId ? { ...user, isBlocked: true } : user
-      ));
+      console.log("blocking the user");
+      const result = await blockUserService(userId);
+      console.log(result);
+      getUsers();
     } catch (error) {
       toast.error("Failed to block user");
     }
@@ -47,10 +49,8 @@ const UserManage = () => {
   // Unblock a user
   const unblockUser = async(userId) => {
     try {
-      await unblockUser(userId);
-      setUsers(users.map((user) =>
-        user._id === userId ? { ...user, isBlocked: false } : user
-      ));
+      await unblockUserService(userId);
+      getUsers();
     } catch (error) {
       toast.error("Failed to unblock user");
     }

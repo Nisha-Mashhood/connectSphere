@@ -51,8 +51,8 @@ const Header = () => {
     try {
       logout(email);
       dispatch(signOut());
-      navigate("/login", { replace: true });
       toast.success("Logout successfully!");
+      navigate("/login", { replace: true });
     } catch (err) {
       toast.error(err.response?.data?.message || "Logout Failed");
     }
@@ -129,7 +129,7 @@ const Header = () => {
         </NavbarItem>
         <NavbarItem>
           <Link color="foreground" href="/explorementor">
-            Explore Mentor
+            Explore
           </Link>
         </NavbarItem>
         <NavbarItem>

@@ -28,7 +28,9 @@ export const updateUserProfile = async (req, res) => {
     const updatedUser = await UserService.updateUserProfile(req.params.id, data);
     res.json(updatedUser);
 };
+//block the user
 export const blockUser = async (req, res) => {
+    console.log(req.params.id);
     await UserService.blockUser(req.params.id);
     res.json({ message: "User blocked successfully" });
 };

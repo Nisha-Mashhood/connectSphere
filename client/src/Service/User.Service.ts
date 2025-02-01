@@ -24,7 +24,7 @@ export const fetchUserDetails = async (userId) => {
 };
 
 // Block a user
-export const blockUser = async (userId) => {
+export const blockUserService = async (userId) => {
   try {
     await axiosInstance.put(`/users/blockuser/${userId}`);
     toast.success("User blocked successfully");
@@ -34,7 +34,7 @@ export const blockUser = async (userId) => {
 };
 
 // Unblock a user
-export const unblockUser = async (userId) => {
+export const unblockUserService = async (userId) => {
   try {
     await axiosInstance.put(`/users/unblockuser/${userId}`);
     toast.success("User unblocked successfully");

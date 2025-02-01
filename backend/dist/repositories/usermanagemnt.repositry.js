@@ -2,7 +2,7 @@
 import User from "../models/user.model.js";
 // Fetch all users
 export const getAllUsers = async () => {
-    return await User.find();
+    return await User.find({ role: { $ne: "admin" } });
 };
 // Fetch user by ID
 export const getUserById = async (id) => {
