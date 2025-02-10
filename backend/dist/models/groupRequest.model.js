@@ -12,7 +12,7 @@ const GroupRequestSchema = new Schema({
     },
     status: {
         type: String,
-        enum: ['Pending', 'Approved', 'Rejected'],
+        enum: ['Pending', 'Accepted', 'Rejected'],
         default: 'Pending'
     },
     paymentStatus: {

@@ -3,12 +3,12 @@ const CollaborationSchema = new Schema({
     mentorId: {
         type: Schema.Types.ObjectId,
         ref: "Mentor",
-        required: true
+        required: true,
     },
     userId: {
         type: Schema.Types.ObjectId,
         ref: "User",
-        required: true
+        required: true,
     },
     selectedSlot: [
         {
@@ -18,24 +18,24 @@ const CollaborationSchema = new Schema({
     ],
     payment: {
         type: Boolean,
-        default: false
+        default: false,
     },
     isCancelled: {
         type: Boolean,
-        fefault: false
+        fefault: false,
     },
     price: {
         type: Number,
-        required: true
+        required: true,
     },
     startDate: {
         type: Date,
         required: true,
-        default: Date.now
+        default: Date.now,
     },
     endDate: {
         type: Date,
-        default: null
+        default: null,
     },
 }, { timestamps: true });
 export default mongoose.model("Collaboration", CollaborationSchema);

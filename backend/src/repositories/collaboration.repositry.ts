@@ -66,6 +66,30 @@ export const deleteMentorRequest = async (requestId: string): Promise<void> => {
   await MentorRequest.findByIdAndDelete(requestId);
 };
 
+export const findCollabById = async(collabId:string): Promise<ICollaboration | null> =>{
+  try {
+  return await Collaboration.findById(collabId)
+  .populate({
+    path: "mentorId",
+    populate: {
+      path: "userId", 
+      model: "User",
+    },
+  })
+  .populate("userId")as ICollaboration | null;; 
+  } catch (error:any) {
+    throw new Error("Error fetching group requests: " + error.message);
+  }
+}
+
+export const deleteCollabById = async(collabId:string) =>{
+  try {
+    return await Collaboration.findByIdAndDelete(collabId)
+  } catch (error:any) {
+    throw new Error("Error fetching group requests: " + error.message);
+  }
+}
+
 //Get collab data For user
 export const getCollabDataForUser = async (userId: string) => {
   try {

@@ -2,7 +2,7 @@ import mongoose, { Document } from 'mongoose';
 export interface GroupRequestDocument extends Document {
     groupId: mongoose.Types.ObjectId;
     userId: mongoose.Types.ObjectId;
-    status: 'Pending' | 'Approved' | 'Rejected';
+    status: 'Pending' | 'Accepted' | 'Rejected';
     paymentStatus: 'Pending' | 'Completed' | 'Failed';
     paymentId?: string;
     amountPaid?: number;

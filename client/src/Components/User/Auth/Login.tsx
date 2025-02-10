@@ -1,7 +1,7 @@
 import LoginImage from "../../../assets/Login.png";
 import { Link, useNavigate } from "react-router-dom";
 import { useDispatch } from "react-redux";
-import { AppDispatch } from '../../../redux/store';
+import { AppDispatch } from "../../../redux/store";
 import {
   signinFailure,
   signinStart,
@@ -14,12 +14,18 @@ import GitHub from "./GitHub";
 import { login, checkProfile } from "../../../Service/Auth.service";
 import { Formik, Field, Form, ErrorMessage } from "formik";
 import * as Yup from "yup";
-import { fetchCollabDetails, fetchMentorDetails } from "../../../redux/Slice/profileSlice";
+import {
+  fetchCollabDetails,
+  fetchGroupDetailsForMembers,
+  fetchGroupRequests,
+  fetchGroups,
+  fetchMentorDetails,
+  fetchRequests,
+} from "../../../redux/Slice/profileSlice";
 
 const Login = () => {
   const dispatch = useDispatch<AppDispatch>();
   const navigate = useNavigate();
-
 
   // Form validation schema with Yup
   const validationSchema = Yup.object({
@@ -32,47 +38,68 @@ const Login = () => {
   });
 
   // Handle login form submission
-  const onSubmit = async (values: { email: string; password: string; role: 'user' }) => {
+  const onSubmit = async (values: {
+    email: string;
+    password: string;
+    role: "user";
+  }) => {
     try {
       dispatch(signinStart());
       const { user } = await login(values);
       console.log(user);
-  
+
       // Check user role
-      if (user.role === 'admin') {
+      if (user.role === "admin") {
         toast.error("Invalid credentials for user login");
         return;
       }
-  
+
       // Check if user is blocked
       if (user.isBlocked) {
         toast.error("Your account has been blocked. Please contact support.");
         return;
       }
-  
+
       dispatch(signinSuccess(user));
       dispatch(unsetIsAdmin());
 
+      let mentorDetails = null;
       // Fetch profile data based on user role
-    if (user.role === 'mentor') {
-      // Fetch mentor details
-      const mentorDetails = await dispatch(fetchMentorDetails(user._id)).unwrap();
+      if (user.role === "mentor") {
+        // Fetch mentor details
+        mentorDetails = await dispatch(fetchMentorDetails(user._id)).unwrap();
 
-      // Fetch collaboration data for mentors
-      if (mentorDetails?._id) {
-        await dispatch(fetchCollabDetails({ userId: mentorDetails._id, role: "mentor" }));
+        // Fetch collaboration data for mentors
+        if (mentorDetails?._id) {
+          await dispatch(
+            fetchCollabDetails({ userId: mentorDetails._id, role: "mentor" })
+          );
+        } else {
+          console.error("Unable to retrieve mentor details");
+        }
       } else {
-        console.error("Unable to retrieve mentor details");
+        // Fetch collaboration data for users
+        dispatch(fetchCollabDetails({ userId: user._id, role: "user" }));
       }
-    } else {
-      // Fetch collaboration data for users
-      dispatch(fetchCollabDetails({ userId: user._id, role: 'user' }));
-    }
-  
-    //Check if profile is complete
+
+      // Fetch requests after login
+      dispatch(
+        fetchRequests({
+          userId: user._id,
+          role: user.role,
+          mentorId: mentorDetails?._id || undefined,
+        })
+      );
+
+      // Fetch groups, group requests, and group membership details after login
+      dispatch(fetchGroups(user._id));
+      dispatch(fetchGroupRequests(user._id));
+      dispatch(fetchGroupDetailsForMembers(user._id));
+
+      //Check if profile is complete
       const profileResponse = await checkProfile(user._id);
       const isProfileComplete = profileResponse.isProfileComplete;
-  
+
       if (!isProfileComplete) {
         toast.success("Login successful!");
         navigate("/complete-profile", { replace: true });
@@ -86,11 +113,11 @@ const Login = () => {
   };
 
   // Error handling function
-const handleLoginError = (error: any, dispatch: any) => {
-  const errorMessage = error.message || "Login failed";
-  toast.error(errorMessage);
-  dispatch(signinFailure(errorMessage));
-};
+  const handleLoginError = (error: any, dispatch: any) => {
+    const errorMessage = error.message || "Login failed";
+    toast.error(errorMessage);
+    dispatch(signinFailure(errorMessage));
+  };
 
   return (
     <div>
@@ -114,7 +141,7 @@ const handleLoginError = (error: any, dispatch: any) => {
 
             {/* Formik Form */}
             <Formik
-              initialValues={{ email: "", password: "",role:"" }}
+              initialValues={{ email: "", password: "", role: "" }}
               validationSchema={validationSchema}
               onSubmit={onSubmit}
             >

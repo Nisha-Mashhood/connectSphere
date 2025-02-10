@@ -11,5 +11,6 @@ router.get("/get-user-requests/:id", [apiLimiter, verifyToken, checkBlockedStatu
 router.post("/process-payment", [apiLimiter, verifyToken, checkBlockedStatus], collaborationController.makeStripePaymentController);
 router.get('/get-collabData-user/:id', [apiLimiter, verifyToken, checkBlockedStatus], collaborationController.getCollabDataForUserController);
 router.get('/get-collabData-mentor/:id', [apiLimiter, verifyToken, checkBlockedStatus], collaborationController.getCollabDataForMentorController);
+router.delete('/cancel-collab/:collabId', [apiLimiter, verifyToken, checkBlockedStatus], collaborationController.deleteCollab);
 export default router;
 //# sourceMappingURL=collaboration.routes.js.map

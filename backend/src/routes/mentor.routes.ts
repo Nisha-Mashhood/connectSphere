@@ -1,4 +1,3 @@
-
 import express from "express";
 import * as MentorController from "../controllers/mentor.controller.js";
 import { apiLimiter } from '../middlewares/ratelimit.middleware.js'

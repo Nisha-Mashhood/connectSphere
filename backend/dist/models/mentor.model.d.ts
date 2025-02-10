@@ -1,10 +1,7 @@
 import mongoose, { Document } from "mongoose";
-interface IUser {
-    name: string;
-    email: string;
-}
+import { UserInterface } from "./user.model.js";
 export interface IMentor extends Document {
-    userId: string | IUser;
+    userId: string | UserInterface;
     isApproved?: string;
     rejectionReason?: string;
     skills?: string[];

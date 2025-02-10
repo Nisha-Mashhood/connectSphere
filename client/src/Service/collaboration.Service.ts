@@ -82,3 +82,13 @@ export const SendRequsetToMentor = async (data) => {
      handleError(error)
     }
   }
+
+  //Cancel Mentorship
+  export const cancelCollab = async(collabId) =>{
+    try {
+      const response = await axiosInstance.delete(`/collaboration/cancel-collab/${collabId}`);
+      return response.data;
+    } catch (error) {
+      handleError(error)
+    }
+  }

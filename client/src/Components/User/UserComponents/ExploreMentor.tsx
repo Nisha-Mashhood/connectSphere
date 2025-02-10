@@ -40,7 +40,8 @@ import { FaSearch, FaUserFriends, FaUsers, FaUserTie } from "react-icons/fa";
 
 const ExploreMentors = () => {
   const { currentUser } = useSelector((state: RootState) => state.user);
-  const { mentorDetails } = useSelector((state: RootState) => state.profile);
+  const { mentorDetails, collabDetails, req, Groups, groupRequests } =
+    useSelector((state: RootState) => state.profile);
   const [mentors, setMentors] = useState([]);
   const [categories, setCategories] = useState([]);
   const [skills, setSkills] = useState([]);
@@ -83,13 +84,18 @@ const ExploreMentors = () => {
 
         // Filter out groups where the current user is the admin
         const filteredGroups =
-        groupData?.data?.filter((group) => group.adminId !== currentUser._id) ||
-        [];
+          groupData?.data?.filter(
+            (group) => group.adminId !== currentUser._id
+          ) || [];
 
-          console.log(currentUser._id);
-        console.log("filteredMentors", filteredMentors);
-        console.log("filteredGroups:", filteredGroups);
-        console.log("filteredUsers:", filteredUsers);
+        console.log("mentor details", mentorDetails);
+        console.log("collab details", collabDetails);
+        console.log("request details:", req);
+        console.log("Group deatils:", Groups);
+        console.log("Group Requset:", groupRequests);
+
+        console.log("filtered mentors:", filteredMentors);
+        console.log("filtered groups:", filteredGroups);
 
         setMentors(filteredMentors || []);
         setCategories(categoriesData || []);
@@ -164,7 +170,6 @@ const ExploreMentors = () => {
     }
   };
 
-  
   const handleRequestGroup = async () => {
     const data = {
       groupId: selectedGroup._id,
@@ -183,6 +188,194 @@ const ExploreMentors = () => {
   const handleSelectionChange = (key: string) => {
     setActiveTab(key);
   };
+
+  const getMentorButtonConfig = (mentor) => {
+    // If this is the current user's mentor card
+    if (mentorDetails?._id === mentor._id) {
+      return {
+        disabled: true,
+        hidden: true,
+        text: "",
+      };
+    }
+
+    // Check if there's an ongoing collaboration
+    const ongoingCollab = collabDetails?.data?.find(
+      (collab) => collab.mentorId._id === mentor._id && !collab.isCancelled
+    );
+    if (ongoingCollab) {
+      return {
+        disabled: true,
+        hidden: false,
+        text: "Ongoing Collaboration",
+      };
+    }
+
+    // Check if there's a pending request
+    const pendingRequest = req?.sentRequests?.find(
+      (request) => request.mentorId._id === mentor._id
+    );
+
+    if (pendingRequest && pendingRequest.isAccepted !== "Rejected") {
+      const requestStatus = {
+        Pending: "Request Pending",
+        Accepted: "Request Accepted",
+        Rejected: "Request Rejected",
+      };
+      return {
+        disabled: true,
+        hidden: false,
+        text: requestStatus[pendingRequest.isAccepted] || "Request Pending",
+      };
+    }
+
+    // Default state - can book session
+    return {
+      disabled: false,
+      hidden: false,
+      text: "Book Session",
+    };
+  };
+
+  // Helper function to determine group button state
+  const getGroupButtonConfig = (group) => {
+    // Check if user has already sent a request
+    const existingRequest = groupRequests?.find(
+      (request) => request.groupId._id === group._id
+    );
+
+    if (existingRequest && existingRequest.status !== "Rejected") {
+      const requestStatus = {
+        Pending: "Request Pending",
+        Accepted: "Request Accepted",
+        Rejected: "Request Rejected",
+      };
+      return {
+        disabled: true,
+        text: requestStatus[existingRequest.status] || "Request Pending",
+      };
+    }
+
+    // Check if group is full
+    if (group.currentMembers >= group.maxMembers) {
+      return {
+        disabled: true,
+        text: "Group Full",
+      };
+    }
+
+    return {
+      disabled: false,
+      text: "Join Group",
+    };
+  };
+
+  // Update the JSX for mentor cards
+  const renderMentorCard = (mentor) => {
+    const buttonConfig = getMentorButtonConfig(mentor);
+
+    if (buttonConfig.hidden) {
+      return null;
+    }
+
+    return (
+      <Card key={mentor._id} className="hover:shadow-lg transition-shadow">
+        <CardHeader className="p-0">
+          <img
+            src={mentor.userId?.profilePic || "/api/placeholder/400/400"}
+            alt={mentor.userId?.name}
+            className="w-full aspect-square object-cover"
+          />
+        </CardHeader>
+        <CardBody className="space-y-4">
+          <Link to={`/profileDispaly/${mentor._id}`}>
+            <h3 className="text-xl font-semibold hover:underline">
+              {mentor.userId?.name}
+            </h3>
+          </Link>
+          <p className="text-gray-600">{mentor.specialization}</p>
+          <div className="space-y-2">
+            <p className="text-sm font-medium">Skills:</p>
+            <div className="flex flex-wrap gap-2">
+              {mentor.skills?.slice(0, 3).map((skill) => (
+                <Chip key={skill._id} size="sm" variant="flat">
+                  {skill.name}
+                </Chip>
+              ))}
+            </div>
+          </div>
+        </CardBody>
+        <CardFooter>
+          <Button
+            color="primary"
+            className="w-full"
+            onPress={() => !buttonConfig.disabled && setSelectedMentor(mentor)}
+            isDisabled={buttonConfig.disabled}
+          >
+            {buttonConfig.text}
+          </Button>
+        </CardFooter>
+      </Card>
+    );
+  };
+
+  // Update the JSX for group cards
+  const renderGroupCard = (group) => {
+    const buttonConfig = getGroupButtonConfig(group);
+
+    return (
+      <Card key={group._id} className="hover:shadow-lg transition-shadow">
+        <CardBody className="space-y-4">
+          <h3 className="text-xl font-semibold">{group.name}</h3>
+          <p className="text-gray-600">{group.bio}</p>
+          <div className="space-y-2">
+            <p className="text-sm text-gray-600">Price: ₹{group.price}</p>
+            <p className="text-sm text-gray-600">
+              Members: {group.currentMembers}/{group.maxMembers}
+            </p>
+            <p className="text-sm text-gray-600 dark:text-gray-300">
+              Start Date:{" "}
+              {group.startDate
+                ? new Date(group.startDate).toLocaleDateString("en-US", {
+                    year: "numeric",
+                    month: "long",
+                    day: "numeric",
+                  })
+                : "Unknown"}
+            </p>
+          </div>
+        </CardBody>
+        <CardFooter>
+          <Button
+            color="primary"
+            className="w-full"
+            onPress={() => !buttonConfig.disabled && setSelectedGroup(group)}
+            isDisabled={buttonConfig.disabled}
+          >
+            {buttonConfig.text}
+          </Button>
+        </CardFooter>
+      </Card>
+    );
+  };
+
+  // Update the mentors tab content
+  const renderMentorsTab = () => (
+    <div className="py-4">
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+        {filteredMentors.map(renderMentorCard)}
+      </div>
+    </div>
+  );
+
+  // Update the groups tab content
+  const renderGroupsTab = () => (
+    <div className="py-4">
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+        {filteredGroups.map(renderGroupCard)}
+      </div>
+    </div>
+  );
 
   return (
     <div className="container mx-auto px-4 py-8 max-w-7xl">
@@ -251,54 +444,7 @@ const ExploreMentors = () => {
               </div>
             }
           >
-            <div className="py-4">
-              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
-                {filteredMentors.map((mentor) => (
-                  <Card
-                    key={mentor._id}
-                    className="hover:shadow-lg transition-shadow"
-                  >
-                    <CardHeader className="p-0">
-                      <img
-                        src={
-                          mentor.userId?.profilePic ||
-                          "/api/placeholder/400/400"
-                        }
-                        alt={mentor.userId?.name}
-                        className="w-full aspect-square object-cover"
-                      />
-                    </CardHeader>
-                    <CardBody className="space-y-4">
-                      <Link to={`/profileDispaly/${mentor._id}`}>
-                        <h3 className="text-xl font-semibold hover:underline">
-                          {mentor.userId?.name}
-                        </h3>
-                      </Link>
-                      <p className="text-gray-600">{mentor.specialization}</p>
-                      <div className="space-y-2">
-                        <p className="text-sm font-medium">Skills:</p>
-                        <div className="flex flex-wrap gap-2">
-                          {mentor.skills?.slice(0, 3).map((skill) => (
-                            <Chip key={skill._id} size="sm" variant="flat">
-                              {skill.name}
-                            </Chip>
-                          ))}
-                        </div>
-                      </div>
-                    </CardBody>
-                    <CardFooter>
-                      <Button
-                        color="primary"
-                        className="w-full"
-                        onPress={() => setSelectedMentor(mentor)}
-                      >
-                        Book Session
-                      </Button>
-                    </CardFooter>
-                  </Card>
-                ))}
-              </div>
-            </div>
+            {renderMentorsTab()}
           </Tab>
 
           <Tab
@@ -358,38 +504,7 @@ const ExploreMentors = () => {
               </div>
             }
           >
-            <div className="py-4">
-              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
-                {filteredGroups.map((group) => (
-                  <Card
-                    key={group._id}
-                    className="hover:shadow-lg transition-shadow"
-                  >
-                    <CardBody className="space-y-4">
-                      <h3 className="text-xl font-semibold">{group.name}</h3>
-                      <p className="text-gray-600">{group.bio}</p>
-                      <div className="space-y-2">
-                        <p className="text-sm text-gray-600">
-                          Price: ₹{group.price}
-                        </p>
-                        <p className="text-sm text-gray-600">
-                          Members: {group.currentMembers}/{group.maxMembers}
-                        </p>
-                      </div>
-                    </CardBody>
-                    <CardFooter>
-                      <Button
-                        color="primary"
-                        className="w-full"
-                        onPress={() => setSelectedGroup(group)}
-                      >
-                        Join Group
-                      </Button>
-                    </CardFooter>
-                  </Card>
-                ))}
-              </div>
-            </div>
+            {renderGroupsTab()}
           </Tab>
         </Tabs>
       </div>

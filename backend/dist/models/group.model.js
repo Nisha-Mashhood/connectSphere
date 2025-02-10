@@ -38,6 +38,10 @@ const GroupSchema = new Schema({
         type: String,
         default: '' // Optional
     },
+    startDate: {
+        type: Date,
+        required: true
+    },
     adminId: {
         type: mongoose.Schema.Types.ObjectId,
         ref: 'User',

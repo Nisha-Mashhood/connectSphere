@@ -1,6 +1,7 @@
-import { createCollaboration, createTemporaryRequest, deleteMentorRequest, getCollabDataForMentor, getCollabDataForUser, getMentorRequestsByMentorId, getRequestByUserId, updateMentorRequestStatus } from "../repositories/collaboration.repositry.js";
-import stripe from '../utils/stripe.utils.js';
-import { v4 as uuid } from 'uuid';
+import { sendEmail } from "../utils/email.utils.js";
+import { createCollaboration, createTemporaryRequest, deleteMentorRequest, findCollabById, getCollabDataForMentor, getCollabDataForUser, getMentorRequestsByMentorId, getRequestByUserId, updateMentorRequestStatus, } from "../repositories/collaboration.repositry.js";
+import stripe from "../utils/stripe.utils.js";
+import { v4 as uuid } from "uuid";
 export const TemporaryRequestService = async (requestData) => {
     try {
         const newRequest = await createTemporaryRequest({
@@ -61,12 +62,12 @@ export const processPaymentService = async (token, amount, requestId, mentorRequ
         });
         const charge = await stripe.charges.create({
             amount,
-            currency: 'inr',
+            currency: "inr",
             customer: customer.id,
             receipt_email: token.email,
             description: `Payment for Request ID: ${requestId}`,
         }, { idempotencyKey });
-        if (charge.status === 'succeeded') {
+        if (charge.status === "succeeded") {
             // Calculate dates
             const startDate = new Date();
             const endDate = new Date(startDate);
@@ -110,5 +111,46 @@ export const getCollabDataForMentorService = async (mentorId) => {
     catch (error) {
         throw new Error(`Error getting collaboration data for mentor: ${error.message}`);
     }
+};
+//Delete collab
+export const removecollab = async (collabId) => {
+    // Check if the group exists
+    const collab = await findCollabById(collabId);
+    if (!collab) {
+        throw new Error("Collab not found");
+    }
+    // Ensure mentorId is an object, not a string
+    if (typeof collab.mentorId === "string") {
+        throw new Error("Mentor details are not populated properly.");
+    }
+    // Ensure userId in mentor is an object
+    if (typeof collab.mentorId.userId === "string") {
+        throw new Error("Mentor's user details are not populated properly.");
+    }
+    // Ensure userId is an object, not a string
+    if (typeof collab.userId === "string") {
+        throw new Error("User details are not populated properly.");
+    }
+    // Extract mentor details
+    const mentorEmail = collab.mentorId?.userId?.email;
+    const mentorName = collab.mentorId?.userId?.name;
+    const userName = collab.userId?.name;
+    if (!mentorEmail) {
+        throw new Error("Mentor email not found");
+    }
+    // Send cancellation email
+    const subject = "Mentorship Session Cancellation Notice";
+    const text = `Dear ${mentorName},
+
+  We regret to inform you that your mentorship session with ${userName} has been cancelled.
+
+  If you have any questions, please contact support.
+
+  Best regards,
+  ConnectSphere Team`;
+    await sendEmail(mentorEmail, subject, text);
+    console.log(`Cancellation email sent to mentor: ${mentorEmail}`);
+    // Delete all related group requests before deleting the group
+    //return await deleteCollabById(collabId);
 };
 //# sourceMappingURL=collaboration.service.js.map

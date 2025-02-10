@@ -18,9 +18,11 @@ import { FaCheckCircle, FaTimesCircle } from "react-icons/fa";
 
 const RequestsSection = (handleProfileClick) => {
   const { currentUser } = useSelector((state: RootState) => state.user);
-  const { mentorDetails } = useSelector((state: RootState) => state.profile);
+  const { mentorDetails,req } = useSelector((state: RootState) => state.profile);
   const [requests, setRequests] = useState([]);
   const [selectedRequest, setSelectedRequest] = useState(null);
+
+  console.log("req from redux is ",req);
 
   const fetchRequests = async () => {
     try {
@@ -226,3 +228,4 @@ const RequestsSection = (handleProfileClick) => {
 };
 
 export default RequestsSection;
+

@@ -11,6 +11,7 @@ export interface GroupDocument extends Document {
     availableSlots: TimeSlot[];
     profilePic: string;
     coverPic: string;
+    startDate: Date;
     adminId: mongoose.Types.ObjectId;
     members: {
         userId: mongoose.Types.ObjectId;

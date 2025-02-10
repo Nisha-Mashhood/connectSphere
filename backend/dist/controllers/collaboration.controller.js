@@ -1,4 +1,4 @@
-import { acceptRequest, getCollabDataForMentorService, getCollabDataForUserService, getMentorRequests, getRequsetForUser, processPaymentService, rejectRequest, TemporaryRequestService } from "../services/collaboration.service.js";
+import { acceptRequest, getCollabDataForMentorService, getCollabDataForUserService, getMentorRequests, getRequsetForUser, processPaymentService, rejectRequest, removecollab, TemporaryRequestService, } from "../services/collaboration.service.js";
 import mentorRequset from "../models/mentorRequset.js";
 export const TemporaryRequestController = async (req, res) => {
     try {
@@ -11,7 +11,7 @@ export const TemporaryRequestController = async (req, res) => {
             mentorId,
             userId,
             selectedSlot,
-            price
+            price,
         };
         const newRequest = await TemporaryRequestService(requestData);
         console.log(newRequest);
@@ -68,7 +68,12 @@ export const getRequsetForUserController = async (req, res) => {
     try {
         const { id } = req.params;
         const userRequest = await getRequsetForUser(id);
-        res.status(200).json({ message: "Request retrieved successfully", requests: userRequest });
+        res
+            .status(200)
+            .json({
+            message: "Request retrieved successfully",
+            requests: userRequest,
+        });
     }
     catch (error) {
         res.status(500).json({ message: error.message });
@@ -81,17 +86,19 @@ export const makeStripePaymentController = async (req, res) => {
         // Retrieve the mentor request document
         const mentorRequestData = await mentorRequset.findById(requestId);
         if (!mentorRequestData) {
-            res.status(404).json({ status: 'failure', message: 'Mentor request not found' });
+            res
+                .status(404)
+                .json({ status: "failure", message: "Mentor request not found" });
             return;
         }
         // Process payment and handle collaboration creation
         const paymentResult = await processPaymentService(token, amount, requestId, mentorRequestData);
-        res.status(200).json({ status: 'success', charge: paymentResult });
+        res.status(200).json({ status: "success", charge: paymentResult });
         return;
     }
     catch (error) {
-        console.error('Payment error:', error.message);
-        res.status(500).json({ status: 'failure', error: error.message });
+        console.error("Payment error:", error.message);
+        res.status(500).json({ status: "failure", error: error.message });
         return;
     }
 };
@@ -119,6 +126,22 @@ export const getCollabDataForMentorController = async (req, res) => {
     catch (error) {
         res.status(500).json({ message: error.message });
         return;
+    }
+};
+//delete collab
+export const deleteCollab = async (req, res) => {
+    const { collabId } = req.params;
+    try {
+        const response = await removecollab(collabId);
+        res.status(200).json({
+            status: "success",
+            message: "Collab deleted successfully",
+            response,
+        });
+    }
+    catch (error) {
+        console.error("Error:", error.message);
+        res.status(500).json({ status: "failure", error: error.message });
     }
 };
 //# sourceMappingURL=collaboration.controller.js.map

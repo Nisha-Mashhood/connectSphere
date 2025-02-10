@@ -19,6 +19,9 @@ import ExploreMentor from "../Components/User/UserComponents/ExploreMentor";
 import UserProfile from "../Components/User/UserComponents/UserProfile";
 import About from "../Components/User/Common/About";
 import CreateGroupForm from "../Components/User/Groups/CreateGroupForm";
+import GroupDetails from "../Components/User/Common/Profile/GroupDetails";
+import GroupDetailView from "../Components/User/Common/Profile/GroupDetailView";
+import CollaborationDetails from "../Components/User/Common/Profile/CollaborationDetails";
 
 
 
@@ -44,6 +47,9 @@ const UserRoutes = () => (
         <Route path="/explorementor" element={<ExploreMentor />} />
         <Route path="/userProfile/:userId" element={<UserProfile />} />
         <Route path="/create-group" element={<CreateGroupForm />} />
+        <Route path="/groupDetails/:groupId" element={<GroupDetails />} />
+        <Route path="/group/:groupId" element={<GroupDetailView />} />
+        <Route path="/collaboration/:collabId" element={<CollaborationDetails />} />
       </Route>
 
       <Route path="*" element={<PageNotFound />} />

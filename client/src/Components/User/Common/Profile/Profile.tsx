@@ -6,11 +6,16 @@ import { FaCalendarAlt, FaUsers } from "react-icons/fa";
 import RequestsSection from "./RequestSection";
 import GroupRequests from "./GroupRequests";
 import ActiveCollaborations from "./ActiveCollaborations";
+import GroupCollaborations from "./GroupCollaborations";
 
 const Profile = () => {
   const { currentUser } = useSelector((state: RootState) => state.user);
   const { mentorDetails } = useSelector((state: RootState) => state.profile);
   const navigate = useNavigate();
+
+  const { groupMemberships } = useSelector((state: RootState) => state.profile);
+  console.log("groupMemberships",groupMemberships);
+
 
   //   // Navigate to user profile page
   const handleUserProfileClick = (Id: string) => {
@@ -36,6 +41,7 @@ const Profile = () => {
             <RequestsSection handleProfileClick={handleUserProfileClick} />
             <GroupRequests />
             <ActiveCollaborations handleProfileClick={handleUserProfileClick} />
+            <GroupCollaborations handleProfileClick={handleUserProfileClick} />
           </div>
         </div>
       </div>

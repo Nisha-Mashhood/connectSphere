@@ -1,6 +1,10 @@
-import { createGroupRepository, getGroupRequestsByAdminId, getGroupRequestsByGroupId, getGroupRequestsByuserId, getGroups, getGroupsByAdminId, sendRequestToGroup, updateGroupRequestStatus, } from "../repositories/group.repositry.js";
+import { addMemberToGroup, createGroupRepository, deleteGroupById, deleteGroupRequest, deleteGroupRequestsByGroupId, findGrouptById, findRequestById, getGroupRequestsByAdminId, getGroupRequestsByGroupId, getGroupRequestsByuserId, getGroups, getGroupsByAdminId, getGroupsByGroupId, groupDetilsByUserId, removeGroupMemberById, sendRequestToGroup, updateGroupImageRepositry, updateGroupPaymentStatus, updateGroupReqStatus,
+// updateGroupRequestStatus,
+ } from "../repositories/group.repositry.js";
+import stripe from "../utils/stripe.utils.js";
+import { v4 as uuid } from "uuid";
 export const createGroupService = async (groupData) => {
-    if (!groupData.name || !groupData.bio || !groupData.adminId) {
+    if (!groupData.name || !groupData.bio || !groupData.adminId || !groupData.startDate) {
         throw new Error("Missing required fields: name, bio, or adminId");
     }
     if (!groupData.availableSlots || groupData.availableSlots.length === 0) {
@@ -22,6 +26,17 @@ export const fetchGroupDetails = async (adminId) => {
     }
     catch (error) {
         throw new Error(`Error in service layer: ${error.message}`);
+    }
+};
+//Get group details using groupId
+export const fetchGroupDetailsService = async (groupId) => {
+    try {
+        // Fetch groups using the repository
+        const groups = await getGroupsByGroupId(groupId);
+        return groups;
+    }
+    catch (error) {
+        throw new Error(`Error in group fetching: ${error.message}`);
     }
 };
 //Get all Groups
@@ -53,6 +68,107 @@ export const fetchGroupRequestsByuserId = async (userId) => {
 };
 //update the status to approved / rejected
 export const modifyGroupRequestStatus = async (requestId, status) => {
-    return await updateGroupRequestStatus(requestId, status);
+    const request = await findRequestById(requestId);
+    if (!request) {
+        throw new Error("Group request not found.");
+    }
+    const group = await findGrouptById(request.groupId);
+    if (!group) {
+        throw new Error("Group not found.");
+    }
+    // Check if the group has space
+    if (group.members.length >= group.maxMembers) {
+        throw new Error("Cannot accept request. Group is full.");
+    }
+    if (status === "Accepted") {
+        if (group.price > 0) {
+            await updateGroupReqStatus(requestId, "Accepted");
+            return;
+        }
+        else {
+            // If no payment is required, add user to group and delete request
+            await updateGroupReqStatus(requestId, "Accepted");
+            await addMemberToGroup(group._id.toString(), request.userId.toString());
+            await deleteGroupRequest(requestId);
+            return { message: "User added to group successfully." };
+        }
+    }
+    else if (status === "Rejected") {
+        return await updateGroupReqStatus(requestId, "Rejected");
+    }
+    throw new Error("Invalid status.");
+};
+export const processGroupPaymentService = async (token, amount, requestId, groupRequestData) => {
+    const idempotencyKey = uuid();
+    try {
+        const customer = await stripe.customers.create({
+            email: token.email,
+            source: token.id,
+        });
+        const charge = await stripe.charges.create({
+            amount,
+            currency: "inr",
+            customer: customer.id,
+            receipt_email: token.email,
+            description: `Payment for Group Request ID: ${requestId}`,
+        }, { idempotencyKey });
+        if (charge.status === "succeeded") {
+            // Update group payment status to "Paid"
+            await updateGroupPaymentStatus(requestId, amount / 100);
+            // Add the user to the group as a member
+            await addMemberToGroup(groupRequestData.groupId, groupRequestData.userId);
+            // Delete the group request since payment is completed
+            await deleteGroupRequest(requestId);
+        }
+        return charge;
+    }
+    catch (error) {
+        throw new Error(error.message);
+    }
+};
+export const removeMemberFromGroup = async (groupId, userId) => {
+    // Check if the group exists
+    const group = await findGrouptById(groupId);
+    if (!group) {
+        throw new Error("Group not found");
+    }
+    // Call the repository function to remove the user
+    const updatedGroup = await removeGroupMemberById(groupId, userId);
+    return updatedGroup;
+};
+export const deleteGroupByIdService = async (groupId) => {
+    // Check if the group exists
+    const group = await findGrouptById(groupId);
+    if (!group) {
+        throw new Error("Group not found");
+    }
+    // Delete all related group requests before deleting the group
+    await deleteGroupRequestsByGroupId(groupId);
+    // Call the repository function to delete the group
+    const deletedGroup = await deleteGroupById(groupId);
+    return deletedGroup;
+};
+//upload group images
+export const updateGroupImageService = async (groupId, profilePic, coverPic) => {
+    const updateData = {};
+    if (profilePic)
+        updateData.profilePic = profilePic;
+    if (coverPic)
+        updateData.coverPic = coverPic;
+    return await updateGroupImageRepositry(groupId, updateData);
+};
+//Get details of the group for the members of the group
+export const groupDetilsForMembers = async (userId) => {
+    try {
+        const groupDetails = await groupDetilsByUserId(userId);
+        if (!groupDetails) {
+            throw new Error("User is not a member of any of the registered groups");
+        }
+        return groupDetails;
+    }
+    catch (error) {
+        console.error("Error in GroupService:", error);
+        throw new Error("Error retrieving group details");
+    }
 };
 //# sourceMappingURL=group.service.js.map

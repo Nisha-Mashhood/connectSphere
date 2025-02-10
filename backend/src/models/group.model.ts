@@ -13,6 +13,7 @@ export interface GroupDocument extends Document {
   availableSlots: TimeSlot[];
   profilePic: string;
   coverPic: string;
+  startDate: Date;
   adminId: mongoose.Types.ObjectId; // the user who created the group
   members:{ userId: mongoose.Types.ObjectId; joinedAt: Date }[]; // Array of member IDs
   createdAt: Date;
@@ -67,6 +68,11 @@ const GroupSchema: Schema = new Schema<GroupDocument>(
         type: String, 
         default: ''     // Optional
     }, 
+    startDate: 
+    { 
+        type: Date, 
+        required: true 
+    },
     adminId: 
     { 
         type: mongoose.Schema.Types.ObjectId, 

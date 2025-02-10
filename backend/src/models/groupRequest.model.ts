@@ -3,7 +3,7 @@ import mongoose, { Schema, Document } from 'mongoose';
 export interface GroupRequestDocument extends Document {
   groupId: mongoose.Types.ObjectId; //  the group
   userId: mongoose.Types.ObjectId; //  the user who sent the request
-  status: 'Pending' | 'Approved' | 'Rejected'; // Request status
+  status: 'Pending' | 'Accepted' | 'Rejected'; // Request status
   paymentStatus: 'Pending' | 'Completed' | 'Failed'; // Payment status
   paymentId?: string; // Optional 
   amountPaid?: number; // Amount paid by the user
@@ -27,7 +27,7 @@ const GroupRequestSchema: Schema = new Schema<GroupRequestDocument>(
     status: 
     { 
         type: String, 
-        enum: ['Pending', 'Approved', 'Rejected'], 
+        enum: ['Pending', 'Accepted', 'Rejected'], 
         default: 'Pending' 
     },
     paymentStatus: 

@@ -2,11 +2,18 @@ import { useSelector } from 'react-redux';
 import { RootState } from '../../../../redux/store';
 import { calculateTimeLeft } from "../../../../lib/helperforprofile";
 import { FaClock } from "react-icons/fa";
+import { useNavigate } from 'react-router-dom';
 
 const ActiveCollaborations = (handleProfileClick) => {
+  const navigate = useNavigate();
     const { currentUser } = useSelector((state: RootState) => state.user);
     const { collabDetails } = useSelector((state: RootState) => state.profile);
+    console.log("collab Details",collabDetails);
   
+    const handleCollabClick = (collabId) => {
+      navigate(`/collaboration/${collabId}`);
+    };
+
     return (
       <div className="bg-white dark:bg-gray-800 p-6 rounded-lg shadow">
         <h2 className="text-2xl font-semibold mb-4 dark:text-white">
@@ -16,7 +23,8 @@ const ActiveCollaborations = (handleProfileClick) => {
         {collabDetails?.data?.map((collab: any) => (
                   <div
                     key={collab._id}
-                    className="bg-white dark:bg-gray-700 p-4 rounded-lg shadow-sm border border-gray-200 dark:border-gray-600"
+                    className="bg-white dark:bg-gray-700 p-4 rounded-lg shadow-sm border border-gray-200 dark:border-gray-600 cursor-pointer"
+                    onClick={() => handleCollabClick(collab._id)}
                   >
                     <div className="flex items-center space-x-4">
                       {/* Profile Picture */}

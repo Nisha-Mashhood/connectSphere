@@ -18,6 +18,7 @@ interface GroupFormData {
   availableSlots: TimeSlot[];
   profilePic: string;
   coverPic: string;
+  startDate: string;
 }
 
 const CreateGroupForm = () => {
@@ -31,7 +32,8 @@ const CreateGroupForm = () => {
     maxMembers: 10,
     availableSlots: [],
     profilePic: '',
-    coverPic: ''
+    coverPic: '',
+    startDate: ''
   });
 
   const [selectedDay, setSelectedDay] = useState('');
@@ -103,6 +105,26 @@ const CreateGroupForm = () => {
       toast.error('Please add at least one time slot');
       return;
     }
+
+    if (!formData.startDate) {
+      toast.error('Please select a start date');
+      return;
+    }
+
+    const startDate = new Date(formData.startDate);
+    const today = new Date();
+
+    if (startDate < today) {
+      toast.error('Start date must be a future date');
+      return;
+    }
+
+    const confirm = window.confirm(
+      'Once everything is set for the group, it cannot be changed. Do you want to proceed?'
+    );
+    if (!confirm) return;
+
+
     const membersData = [
       {
         userId: currentUser._id, 
@@ -158,6 +180,19 @@ const CreateGroupForm = () => {
                 className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
                 value={formData.bio}
                 onChange={e => setFormData(prev => ({ ...prev, bio: e.target.value }))}
+              />
+            </div>
+
+            <div>
+              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">
+                Start Date
+              </label>
+              <input
+                type="date"
+                required
+                className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
+                value={formData.startDate}
+                onChange={e => setFormData(prev => ({ ...prev, startDate: e.target.value }))}
               />
             </div>
 

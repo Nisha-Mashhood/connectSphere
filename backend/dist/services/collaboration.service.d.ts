@@ -34,4 +34,5 @@ export declare const getCollabDataForMentorService: (mentorId: string) => Promis
 }> & {
     __v: number;
 })[]>;
+export declare const removecollab: (collabId: string) => Promise<void>;
 //# sourceMappingURL=collaboration.service.d.ts.map
