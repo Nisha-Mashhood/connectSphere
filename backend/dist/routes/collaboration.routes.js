@@ -3,6 +3,7 @@ import { apiLimiter } from "../middlewares/ratelimit.middleware.js";
 import { checkBlockedStatus, verifyToken } from "../middlewares/auth.middleware.js";
 import * as collaborationController from '../controllers/collaboration.controller.js';
 const router = express.Router();
+//User- Mentor routes
 router.post("/create-mentorprofile", [apiLimiter, verifyToken, checkBlockedStatus], collaborationController.TemporaryRequestController);
 router.get("/get-mentor-requests", [apiLimiter, verifyToken, checkBlockedStatus], collaborationController.getMentorRequestsController);
 router.post("/accept-request/:id", [apiLimiter, verifyToken, checkBlockedStatus], collaborationController.acceptRequestController);

@@ -39,6 +39,7 @@ import toast from "react-hot-toast";
 import { FaSearch, FaUserFriends, FaUsers, FaUserTie } from "react-icons/fa";
 import { fetchCollabDetails, fetchGroupDetailsForMembers, fetchGroupRequests, fetchRequests } from "../../../redux/Slice/profileSlice";
 import RequestStatusHandler from "./HelperComponents/RequestStatusHandler";
+import { sendUser_UserRequset } from "../../../Service/User-User.Service";
 
 const ExploreMentors = () => {
   const { currentUser } = useSelector((state: RootState) => state.user);
@@ -181,10 +182,11 @@ const ExploreMentors = () => {
     }
   };
 
-  //ToDo user-user connection
+  //user-user connection
   const handleRequestUser = async () => {
     try {
       console.log(`Sending request to user ${selectedUser._id}`);
+      await sendUser_UserRequset(currentUser._id, selectedUser._id)
       setSelectedUser(null);
     } catch (error) {
       console.error("Error sending user request:", error);

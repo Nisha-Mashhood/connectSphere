@@ -11,6 +11,7 @@ import mentorRoutes from "./routes/mentor.routes.js";
 import collaborationRoutes from "./routes/collaboration.routes.js";
 import groupRoutes from "./routes/group.routes.js";
 import feedbackRoutes from './routes/feedback.routes.js';
+import user_userCollabRoutes from './routes/userCollaboration.routes.js';
 import helmet from "helmet";
 import cors from "cors";
 import cookieParser from "cookie-parser";
@@ -36,6 +37,7 @@ app.use("/api/mentors", mentorRoutes);
 app.use("/api/collaboration", collaborationRoutes);
 app.use("/api/group", groupRoutes);
 app.use("/api/feedback", feedbackRoutes);
+app.use("/api/user-userCollab", user_userCollabRoutes);
 // Placeholder route
 app.get("/", (_req, res) => {
     res.send("Connect Sphere Backend is running!");
