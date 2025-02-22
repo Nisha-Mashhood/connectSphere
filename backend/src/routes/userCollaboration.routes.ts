@@ -1,7 +1,7 @@
 import express from "express";
 import { apiLimiter } from "../middlewares/ratelimit.middleware.js";
 import { checkBlockedStatus, verifyToken } from "../middlewares/auth.middleware.js";
-import { disconnectConnectionController, getUserConnectionsController, respondToRequestController, sendRequestController } from "src/controllers/user-userCollab.controller.js";
+import { disconnectConnectionController, getUserConnectionsController, respondToRequestController, sendRequestController } from "../controllers/user-userCollab.controller.js";
 
 const router = express.Router();
 
