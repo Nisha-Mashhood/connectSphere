@@ -32,6 +32,11 @@ export declare const deleteCollabById: (collabId: string) => Promise<(import("mo
 }> & {
     __v: number;
 }) | null>;
+export declare const markCollabAsCancelled: (collabId: string) => Promise<(import("mongoose").Document<unknown, {}, ICollaboration> & ICollaboration & Required<{
+    _id: unknown;
+}> & {
+    __v: number;
+}) | null>;
 export declare const getCollabDataForUser: (userId: string) => Promise<(import("mongoose").Document<unknown, {}, ICollaboration> & ICollaboration & Required<{
     _id: unknown;
 }> & {

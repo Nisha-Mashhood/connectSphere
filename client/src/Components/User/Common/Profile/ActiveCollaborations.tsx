@@ -4,7 +4,7 @@ import { calculateTimeLeft } from "../../../../lib/helperforprofile";
 import { FaClock } from "react-icons/fa";
 import { useNavigate } from 'react-router-dom';
 
-const ActiveCollaborations = (handleProfileClick) => {
+const ActiveCollaborations = ({handleProfileClick}) => {
   const navigate = useNavigate();
     const { currentUser } = useSelector((state: RootState) => state.user);
     const { collabDetails } = useSelector((state: RootState) => state.profile);

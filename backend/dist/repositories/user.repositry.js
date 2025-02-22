@@ -33,7 +33,7 @@ export const findOrCreateUser = async (profile, provider) => {
 };
 // Update a user
 export const updateUser = async (id, updateData) => {
-    return await User.findByIdAndUpdate(id, updateData, { new: true });
+    return await User.findByIdAndUpdate(id, { $set: updateData }, { new: true });
 };
 //update password
 export const updatePassword = async (id, password) => User.findByIdAndUpdate(id, { password }, { new: true });

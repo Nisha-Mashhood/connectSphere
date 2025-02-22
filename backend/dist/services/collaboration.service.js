@@ -150,7 +150,6 @@ export const removecollab = async (collabId) => {
   ConnectSphere Team`;
     await sendEmail(mentorEmail, subject, text);
     console.log(`Cancellation email sent to mentor: ${mentorEmail}`);
-    // Delete all related group requests before deleting the group
-    //return await deleteCollabById(collabId);
+    //return await markCollabAsCancelled(collabId);
 };
 //# sourceMappingURL=collaboration.service.js.map

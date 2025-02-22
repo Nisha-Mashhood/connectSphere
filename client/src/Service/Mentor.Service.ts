@@ -86,3 +86,13 @@ export const getAllMentorProfile = async (userId) => {
     handleError(error)
   }
 };
+
+//update Mentor Profile
+export const updateMentorProfile = async(mentorId, mentorInfo) =>{
+  try {
+    const response = await axiosInstance.put(`/mentors/update-mentor/${mentorId}`,mentorInfo);
+    return response.data;
+  } catch (error) {
+    handleError(error)
+  }
+}

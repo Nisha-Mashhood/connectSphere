@@ -408,7 +408,7 @@ export const updateUserProfile = async (
     name: string;
     email: string;
     phone: string;
-    dateOfBirth: string;
+    dateOfBirth: string ;
     jobTitle: string;
     industry: string;
     reasonForJoining: string;
@@ -436,17 +436,19 @@ export const updateUserProfile = async (
 
   // Update user data
   const updatedData = {
-    name: data.name,
-    email: data.email,
-    phone: data.phone,
-    dateOfBirth: new Date(data.dateOfBirth),
-    jobTitle: data.jobTitle,
-    industry: data.industry,
-    reasonForJoining: data.reasonForJoining,
-    profilePic: profilePicUrl,
-    coverPic: coverPicUrl,
+  name: data.name || user.name,  
+  email: data.email || user.email,
+  phone: data.phone || user.phone,
+  dateOfBirth: data.dateOfBirth ? new Date(data.dateOfBirth) : user.dateOfBirth,  
+  jobTitle: data.jobTitle || user.jobTitle,
+  industry: data.industry || user.industry,
+  reasonForJoining: data.reasonForJoining || user.reasonForJoining,
+  profilePic: profilePicUrl,
+  coverPic: coverPicUrl,
   };
 
+
+  console.log(updatedData)
   const updatedUser = await updateUser(userId, updatedData);
   return updatedUser;
 };

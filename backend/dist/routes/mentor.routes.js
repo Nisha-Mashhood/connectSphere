@@ -11,6 +11,7 @@ router.put("/approvementorrequest/:id", [apiLimiter, verifyToken, authorize('adm
 router.delete("/rejectmentorrequest/:id", [apiLimiter, verifyToken, authorize('admin')], MentorController.rejectMentorRequest);
 router.put("/cancelmentorship/:mentorId", [apiLimiter, verifyToken, authorize('admin')], MentorController.cancelMentorship);
 router.get("/getmentorDetails/:mentorId", [apiLimiter, verifyToken, checkBlockedStatus,], MentorController.getMentorDetails);
+router.put("/update-mentor/:mentorId", [apiLimiter, verifyToken, checkBlockedStatus,], MentorController.updateMentorProfile);
 router.get("/getAllMentors", [apiLimiter, verifyToken, checkBlockedStatus], MentorController.getAllMentors);
 export default router;
 //# sourceMappingURL=mentor.routes.js.map

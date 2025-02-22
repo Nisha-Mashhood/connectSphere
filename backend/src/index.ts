@@ -10,6 +10,7 @@ import userRoutes from "./routes/user.routes.js";
 import mentorRoutes from "./routes/mentor.routes.js";
 import collaborationRoutes from "./routes/collaboration.routes.js";
 import groupRoutes from "./routes/group.routes.js";
+import feedbackRoutes from './routes/feedback.routes.js'
 import helmet from "helmet";
 import cors from "cors";
 import cookieParser from "cookie-parser";
@@ -41,6 +42,7 @@ app.use("/api/users", userRoutes);
 app.use("/api/mentors", mentorRoutes);
 app.use("/api/collaboration",collaborationRoutes);
 app.use("/api/group", groupRoutes);
+app.use("/api/feedback", feedbackRoutes);
 
 // Placeholder route
 app.get("/", (_req, res) => {

@@ -6,7 +6,7 @@ import { useNavigate } from "react-router-dom";
 import { getAllSkills } from "../../../Service/Category.Service";
 import { createMentorProfile } from "../../../Service/Mentor.Service";
 
-const MentorProfile = () => {
+const MentorProfileForm = () => {
   const navigate = useNavigate();
   const [loading, setLoading] = useState(false);
   const { currentUser } = useSelector((state: RootState) => state.user);
@@ -16,9 +16,9 @@ const MentorProfile = () => {
   const [selectedSkills, setSelectedSkills] = useState([]);
   const [specialization, setSpecialization] = useState("");
   const [certificates, setCertificates] = useState([]);
-  const [availableSlots, setAvailableSlots] = useState([
-    { day: "", timeSlots: [""] },
-  ]);
+  const [availableSlots, setAvailableSlots] = useState([]);
+  const [selectedDay, setSelectedDay] = useState("");
+  const [selectedTime, setSelectedTime] = useState("");
   const [dropdownOpen, setDropdownOpen] = useState(false);
 
   // Fetch skills from the Skill collection
@@ -66,128 +66,84 @@ const MentorProfile = () => {
 
     setCertificates(files);
   };
-  // Handle day input
-  const handleDayChange = (index, value) => {
-    const updatedSlots = [...availableSlots];
-    updatedSlots[index].day = value;
-    setAvailableSlots(updatedSlots);
+ 
+  const getSkillName = (skillId) => {
+    const skill = skills.find((s) => s._id === skillId);
+    return skill ? skill.name : '';
   };
+  
+  const DAYS_OF_WEEK = [
+    "Monday",
+    "Tuesday", 
+    "Wednesday",
+    "Thursday",
+    "Friday",
+    "Saturday",
+    "Sunday"
+  ];
 
-  // Handle time slot input
-  const handleTimeSlotChange = (dayIndex, timeIndex, value) => {
-    const updatedSlots = [...availableSlots];
-    updatedSlots[dayIndex].timeSlots[timeIndex] = value;
-    setAvailableSlots(updatedSlots);
-  };
+  const TIME_SLOTS = [
+    "09:00 AM - 10:30 AM",
+    "10:30 AM - 12:00 PM",
+    "01:00 PM - 02:30 PM",
+    "02:30 PM - 04:00 PM",
+    "04:00 PM - 05:30 PM"
+  ];
 
-  // Add a new time slot for a day
-  const addTimeSlot = (dayIndex) => {
-    const day = availableSlots[dayIndex];
-    if (day.timeSlots.length >= 2) {
-      toast.error("You can only add up to 2 time slots per day.");
+  const handleAddSlot = () => {
+    if (!selectedDay || !selectedTime) {
+      toast.error("Please select both day and time");
       return;
     }
 
-    setAvailableSlots((prevSlots) => {
-      const updatedSlots = [...prevSlots];
-      updatedSlots[dayIndex].timeSlots.push("");
+    // Check if maximum days limit is reached
+    if (!availableSlots.some(slot => slot.day === selectedDay) && availableSlots.length >= 3) {
+      toast.error("You can only add up to 3 days");
+      return;
+    }
+
+    // Check if the slot already exists
+    const existingDaySlot = availableSlots.find(slot => slot.day === selectedDay);
+    if (existingDaySlot) {
+      if (existingDaySlot.timeSlots.includes(selectedTime)) {
+        toast.error("This time slot already exists for the selected day");
+        return;
+      }
+      if (existingDaySlot.timeSlots.length >= 2) {
+        toast.error("You can only add up to 2 time slots per day");
+        return;
+      }
+    }
+
+    setAvailableSlots(prevSlots => {
+      const existingSlot = prevSlots.find(slot => slot.day === selectedDay);
+      if (existingSlot) {
+        return prevSlots.map(slot =>
+          slot.day === selectedDay
+            ? { ...slot, timeSlots: [...slot.timeSlots, selectedTime].sort() }
+            : slot
+        );
+      }
+      return [...prevSlots, { day: selectedDay, timeSlots: [selectedTime] }]
+        .sort((a, b) => DAYS_OF_WEEK.indexOf(a.day) - DAYS_OF_WEEK.indexOf(b.day));
+    });
+
+    setSelectedTime("");
+  };
+
+  const handleRemoveSlot = (day, time) => {
+    setAvailableSlots(prevSlots => {
+      const updatedSlots = prevSlots.map(slot => {
+        if (slot.day === day) {
+          const newTimeSlots = slot.timeSlots.filter(t => t !== time);
+          return newTimeSlots.length ? { ...slot, timeSlots: newTimeSlots } : null;
+        }
+        return slot;
+      }).filter(Boolean); // Remove any null entries
       return updatedSlots;
     });
   };
 
-  // Add a new day
-  const addDay = () => {
-    if (availableSlots.length >= 3) {
-      toast.error("You can only add up to 3 days.");
-      return;
-    }
-
-    setAvailableSlots((prevSlots) => [
-      ...prevSlots,
-      { day: "", timeSlots: [""] },
-    ]);
-  };
-
-  // Remove a specific day
-  const removeDay = (index) => {
-    const updatedSlots = availableSlots.filter((_, i) => i !== index);
-    setAvailableSlots(updatedSlots);
-  };
-
-  // Remove a specific time slot for a day
-  const removeTimeSlot = (dayIndex, timeIndex) => {
-    const updatedSlots = [...availableSlots];
-    updatedSlots[dayIndex].timeSlots = updatedSlots[dayIndex].timeSlots.filter(
-      (_, i) => i !== timeIndex
-    );
-    setAvailableSlots(updatedSlots);
-  };
-
-  const validateSlot = (slot) => {
-    // Days of the week for validation (case-insensitive)
-    const validDays = [
-      "monday",
-      "tuesday",
-      "wednesday",
-      "thursday",
-      "friday",
-      "saturday",
-      "sunday",
-    ];
-
-    // Check if day is valid (case-insensitive)
-    if (!validDays.includes(slot.day.toLowerCase())) {
-      toast.error(
-        `Invalid day entered: "${slot.day}". Please enter a valid day of the week (e.g., Monday, Tuesday).`
-      );
-      return false;
-    }
-
-    // Regular expression for time slot format (e.g., "09:00 AM - 10:30 AM")
-    const timeSlotRegex =
-      /^([0-9]{1,2}:[0-9]{2} (AM|PM)) - ([0-9]{1,2}:[0-9]{2} (AM|PM))$/i;
-
-    // Validate each time slot for the day
-    for (let timeSlot of slot.timeSlots) {
-      if (!timeSlotRegex.test(timeSlot)) {
-        toast.error(
-          `Invalid time slot format: "${timeSlot}". Please use the format "hh:mm AM/PM - hh:mm AM/PM".`
-        );
-        return false;
-      }
-
-      // Check if duration is within the 1.5-hour limit
-      const [start, end] = timeSlot.split(" - ");
-      const startTime = new Date(`1970-01-01T${convertTo24Hour(start)}`);
-      const endTime = new Date(`1970-01-01T${convertTo24Hour(end)}`);
-      const diffInMinutes =
-        (endTime.getTime() - startTime.getTime()) / (1000 * 60);
-
-      if (diffInMinutes > 90) {
-        toast.error(
-          `Time slot duration for ${slot.day} exceeds 1.5 hours. Please adjust the time slot "${timeSlot}".`
-        );
-        return false;
-      }
-    }
-
-    return true;
-  };
-
-  // Helper function to convert "hh:mm AM/PM" to 24-hour format
-  const convertTo24Hour = (time) => {
-    const [hour, minutePeriod] = time.split(":");
-    const [minute, period] = minutePeriod.split(" ");
-    let hour24 = parseInt(hour, 10);
-
-    if (period === "PM" && hour24 !== 12) {
-      hour24 += 12;
-    } else if (period === "AM" && hour24 === 12) {
-      hour24 = 0;
-    }
-
-    return `${hour24.toString().padStart(2, "0")}:${minute}`;
-  };
 
   // Submit Handler with Validation
   const handleSubmit = async (e) => {
@@ -228,12 +184,6 @@ const MentorProfile = () => {
       return;
     }
 
-    // Validate each slot
-    for (let slot of availableSlots) {
-      if (!validateSlot(slot)) {
-        return; // Stop submission if any slot is invalid
-      }
-    }
 
     // Proceed with form submission if all validations pass
 
@@ -341,40 +291,57 @@ const MentorProfile = () => {
 
         {/* Skills Dropdown */}
         <div className="form-group">
-          <label className="block font-medium mb-2">Skills</label>
-          <div className="relative">
-            <button
-              type="button"
-              onClick={() => setDropdownOpen(!dropdownOpen)} // Toggle dropdown visibility
-              className="w-full px-4 py-2 border rounded-md text-left"
-            >
-              {selectedSkills.length > 0
-                ? `${selectedSkills.length} Skills Selected`
-                : "Select Skills"}
-            </button>
-
-            {/* Dropdown Menu */}
-            {dropdownOpen && (
-              <div className="absolute left-0 right-0 mt-2 bg-white border rounded-md shadow-md z-10">
-                <ul className="max-h-60 overflow-y-auto">
-                  {skills.map((skill) => (
-                    <li
-                      key={skill._id}
-                      onClick={() => handleSkillChange(skill._id)} // Handle selection
-                      className={`px-4 py-2 cursor-pointer ${
-                        selectedSkills.includes(skill._id)
-                          ? "bg-blue-500 text-white"
-                          : "hover:bg-gray-100"
-                      }`}
-                    >
-                      {skill.name}
-                    </li>
-                  ))}
-                </ul>
+        <label className="block font-medium mb-2">Skills</label>
+        <div className="relative">
+          {/* Selected Skills Chips */}
+          <div className="flex flex-wrap gap-2 mb-2">
+            {selectedSkills.map((skillId) => (
+              <div
+                key={skillId}
+                className="bg-blue-100 text-blue-800 px-3 py-1 rounded-full flex items-center gap-2 text-sm"
+              >
+                <span>{getSkillName(skillId)}</span>
+                <button
+                  type="button"
+                  onClick={() => handleSkillChange(skillId)}
+                  className="hover:bg-blue-200 rounded-full w-4 h-4 flex items-center justify-center leading-none font-medium focus:outline-none"
+                >
+                  ×
+                </button>
               </div>
-            )}
+            ))}
           </div>
+
+          <button
+            type="button"
+            onClick={() => setDropdownOpen(!dropdownOpen)}
+            className="w-full px-4 py-2 border rounded-md text-left bg-white"
+          >
+            Select Skills
+          </button>
+
+          {/* Dropdown Menu */}
+          {dropdownOpen && (
+            <div className="absolute left-0 right-0 mt-2 bg-white border rounded-md shadow-md z-10">
+              <ul className="max-h-60 overflow-y-auto">
+                {skills.map((skill) => (
+                  <li
+                    key={skill._id}
+                    onClick={() => handleSkillChange(skill._id)}
+                    className={`px-4 py-2 cursor-pointer ${
+                      selectedSkills.includes(skill._id)
+                        ? "bg-blue-500 text-white"
+                        : "hover:bg-gray-100"
+                    }`}
+                  >
+                    {skill.name}
+                  </li>
+                ))}
+              </ul>
+            </div>
+          )}
         </div>
+      </div>
 
         {/* Certificate preview */}
         <div className="form-group">
@@ -406,68 +373,78 @@ const MentorProfile = () => {
           </div>
         </div>
 
-        {/* Available Slots */}
-        <div className="form-group">
-          <label className="block font-medium mb-2">Available Slots</label>
-          {availableSlots.map((slot, index) => (
-            <div key={index} className="mb-4 p-4 border rounded-md">
-              {/* Day Input */}
-              <div className="flex gap-4 mb-2">
-                <input
-                  type="text"
-                  placeholder="Enter day (e.g., Monday)"
-                  value={slot.day}
-                  onChange={(e) => handleDayChange(index, e.target.value)}
-                  className="flex-1 px-4 py-2 border rounded-md"
-                />
-                <button
-                  type="button"
-                  onClick={() => removeDay(index)}
-                  className="text-red-500 font-bold"
-                >
-                  Remove Day
-                </button>
-              </div>
-              {/* Time Slots */}
-              {slot.timeSlots.map((time, timeIndex) => (
-                <div key={timeIndex} className="flex gap-4 mb-2">
-                  <input
-                    type="text"
-                    placeholder="Enter time slot (e.g., 9:00 AM - 10:30 AM)"
-                    value={time}
-                    onChange={(e) =>
-                      handleTimeSlotChange(index, timeIndex, e.target.value)
-                    }
-                    className="flex-1 px-4 py-2 border rounded-md"
-                  />
-                  {timeIndex === slot.timeSlots.length - 1 && (
-                    <button
-                      type="button"
-                      onClick={() => addTimeSlot(index)}
-                      className="text-green-500 font-bold"
-                    >
-                      Add Time Slot
-                    </button>
-                  )}
-                  <button
-                    type="button"
-                    onClick={() => removeTimeSlot(index, timeIndex)}
-                    className="text-red-500 font-bold"
-                  >
-                    Remove
-                  </button>
-                </div>
+        {/* Available Slots Section */}
+      <div className="form-group space-y-4">
+        <label className="block font-medium mb-2">Available Slots</label>
+        
+        <div className="grid grid-cols-2 gap-4">
+          {/* Day Selection */}
+          <div>
+            <label className="block text-sm font-medium mb-1">Select Day</label>
+            <select
+              value={selectedDay}
+              onChange={(e) => setSelectedDay(e.target.value)}
+              className="w-full px-4 py-2 border rounded-md"
+            >
+              <option value="">Choose a day</option>
+              {DAYS_OF_WEEK.map(day => (
+                <option key={day} value={day}>{day}</option>
               ))}
-            </div>
-          ))}
-          <button
-            type="button"
-            onClick={addDay}
-            className="px-4 py-2 bg-blue-500 text-white font-bold rounded-md"
-          >
-            Add Day
-          </button>
+            </select>
+          </div>
+
+          {/* Time Selection */}
+          <div>
+            <label className="block text-sm font-medium mb-1">Select Time</label>
+            <select
+              value={selectedTime}
+              onChange={(e) => setSelectedTime(e.target.value)}
+              className="w-full px-4 py-2 border rounded-md"
+            >
+              <option value="">Choose a time</option>
+              {TIME_SLOTS.map(time => (
+                <option key={time} value={time}>{time}</option>
+              ))}
+            </select>
+          </div>
         </div>
+
+        <button
+          type="button"
+          onClick={handleAddSlot}
+          className="w-full px-4 py-2 bg-blue-500 text-white font-bold rounded-md hover:bg-blue-600"
+        >
+          Add Time Slot
+        </button>
+
+        {/* Display Selected Slots */}
+        {availableSlots.length > 0 && (
+          <div className="mt-4 space-y-4">
+            {availableSlots.map((slot) => (
+              <div key={slot.day} className="p-4 border rounded-md">
+                <div className="font-medium text-lg mb-2">{slot.day}</div>
+                <div className="flex flex-wrap gap-2">
+                  {slot.timeSlots.map((time) => (
+                    <div
+                      key={`${slot.day}-${time}`}
+                      className="inline-flex items-center bg-blue-100 px-3 py-1 rounded-full"
+                    >
+                      <span className="mr-2">{time}</span>
+                      <button
+                        type="button"
+                        onClick={() => handleRemoveSlot(slot.day, time)}
+                        className="text-red-500 hover:text-red-700"
+                      >
+                        ×
+                      </button>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            ))}
+          </div>
+        )}
+      </div>
 
         {/* Submit */}
         <button
@@ -486,4 +463,4 @@ const MentorProfile = () => {
   );
 };
 
-export default MentorProfile;
+export default MentorProfileForm;

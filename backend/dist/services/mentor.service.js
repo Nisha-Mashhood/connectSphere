@@ -118,7 +118,12 @@ export const getMentorByUserId = async (userId) => {
 // Update mentor details by mentorId
 export const updateMentorById = async (mentorId, updateData) => {
     try {
-        return await MentorRepository.updateMentorById(mentorId, updateData);
+        const mentor = await MentorRepository.getMentorById(mentorId);
+        if (!mentor) {
+            throw new Error("Mentor not found.");
+        }
+        const MentorData = await MentorRepository.updateMentorById(mentorId, updateData);
+        return MentorData;
     }
     catch (error) {
         throw new Error("Error updating mentor details: " + error.message);

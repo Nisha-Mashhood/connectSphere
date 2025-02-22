@@ -11,15 +11,25 @@ import {
   updateGroupRequest,
   uploadGroupPicture,
 } from "../../../../Service/Group.Service";
-import toast from "react-hot-toast";
+import {
+  Card,
+  CardBody,
+  Button,
+  Avatar,
+  Spinner,
+  Chip,
+  User,
+  Divider,
+} from "@nextui-org/react";
 import {
   FaUser,
-  FaEnvelope,
   FaCheck,
   FaTimes,
   FaTrash,
   FaCamera,
+  FaUserFriends,
 } from "react-icons/fa";
+import toast from "react-hot-toast";
 
 const GroupDetails = () => {
   const navigate = useNavigate();
@@ -144,58 +154,80 @@ const GroupDetails = () => {
     }
   };
 
-  if (loading) return <p className="text-center text-gray-600">Loading...</p>;
-  if (error) return <p className="text-center text-red-500">{error}</p>;
+  if (loading) {
+    return (
+      <div className="flex justify-center items-center min-h-screen">
+        <Spinner size="lg" color="primary" />
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <Card className="max-w-md mx-auto mt-8">
+        <CardBody>
+          <p className="text-danger text-center">{error}</p>
+        </CardBody>
+      </Card>
+    );
+  }
 
   return (
-    <div className="bg-white dark:bg-gray-800 rounded-lg shadow-lg overflow-hidden">
+    <div className="max-w-7xl mx-auto p-4">
       {group && (
-        <>
-          {/* Group Cover Image */}
+        <Card className="w-full shadow-md">
+          {/* Cover Image Section */}
           <div
             className="relative h-40 md:h-60"
             onMouseEnter={() => setIsHoveringCover(true)}
             onMouseLeave={() => setIsHoveringCover(false)}
           >
             <img
-              src={group.coverPic || "https://via.placeholder.com/1200x400"}
+              src={group.coverPic || "/api/placeholder/1200/400"}
               alt="Group Cover"
               className="w-full h-full object-cover"
             />
             {isHoveringCover && group.adminId === currentUser._id && (
-              <div className="absolute inset-0 bg-black bg-opacity-50 flex items-center justify-center">
-                <label className="cursor-pointer bg-white text-black px-4 py-2 rounded-lg hover:bg-gray-200">
-                  <input
-                    type="file"
-                    className="hidden"
-                    accept="image/*"
-                    onChange={(e) => handlePhotoUpload(e, "cover")}
-                  />
-                  Change Cover Photo
+              <div className="absolute inset-0 bg-black/50 flex items-center justify-center">
+                <label className="cursor-pointer">
+                  <Button
+                    color="default"
+                    variant="flat"
+                    startContent={<FaCamera />}
+                  >
+                    Change Cover
+                    <input
+                      type="file"
+                      className="hidden"
+                      accept="image/*"
+                      onChange={(e) => handlePhotoUpload(e, "cover")}
+                    />
+                  </Button>
                 </label>
               </div>
             )}
+            
+            {/* Profile Picture */}
             <div
-              className="absolute bottom-[-40px] left-4"
+              className="absolute -bottom-10 left-6"
               onMouseEnter={() => setIsHoveringProfile(true)}
               onMouseLeave={() => setIsHoveringProfile(false)}
             >
               <div className="relative">
-                <img
-                  src={group.profilePic || "https://via.placeholder.com/100"}
-                  alt="Group Profile"
-                  className="w-20 h-20 rounded-full border-4 border-white dark:border-gray-800 shadow-md"
+                <Avatar
+                  src={group.profilePic || "/api/placeholder/200/200"}
+                  className="w-20 h-20 text-large border-4 border-white"
                 />
                 {isHoveringProfile && group.adminId === currentUser._id && (
-                  <div className="absolute inset-0 bg-black bg-opacity-50 rounded-full flex items-center justify-center">
+                  <div className="absolute inset-0 bg-black/50 rounded-full flex items-center justify-center">
                     <label className="cursor-pointer">
+                      <FaCamera className="text-white text-xl" />
                       <input
                         type="file"
                         className="hidden"
                         accept="image/*"
                         onChange={(e) => handlePhotoUpload(e, "profile")}
                       />
-                      <FaCamera className="text-white text-xl" />
                     </label>
                   </div>
                 )}
@@ -203,150 +235,151 @@ const GroupDetails = () => {
             </div>
           </div>
 
-          {/* Group Details */}
-          <div className="p-6 mt-6 flex justify-between items-center">
-            <div>
-              <h3 className="text-2xl font-bold dark:text-white">
-                {group.name}
-              </h3>
-              <p className="text-gray-700 dark:text-gray-300">{group.bio}</p>
-              <p className="text-sm text-gray-600 dark:text-gray-400">
-                Max Members: {group.maxMembers}
-              </p>
-            </div>
-
-            {/* Delete Group Button (Only visible for Admin) */}
-            {group.adminId === currentUser._id && (
-              <button
-                onClick={handleDeleteGroup}
-                className="bg-red-500 hover:bg-red-600 text-white px-3 py-1 rounded flex items-center"
-              >
-                <FaTrash className="mr-1" />
-              </button>
-            )}
-          </div>
-        </>
-      )}
-
-      {/* User Requests List */}
-      <div className="p-6 space-y-4">
-        <h2 className="text-xl font-semibold dark:text-white">
-          Group Requests
-        </h2>
-
-        {groupRequests.length === 0 && (
-          <p className="text-center text-gray-500 dark:text-gray-400 py-4">
-            No requests to manage.
-          </p>
-        )}
-
-        {groupRequests.map((req) => (
-          <div
-            key={req._id}
-            className="bg-gray-50 dark:bg-gray-700 p-4 rounded-lg shadow-sm border border-gray-300 dark:border-gray-600"
-          >
-            <div className="flex items-center justify-between">
-              <div className="flex items-center space-x-4">
-                <FaUser
-                  className="text-blue-500 dark:text-blue-300"
-                  size={20}
-                />
-                <div>
-                  <p className="font-semibold dark:text-white">
-                    {req.userId.name}
-                  </p>
-                  <p className="text-sm text-gray-600 dark:text-gray-300 flex items-center">
-                    <FaEnvelope className="mr-1" /> {req.userId.email}
-                  </p>
-                  <p className="text-sm text-gray-500">Status: {req.status}</p>
-                </div>
+          <CardBody className="mt-12 px-6">
+            <div className="flex justify-between items-start">
+              <div>
+                <h3 className="text-2xl font-bold">{group.name}</h3>
+                <p className="text-default-500">{group.bio}</p>
+                <Chip className="mt-2" color="primary" variant="flat">
+                  {group.maxMembers} Max Members
+                </Chip>
               </div>
-              <div className="flex space-x-2">
-                {req.status === "Pending" && (
-                  <>
-                    <button
-                      onClick={() => handleRequestUpdate(req._id, "Accepted")}
-                      className="bg-green-500 hover:bg-green-600 text-white px-3 py-1 rounded flex items-center"
-                    >
-                      <FaCheck className="mr-1" /> Accept
-                    </button>
-                    <button
-                      onClick={() => handleRequestUpdate(req._id, "Rejected")}
-                      className="bg-red-500 hover:bg-red-600 text-white px-3 py-1 rounded flex items-center"
-                    >
-                      <FaTimes className="mr-1" /> Reject
-                    </button>
-                  </>
-                )}
-                {req.status === "Accepted" && (
-                  <span className="text-green-600 font-bold">Accepted</span>
-                )}
-                {req.status === "Rejected" && (
-                  <span className="text-red-600 font-bold">Rejected</span>
-                )}
-              </div>
-            </div>
-          </div>
-        ))}
-      </div>
 
-      {/* Group Members List */}
-      <div className="p-6 space-y-4">
-        <h2 className="text-xl font-semibold dark:text-white">Group Members</h2>
-
-        {group?.members?.length > 0 ? (
-          group.members
-            .filter((member) => member.userId?._id !== group.adminId)
-            .map((member) => (
-              <div
-                key={member._id}
-                className="bg-gray-50 dark:bg-gray-700 p-4 rounded-lg shadow-sm border border-gray-300 dark:border-gray-600 flex items-center justify-between"
-              >
-                <div className="flex items-center space-x-4">
-                  <img
-                    src={
-                      member.userId?.profilePic ||
-                      "https://via.placeholder.com/100"
-                    }
-                    alt="Profile"
-                    className="w-10 h-10 rounded-full border"
-                  />
-                  <div>
-                    <p className="font-semibold dark:text-white">
-                      {member.userId?.name || "Unknown"}
-                    </p>
-                    <p className="text-sm text-gray-600 dark:text-gray-300">
-                      {member.userId?.jobTitle || "No job title"}
-                    </p>
-                    <p className="text-sm text-gray-600 dark:text-gray-300">
-                      Joining Date:{" "}
-                      {member.joinedAt
-                        ? new Date(member.joinedAt).toLocaleDateString(
-                            "en-US",
-                            {
-                              year: "numeric",
-                              month: "long",
-                              day: "numeric",
-                            }
-                          )
-                        : "Unknown"}
-                    </p>
-                  </div>
-                </div>
-                <button
-                  onClick={() => handleRemoveUser(member.userId?._id)}
-                  className="bg-red-500 hover:bg-red-600 text-white px-3 py-1 rounded"
+              {group.adminId === currentUser._id && (
+                <Button
+                  color="danger"
+                  variant="flat"
+                  startContent={<FaTrash />}
+                  onClick={handleDeleteGroup}
                 >
-                  Remove
-                </button>
-              </div>
-            ))
-        ) : (
-          <p className="text-center text-gray-500 dark:text-gray-400 py-4">
-            No members yet.
-          </p>
-        )}
-      </div>
+                  Delete Group
+                </Button>
+              )}
+            </div>
+
+            <Divider className="my-6" />
+
+            {/* Group Requests Section */}
+            <div className="space-y-4">
+              <h2 className="text-xl font-semibold flex items-center gap-2">
+                <FaUserFriends />
+                Group Requests
+              </h2>
+
+              {groupRequests.length === 0 ? (
+                <Card>
+                  <CardBody>
+                    <p className="text-center text-default-500">
+                      No pending requests
+                    </p>
+                  </CardBody>
+                </Card>
+              ) : (
+                <div className="space-y-4">
+                  {groupRequests.map((req) => (
+                    <Card key={req._id}>
+                      <CardBody>
+                        <div className="flex justify-between items-center">
+                          <User
+                            name={req.userId.name}
+                            description={req.userId.email}
+                            avatarProps={{
+                              icon: <FaUser />
+                            }}
+                          />
+                          
+                          <div className="flex gap-2">
+                            {req.status === "Pending" ? (
+                              <>
+                                <Button
+                                  color="success"
+                                  variant="flat"
+                                  startContent={<FaCheck />}
+                                  onClick={() => handleRequestUpdate(req._id, "Accepted")}
+                                >
+                                  Accept
+                                </Button>
+                                <Button
+                                  color="danger"
+                                  variant="flat"
+                                  startContent={<FaTimes />}
+                                  onClick={() => handleRequestUpdate(req._id, "Rejected")}
+                                >
+                                  Reject
+                                </Button>
+                              </>
+                            ) : (
+                              <Chip
+                                color={req.status === "Accepted" ? "success" : "danger"}
+                              >
+                                {req.status}
+                              </Chip>
+                            )}
+                          </div>
+                        </div>
+                      </CardBody>
+                    </Card>
+                  ))}
+                </div>
+              )}
+            </div>
+
+            <Divider className="my-6" />
+
+            {/* Members Section */}
+            <div className="space-y-4">
+              <h2 className="text-xl font-semibold flex items-center gap-2">
+                <FaUserFriends />
+                Group Members
+              </h2>
+
+              {group?.members?.length > 0 ? (
+                <div className="space-y-4">
+                  {group.members
+                    .filter((member) => member.userId?._id !== group.adminId)
+                    .map((member) => (
+                      <Card key={member._id}>
+                        <CardBody>
+                          <div className="flex justify-between items-center">
+                            <User
+                              name={member.userId?.name || "Unknown"}
+                              description={member.userId?.jobTitle || "No job title"}
+                              avatarProps={{
+                                src: member.userId?.profilePic || "/api/placeholder/100/100"
+                              }}
+                            />
+                            
+                            <div className="flex items-center gap-4">
+                              <Chip variant="flat" size="sm">
+                                Joined {new Date(member.joinedAt).toLocaleDateString()}
+                              </Chip>
+                              <Button
+                                color="danger"
+                                variant="flat"
+                                size="sm"
+                                onClick={() => handleRemoveUser(member.userId?._id)}
+                              >
+                                Remove
+                              </Button>
+                            </div>
+                          </div>
+                        </CardBody>
+                      </Card>
+                    ))}
+                </div>
+              ) : (
+                <Card>
+                  <CardBody>
+                    <p className="text-center text-default-500">
+                      No members yet
+                    </p>
+                  </CardBody>
+                </Card>
+              )}
+            </div>
+          </CardBody>
+        </Card>
+      )}
     </div>
   );
 };

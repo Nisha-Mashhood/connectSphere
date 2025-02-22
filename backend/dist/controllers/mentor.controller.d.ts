@@ -8,4 +8,5 @@ export declare const getMentorByUserId: (req: Request, res: Response) => Promise
 export declare const approveMentorRequest: (req: Request, res: Response) => Promise<void>;
 export declare const rejectMentorRequest: (req: Request, res: Response) => Promise<void>;
 export declare const cancelMentorship: (req: Request, res: Response) => Promise<void>;
+export declare const updateMentorProfile: (req: Request, res: Response) => Promise<void>;
 //# sourceMappingURL=mentor.controller.d.ts.map

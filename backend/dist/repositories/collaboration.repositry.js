@@ -86,10 +86,19 @@ export const deleteCollabById = async (collabId) => {
         throw new Error("Error fetching group requests: " + error.message);
     }
 };
+//mark collaboration as cancelled
+export const markCollabAsCancelled = async (collabId) => {
+    try {
+        return await Collaboration.findByIdAndUpdate(collabId, { isCancelled: true }, { new: true });
+    }
+    catch (error) {
+        throw new Error("Error updating collaboration: " + error.message);
+    }
+};
 //Get collab data For user
 export const getCollabDataForUser = async (userId) => {
     try {
-        const collabData = await Collaboration.find({ userId })
+        const collabData = await Collaboration.find({ userId, isCancelled: false })
             .populate({
             path: 'mentorId',
             populate: {
@@ -106,7 +115,7 @@ export const getCollabDataForUser = async (userId) => {
 //get collab data for mentor
 export const getCollabDataForMentor = async (mentorId) => {
     try {
-        const collabData = await Collaboration.find({ mentorId })
+        const collabData = await Collaboration.find({ mentorId, isCancelled: false })
             .populate("userId", "name email profilePic");
         return collabData;
     }

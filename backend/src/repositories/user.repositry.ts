@@ -42,7 +42,7 @@ export const updateUser = async (
   id: string,
   updateData: Partial<UserInterface>
 ) => {
-  return await User.findByIdAndUpdate(id, updateData, { new: true });
+  return await User.findByIdAndUpdate(id, { $set: updateData }, { new: true });
 };
 
 //update password

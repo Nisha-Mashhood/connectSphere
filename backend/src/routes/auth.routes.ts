@@ -64,6 +64,7 @@ router.get(
   [apiLimiter, verifyToken, checkBlockedStatus],
   getprofileDetails
 );
+
 router.put(
   "/updateUserDetails/:Id",
   [

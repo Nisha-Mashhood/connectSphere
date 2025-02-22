@@ -63,3 +63,35 @@ export const verifyAdminPasskey = async (passkey) => {
     handleError(error)
   }
 };
+
+export const updateUserImages = async(userId: string, formData: FormData) =>{
+  try {
+    const response = await axiosInstance.put(`/auth/updateUserDetails/${userId}`,
+      formData,
+      {
+        headers: { "Content-Type": "multipart/form-data" },
+      });
+      return response.data;
+  } catch (error) {
+    handleError(error)
+  }
+}
+
+export const updateUserProfessionalInfo = async(userId: string, data: { industry: string; reasonForJoining: string; jobTitle: string }) =>{
+  try {
+    const response = await axiosInstance.put(`/auth/updateUserDetails/${userId}`, data);
+      return response.data;
+  } catch (error) {
+    handleError(error)
+  }
+}
+
+// Update contact information
+export const updateContactInfo = async (userId: string, data: { email: string; phone: string; dateOfBirth: string }) => {
+  try {
+    const response = await axiosInstance.put(`/auth/updateUserDetails/${userId}`, data);
+    return response.data;
+  } catch (error) {
+    throw error;
+  }
+};

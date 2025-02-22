@@ -1,4 +1,4 @@
-import React from "react";
+import { useState } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { useDispatch, useSelector } from "react-redux";
 import {
@@ -17,13 +17,14 @@ import { FaCalendarAlt } from "react-icons/fa";
 import { AppDispatch, RootState } from "../../../../redux/store";
 import { cancelCollab } from "../../../../Service/collaboration.Service";
 import { fetchCollabDetails } from "../../../../redux/Slice/profileSlice";
-
+import FeedbackModal from "./FeedbackModal";
 
 const CollaborationDetails = () => {
   const { collabId } = useParams();
   const navigate = useNavigate();
   const dispatch = useDispatch<AppDispatch>();
-  const [showCancelDialog, setShowCancelDialog] = React.useState(false);
+  const [showCancelDialog, setShowCancelDialog] = useState(false);
+  const [showFeedbackModal, setShowFeedbackModal] = useState(false);
 
   const { currentUser } = useSelector((state: RootState) => state.user);
   const { collabDetails } = useSelector((state: RootState) => state.profile);
@@ -52,15 +53,24 @@ const CollaborationDetails = () => {
   const profilePic = otherPartyDetails?.profilePic;
 
   const handleCancelMentorship = async () => {
+    setShowCancelDialog(false);
+    setShowFeedbackModal(true);
+  };
+
+  const handleFeedbackComplete = async () => {
     try {
-       const response = await cancelCollab(collabId);
-       console.log(response);
-        setShowCancelDialog(false);
-        // After successful deletion, refresh the collaboration data in redux store
-      await dispatch(fetchCollabDetails({ 
-        userId: currentUser._id, 
-        role: currentUser.role 
-      }));
+      const response = await cancelCollab(collabId);
+      console.log(response);
+
+      // After successful deletion, refresh the collaboration data in redux store
+      await dispatch(
+        fetchCollabDetails({
+          userId: currentUser._id,
+          role: currentUser.role,
+        })
+      );
+
+      setShowFeedbackModal(false);
       navigate("/profile");
     } catch (error) {
       console.error("Error cancelling mentorship:", error);
@@ -168,7 +178,7 @@ const CollaborationDetails = () => {
                 !collaboration.isCancelled && (
                   <Button
                     color="danger"
-                    onClick={() => setShowCancelDialog(true)}
+                    onPress={() => setShowCancelDialog(true)}
                   >
                     Cancel Mentorship
                   </Button>
@@ -204,6 +214,12 @@ const CollaborationDetails = () => {
             </ModalFooter>
           </ModalContent>
         </Modal>
+        <FeedbackModal
+          isOpen={showFeedbackModal}
+          onClose={() => setShowFeedbackModal(false)}
+          collaborationData={collaboration}
+          onComplete={handleFeedbackComplete}
+        />
       </div>
     </div>
   );

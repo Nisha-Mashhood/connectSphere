@@ -147,7 +147,14 @@ const profileSlice = createSlice({
     loading: false,
     error: null,
   },
-  reducers: {},
+  reducers: {
+    updateMentorInfo: (state, action) => {
+      state.mentorDetails = {
+        ...state.mentorDetails,
+        ...action.payload
+      };
+    },
+  },
   extraReducers: (builder) => {
     builder
       // Fetch Mentor Details
@@ -237,5 +244,9 @@ const profileSlice = createSlice({
       });
   },
 });
+
+export const { 
+  updateMentorInfo,
+} = profileSlice.actions;
 
 export default profileSlice.reducer;

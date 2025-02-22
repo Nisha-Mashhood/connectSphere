@@ -9,7 +9,7 @@ import ResetPassword from "../Components/User/Auth/ResetPassword";
 import Profile from "../Components/User/Common/Profile/Profile";
 import PrivateRoute from "../Components/User/PrivateRoute";
 import CompleteProfile from "../Components/User/UserComponents/CompleteProfile";
-import MentorProfile from "../Components/User/Mentor/MentorProfile";
+import MentorProfileForm from "../Components/User/Mentor/MentorProfileForm";
 import ProfileDisplay from "../Components/User/Mentor/Mentorship";
 import PageNotFound from "../Components/PageNotFound";
 import { ForbiddenPage } from "../Components/ForebiddenPage";
@@ -41,7 +41,7 @@ const UserRoutes = () => (
       <Route element={<PrivateRoute />}>
         <Route path="/complete-profile" element={<CompleteProfile />} />
         <Route path="/profile" element={<Profile />} />
-        <Route path="/mentorProfile" element={<MentorProfile />} />
+        <Route path="/mentorProfile" element={<MentorProfileForm />} />
         <Route path="/profileDispaly/:Id" element={< ProfileDisplay />} />
         {/* <Route path="/mymentorProfilePage" element={< MyMentorProfilePage />} /> */}
         <Route path="/explorementor" element={<ExploreMentor />} />

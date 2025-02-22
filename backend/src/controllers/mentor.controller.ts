@@ -166,3 +166,16 @@ export const cancelMentorship = async (req:Request, res:Response) => {
     res.status(500).json({ error: error.message });
   }
 };
+
+//update mentor Profile
+export const updateMentorProfile = async(req:Request, res:Response) =>{
+  try {
+    const { mentorId } = req.params;
+    const updateData = req.body;
+    const MentorData = await MentorService.updateMentorById(mentorId, updateData);
+    res.status(200).json({ message: 'Mentor Profile Updated successfully.', MentorData });
+
+  } catch (error: any) {
+    res.status(500).json({ error: error.message });
+  }
+}

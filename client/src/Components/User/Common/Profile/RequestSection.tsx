@@ -16,7 +16,7 @@ import StripeCheckout from "react-stripe-checkout";
 import { RootState } from "../../../../redux/store";
 import { FaCheckCircle, FaTimesCircle } from "react-icons/fa";
 
-const RequestsSection = (handleProfileClick) => {
+const RequestsSection = ({handleProfileClick}) => {
   const { currentUser } = useSelector((state: RootState) => state.user);
   const { mentorDetails,req } = useSelector((state: RootState) => state.profile);
   const [requests, setRequests] = useState([]);

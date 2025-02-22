@@ -2,7 +2,6 @@ import { sendEmail } from "../utils/email.utils.js";
 import {
   createCollaboration,
   createTemporaryRequest,
-  deleteCollabById,
   deleteMentorRequest,
   findCollabById,
   getCollabDataForMentor,
@@ -189,5 +188,5 @@ export const removecollab = async (collabId: string) => {
 
   console.log(`Cancellation email sent to mentor: ${mentorEmail}`);
 
-  return await deleteCollabById(collabId);
+  //return await markCollabAsCancelled(collabId);
 };

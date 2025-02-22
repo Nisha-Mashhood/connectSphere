@@ -22,7 +22,7 @@ const CollaborationSchema = new Schema({
     },
     isCancelled: {
         type: Boolean,
-        fefault: false,
+        default: false,
     },
     price: {
         type: Number,

@@ -185,23 +185,16 @@ export const getprofileDetails = async (req: Request, res: Response) => {
 export const updateUserDetails = async (req: Request, res: Response) => {
   try {
     const id = req.params.Id;
-    const { name, email, phone, dateOfBirth, jobTitle, industry, reasonForJoining } = req.body;
+    const updateData: any = req.body;
+
 
     // Uploaded files (from multer)
     const profilePicFile = (req.files as { [fieldname: string]: Express.Multer.File[] })?.["profilePic"]?.[0];
     const coverPicFile = (req.files as { [fieldname: string]: Express.Multer.File[] })?.["coverPic"]?.[0];
+    if (profilePicFile) updateData.profilePicFile = profilePicFile;
+    if (coverPicFile) updateData.coverPicFile = coverPicFile;
 
-    const updatedUser = await updateUserProfile(id, {
-      name,
-      email,
-      phone,
-      dateOfBirth,
-      jobTitle,
-      industry,
-      reasonForJoining,
-      profilePicFile,
-      coverPicFile,
-    });
+    const updatedUser = await updateUserProfile(id, updateData);
 
     res.status(200).json({ message: "Profile updated successfully", user: updatedUser });
   } catch (error: any) {

@@ -57,6 +57,17 @@ const userSlice = createSlice({
     state.isAdmin = false;
     state.isLoggingOutAdmin = true; 
   },
+
+  //update the user profile
+
+  updateUserProfile: (state, action) => {
+    state.currentUser = {
+      ...state.currentUser,
+      ...action.payload
+    };
+    state.loading = false;
+    state.error = false;
+  },
   },
 });
 
@@ -70,8 +81,8 @@ export const {
   setIsAdmin,
   unsetIsAdmin,
   AdminLogout,
-  // adminSigninSuccess,
-  // adminSigninFailure,
-  // adminSignOut
+  updateUserProfile
 } = userSlice.actions;
 export default userSlice.reducer;
+
+
