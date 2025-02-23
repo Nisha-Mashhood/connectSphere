@@ -48,7 +48,7 @@ const RequestsSection = ({handleProfileClick}) => {
       }
     } catch (error) {
       console.error("Error fetching requests:", error.message);
-      toast.error(error.message);
+      // toast.error(error.message);
     }
   };
 

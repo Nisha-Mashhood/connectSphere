@@ -30,3 +30,7 @@ export const disconnectConnection = async (connectionId: string, reason: string)
 export const fetchUserConnections = async (userId: string) => {
   return await userConnectionRepo.getUserConnections(userId);
 };
+
+export const fetchUserRequests = async (userId: string) => {
+    return await userConnectionRepo.getUserRequests(userId);
+  };

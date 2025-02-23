@@ -46,4 +46,19 @@ export const getUserConnectionsController = async (req, res) => {
         res.status(400).json({ message: error.message });
     }
 };
+// Fetch sent and received user-user requests
+export const getUserRequestsController = async (req, res) => {
+    const { userId } = req.params;
+    try {
+        const { sentRequests, receivedRequests } = await userConnectionService.fetchUserRequests(userId);
+        res.status(200).json({
+            message: "User requests fetched successfully",
+            sentRequests,
+            receivedRequests,
+        });
+    }
+    catch (error) {
+        res.status(500).json({ message: error.message });
+    }
+};
 //# sourceMappingURL=user-userCollab.controller.js.map

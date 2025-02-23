@@ -2,6 +2,7 @@ import { createSlice, createAsyncThunk } from '@reduxjs/toolkit';
 import { checkMentorProfile } from '../../Service/Mentor.Service';
 import { getAllRequest, getCollabDataforMentor, getCollabDataforUser, getTheRequestByUser } from '../../Service/collaboration.Service';
 import { getGroupRequestsByUser, groupDetailsForMembers, groupDetailsWithAdminId } from '../../Service/Group.Service';
+import { getUser_UserRequests } from '../../Service/User-User.Service';
 
 // Define the argument type for the thunk
 interface FetchCollabDetailsArgs {
@@ -24,6 +25,18 @@ interface FetchCollabDetailsArgs {
   interface FetchRequestsResponse {
     receivedRequests: any[];
     sentRequests: any[];
+  }
+
+  interface UserConnection {
+    _id: string;
+    requester: any;
+    recipient: any;
+    requestStatus: 'Pending' | 'Accepted' | 'Rejected';
+    connectionStatus: 'Connected' | 'Disconnected';
+    requestSentAt: Date;
+    requestAcceptedAt?: Date;
+    disconnectedAt?: Date;
+    disconnectionReason?: string;
   }
 
 // Thunk to fetch mentor details
@@ -133,6 +146,19 @@ export const fetchGroupDetailsForMembers = createAsyncThunk(
   }
 );
 
+// Thunk for fetching user-user connection requests
+export const fetchUserConnections = createAsyncThunk(
+  'profile/fetchUserConnections',
+  async (userId: string, { rejectWithValue }) => {
+    try {
+      const response = await getUser_UserRequests(userId);
+      return response;
+    } catch (error) {
+      return rejectWithValue(error.message);
+    }
+  }
+);
+
 
 // Slice
 const profileSlice = createSlice({
@@ -144,6 +170,10 @@ const profileSlice = createSlice({
     Groups: [],
     groupRequests: [],
     groupMemberships: [],
+    userConnections: {
+      sent: [] as UserConnection[],
+      received: [] as UserConnection[],
+    },
     loading: false,
     error: null,
   },
@@ -239,6 +269,23 @@ const profileSlice = createSlice({
         state.loading = false;
       })
       .addCase(fetchGroupDetailsForMembers.rejected, (state, action) => {
+        state.error = action.payload;
+        state.loading = false;
+      })
+
+      //user - user connections
+      .addCase(fetchUserConnections.pending, (state) => {
+        state.loading = true;
+        state.error = null;
+      })
+      .addCase(fetchUserConnections.fulfilled, (state, action) => {
+        state.userConnections = {
+          sent: action.payload.sentRequests || [],
+          received: action.payload.receivedRequests || [],
+        };
+        state.loading = false;
+      })
+      .addCase(fetchUserConnections.rejected, (state, action) => {
         state.error = action.payload;
         state.loading = false;
       });

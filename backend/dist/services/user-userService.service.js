@@ -21,4 +21,7 @@ export const disconnectConnection = async (connectionId, reason) => {
 export const fetchUserConnections = async (userId) => {
     return await userConnectionRepo.getUserConnections(userId);
 };
+export const fetchUserRequests = async (userId) => {
+    return await userConnectionRepo.getUserRequests(userId);
+};
 //# sourceMappingURL=user-userService.service.js.map

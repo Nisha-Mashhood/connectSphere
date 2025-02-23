@@ -36,14 +36,14 @@ import { useDispatch, useSelector } from "react-redux";
 import { AppDispatch, RootState } from "../../../redux/store";
 import { SendRequsetToMentor } from "../../../Service/collaboration.Service";
 import toast from "react-hot-toast";
-import { FaSearch, FaUserFriends, FaUsers, FaUserTie } from "react-icons/fa";
-import { fetchCollabDetails, fetchGroupDetailsForMembers, fetchGroupRequests, fetchRequests } from "../../../redux/Slice/profileSlice";
+import { FaSearch, FaUsers, FaUserTie } from "react-icons/fa";
+import { fetchCollabDetails, fetchGroupDetailsForMembers, fetchGroupRequests, fetchRequests, fetchUserConnections } from "../../../redux/Slice/profileSlice";
 import RequestStatusHandler from "./HelperComponents/RequestStatusHandler";
 import { sendUser_UserRequset } from "../../../Service/User-User.Service";
 
 const ExploreMentors = () => {
   const { currentUser } = useSelector((state: RootState) => state.user);
-  const { mentorDetails, collabDetails, req, groupRequests,  groupMemberships } =
+  const { mentorDetails, collabDetails, req, groupRequests,  groupMemberships,  userConnections } =
     useSelector((state: RootState) => state.profile);
   const dispatch = useDispatch<AppDispatch>();
   const [mentors, setMentors] = useState([]);
@@ -93,7 +93,9 @@ const ExploreMentors = () => {
               // Fetch group request status
               dispatch(fetchGroupRequests(currentUser._id)),
               //fetch group membership datas
-              dispatch(fetchGroupDetailsForMembers(currentUser._id))
+              dispatch(fetchGroupDetailsForMembers(currentUser._id)),
+              // Add user connections fetch
+              dispatch(fetchUserConnections(currentUser._id))
             ]);
           }
 
@@ -166,8 +168,9 @@ const ExploreMentors = () => {
     };
 
     try {
-      await SendRequsetToMentor(requestData);
-      toast.success("Request sent successfully!");
+      const response = await SendRequsetToMentor(requestData);
+      if(response) {
+        toast.success("Request sent successfully!");
             dispatch(
               fetchRequests({
                 userId: currentUser._id,
@@ -176,18 +179,74 @@ const ExploreMentors = () => {
               })
             );
       setSelectedMentor(null);
+      }
     } catch (error) {
       console.error("Error booking mentor:", error);
       toast.error("Failed to send the request. Please try again.");
     }
   };
 
+  //Button configuration of user - user connection
+  const getUserButtonConfig = (targetUser, userConnections) => {
+    // Check if there's a connection request sent by current user
+    const sentRequest = userConnections.sent?.find(
+      conn => conn.recipient._id === targetUser._id
+    );
+  
+    // Check if there's a connection request received from this user
+    const receivedRequest = userConnections.received?.find(
+      conn => conn.requester._id === targetUser._id
+    );
+  
+    // If there's an existing connection
+    if (sentRequest?.connectionStatus === 'Connected' || receivedRequest?.connectionStatus === 'Connected') {
+      return {
+        disabled: true,
+        text: 'Connected'
+      };
+    }
+  
+    // If there's a pending sent request
+    if (sentRequest?.requestStatus === 'Pending') {
+      return {
+        disabled: true,
+        text: 'Request Pending'
+      };
+    }
+  
+    // If there's a pending received request
+    if (receivedRequest?.requestStatus === 'Pending') {
+      return {
+        disabled: true,
+        text: 'Accept Request'
+      };
+    }
+  
+    // If request was rejected
+    if (sentRequest?.requestStatus === 'Rejected' || sentRequest?.connectionStatus === "Disconnected") {
+      return {
+        disabled: false,
+        text: 'Connect Again'
+      };
+    }
+  
+    // Default state - can send connection request
+    return {
+      disabled: false,
+      text: 'Connect'
+    };
+  };
+
   //user-user connection
   const handleRequestUser = async () => {
     try {
       console.log(`Sending request to user ${selectedUser._id}`);
-      await sendUser_UserRequset(currentUser._id, selectedUser._id)
-      setSelectedUser(null);
+      const newConnection = await sendUser_UserRequset(currentUser._id, selectedUser._id)
+      if(newConnection){
+        toast.success("Connection Requset send successfully");
+        setSelectedUser(null);
+        dispatch(fetchUserConnections(currentUser._id))
+      }
     } catch (error) {
       console.error("Error sending user request:", error);
     }
@@ -201,9 +260,11 @@ const ExploreMentors = () => {
     try {
       console.log(`Requesting to join group ${selectedGroup._id}`);
       const response = await sendRequsettoGroup(data);
-      console.log(response);
-      dispatch(fetchGroupRequests(currentUser._id));
-      setSelectedGroup(null);
+      if(response){
+        toast.success("Connection Requset send successfully");
+        dispatch(fetchGroupRequests(currentUser._id));
+        setSelectedGroup(null);
+      }
     } catch (error) {
       console.error("Error requesting group:", error);
     }
@@ -316,7 +377,7 @@ const ExploreMentors = () => {
     };
   };
 
-  // Update the JSX for mentor cards
+  // UJSX for mentor cards
   const renderMentorCard = (mentor) => {
     const buttonConfig = getMentorButtonConfig(mentor);
 
@@ -365,7 +426,43 @@ const ExploreMentors = () => {
     );
   };
 
-  // Update the JSX for group cards
+  const renderUserCard = (user) => {
+    const buttonConfig = getUserButtonConfig(user, userConnections);
+    
+    return (
+      <Card key={user._id} className="hover:shadow-lg transition-shadow">
+       <CardHeader className="p-0">
+                <img
+                  src={user.profilePic || "/api/placeholder/400/400"}
+                  alt={user.name}
+                  className="w-full aspect-square object-cover"
+                />
+              </CardHeader>
+              <CardBody className="space-y-4">
+                <Link to={`/profileDispaly/${user._id}`}>
+                  <h3 className="text-xl font-semibold hover:underline">
+                    {user.name}
+                  </h3>
+                </Link>
+                <p className="text-gray-600">
+                  {user.jobTitle || "Community Member"}
+                </p>
+              </CardBody>
+              <CardFooter>
+                <Button
+                  color="primary"
+                  className="w-full"
+                  onPress={() => !buttonConfig.disabled && setSelectedUser(user)}
+                  isDisabled={buttonConfig.disabled}
+                >
+                  {buttonConfig.text}
+                </Button>
+              </CardFooter>
+      </Card>
+    );
+  };
+  
+  // JSX for group cards
   const renderGroupCard = (group) => {
     const buttonConfig = getGroupButtonConfig(group);
     const memberCounts = getMemberCounts(group);
@@ -422,7 +519,7 @@ const ExploreMentors = () => {
     );
   };
 
-  // Update the mentors tab content
+  // mentors tab content
   const renderMentorsTab = () => (
     <div className="py-4">
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
@@ -431,7 +528,16 @@ const ExploreMentors = () => {
     </div>
   );
 
-  // Update the groups tab content
+   // users tab content
+   const renderUsersTab = () => (
+    <div className="py-4">
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+        {filteredUsers.map(renderUserCard)}
+      </div>
+    </div>
+  );
+
+  // groups tab content
   const renderGroupsTab = () => (
     <div className="py-4">
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
@@ -510,53 +616,17 @@ const ExploreMentors = () => {
           >
             {renderMentorsTab()}
           </Tab>
-
+          
           <Tab
             key="users"
             title={
               <div className="flex items-center gap-2">
-                <FaUserFriends />
+                <FaUserTie />
                 <span>Users</span>
               </div>
             }
           >
-            <div className="py-4">
-              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
-                {filteredUsers.map((user) => (
-                  <Card
-                    key={user._id}
-                    className="hover:shadow-lg transition-shadow"
-                  >
-                    <CardHeader className="p-0">
-                      <img
-                        src={user.profilePic || "/api/placeholder/400/400"}
-                        alt={user.name}
-                        className="w-full aspect-square object-cover"
-                      />
-                    </CardHeader>
-                    <CardBody className="space-y-4">
-                      <Link to={`/profileDispaly/${user._id}`}>
-                        <h3 className="text-xl font-semibold hover:underline">
-                          {user.name}
-                        </h3>
-                      </Link>
-                      <p className="text-gray-600">
-                        {user.jobTitle || "Community Member"}
-                      </p>
-                    </CardBody>
-                    <CardFooter>
-                      <Button
-                        color="primary"
-                        className="w-full"
-                        onPress={() => setSelectedUser(user)}
-                      >
-                        Connect
-                      </Button>
-                    </CardFooter>
-                  </Card>
-                ))}
-              </div>
-            </div>
+            {renderUsersTab()}
           </Tab>
 
           <Tab

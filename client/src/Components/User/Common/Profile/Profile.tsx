@@ -46,15 +46,19 @@ import {
   updateUserProfessionalInfo,
 } from "../../../../Service/User.Service";
 import toast from "react-hot-toast";
-import { checkMentorProfile, updateMentorProfile } from "../../../../Service/Mentor.Service";
+import {
+  checkMentorProfile,
+  updateMentorProfile,
+} from "../../../../Service/Mentor.Service";
 import { updateMentorInfo } from "../../../../redux/Slice/profileSlice";
 import { updateUserProfile } from "../../../../redux/Slice/userSlice";
 import { checkProfile } from "../../../../Service/Auth.service";
+import UserConnections from "./UserConnections";
 
 const Profile = () => {
   const { currentUser } = useSelector((state: RootState) => state.user);
   const { mentorDetails } = useSelector((state: RootState) => state.profile);
-  console.log("Mentor details from Redux:" , mentorDetails);
+  console.log("Mentor details from Redux:", mentorDetails);
   const [selectedDay, setSelectedDay] = useState("");
   const [selectedTime, setSelectedTime] = useState("");
   const navigate = useNavigate();
@@ -104,7 +108,7 @@ const Profile = () => {
         reasonForJoining: professionalInfo.reasonForJoining,
         jobTitle: currentUser.jobTitle,
       });
-      
+
       onProfessionalModalClose();
       if (user) {
         // Dispatch action to update Redux state
@@ -114,7 +118,7 @@ const Profile = () => {
       }
     } catch (error) {
       console.error("Error updating professional info:", error);
-      toast.error(error)
+      toast.error(error);
     }
   };
 
@@ -132,17 +136,19 @@ const Profile = () => {
         toast.success("Profile Updated Successfully");
         onContactModalClose();
       }
-      
     } catch (error) {
       console.error("Error updating contact info:", error);
-      toast.error(error)
+      toast.error(error);
     }
   };
 
   // Update mentor submission handler
   const handleMentorshipSubmit = async () => {
     try {
-       const { MentorData } = await updateMentorProfile(mentorDetails._id, mentorshipInfo);
+      const { MentorData } = await updateMentorProfile(
+        mentorDetails._id,
+        mentorshipInfo
+      );
       console.log("Submitted mentorship info:", MentorData);
       onMentorModalClose();
       if (MentorData) {
@@ -153,7 +159,7 @@ const Profile = () => {
       }
     } catch (error) {
       console.error("Error updating mentor info:", error);
-      toast.error(error)
+      toast.error(error);
     }
   };
 
@@ -271,9 +277,7 @@ const Profile = () => {
     }));
   };
 
-
-
-//Handle Become Mentor
+  //Handle Become Mentor
   const handleBecomeMentor = async () => {
     if (!currentUser) {
       toast.error("Please log in to apply as a mentor.");
@@ -285,23 +289,25 @@ const Profile = () => {
 
       const profileResponse = await checkProfile(currentUser._id);
       const isProfileComplete = profileResponse.isProfileComplete;
-  
+
       if (!isProfileComplete) {
-        toast.error("For becoming a mentor, you should complete your profile first.");
+        toast.error(
+          "For becoming a mentor, you should complete your profile first."
+        );
         navigate("/complete-profile", { replace: true });
         return;
       }
-  
+
       // Step 2: Check if the user is already a mentor and the approval status
 
       const mentorResponse = await checkMentorProfile(currentUser._id);
       const mentor = mentorResponse.mentor;
       console.log(mentor);
-  
+
       if (!mentor) {
         // If there's no mentor record, show the mentor profile form
         navigate("/mentorProfile");
-      }else {
+      } else {
         switch (mentor.isApproved) {
           case "Processing":
             toast.success("Your mentor request is still under review.");
@@ -320,7 +326,7 @@ const Profile = () => {
     } catch (error) {
       toast.error("An error occurred while checking your mentor status.");
     }
-  }
+  };
 
   return (
     <div className="max-w-7xl mx-auto p-4 space-y-6">
@@ -532,7 +538,7 @@ const Profile = () => {
                   isIconOnly
                   variant="light"
                   size="sm"
-                  onClick={onMentorModalOpen}
+                  onPress={onMentorModalOpen}
                 >
                   <FaPencilAlt size={14} />
                 </Button>
@@ -586,10 +592,7 @@ const Profile = () => {
                 <p className="text-center mb-4">
                   Share your expertise and help others grow!
                 </p>
-                <Button
-                  color="success"
-                  onPress={() => handleBecomeMentor()}
-                >
+                <Button color="success" onPress={() => handleBecomeMentor()}>
                   Apply to be a Mentor
                 </Button>
               </CardBody>
@@ -609,12 +612,14 @@ const Profile = () => {
           </CardBody>
         </Card>
 
+        
+
         <Card>
           <CardHeader className="bg-primary-50">
-            <h2 className="text-xl font-bold">Group Invitations</h2>
+            <h2 className="text-xl font-bold">Pending Requests</h2>
           </CardHeader>
           <CardBody>
-            <GroupRequests />
+            <RequestsSection handleProfileClick={handleUserProfileClick} />
           </CardBody>
         </Card>
 
@@ -626,6 +631,22 @@ const Profile = () => {
             <ActiveCollaborations handleProfileClick={handleUserProfileClick} />
           </CardBody>
         </Card>
+        
+        <UserConnections
+          currentUser={currentUser}
+          handleProfileClick={handleUserProfileClick}
+        />
+
+        <Card>
+          <CardHeader className="bg-primary-50">
+            <h2 className="text-xl font-bold">Group Invitations</h2>
+          </CardHeader>
+          <CardBody>
+            <GroupRequests />
+          </CardBody>
+        </Card>
+
+
 
         <Card>
           <CardHeader className="bg-primary-50">

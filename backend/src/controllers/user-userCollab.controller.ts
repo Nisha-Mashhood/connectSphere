@@ -51,3 +51,19 @@ export const getUserConnectionsController = async (req: Request, res: Response) 
     res.status(400).json({ message: error.message });
   }
 };
+
+// Fetch sent and received user-user requests
+export const getUserRequestsController = async (req: Request, res: Response) => {
+    const { userId } = req.params;
+  
+    try {
+      const { sentRequests, receivedRequests } = await userConnectionService.fetchUserRequests(userId);
+      res.status(200).json({
+        message: "User requests fetched successfully",
+        sentRequests,
+        receivedRequests,
+      });
+    } catch (error: any) {
+      res.status(500).json({ message: error.message });
+    }
+  };
