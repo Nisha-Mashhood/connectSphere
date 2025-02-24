@@ -8,7 +8,6 @@ const ActiveCollaborations = ({handleProfileClick}) => {
   const navigate = useNavigate();
     const { currentUser } = useSelector((state: RootState) => state.user);
     const { collabDetails } = useSelector((state: RootState) => state.profile);
-    console.log("collab Details",collabDetails);
   
     const handleCollabClick = (collabId) => {
       navigate(`/collaboration/${collabId}`);

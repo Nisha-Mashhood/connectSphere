@@ -427,7 +427,7 @@ const Profile = () => {
         </CardBody>
       </Card>
 
-      {/* Task Management Section with improved UI */}
+      {/* Task Management Section*/}
       <Card>
         <CardHeader className="flex gap-3 justify-between">
           <div className="flex items-center gap-2">
@@ -441,9 +441,6 @@ const Profile = () => {
             context="profile"
             currentUser={currentUser}
             contextData={currentUser}
-            onTaskCreate={(taskData) => {
-              //API call
-            }}
           />
         </CardBody>
       </Card>
@@ -612,8 +609,6 @@ const Profile = () => {
           </CardBody>
         </Card>
 
-        
-
         <Card>
           <CardHeader className="bg-primary-50">
             <h2 className="text-xl font-bold">Pending Requests</h2>
@@ -631,7 +626,7 @@ const Profile = () => {
             <ActiveCollaborations handleProfileClick={handleUserProfileClick} />
           </CardBody>
         </Card>
-        
+
         <UserConnections
           currentUser={currentUser}
           handleProfileClick={handleUserProfileClick}
@@ -645,8 +640,6 @@ const Profile = () => {
             <GroupRequests />
           </CardBody>
         </Card>
-
-
 
         <Card>
           <CardHeader className="bg-primary-50">
