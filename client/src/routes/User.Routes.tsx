@@ -43,7 +43,6 @@ const UserRoutes = () => (
         <Route path="/profile" element={<Profile />} />
         <Route path="/mentorProfile" element={<MentorProfileForm />} />
         <Route path="/profileDispaly/:Id" element={< ProfileDisplay />} />
-        {/* <Route path="/mymentorProfilePage" element={< MyMentorProfilePage />} /> */}
         <Route path="/explorementor" element={<ExploreMentor />} />
         <Route path="/userProfile/:userId" element={<UserProfile />} />
         <Route path="/create-group" element={<CreateGroupForm />} />

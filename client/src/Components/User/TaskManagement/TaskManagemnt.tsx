@@ -118,11 +118,9 @@ const TaskManagement = ({ context, currentUser, contextData }) => {
   const fetchTasks = async () => {
     try {
       const response = await get_tasks_by_context(context, contextData?._id);
-      console.log("Response: ", response);
       if (response) {
         setTasks(response);
       }
-      console.log("task :", tasks);
     } catch (error) {
       console.error("Error fetching tasks:", error);
       toast.error("Failed to fetch tasks");
@@ -132,6 +130,8 @@ const TaskManagement = ({ context, currentUser, contextData }) => {
   useEffect(() => {
     fetchTasks();
   }, [context, currentUser, contextData]);
+  console.log("Context :", context);
+  console.log("Context Data :",contextData);
 
   const handleTaskCreate = async () => {
     try {
@@ -211,10 +211,9 @@ const TaskManagement = ({ context, currentUser, contextData }) => {
     try {
       if (!selectedTask) return;
 
-      // Add API call to delete task here
+      // API call to delete task here
       // const response = await delete_task(selectedTask._id);
 
-      // Since delete endpoint wasn't provided, we'll simulate it
       toast.success("Task deleted successfully!");
       setIsViewOpen(false);
       setIsDeleting(false);

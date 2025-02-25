@@ -18,6 +18,7 @@ import { AppDispatch, RootState } from "../../../../redux/store";
 import { cancelCollab } from "../../../../Service/collaboration.Service";
 import { fetchCollabDetails } from "../../../../redux/Slice/profileSlice";
 import FeedbackModal from "./FeedbackModal";
+import TaskManagement from "../../TaskManagement/TaskManagemnt";
 
 const CollaborationDetails = () => {
   const { collabId } = useParams();
@@ -185,6 +186,26 @@ const CollaborationDetails = () => {
                 )
               )}
             </div>
+
+                           {/* Task Management Section*/}
+                           <Card>
+                <CardHeader className="flex gap-3 justify-between">
+                  <div className="flex items-center gap-2">
+                    <FaCalendarAlt className="text-xl text-primary" />
+                    <p className="text-lg font-semibold">My Tasks</p>
+                  </div>
+                </CardHeader>
+                <Divider />
+                <CardBody>
+                  <TaskManagement
+                    context="collaboration"
+                    currentUser={currentUser}
+                    contextData={collaboration}
+                  />
+                </CardBody>
+              </Card>
+
+
           </CardBody>
         </Card>
 

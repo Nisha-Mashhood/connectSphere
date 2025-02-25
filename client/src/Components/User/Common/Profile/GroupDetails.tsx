@@ -20,6 +20,7 @@ import {
   Chip,
   User,
   Divider,
+  CardHeader,
 } from "@nextui-org/react";
 import {
   FaUser,
@@ -28,8 +29,10 @@ import {
   FaTrash,
   FaCamera,
   FaUserFriends,
+  FaCalendarAlt,
 } from "react-icons/fa";
 import toast from "react-hot-toast";
+import TaskManagement from "../../TaskManagement/TaskManagemnt";
 
 const GroupDetails = () => {
   const navigate = useNavigate();
@@ -76,16 +79,14 @@ const GroupDetails = () => {
     }
   }, [groupId]);
 
-  const fetchGroupdDetailsForMembers = async(id) =>{
+  const fetchGroupdDetailsForMembers = async (id) => {
     console.log(currentUser);
-    //dummy
     const response2 = await groupDetailsForMembers(id);
     console.log("Group details for members: ", response2);
-  }
-
+  };
 
   useEffect(() => {
-    fetchGroupdDetailsForMembers(currentUser._id)
+    fetchGroupdDetailsForMembers(currentUser._id);
   }, []);
 
   const handleRequestUpdate = async (requestId: string, status: string) => {
@@ -149,7 +150,7 @@ const GroupDetails = () => {
         toast.success(`${type} photo updated successfully`);
       }
     } catch (error) {
-    console.log(error)
+      console.log(error);
       toast.error("Failed to update photo");
     }
   };
@@ -206,7 +207,7 @@ const GroupDetails = () => {
                 </label>
               </div>
             )}
-            
+
             {/* Profile Picture */}
             <div
               className="absolute -bottom-10 left-6"
@@ -259,6 +260,24 @@ const GroupDetails = () => {
 
             <Divider className="my-6" />
 
+            {/* Task Management Section*/}
+            <Card>
+              <CardHeader className="flex gap-3 justify-between">
+                <div className="flex items-center gap-2">
+                  <FaCalendarAlt className="text-xl text-primary" />
+                  <p className="text-lg font-semibold">My Tasks</p>
+                </div>
+              </CardHeader>
+              <Divider />
+              <CardBody>
+                <TaskManagement
+                  context="group"
+                  currentUser={currentUser}
+                  contextData={group}
+                />
+              </CardBody>
+            </Card>
+
             {/* Group Requests Section */}
             <div className="space-y-4">
               <h2 className="text-xl font-semibold flex items-center gap-2">
@@ -284,10 +303,10 @@ const GroupDetails = () => {
                             name={req.userId.name}
                             description={req.userId.email}
                             avatarProps={{
-                              icon: <FaUser />
+                              icon: <FaUser />,
                             }}
                           />
-                          
+
                           <div className="flex gap-2">
                             {req.status === "Pending" ? (
                               <>
@@ -295,7 +314,9 @@ const GroupDetails = () => {
                                   color="success"
                                   variant="flat"
                                   startContent={<FaCheck />}
-                                  onClick={() => handleRequestUpdate(req._id, "Accepted")}
+                                  onClick={() =>
+                                    handleRequestUpdate(req._id, "Accepted")
+                                  }
                                 >
                                   Accept
                                 </Button>
@@ -303,14 +324,20 @@ const GroupDetails = () => {
                                   color="danger"
                                   variant="flat"
                                   startContent={<FaTimes />}
-                                  onClick={() => handleRequestUpdate(req._id, "Rejected")}
+                                  onClick={() =>
+                                    handleRequestUpdate(req._id, "Rejected")
+                                  }
                                 >
                                   Reject
                                 </Button>
                               </>
                             ) : (
                               <Chip
-                                color={req.status === "Accepted" ? "success" : "danger"}
+                                color={
+                                  req.status === "Accepted"
+                                    ? "success"
+                                    : "danger"
+                                }
                               >
                                 {req.status}
                               </Chip>
@@ -343,21 +370,28 @@ const GroupDetails = () => {
                           <div className="flex justify-between items-center">
                             <User
                               name={member.userId?.name || "Unknown"}
-                              description={member.userId?.jobTitle || "No job title"}
+                              description={
+                                member.userId?.jobTitle || "No job title"
+                              }
                               avatarProps={{
-                                src: member.userId?.profilePic || "/api/placeholder/100/100"
+                                src:
+                                  member.userId?.profilePic ||
+                                  "/api/placeholder/100/100",
                               }}
                             />
-                            
+
                             <div className="flex items-center gap-4">
                               <Chip variant="flat" size="sm">
-                                Joined {new Date(member.joinedAt).toLocaleDateString()}
+                                Joined{" "}
+                                {new Date(member.joinedAt).toLocaleDateString()}
                               </Chip>
                               <Button
                                 color="danger"
                                 variant="flat"
                                 size="sm"
-                                onClick={() => handleRemoveUser(member.userId?._id)}
+                                onClick={() =>
+                                  handleRemoveUser(member.userId?._id)
+                                }
                               >
                                 Remove
                               </Button>

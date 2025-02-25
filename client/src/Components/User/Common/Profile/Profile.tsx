@@ -444,6 +444,7 @@ const Profile = () => {
           />
         </CardBody>
       </Card>
+      
 
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
         {/* Professional Info - With Edit Button */}

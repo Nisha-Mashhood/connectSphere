@@ -1,10 +1,25 @@
-import { useParams, useNavigate } from 'react-router-dom';
-import { useSelector } from 'react-redux';
-import { FaUsers, FaCalendarAlt, FaSignOutAlt, FaDollarSign, FaClock } from 'react-icons/fa';
-import { RootState } from '../../../../redux/store';
-import { removeUserFromGroup } from '../../../../Service/Group.Service';
-import { Card, CardBody, Button, Avatar, Chip, Divider } from "@nextui-org/react";
-import toast from 'react-hot-toast';
+import { useParams, useNavigate } from "react-router-dom";
+import { useSelector } from "react-redux";
+import {
+  FaUsers,
+  FaCalendarAlt,
+  FaSignOutAlt,
+  FaDollarSign,
+  FaClock,
+} from "react-icons/fa";
+import { RootState } from "../../../../redux/store";
+import { removeUserFromGroup } from "../../../../Service/Group.Service";
+import {
+  Card,
+  CardBody,
+  Button,
+  Avatar,
+  Chip,
+  Divider,
+  CardHeader,
+} from "@nextui-org/react";
+import toast from "react-hot-toast";
+import TaskManagement from "../../TaskManagement/TaskManagemnt";
 
 const GroupDetailView = () => {
   const { groupId } = useParams();
@@ -15,9 +30,10 @@ const GroupDetailView = () => {
   const group = groupMemberships?.find((g) => g._id === groupId);
 
   // Filter out admin from members list
-  const membersList = group?.members.filter(
-    member => member.userId._id !== group.adminId._id
-  ) || [];
+  const membersList =
+    group?.members.filter(
+      (member) => member.userId._id !== group.adminId._id
+    ) || [];
 
   if (!group) {
     return (
@@ -36,7 +52,7 @@ const GroupDetailView = () => {
     try {
       await removeUserFromGroup({ groupId, userId });
       toast.success("You have successfully exited the group");
-      navigate('/profile');
+      navigate("/profile");
     } catch (err: any) {
       toast.error(err.message);
     }
@@ -44,7 +60,7 @@ const GroupDetailView = () => {
 
   return (
     <div className="min-h-screen bg-gray-50 dark:bg-gray-900">
-      {/* Cover Image with Overlay */}
+      {/* Cover Image */}
       <div className="relative w-full h-64">
         <img
           src={group.coverPic || "/api/placeholder/1200/300"}
@@ -71,7 +87,7 @@ const GroupDetailView = () => {
                     <p className="text-default-500 mt-2">{group.bio}</p>
                   </div>
                 </div>
-                
+
                 {currentUser._id !== group.adminId._id && (
                   <Button
                     color="danger"
@@ -84,6 +100,24 @@ const GroupDetailView = () => {
                 )}
               </div>
 
+              {/* Task Management Section*/}
+              <Card>
+                <CardHeader className="flex gap-3 justify-between">
+                  <div className="flex items-center gap-2">
+                    <FaCalendarAlt className="text-xl text-primary" />
+                    <p className="text-lg font-semibold">My Tasks</p>
+                  </div>
+                </CardHeader>
+                <Divider />
+                <CardBody>
+                  <TaskManagement
+                    context="group"
+                    currentUser={currentUser}
+                    contextData={group}
+                  />
+                </CardBody>
+              </Card>
+
               <Divider className="my-8" />
 
               {/* Info Cards Grid */}
@@ -94,12 +128,16 @@ const GroupDetailView = () => {
                     <h3 className="font-semibold mb-4">Admin Details</h3>
                     <div className="flex items-center gap-3">
                       <Avatar
-                        src={group.adminId.profilePic || "/api/placeholder/100/100"}
+                        src={
+                          group.adminId.profilePic || "/api/placeholder/100/100"
+                        }
                         size="md"
                       />
                       <div>
                         <p className="font-medium">{group.adminId.name}</p>
-                        <p className="text-sm text-default-500">{group.adminId.jobTitle}</p>
+                        <p className="text-sm text-default-500">
+                          {group.adminId.jobTitle}
+                        </p>
                       </div>
                     </div>
                   </CardBody>
@@ -112,11 +150,16 @@ const GroupDetailView = () => {
                     <div className="space-y-3">
                       <div className="flex items-center gap-2 text-default-500">
                         <FaUsers />
-                        <span>{group.members.length} / {group.maxMembers} members</span>
+                        <span>
+                          {group.members.length} / {group.maxMembers} members
+                        </span>
                       </div>
                       <div className="flex items-center gap-2 text-default-500">
                         <FaCalendarAlt />
-                        <span>Started {new Date(group.startDate).toLocaleDateString()}</span>
+                        <span>
+                          Started{" "}
+                          {new Date(group.startDate).toLocaleDateString()}
+                        </span>
                       </div>
                       {group.price > 0 && (
                         <div className="flex items-center gap-2 text-default-500">
@@ -162,14 +205,20 @@ const GroupDetailView = () => {
                       <CardBody className="p-0">
                         <div className="flex items-center gap-4">
                           <Avatar
-                            src={member.userId.profilePic || "/api/placeholder/100/100"}
+                            src={
+                              member.userId.profilePic ||
+                              "/api/placeholder/100/100"
+                            }
                             size="md"
                           />
                           <div>
                             <p className="font-medium">{member.userId.name}</p>
-                            <p className="text-sm text-default-500">{member.userId.jobTitle}</p>
+                            <p className="text-sm text-default-500">
+                              {member.userId.jobTitle}
+                            </p>
                             <p className="text-xs text-default-400">
-                              Joined {new Date(member.joinedAt).toLocaleDateString()}
+                              Joined{" "}
+                              {new Date(member.joinedAt).toLocaleDateString()}
                             </p>
                           </div>
                         </div>
