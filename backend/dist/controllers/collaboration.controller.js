@@ -131,8 +131,9 @@ export const getCollabDataForMentorController = async (req, res) => {
 //delete collab
 export const deleteCollab = async (req, res) => {
     const { collabId } = req.params;
+    const { reason } = req.body;
     try {
-        const response = await removecollab(collabId);
+        const response = await removecollab(collabId, reason);
         res.status(200).json({
             status: "success",
             message: "Collab deleted successfully",

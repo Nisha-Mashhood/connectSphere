@@ -8,6 +8,7 @@ import {
   getCollabDataForUser,
   getMentorRequestsByMentorId,
   getRequestByUserId,
+  markCollabAsCancelled,
   updateMentorRequestStatus,
 } from "../repositories/collaboration.repositry.js";
 import stripe from "../utils/stripe.utils.js";
@@ -142,7 +143,7 @@ export const getCollabDataForMentorService = async (mentorId: string) => {
 };
 
 //Delete collab
-export const removecollab = async (collabId: string) => {
+export const removecollab = async (collabId: string, reason: string) => {
   // Check if the group exists
   const collab = await findCollabById(collabId);
   if (!collab) {
@@ -178,6 +179,7 @@ export const removecollab = async (collabId: string) => {
   const text = `Dear ${mentorName},
 
   We regret to inform you that your mentorship session with ${userName} has been cancelled.
+  Reason: ${reason}
 
   If you have any questions, please contact support.
 
@@ -188,5 +190,5 @@ export const removecollab = async (collabId: string) => {
 
   console.log(`Cancellation email sent to mentor: ${mentorEmail}`);
 
-  //return await markCollabAsCancelled(collabId);
+  return await markCollabAsCancelled(collabId);
 };

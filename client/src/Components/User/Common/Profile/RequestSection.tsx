@@ -8,67 +8,79 @@ import {
   processStripePayment,
 } from "../../../../Service/collaboration.Service";
 import {
-  getRequestStatusColor,
   getRelativeTime,
 } from "../../../../lib/helperforprofile";
 import toast from "react-hot-toast";
 import StripeCheckout from "react-stripe-checkout";
 import { RootState } from "../../../../redux/store";
-import { FaCheckCircle, FaTimesCircle } from "react-icons/fa";
+import { 
+  FaCheckCircle, 
+  FaTimesCircle, 
+  FaPaperPlane, 
+  FaInbox,
+  FaClock,
+  FaCalendarAlt,
+  FaMoneyBillWave
+} from "react-icons/fa";
+import {
+  Card,
+  CardBody,
+  Tabs,
+  Tab,
+  Avatar,
+  Chip,
+  Button,
+  Badge,
+  Tooltip,
+} from "@nextui-org/react";
 
-const RequestsSection = ({handleProfileClick}) => {
+const RequestsSection = ({ handleProfileClick }) => {
   const { currentUser } = useSelector((state: RootState) => state.user);
-  const { mentorDetails,req } = useSelector((state: RootState) => state.profile);
-  const [requests, setRequests] = useState([]);
+  const { mentorDetails } = useSelector((state: RootState) => state.profile);
+  const [sentRequests, setSentRequests] = useState([]);
+  const [receivedRequests, setReceivedRequests] = useState([]);
   const [selectedRequest, setSelectedRequest] = useState(null);
-
-  console.log("req from redux is ",req);
+  const [isLoading, setIsLoading] = useState(true);
 
   const fetchRequests = async () => {
+    setIsLoading(true);
     try {
-      let receivedRequests = [];
-      let sentRequests = [];
+      // Get requests sent by the user/mentor
+      const sentData = await getTheRequestByUser(currentUser._id);
+      setSentRequests(sentData.requests || []);
 
-      if (currentUser.role === "user") {
-        // Get requests sent by the user
-        const data = await getTheRequestByUser(currentUser._id);
-        setRequests(data.requests);
-      } else if (currentUser.role === "mentor" && mentorDetails) {
-        // Get requests received by the mentor
+      // Get requests received by the mentor (if applicable)
+      if (currentUser.role === "mentor" && mentorDetails) {
         const receivedData = await getAllRequest(mentorDetails._id);
-        receivedRequests = receivedData.requests;
-
-        // Get requests sent by the mentor
-        const sentData = await getTheRequestByUser(currentUser._id);
-        sentRequests = sentData.requests;
-
-        // Combine both received and sent requests
-        setRequests([...receivedRequests, ...sentRequests]);
-        console.log(requests);
+        setReceivedRequests(receivedData.requests || []);
       }
     } catch (error) {
       console.error("Error fetching requests:", error.message);
-      // toast.error(error.message);
+      toast.error("Failed to load requests. Please try again.");
+    } finally {
+      setIsLoading(false);
     }
   };
 
   const handleAccept = async (requestId) => {
     try {
       await acceptTheRequest(requestId);
-      toast.success("Request Accepted!");
+      toast.success("Request accepted successfully!");
       fetchRequests();
     } catch (error) {
       console.error("Error accepting request:", error.message);
+      toast.error("Failed to accept request. Please try again.");
     }
   };
 
   const handleReject = async (requestId) => {
     try {
       await rejectTheRequest(requestId);
-      toast.success("Request Rejected!");
+      toast.success("Request rejected successfully!");
       fetchRequests();
     } catch (error) {
       console.error("Error rejecting request:", error.message);
+      toast.error("Failed to reject request. Please try again.");
     }
   };
 
@@ -81,151 +93,228 @@ const RequestsSection = ({handleProfileClick}) => {
       });
 
       if (response.status === "success") {
-        toast.success("Payment successful!");
+        toast.success("Payment successful! Your session is now booked.");
         fetchRequests();
       } else {
         toast.error("Payment failed. Please try again.");
       }
     } catch (error) {
       console.error("Error processing payment:", error.message);
+      toast.error("Payment processing error. Please try again.");
+    }
+  };
+
+  // Status badges with consistent styling
+  const getStatusBadge = (status) => {
+    switch (status) {
+      case "Accepted":
+        return <Chip color="success" variant="flat">Accepted</Chip>;
+      case "Rejected":
+        return <Chip color="danger" variant="flat">Rejected</Chip>;
+      case "Pending":
+      default:
+        return <Chip color="warning" variant="flat">Pending</Chip>;
     }
   };
 
   useEffect(() => {
     fetchRequests();
   }, [currentUser._id]);
-  return (
-    <div className="bg-white dark:bg-gray-800 p-6 rounded-lg shadow">
-      <h2 className="text-2xl font-semibold mb-4 dark:text-white">
-        Your Requests (Mentor)
-      </h2>
 
-      <div className="space-y-4">
-        {requests.map((request) => (
-          <div
-            key={request._id}
-            className={`p-4 rounded-lg ${getRequestStatusColor(
-              request.isAccepted
-            )}`}
-            onMouseEnter={() => {
-              if (request.isAccepted === "Accepted")
-                setSelectedRequest(request);
-            }}
-            onMouseLeave={() => setSelectedRequest(null)}
-          >
-            <div className="flex items-center space-x-4">
-              <img
-                src={
-                  currentUser.role === "user"
-                    ? request.mentorId?.userId?.profilePic
-                    : currentUser._id === request.userId
-                    ? request.mentorId?.userId?.profilePic
-                    : request.userId?.profilePic
-                }
-                alt="Mentor"
-                className="w-12 h-12 rounded-full"
+  // Render a single request card
+  const renderRequestCard = (request, isSent) => {
+    const otherPerson = isSent 
+      ? (request.mentorId?.userId || {}) 
+      : (request.userId || {});
+    
+    const profilePic = otherPerson.profilePic || "/default-avatar.png";
+    const name = otherPerson.name || "Unknown User";
+    
+    return (
+      <Card key={request._id} className="mb-4 shadow-sm hover:shadow-md transition-shadow">
+        <CardBody>
+          <div className="flex items-start gap-4">
+            <Badge 
+              content={getStatusBadge(request.isAccepted)} 
+              placement="top-right"
+              classNames={{
+                badge: "border-none cursor-pointer"
+
+              }}
+            >
+              <Avatar
+                src={profilePic}
+                className="w-16 h-16"
+                isBordered={request.isAccepted === "Accepted"}
+                color={request.isAccepted === "Accepted" ? "success" : 
+                      request.isAccepted === "Rejected" ? "danger" : "warning"}
+                onClick={() => handleProfileClick(otherPerson._id)}
+                isFocusable
               />
-              <div className="flex-1">
-                <p
-                  className="font-semibold cursor-pointer hover:underline"
-                  onClick={() =>
-                    currentUser.role === "user"
-                      ? handleProfileClick(request.mentorId._id)
-                      : handleProfileClick(request.userId?._id)
-                  }
-                >
-                  {currentUser._id === request.userId
-                    ? `Requested to Mentor "${request.mentorId?.userId?.name}"`
-                    : `Requested by User "${request.userId?.name}"`}
-                </p>
-                <p className="text-sm">
-                  {request.selectedSlot.day} at {request.selectedSlot.timeSlots}
-                </p>
-                <p className="text-xs opacity-75 mt-1">
-                  {getRelativeTime(request.createdAt)}
-                </p>
-              </div>
-              {currentUser.role === "user" ? (
-                <span
-                  className={`${
-                    request.isAccepted === "Accepted"
-                      ? "text-green-600 dark:text-green-400"
-                      : request.isAccepted === "Rejected"
-                      ? "text-red-600 dark:text-red-400"
-                      : "text-yellow-600 dark:text-yellow-400"
-                  }`}
-                >
-                  {request.isAccepted}
-                </span>
-              ) : (
+            </Badge>
+            
+            <div className="flex-1">
+              <div className="flex justify-between items-start">
                 <div>
-                  {/* If request is sent by the mentor */}
-                  {request.userId === currentUser._id ? (
-                    <span
-                      className={`${
-                        request.isAccepted === "Accepted"
-                          ? "text-green-600 dark:text-green-400"
-                          : request.isAccepted === "Rejected"
-                          ? "text-red-600 dark:text-red-400"
-                          : "text-yellow-600 dark:text-yellow-400"
-                      }`}
-                    >
-                      {request.isAccepted}
-                    </span>
-                  ) : (
-                    // If the mentor has received the request
-                    <div>
-                      {request.isAccepted === "Pending" ? (
-                        <div className="flex space-x-2">
-                          <button
-                            className="text-green-500 hover:text-green-700"
-                            onClick={() => handleAccept(request._id)}
-                          >
-                            <FaCheckCircle size={20} />
-                          </button>
-                          <button
-                            className="text-red-500 hover:text-red-700"
-                            onClick={() => handleReject(request._id)}
-                          >
-                            <FaTimesCircle size={20} />
-                          </button>
-                        </div>
-                      ) : (
-                        <span
-                          className={`font-semibold ${
-                            request.isAccepted === "Accepted"
-                              ? "text-green-600 dark:text-green-400"
-                              : "text-red-600 dark:text-red-400"
-                          }`}
-                        >
-                          {request.isAccepted}
-                        </span>
-                      )}
-                    </div>
+                  <h3 
+                    className="text-lg font-medium cursor-pointer hover:text-primary transition-colors"
+                    onClick={() => handleProfileClick(otherPerson._id)}
+                  >
+                    {name}
+                  </h3>
+                  <div className="text-sm text-default-500 flex items-center gap-1 mt-1">
+                    <FaCalendarAlt size={14} />
+                    <span>{request.selectedSlot.day} at {request.selectedSlot.timeSlots}</span>
+                  </div>
+                </div>
+                
+                <div className="flex items-center">
+                  {request.price && (
+                    <Tooltip content="Session Fee">
+                      <div className="text-sm text-default-700 flex items-center gap-1 mr-3">
+                        <FaMoneyBillWave className="text-green-600" />
+                        <span>${request.price}</span>
+                      </div>
+                    </Tooltip>
                   )}
+                  
+                  <div className="text-xs text-default-400 flex items-center">
+                    <FaClock size={12} className="mr-1" />
+                    {getRelativeTime(request.createdAt)}
+                  </div>
+                </div>
+              </div>
+              
+              <p className="text-sm mt-2">
+                {isSent 
+                  ? `You requested a mentoring session with ${name}`
+                  : `${name} requested a mentoring session with you`
+                }
+              </p>
+              
+              <div className="mt-4 flex justify-between items-center">
+                {!isSent && request.isAccepted === "Pending" && (
+                  <div className="flex gap-2">
+                    <Button 
+                      color="success" 
+                      variant="flat" 
+                      size="sm"
+                      startContent={<FaCheckCircle />}
+                      onClick={() => handleAccept(request._id)}
+                    >
+                      Accept
+                    </Button>
+                    <Button 
+                      color="danger" 
+                      variant="flat" 
+                      size="sm"
+                      startContent={<FaTimesCircle />}
+                      onClick={() => handleReject(request._id)}
+                    >
+                      Reject
+                    </Button>
+                  </div>
+                )}
+                
+                {isSent && request.isAccepted === "Accepted" && !request.isPaid && (
+                  <StripeCheckout
+                  stripeKey="pk_test_51QjEUpLJKggnYdjdkq6nC53RrJ8U0Uti4Qwvw1CYK7VDzo7hqF8CVldtejMOhiJblOeipP7uwgxU8JGFMo1bD6aZ00XOGuBYhU"
+                  token={handlePayment}
+                  amount={request.price * 100}
+                  name="ConnectSphere Mentorship"
+                  description={`Book a slot with ${request.mentorId?.userId?.name}`}
+                  email={currentUser.email}
+                ></StripeCheckout>
+                )}
+                
+                {request.isPaid && (
+                  <Chip color="success" variant="flat">
+                    Paid Session
+                  </Chip>
+                )}
+              </div>
+            </div>
+          </div>
+        </CardBody>
+      </Card>
+    );
+  };
+
+  return (
+    <div className="w-full">
+      <Tabs 
+        aria-label="Request tabs" 
+        color="primary" 
+        variant="underlined"
+        classNames={{
+          tabList: "gap-6 w-full relative rounded-none p-0 border-b border-divider",
+          cursor: "w-full bg-primary",
+          tab: "max-w-fit px-0 h-12",
+          tabContent: "group-data-[selected=true]:text-primary"
+        }}
+      >
+        <Tab
+          key="sent"
+          title={
+            <div className="flex items-center gap-2">
+              <FaPaperPlane />
+              <span>Sent Requests</span>
+              {sentRequests.length > 0 && (
+                <Chip size="sm" variant="flat" color="primary">
+                  {sentRequests.length}
+                </Chip>
+              )}
+            </div>
+          }
+        >
+          <div className="mt-4">
+            {isLoading ? (
+              <div className="flex justify-center items-center h-40">
+                <p>Loading sent requests...</p>
+              </div>
+            ) : sentRequests.length > 0 ? (
+              sentRequests.map(request => renderRequestCard(request, true))
+            ) : (
+              <div className="text-center py-8">
+                <p className="text-default-500">You haven't sent any requests yet.</p>
+              </div>
+            )}
+          </div>
+        </Tab>
+        
+        {currentUser.role === "mentor" && (
+          <Tab
+            key="received"
+            title={
+              <div className="flex items-center gap-2">
+                <FaInbox />
+                <span>Received Requests</span>
+                {receivedRequests.length > 0 && (
+                  <Chip size="sm" variant="flat" color="primary">
+                    {receivedRequests.length}
+                  </Chip>
+                )}
+              </div>
+            }
+          >
+            <div className="mt-4">
+              {isLoading ? (
+                <div className="flex justify-center items-center h-40">
+                  <p>Loading received requests...</p>
+                </div>
+              ) : receivedRequests.length > 0 ? (
+                receivedRequests.map(request => renderRequestCard(request, false))
+              ) : (
+                <div className="text-center py-8">
+                  <p className="text-default-500">You haven't received any requests yet.</p>
                 </div>
               )}
             </div>
-            {currentUser.role === "user" &&
-              selectedRequest?._id === request._id &&
-              request.isAccepted === "Accepted" && (
-                <div className="mt-4">
-                  <StripeCheckout
-                    stripeKey="pk_test_51QjEUpLJKggnYdjdkq6nC53RrJ8U0Uti4Qwvw1CYK7VDzo7hqF8CVldtejMOhiJblOeipP7uwgxU8JGFMo1bD6aZ00XOGuBYhU"
-                    token={handlePayment}
-                    amount={request.price * 100}
-                    name="ConnectSphere Mentorship"
-                    description={`Book a slot with ${request.mentorId?.userId?.name}`}
-                    email={currentUser.email}
-                  ></StripeCheckout>
-                </div>
-              )}
-          </div>
-        ))}
-      </div>
+          </Tab>
+        )}
+      </Tabs>
     </div>
   );
 };
 
 export default RequestsSection;
-

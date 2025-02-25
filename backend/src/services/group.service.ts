@@ -1,3 +1,4 @@
+import { sendEmail } from "../utils/email.utils.js";
 import {
   addMemberToGroup,
   createGroupRepository,
@@ -23,6 +24,7 @@ import {
 } from "../repositories/group.repositry.js";
 import stripe from "../utils/stripe.utils.js";
 import { v4 as uuid } from "uuid";
+import { findUserById } from "../repositories/user.repositry.js";
 
 export const createGroupService = async (groupData: GroupFormData) => {
   if (!groupData.name || !groupData.bio || !groupData.adminId || !groupData.startDate) {
@@ -181,16 +183,57 @@ export const removeMemberFromGroup = async (
   groupId: string,
   userId: string
 ) => {
-  // Check if the group exists
+  try {
+    // Check if the group exists
   const group = await findGrouptById(groupId);
   if (!group) {
     throw new Error("Group not found");
   }
 
+  // Check if the user exists
+  const user = await findUserById(userId);
+  if (!user) {
+    throw new Error("User not found");
+  }
+
   // Call the repository function to remove the user
   const updatedGroup = await removeGroupMemberById(groupId, userId);
+
+  // Compose email details
+  const subject = `You have been removed from the group "${group.name}"`;
+  const text = `Hi ${user.name},
+
+We wanted to inform you that you have been removed from the group "${group.name}" on ConnectSphere.
+
+If you believe this was a mistake or have any questions, feel free to reach out to our support team.
+
+Best regards,
+ConnectSphere Team`;
+
+  // Send email notification
+  await sendEmail(user.email, subject, text);
+  console.log(`Removal email sent to: ${user.email}`);
+
   return updatedGroup;
+  } catch (error : any) {
+    throw new Error(error.message);
+  }
 };
+
+// export const removeMemberFromGroup = async (
+//   groupId: string,
+//   userId: string
+// ) => {
+//   // Check if the group exists
+//   const group = await findGrouptById(groupId);
+//   if (!group) {
+//     throw new Error("Group not found");
+//   }
+
+//   // Call the repository function to remove the user
+//   const updatedGroup = await removeGroupMemberById(groupId, userId);
+//   return updatedGroup;
+// };
 
 export const deleteGroupByIdService = async (groupId: string) => {
   // Check if the group exists

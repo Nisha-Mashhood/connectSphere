@@ -1,5 +1,5 @@
 import { Request, Response } from "express";
-import { changeTaskPriorityService, changeTaskStatusService, createTaskService, editTaskService, getTasksByContextService } from "../services/task.service.js";
+import { changeTaskPriorityService, changeTaskStatusService,  createTaskService,  deleteTaskService, editTaskService, getTasksByContextService } from "../services/task.service.js";
 
 
 export const createTask = async (req: Request, res: Response): Promise<void> => {
@@ -8,6 +8,9 @@ export const createTask = async (req: Request, res: Response): Promise<void> => 
       const imagePath = req.file?.path;
       const taskData = JSON.parse(req.body.taskData);
       taskData.createdBy = id;
+
+      console.log(taskData);
+      console.log(imagePath);
 
       const newTask = await createTaskService(taskData, imagePath);
       res.status(201).json({ message: "Task created successfully", task: newTask });
@@ -57,5 +60,16 @@ export const editTask = async (req: Request, res: Response): Promise<void> => {
     res.status(200).json(updatedTask);
   } catch (error: any) {
     res.status(500).json({ message: 'Error editing task', error: error.message });
+  }
+};
+
+export const deleteTask = async (req: Request, res: Response): Promise<void> => {
+  const { taskId } = req.params;
+  try {
+    await deleteTaskService(taskId);
+    res.status(200).json({ message: "Task deleted successfully" });
+  } catch (error: any) {
+    console.error("Error deleting task:", error);
+    res.status(500).json({ message: "Error deleting task", error: error.message });
   }
 };

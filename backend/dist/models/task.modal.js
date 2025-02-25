@@ -54,7 +54,7 @@ const taskSchema = new mongoose.Schema({
             ref: "User",
         },
     ],
-    assignedMentors: [
+    assignedCollaborations: [
         {
             type: mongoose.Schema.Types.ObjectId,
             ref: "Mentor",

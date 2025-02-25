@@ -18,7 +18,15 @@ export const deleteTask = async (taskId: string): Promise<void> => {
 }
 
 export const findTasksByContext = async (contextType: string, contextId: string): Promise<ITask[]> => {
-  return await Task.find({ contextType, contextId });
+  const tasks = await Task.find({
+    $or: [
+      { contextType, contextId }, 
+      { assignedGroups: contextId }, 
+      { assignedCollaborations: contextId } 
+    ]
+  }).populate('createdBy'); 
+
+  return tasks;
 }
 
 export const updateTaskPriority = async (taskId: string, priority: 'low' | 'medium' | 'high'): Promise<ITask | null> => {

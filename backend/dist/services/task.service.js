@@ -1,5 +1,5 @@
 import { uploadImage } from '../utils/cloudinary.utils.js';
-import { createTaskRepo, editTask, findTasksByContext, updateTaskPriority, updateTaskStatus } from '../repositories/task.repositry.js';
+import { createTaskRepo, deleteTask, editTask, findTasksByContext, updateTaskPriority, updateTaskStatus } from '../repositories/task.repositry.js';
 export const createTaskService = async (taskData, imagePath) => {
     if (imagePath) {
         const imageUrl = await uploadImage(imagePath, 'tasks');
@@ -18,5 +18,8 @@ export const changeTaskStatusService = async (taskId, status) => {
 };
 export const editTaskService = async (taskId, updates) => {
     return await editTask(taskId, updates);
+};
+export const deleteTaskService = async (taskId) => {
+    await deleteTask(taskId);
 };
 //# sourceMappingURL=task.service.js.map

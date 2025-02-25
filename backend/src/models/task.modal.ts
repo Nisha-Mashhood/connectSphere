@@ -14,7 +14,7 @@ export interface ITask extends Document {
     contextType: "profile" | "group" | "collaboration";
     contextId: mongoose.Types.ObjectId;
     assignedUsers: mongoose.Types.ObjectId[];
-    assignedMentors: mongoose.Types.ObjectId[];
+    assignedCollaborations: mongoose.Types.ObjectId[];
     assignedGroups: mongoose.Types.ObjectId[];
     createdBy: mongoose.Types.ObjectId;
     createdAt: Date;
@@ -76,7 +76,7 @@ const taskSchema: Schema<ITask> = new mongoose.Schema({
       ref: "User",
     },
   ],
-  assignedMentors: [
+  assignedCollaborations: [
     {
       type: mongoose.Schema.Types.ObjectId,
       ref: "Mentor",

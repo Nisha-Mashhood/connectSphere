@@ -21,6 +21,8 @@ import {
   useDisclosure,
   Select,
   SelectItem,
+  Tabs,
+  Tab,
 } from "@nextui-org/react";
 import {
   FaCalendarAlt,
@@ -33,6 +35,10 @@ import {
   FaPencilAlt,
   FaPlus,
   FaCamera,
+  FaUserFriends,
+  FaUserCog,
+  FaUserGraduate,
+  FaLayerGroup,
 } from "react-icons/fa";
 import RequestsSection from "./RequestSection";
 import GroupRequests from "./GroupRequests";
@@ -58,7 +64,6 @@ import UserConnections from "./UserConnections";
 const Profile = () => {
   const { currentUser } = useSelector((state: RootState) => state.user);
   const { mentorDetails } = useSelector((state: RootState) => state.profile);
-  console.log("Mentor details from Redux:", mentorDetails);
   const [selectedDay, setSelectedDay] = useState("");
   const [selectedTime, setSelectedTime] = useState("");
   const navigate = useNavigate();
@@ -114,7 +119,6 @@ const Profile = () => {
         // Dispatch action to update Redux state
         dispatch(updateUserProfile(user));
         toast.success("Profile Updated Successfully");
-        onContactModalClose();
       }
     } catch (error) {
       console.error("Error updating professional info:", error);
@@ -134,7 +138,6 @@ const Profile = () => {
         // Dispatch action to update Redux state
         dispatch(updateUserProfile(user));
         toast.success("Profile Updated Successfully");
-        onContactModalClose();
       }
     } catch (error) {
       console.error("Error updating contact info:", error);
@@ -149,13 +152,11 @@ const Profile = () => {
         mentorDetails._id,
         mentorshipInfo
       );
-      console.log("Submitted mentorship info:", MentorData);
       onMentorModalClose();
       if (MentorData) {
         // Update Redux state with the returned data
         dispatch(updateMentorInfo(MentorData));
         toast.success("Profile Updated Successfully");
-        onMentorModalClose();
       }
     } catch (error) {
       console.error("Error updating mentor info:", error);
@@ -181,7 +182,6 @@ const Profile = () => {
         // Dispatch action to update Redux state
         dispatch(updateUserProfile(user));
         toast.success("Profile Updated Successfully");
-        onContactModalClose();
       }
     } catch (error) {
       console.error(`Error updating ${type}:`, error);
@@ -286,7 +286,6 @@ const Profile = () => {
     }
     try {
       // Step 1: Check if the profile is complete
-
       const profileResponse = await checkProfile(currentUser._id);
       const isProfileComplete = profileResponse.isProfileComplete;
 
@@ -299,10 +298,8 @@ const Profile = () => {
       }
 
       // Step 2: Check if the user is already a mentor and the approval status
-
       const mentorResponse = await checkMentorProfile(currentUser._id);
       const mentor = mentorResponse.mentor;
-      console.log(mentor);
 
       if (!mentor) {
         // If there's no mentor record, show the mentor profile form
@@ -331,7 +328,7 @@ const Profile = () => {
   return (
     <div className="max-w-7xl mx-auto p-4 space-y-6">
       {/* Profile Header */}
-      <Card className="w-full overflow-hidden">
+      <Card className="w-full overflow-hidden shadow-lg">
         <div className="relative">
           {/* Cover Photo */}
           <div className="relative h-64 w-full">
@@ -346,7 +343,7 @@ const Profile = () => {
                 isIconOnly
                 color="primary"
                 variant="flat"
-                className="absolute bottom-4 right-4 bg-white shadow-md z-10"
+                className="absolute bottom-4 right-4 bg-white/80 backdrop-blur-sm shadow-md z-10 hover:bg-white transition-all"
               >
                 <label className="cursor-pointer">
                   <input
@@ -378,7 +375,7 @@ const Profile = () => {
                   color="primary"
                   size="sm"
                   variant="flat"
-                  className="absolute bottom-0 right-0 bg-white shadow-sm"
+                  className="absolute bottom-0 right-0 bg-white/80 backdrop-blur-sm shadow-sm hover:bg-white transition-all"
                 >
                   <label className="cursor-pointer">
                     <input
@@ -415,128 +412,36 @@ const Profile = () => {
               </div>
               <p className="text-lg text-default-600">{currentUser.jobTitle}</p>
             </div>
-            <Button
-              color="primary"
-              onPress={() => navigate("/create-group")}
-              startContent={<FaPlus />}
-              className="w-full md:w-auto"
-            >
-              Create Group
-            </Button>
+            <div className="flex gap-2">
+              <Button
+                color="primary"
+                onPress={() => navigate("/create-group")}
+                startContent={<FaPlus />}
+              >
+                Create Group
+              </Button>
+            </div>
           </div>
         </CardBody>
       </Card>
 
-      {/* Task Management Section*/}
-      <Card>
-        <CardHeader className="flex gap-3 justify-between">
-          <div className="flex items-center gap-2">
-            <FaCalendarAlt className="text-xl text-primary" />
-            <p className="text-lg font-semibold">My Tasks</p>
-          </div>
-        </CardHeader>
-        <Divider />
-        <CardBody>
-          <TaskManagement
-            context="profile"
-            currentUser={currentUser}
-            contextData={currentUser}
-          />
-        </CardBody>
-      </Card>
-      
-
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-        {/* Professional Info - With Edit Button */}
-        <Card className="w-full hover:shadow-md transition-shadow">
-          <CardHeader className="flex justify-between items-center bg-primary-50">
-            <div className="flex items-center gap-2">
-              <FaBriefcase className="text-xl text-primary" />
-              <p className="text-lg font-semibold">Professional Info</p>
-            </div>
-            <Tooltip content="Edit Professional Info">
-              <Button
-                isIconOnly
-                variant="light"
-                size="sm"
-                onPress={onProfessionalModalOpen}
-              >
-                <FaPencilAlt size={14} />
-              </Button>
-            </Tooltip>
-          </CardHeader>
-          <Divider />
-          <CardBody className="py-4">
-            <div className="space-y-4">
-              <div>
-                <p className="text-sm text-default-500 font-medium">Industry</p>
-                <p className="font-medium">
-                  {currentUser.industry || "Not specified"}
-                </p>
-              </div>
-              <div>
-                <p className="text-sm text-default-500 font-medium">
-                  Reason for Joining
-                </p>
-                <p className="font-medium">
-                  {currentUser.reasonForJoining || "Not specified"}
-                </p>
-              </div>
-            </div>
-          </CardBody>
-        </Card>
-
-        {/* Contact Info - With Edit Button */}
-        <Card className="w-full hover:shadow-md transition-shadow">
-          <CardHeader className="flex justify-between items-center bg-primary-50">
-            <div className="flex items-center gap-2">
-              <FaInfoCircle className="text-xl text-primary" />
-              <p className="text-lg font-semibold">Contact Information</p>
-            </div>
-            <Tooltip content="Edit Contact Info">
-              <Button
-                isIconOnly
-                variant="light"
-                size="sm"
-                onPress={onContactModalOpen}
-              >
-                <FaPencilAlt size={14} />
-              </Button>
-            </Tooltip>
-          </CardHeader>
-          <Divider />
-          <CardBody className="py-4">
-            <div className="space-y-4">
-              <div className="flex items-center gap-2">
-                <FaEnvelope className="text-primary" />
-                <p>{currentUser.email || "No email provided"}</p>
-              </div>
-              <div className="flex items-center gap-2">
-                <FaPhone className="text-primary" />
-                <p>{currentUser.phone || "No phone provided"}</p>
-              </div>
-              <div className="flex items-center gap-2">
-                <FaBirthdayCake className="text-primary" />
-                <p>{formatDate(currentUser.dateOfBirth)}</p>
-              </div>
-            </div>
-          </CardBody>
-        </Card>
-
-        {/* Mentor Details - With Edit Button */}
-        {currentUser.role === "mentor" && mentorDetails ? (
-          <Card className="w-full hover:shadow-md transition-shadow">
+      {/* Profile Info and Tasks Section */}
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+        {/* Left Column - Profile Details */}
+        <div className="space-y-6">
+          {/* Professional Info - With Edit Button */}
+          <Card className="w-full shadow-md hover:shadow-lg transition-shadow">
             <CardHeader className="flex justify-between items-center bg-primary-50">
               <div className="flex items-center gap-2">
-                <FaCalendarAlt className="text-xl text-primary" />
-                <p className="text-lg font-semibold">Mentorship Details</p>
+                <FaBriefcase className="text-xl text-primary" />
+                <p className="text-lg font-semibold">Professional Info</p>
               </div>
-              <Tooltip content="Edit Mentorship Details">
+              <Tooltip content="Edit Professional Info">
                 <Button
                   isIconOnly
                   variant="light"
                   size="sm"
-                  onPress={onMentorModalOpen}
+                  onPress={onProfessionalModalOpen}
                 >
                   <FaPencilAlt size={14} />
                 </Button>
@@ -546,112 +451,274 @@ const Profile = () => {
             <CardBody className="py-4">
               <div className="space-y-4">
                 <div>
-                  <p className="text-sm text-default-500 font-medium">Bio</p>
+                  <p className="text-sm text-default-500 font-medium">Industry</p>
                   <p className="font-medium">
-                    {mentorDetails.bio || "No bio available"}
+                    {currentUser.industry || "Not specified"}
                   </p>
                 </div>
                 <div>
                   <p className="text-sm text-default-500 font-medium">
-                    Available Slots
+                    Reason for Joining
                   </p>
-                  {mentorDetails.availableSlots &&
-                  mentorDetails.availableSlots.length > 0 ? (
-                    <div className="grid grid-cols-1 gap-2">
-                      {mentorDetails.availableSlots.map((slot, index) => (
-                        <Chip
-                          key={index}
-                          variant="flat"
-                          className="w-full"
-                          color="primary"
-                        >
-                          {slot.day} : {slot.timeSlots.join(" , ")}
-                        </Chip>
-                      ))}
-                    </div>
-                  ) : (
-                    <p className="text-sm">No available slots set</p>
-                  )}
+                  <p className="font-medium">
+                    {currentUser.reasonForJoining || "Not specified"}
+                  </p>
                 </div>
               </div>
             </CardBody>
           </Card>
-        ) : (
-          currentUser.role !== "mentor" && (
-            <Card className="w-full hover:shadow-md transition-shadow">
-              <CardHeader className="flex gap-3 bg-primary-50">
-                <FaCalendarAlt className="text-xl text-primary" />
-                <div className="flex flex-col">
-                  <p className="text-lg font-semibold">Become a Mentor</p>
+
+          {/* Contact Info - With Edit Button */}
+          <Card className="w-full shadow-md hover:shadow-lg transition-shadow">
+            <CardHeader className="flex justify-between items-center bg-primary-50">
+              <div className="flex items-center gap-2">
+                <FaInfoCircle className="text-xl text-primary" />
+                <p className="text-lg font-semibold">Contact Information</p>
+              </div>
+              <Tooltip content="Edit Contact Info">
+                <Button
+                  isIconOnly
+                  variant="light"
+                  size="sm"
+                  onPress={onContactModalOpen}
+                >
+                  <FaPencilAlt size={14} />
+                </Button>
+              </Tooltip>
+            </CardHeader>
+            <Divider />
+            <CardBody className="py-4">
+              <div className="space-y-4">
+                <div className="flex items-center gap-2">
+                  <FaEnvelope className="text-primary" />
+                  <p>{currentUser.email || "No email provided"}</p>
                 </div>
+                <div className="flex items-center gap-2">
+                  <FaPhone className="text-primary" />
+                  <p>{currentUser.phone || "No phone provided"}</p>
+                </div>
+                <div className="flex items-center gap-2">
+                  <FaBirthdayCake className="text-primary" />
+                  <p>{formatDate(currentUser.dateOfBirth)}</p>
+                </div>
+              </div>
+            </CardBody>
+          </Card>
+
+          {/* Mentor Details or Become Mentor */}
+          {currentUser.role === "mentor" && mentorDetails ? (
+            <Card className="w-full shadow-md hover:shadow-lg transition-shadow">
+              <CardHeader className="flex justify-between items-center bg-primary-50">
+                <div className="flex items-center gap-2">
+                  <FaUserGraduate className="text-xl text-primary" />
+                  <p className="text-lg font-semibold">Mentorship Details</p>
+                </div>
+                <Tooltip content="Edit Mentorship Details">
+                  <Button
+                    isIconOnly
+                    variant="light"
+                    size="sm"
+                    onPress={onMentorModalOpen}
+                  >
+                    <FaPencilAlt size={14} />
+                  </Button>
+                </Tooltip>
               </CardHeader>
               <Divider />
-              <CardBody className="py-4 flex flex-col items-center justify-center">
-                <p className="text-center mb-4">
-                  Share your expertise and help others grow!
-                </p>
-                <Button color="success" onPress={() => handleBecomeMentor()}>
-                  Apply to be a Mentor
-                </Button>
+              <CardBody className="py-4">
+                <div className="space-y-4">
+                  <div>
+                    <p className="text-sm text-default-500 font-medium">Bio</p>
+                    <p className="font-medium">
+                      {mentorDetails.bio || "No bio available"}
+                    </p>
+                  </div>
+                  <div>
+                    <p className="text-sm text-default-500 font-medium">
+                      Available Slots
+                    </p>
+                    {mentorDetails.availableSlots &&
+                    mentorDetails.availableSlots.length > 0 ? (
+                      <div className="grid grid-cols-1 gap-2">
+                        {mentorDetails.availableSlots.map((slot, index) => (
+                          <Chip
+                            key={index}
+                            variant="flat"
+                            className="w-full"
+                            color="primary"
+                          >
+                            {slot.day}: {slot.timeSlots.join(", ")}
+                          </Chip>
+                        ))}
+                      </div>
+                    ) : (
+                      <p className="text-sm">No available slots set</p>
+                    )}
+                  </div>
+                </div>
               </CardBody>
             </Card>
-          )
-        )}
+          ) : (
+            currentUser.role !== "mentor" && (
+              <Card className="w-full shadow-md hover:shadow-lg transition-shadow">
+                <CardHeader className="flex gap-3 bg-primary-50">
+                  <FaUserGraduate className="text-xl text-primary" />
+                  <div className="flex flex-col">
+                    <p className="text-lg font-semibold">Become a Mentor</p>
+                  </div>
+                </CardHeader>
+                <Divider />
+                <CardBody className="py-4 flex flex-col items-center justify-center">
+                  <p className="text-center mb-4">
+                    Share your expertise and help others grow!
+                  </p>
+                  <Button color="success" onPress={() => handleBecomeMentor()}>
+                    Apply to be a Mentor
+                  </Button>
+                </CardBody>
+              </Card>
+            )
+          )}
+        </div>
+
+        {/* Middle and Right Columns - Task Management and Activity Sections */}
+        <div className="lg:col-span-2 space-y-6">
+          {/* Task Management Section */}
+          <Card className="shadow-md hover:shadow-lg transition-shadow">
+            <CardHeader className="flex gap-3 justify-between bg-primary-50">
+              <div className="flex items-center gap-2">
+                <FaCalendarAlt className="text-xl text-primary" />
+                <p className="text-lg font-semibold">My Tasks</p>
+              </div>
+            </CardHeader>
+            <Divider />
+            <CardBody>
+              <TaskManagement
+                context="profile"
+                currentUser={currentUser}
+                contextData={currentUser}
+              />
+            </CardBody>
+          </Card>
+
+          {/* Activity Sections - Tabbed Interface */}
+          <Card className="shadow-md hover:shadow-lg transition-shadow">
+            <CardHeader className="bg-primary-50">
+              <h2 className="text-xl font-bold">Activity & Connections</h2>
+            </CardHeader>
+            <Divider />
+            <CardBody>
+              <Tabs 
+                aria-label="Profile Activity Sections" 
+                color="primary" 
+                variant="underlined"
+                classNames={{
+                  tabList: "gap-6 w-full relative rounded-none p-0 border-b border-divider",
+                  cursor: "w-full bg-primary",
+                  tab: "max-w-fit px-0 h-12",
+                  tabContent: "group-data-[selected=true]:text-primary"
+                }}
+              >
+                {/* User Connections Tab */}
+                <Tab
+                  key="connections"
+                  title={
+                    <div className="flex items-center gap-2">
+                      <FaUserFriends className="text-lg" />
+                      <span>Connections</span>
+                    </div>
+                  }
+                >
+                  <div className="mt-4 space-y-4">
+                    <Card shadow="sm">
+                      <CardHeader className="bg-blue-50">
+                        <h3 className="text-md font-semibold">Pending Requests</h3>
+                      </CardHeader>
+                      <CardBody>
+                        <RequestsSection handleProfileClick={handleUserProfileClick} />
+                      </CardBody>
+                    </Card>
+                    
+                    <Card shadow="sm">
+                      <CardHeader className="bg-blue-50">
+                        <h3 className="text-md font-semibold">Active Collaborations</h3>
+                      </CardHeader>
+                      <CardBody>
+                        <ActiveCollaborations handleProfileClick={handleUserProfileClick} />
+                      </CardBody>
+                    </Card>
+                    
+                    <Card shadow="sm">
+                      <CardHeader className="bg-blue-50">
+                        <h3 className="text-md font-semibold">My Network</h3>
+                      </CardHeader>
+                      <CardBody>
+                        <UserConnections
+                          currentUser={currentUser}
+                          handleProfileClick={handleUserProfileClick}
+                        />
+                      </CardBody>
+                    </Card>
+                  </div>
+                </Tab>
+                
+                {/* Groups Tab */}
+                <Tab
+                  key="groups"
+                  title={
+                    <div className="flex items-center gap-2">
+                      <FaLayerGroup className="text-lg" />
+                      <span>Groups</span>
+                    </div>
+                  }
+                >
+                  <div className="mt-4 space-y-4">
+                    <Card shadow="sm">
+                      <CardHeader className="bg-green-50">
+                        <h3 className="text-md font-semibold">Group Invitations</h3>
+                      </CardHeader>
+                      <CardBody>
+                        <GroupRequests />
+                      </CardBody>
+                    </Card>
+                    
+                    <Card shadow="sm">
+                      <CardHeader className="bg-green-50">
+                        <h3 className="text-md font-semibold">My Groups</h3>
+                      </CardHeader>
+                      <CardBody>
+                        <GroupCollaborations handleProfileClick={handleUserProfileClick} />
+                      </CardBody>
+                    </Card>
+                  </div>
+                </Tab>
+                
+                {/* Mentor Section Tab - Only if the user is a mentor */}
+                {mentorDetails && (
+                  <Tab
+                    key="mentoring"
+                    title={
+                      <div className="flex items-center gap-2">
+                        <FaUserCog className="text-lg" />
+                        <span>Mentoring</span>
+                      </div>
+                    }
+                  >
+                    <div className="mt-4">
+                      <p className="text-center text-default-500 mb-4">
+                        View and manage your mentoring activities here.
+                      </p>
+                      {/* Add mentoring-specific components here when needed */}
+                    </div>
+                  </Tab>
+                )}
+              </Tabs>
+            </CardBody>
+          </Card>
+        </div>
       </div>
 
-      {/* Activity Sections*/}
-      <div className="space-y-6">
-        <Card>
-          <CardHeader className="bg-primary-50">
-            <h2 className="text-xl font-bold">Pending Requests</h2>
-          </CardHeader>
-          <CardBody>
-            <RequestsSection handleProfileClick={handleUserProfileClick} />
-          </CardBody>
-        </Card>
-
-        <Card>
-          <CardHeader className="bg-primary-50">
-            <h2 className="text-xl font-bold">Pending Requests</h2>
-          </CardHeader>
-          <CardBody>
-            <RequestsSection handleProfileClick={handleUserProfileClick} />
-          </CardBody>
-        </Card>
-
-        <Card>
-          <CardHeader className="bg-primary-50">
-            <h2 className="text-xl font-bold">Active Collaborations</h2>
-          </CardHeader>
-          <CardBody>
-            <ActiveCollaborations handleProfileClick={handleUserProfileClick} />
-          </CardBody>
-        </Card>
-
-        <UserConnections
-          currentUser={currentUser}
-          handleProfileClick={handleUserProfileClick}
-        />
-
-        <Card>
-          <CardHeader className="bg-primary-50">
-            <h2 className="text-xl font-bold">Group Invitations</h2>
-          </CardHeader>
-          <CardBody>
-            <GroupRequests />
-          </CardBody>
-        </Card>
-
-        <Card>
-          <CardHeader className="bg-primary-50">
-            <h2 className="text-xl font-bold">My Groups</h2>
-          </CardHeader>
-          <CardBody>
-            <GroupCollaborations handleProfileClick={handleUserProfileClick} />
-          </CardBody>
-        </Card>
-      </div>
-
+      {/* Modals */}
       {/* Modal for editing Professional Info */}
       <Modal
         isOpen={isProfessionalModalOpen}
@@ -837,33 +904,37 @@ const Profile = () => {
                     </Button>
 
                     {/* Selected Slots Display */}
-                    <div className="space-y-2">
-                      {mentorshipInfo.availableSlots.map((slot) => (
-                        <Card key={slot.day} className="w-full">
-                          <CardBody className="py-2">
-                            <div className="flex items-center justify-between mb-2">
-                              <span className="font-medium text-default-600">
-                                {slot.day}
-                              </span>
+                    <div className="space-y-3">
+                      <p className="text-sm font-medium text-default-600 mb-2">
+                        Currently Selected Slots:
+                      </p>
+                      {mentorshipInfo.availableSlots &&
+                      mentorshipInfo.availableSlots.length > 0 ? (
+                        <div className="divide-y">
+                          {mentorshipInfo.availableSlots.map((slot, dayIndex) => (
+                            <div key={dayIndex} className="py-2">
+                              <p className="font-medium text-primary">{slot.day}</p>
+                              <div className="grid grid-cols-2 gap-2 mt-2">
+                                {slot.timeSlots.map((time, timeIndex) => (
+                                  <Chip
+                                    key={`${dayIndex}-${timeIndex}`}
+                                    onClose={() => handleRemoveSlot(slot.day, time)}
+                                    variant="flat"
+                                    color="primary"
+                                    className="max-w-full"
+                                  >
+                                    {time}
+                                  </Chip>
+                                ))}
+                              </div>
                             </div>
-                            <div className="flex flex-wrap gap-2">
-                              {slot.timeSlots.map((time) => (
-                                <Chip
-                                  key={`${slot.day}-${time}`}
-                                  onClose={() =>
-                                    handleRemoveSlot(slot.day, time)
-                                  }
-                                  variant="flat"
-                                  color="primary"
-                                  size="sm"
-                                >
-                                  {time}
-                                </Chip>
-                              ))}
-                            </div>
-                          </CardBody>
-                        </Card>
-                      ))}
+                          ))}
+                        </div>
+                      ) : (
+                        <p className="text-sm text-default-500">
+                          No slots added yet. Please add your available time slots.
+                        </p>
+                      )}
                     </div>
                   </div>
                 </div>
@@ -885,3 +956,6 @@ const Profile = () => {
 };
 
 export default Profile;
+
+
+

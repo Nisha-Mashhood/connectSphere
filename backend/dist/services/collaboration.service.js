@@ -1,5 +1,5 @@
 import { sendEmail } from "../utils/email.utils.js";
-import { createCollaboration, createTemporaryRequest, deleteMentorRequest, findCollabById, getCollabDataForMentor, getCollabDataForUser, getMentorRequestsByMentorId, getRequestByUserId, updateMentorRequestStatus, } from "../repositories/collaboration.repositry.js";
+import { createCollaboration, createTemporaryRequest, deleteMentorRequest, findCollabById, getCollabDataForMentor, getCollabDataForUser, getMentorRequestsByMentorId, getRequestByUserId, markCollabAsCancelled, updateMentorRequestStatus, } from "../repositories/collaboration.repositry.js";
 import stripe from "../utils/stripe.utils.js";
 import { v4 as uuid } from "uuid";
 export const TemporaryRequestService = async (requestData) => {
@@ -113,7 +113,7 @@ export const getCollabDataForMentorService = async (mentorId) => {
     }
 };
 //Delete collab
-export const removecollab = async (collabId) => {
+export const removecollab = async (collabId, reason) => {
     // Check if the group exists
     const collab = await findCollabById(collabId);
     if (!collab) {
@@ -143,6 +143,7 @@ export const removecollab = async (collabId) => {
     const text = `Dear ${mentorName},
 
   We regret to inform you that your mentorship session with ${userName} has been cancelled.
+  Reason: ${reason}
 
   If you have any questions, please contact support.
 
@@ -150,6 +151,6 @@ export const removecollab = async (collabId) => {
   ConnectSphere Team`;
     await sendEmail(mentorEmail, subject, text);
     console.log(`Cancellation email sent to mentor: ${mentorEmail}`);
-    //return await markCollabAsCancelled(collabId);
+    return await markCollabAsCancelled(collabId);
 };
 //# sourceMappingURL=collaboration.service.js.map

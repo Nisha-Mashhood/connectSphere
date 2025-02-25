@@ -34,5 +34,9 @@ export declare const getCollabDataForMentorService: (mentorId: string) => Promis
 }> & {
     __v: number;
 })[]>;
-export declare const removecollab: (collabId: string) => Promise<void>;
+export declare const removecollab: (collabId: string, reason: string) => Promise<(import("mongoose").Document<unknown, {}, import("../models/collaboration.js").ICollaboration> & import("../models/collaboration.js").ICollaboration & Required<{
+    _id: unknown;
+}> & {
+    __v: number;
+}) | null>;
 //# sourceMappingURL=collaboration.service.d.ts.map

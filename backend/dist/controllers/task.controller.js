@@ -1,10 +1,12 @@
-import { changeTaskPriorityService, changeTaskStatusService, createTaskService, editTaskService, getTasksByContextService } from "../services/task.service.js";
+import { changeTaskPriorityService, changeTaskStatusService, createTaskService, deleteTaskService, editTaskService, getTasksByContextService } from "../services/task.service.js";
 export const createTask = async (req, res) => {
     const { id } = req.params;
     try {
         const imagePath = req.file?.path;
         const taskData = JSON.parse(req.body.taskData);
         taskData.createdBy = id;
+        console.log(taskData);
+        console.log(imagePath);
         const newTask = await createTaskService(taskData, imagePath);
         res.status(201).json({ message: "Task created successfully", task: newTask });
     }
@@ -54,6 +56,17 @@ export const editTask = async (req, res) => {
     }
     catch (error) {
         res.status(500).json({ message: 'Error editing task', error: error.message });
+    }
+};
+export const deleteTask = async (req, res) => {
+    const { taskId } = req.params;
+    try {
+        await deleteTaskService(taskId);
+        res.status(200).json({ message: "Task deleted successfully" });
+    }
+    catch (error) {
+        console.error("Error deleting task:", error);
+        res.status(500).json({ message: "Error deleting task", error: error.message });
     }
 };
 //# sourceMappingURL=task.controller.js.map

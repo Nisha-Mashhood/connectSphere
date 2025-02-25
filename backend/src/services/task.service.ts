@@ -1,6 +1,6 @@
 import { uploadImage } from '../utils/cloudinary.utils.js';
 import { ITask } from '../models/task.modal.js';
-import { createTaskRepo, editTask, findTasksByContext, updateTaskPriority, updateTaskStatus } from '../repositories/task.repositry.js';
+import { createTaskRepo, deleteTask, editTask, findTasksByContext, updateTaskPriority, updateTaskStatus } from '../repositories/task.repositry.js';
 
 
  export const createTaskService = async(taskData: Partial<ITask>, imagePath?: string): Promise<ITask> => {
@@ -25,4 +25,8 @@ import { createTaskRepo, editTask, findTasksByContext, updateTaskPriority, updat
   
   export const editTaskService = async (taskId: string, updates: Partial<ITask>): Promise<ITask | null> => {
     return await editTask(taskId, updates);
+  };
+
+  export const deleteTaskService = async (taskId: string): Promise<void> => {
+    await deleteTask(taskId);
   };

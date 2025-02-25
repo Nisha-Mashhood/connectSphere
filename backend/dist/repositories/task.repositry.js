@@ -13,7 +13,14 @@ export const deleteTask = async (taskId) => {
     await Task.findByIdAndDelete(taskId);
 };
 export const findTasksByContext = async (contextType, contextId) => {
-    return await Task.find({ contextType, contextId });
+    const tasks = await Task.find({
+        $or: [
+            { contextType, contextId },
+            { assignedGroups: contextId },
+            { assignedCollaborations: contextId }
+        ]
+    }).populate('createdBy');
+    return tasks;
 };
 export const updateTaskPriority = async (taskId, priority) => {
     return await Task.findByIdAndUpdate(taskId, { priority }, { new: true });

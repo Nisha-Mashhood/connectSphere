@@ -54,3 +54,13 @@ export const edit_task = async (taskId, updates) => {
     handleError(error);
   }
 };
+
+//Delete Task
+export const  delete_task = async(taskId) =>{
+  try{
+    const response = await axiosInstance.delete(`/task/delete/${taskId}`);
+    return response.data;
+  } catch(error) {
+
+  }
+}
