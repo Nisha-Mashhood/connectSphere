@@ -377,7 +377,7 @@ const ExploreMentors = () => {
     };
   };
 
-  // UJSX for mentor cards
+  // JSX for mentor cards
   const renderMentorCard = (mentor) => {
     const buttonConfig = getMentorButtonConfig(mentor);
 

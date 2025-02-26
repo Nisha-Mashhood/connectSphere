@@ -10,7 +10,7 @@ import Profile from "../Components/User/Common/Profile/Profile";
 import PrivateRoute from "../Components/User/PrivateRoute";
 import CompleteProfile from "../Components/User/UserComponents/CompleteProfile";
 import MentorProfileForm from "../Components/User/Mentor/MentorProfileForm";
-import ProfileDisplay from "../Components/User/Mentor/Mentorship";
+import ProfileDisplay from "../Components/User/Mentor/ProfileDisplay";
 import PageNotFound from "../Components/PageNotFound";
 import { ForbiddenPage } from "../Components/ForebiddenPage";
 import GithubCallback from "../Components/User/Auth/GithubCallback";

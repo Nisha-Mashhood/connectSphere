@@ -9,20 +9,29 @@ import {
   FaClock,
   FaGraduationCap,
   FaMoneyBillWave,
+  FaCheckCircle,
+  FaTimesCircle,
 } from "react-icons/fa";
-import { useSelector } from "react-redux";
-import { RootState } from "../../../redux/store";
+import { useDispatch, useSelector } from "react-redux";
+import { AppDispatch, RootState } from "../../../redux/store";
 import {
   getCollabDataforMentor,
   getCollabDataforUser,
+  getTheRequestByUser,
   SendRequsetToMentor,
 } from "../../../Service/collaboration.Service";
 import toast from "react-hot-toast";
 import { fetchUserDetails } from "../../../Service/User.Service";
+import {
+  respondToUser_UserRequest,
+  sendUser_UserRequset,
+} from "../../../Service/User-User.Service";
+import { fetchUserConnections } from "../../../redux/Slice/profileSlice";
 
 const ProfileDisplay = () => {
   const { currentUser } = useSelector((state: RootState) => state.user);
-  const { Id } = useParams();
+  const { userConnections } = useSelector((state: RootState) => state.profile);
+  const { Id } = useParams(); // mentorId
   const [mentor, setMentor] = useState<any>(null);
   const [user, setUser] = useState<any>(null);
   const [isMentor, setIsMentor] = useState<boolean>(true);
@@ -31,8 +40,10 @@ const ProfileDisplay = () => {
   const [selectedSlot, setSelectedSlot] = useState("");
   const [hasExistingCollaboration, setHasExistingCollaboration] =
     useState(false);
+  const [existingRequest, setExistingRequest] = useState<any>(null);
   const [isCurrentUserMentor, setIsCurrentUserMentor] = useState(false);
   const navigate = useNavigate();
+  const dispatch = useDispatch<AppDispatch>();
 
   //function to check if user is a mentor
   const checkIfUserIsMentor = async (userId: string) => {
@@ -42,6 +53,21 @@ const ProfileDisplay = () => {
     } catch (error) {
       console.error("Error checking mentor status:", error);
       return false;
+    }
+  };
+
+  //Check for existing requsets
+  const fetchExistingRequest = async () => {
+    try {
+      const response = await getTheRequestByUser(currentUser._id);
+      console.log(response);
+      const filteredRequest = response.requests.find(
+        (req: any) => req.mentorId._id === Id
+      );
+
+      setExistingRequest(filteredRequest || null);
+    } catch (error) {
+      console.error("Error fetching existing requests:", error);
     }
   };
 
@@ -113,12 +139,19 @@ const ProfileDisplay = () => {
             checkExistingCollaboration(collabDataForUser)
           );
         }
+
+        // Fetch existing requests
+        fetchExistingRequest();
       } catch (error) {
         console.error("Error fetching details:", error);
       }
     };
     fetchdata();
+    //fetch user connections
+    dispatch(fetchUserConnections(currentUser._id));
   }, [Id, currentUser?._id]);
+
+  console.log("existingRequest :", existingRequest);
 
   if (!mentor && !user) {
     return (
@@ -156,6 +189,33 @@ const ProfileDisplay = () => {
     } catch (error: any) {
       console.error("Error sending request:", error.message);
       toast.error("Failed to send the request. Please try again.");
+    }
+  };
+
+  const handleConnect = async () => {
+    try {
+      console.log(`Sending request to user ${Id}`);
+      const newConnection = await sendUser_UserRequset(currentUser._id, Id);
+      if (newConnection) {
+        toast.success("Connection Requset send successfully");
+        dispatch(fetchUserConnections(currentUser._id));
+      }
+    } catch (error) {
+      console.error("Error sending user request:", error);
+    }
+  };
+  console.log("User connections :", userConnections);
+
+  const handleRequestResponse = async (requestId, action) => {
+    try {
+      const response = await respondToUser_UserRequest(requestId, action);
+      if (response) {
+        toast.success(`Request ${action} successfully`);
+        dispatch(fetchUserConnections(currentUser._id));
+      }
+    } catch (error) {
+      console.log(error);
+      toast.error(`Failed to ${action} request`);
     }
   };
 
@@ -211,33 +271,130 @@ const ProfileDisplay = () => {
                 </div>
               </div>
               <div className="mt-5 sm:mt-0">
-                {isMentor && (
-                  <>
-                    {isCurrentUserMentor ? (
-                      // If current user is a mentor, don't show book button
-                      <div className="text-gray-600 font-medium">
-                        You are a mentor
+                {currentUser?._id === Id ? (
+                  // If the logged-in user is viewing their own profile
+                  <p className="text-gray-500 font-semibold">
+                    This is your profile
+                  </p>
+                ) : !mentor ? (
+                  // If viewing another user's profile (not a mentor)
+                  <div>
+                    {userConnections?.received?.find(
+                      (req) =>
+                        req.requester === Id && req.requestStatus === "Pending"
+                    ) ? (
+                      // Show accept/reject buttons for pending received requests
+                      <div className="flex gap-2">
+                        <button
+                          onClick={() =>
+                            handleRequestResponse(
+                              userConnections.received.find(
+                                (req) =>
+                                  req.requester === Id &&
+                                  req.requestStatus === "Pending"
+                              )._id,
+                              "Accepted"
+                            )
+                          }
+                          className="bg-green-600 text-white px-3 py-2 rounded-md hover:bg-green-700 flex items-center gap-1"
+                        >
+                          <FaCheckCircle /> Accept
+                        </button>
+                        <button
+                          onClick={() =>
+                            handleRequestResponse(
+                              userConnections.received.find(
+                                (req) =>
+                                  req.requester === Id &&
+                                  req.requestStatus === "Pending"
+                              )._id,
+                              "Rejected"
+                            )
+                          }
+                          className="bg-red-600 text-white px-3 py-2 rounded-md hover:bg-red-700 flex items-center gap-1"
+                        >
+                          <FaTimesCircle /> Reject
+                        </button>
                       </div>
-                    ) : currentUser?._id === Id ? (
-                      // If current user is viewing their own profile
-                      <div className="text-gray-600 font-medium">
-                        Your profile
-                      </div>
-                    ) : hasExistingCollaboration ? (
-                      // If there's an existing collaboration
-                      <div className="text-green-600 font-medium">
-                        Already in collaboration
-                      </div>
-                    ) : (
-                      // Show book button if none of the above conditions are met
+                    ) : userConnections?.sent?.find(
+                        (req) =>
+                          req.recipient?._id === Id &&
+                          req.requestStatus === "Pending"
+                      ) ? (
+                      // Request sent but pending
                       <button
-                        onClick={openModal}
-                        className="w-full flex items-center justify-center px-8 py-3 border border-transparent text-base font-medium rounded-md text-white bg-blue-600 hover:bg-blue-700 md:py-4 md:text-lg md:px-10"
+                        className="bg-yellow-600 text-white px-4 py-2 rounded-md"
+                        disabled
                       >
-                        Book Session
+                        Request Sent
+                      </button>
+                    ) : userConnections?.sent?.find(
+                        (req) =>
+                          req.recipient?._id === Id &&
+                          (req.connectionStatus === "Connected" ||
+                            req.requestStatus === "Accepted")
+                      ) ||
+                      userConnections?.received?.find(
+                        (req) =>
+                          req.requester === Id &&
+                          (req.connectionStatus === "Connected" ||
+                            req.requestStatus === "Accepted")
+                      ) ? (
+                      // Already connected
+                      <button
+                        className="bg-green-600 text-white px-4 py-2 rounded-md"
+                        disabled
+                      >
+                        Connected
+                      </button>
+                    ) : userConnections?.sent?.find(
+                        (req) =>
+                          req.recipient?._id === Id &&
+                          req.requestStatus === "Rejected"
+                      ) ? (
+                      // Request was rejected
+                      <button
+                        className="bg-gray-600 text-white px-4 py-2 rounded-md hover:bg-blue-700"
+                        onClick={handleConnect}
+                      >
+                        Request Again
+                      </button>
+                    ) : (
+                      // No connection yet, show connect button
+                      <button
+                        className="bg-blue-600 text-white px-4 py-2 rounded-md hover:bg-blue-700"
+                        onClick={handleConnect}
+                      >
+                        Connect
                       </button>
                     )}
-                  </>
+                  </div>
+                ) : hasExistingCollaboration ? (
+                  // If the logged-in user is already in collaboration
+                  <p className="text-green-600 font-semibold">
+                    ✅ Already in Collaboration
+                  </p>
+                ) : existingRequest ? (
+                  // If a request is already sent
+                  <p
+                    className={`font-semibold ${
+                      existingRequest.isAccepted === "Pending"
+                        ? "text-yellow-600"
+                        : "text-green-600"
+                    }`}
+                  >
+                    {existingRequest.isAccepted === "Pending"
+                      ? "⏳ Request Pending"
+                      : "✔️ Request Approved"}
+                  </p>
+                ) : (
+                  // If no request is sent and no collaboration exists, show "Send Request" button
+                  <button
+                    onClick={openModal}
+                    className="w-full flex items-center justify-center px-8 py-3 border border-transparent text-base font-medium rounded-md text-white bg-blue-600 hover:bg-blue-700 md:py-4 md:text-lg md:px-10"
+                  >
+                    Book Session
+                  </button>
                 )}
               </div>
             </div>
