@@ -400,7 +400,7 @@ const Profile = () => {
             <div className="flex-1 space-y-2 mt-10 md:mt-0">
               <div className="flex items-center gap-2">
                 <h1 className="text-2xl font-bold">{currentUser.name}</h1>
-                {mentorDetails ? (
+                {currentUser.role === 'mentor' ? (
                   <Chip color="success" variant="flat">
                     Mentor
                   </Chip>

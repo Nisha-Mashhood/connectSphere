@@ -126,6 +126,11 @@ const RequestsSection = ({ handleProfileClick }) => {
     const otherPerson = isSent 
       ? (request.mentorId?.userId || {}) 
       : (request.userId || {});
+
+    const profileId = isSent 
+    ? (request.mentorId?._id) // Use mentorId for sent requests to mentors
+    : (otherPerson._id);   
+
     
     const profilePic = otherPerson.profilePic || "/default-avatar.png";
     const name = otherPerson.name || "Unknown User";
@@ -148,7 +153,7 @@ const RequestsSection = ({ handleProfileClick }) => {
                 isBordered={request.isAccepted === "Accepted"}
                 color={request.isAccepted === "Accepted" ? "success" : 
                       request.isAccepted === "Rejected" ? "danger" : "warning"}
-                onClick={() => handleProfileClick(otherPerson._id)}
+                onClick={() => handleProfileClick(profileId)}
                 isFocusable
               />
             </Badge>
@@ -158,7 +163,7 @@ const RequestsSection = ({ handleProfileClick }) => {
                 <div>
                   <h3 
                     className="text-lg font-medium cursor-pointer hover:text-primary transition-colors"
-                    onClick={() => handleProfileClick(otherPerson._id)}
+                    onClick={() => handleProfileClick(profileId)}
                   >
                     {name}
                   </h3>

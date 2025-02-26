@@ -134,6 +134,10 @@ const TaskManagement = ({ context, currentUser, contextData }) => {
       newErrors.name = "Task name is required";
     }
 
+    if(!taskData.description.trim()) {
+      newErrors.description ="task description is required"
+    }
+
     if (!taskData.startDate) {
       newErrors.startDate = "Start date is required";
     }
@@ -194,11 +198,12 @@ const TaskManagement = ({ context, currentUser, contextData }) => {
     fetchTasks();
   }, [context, currentUser, contextData]);
 
+
+
   const handleTaskCreate = async () => {
     if (!validateDates()) {
       return;
     }
-
     try {
       const formData = new FormData();
 
@@ -867,9 +872,12 @@ const TaskManagement = ({ context, currentUser, contextData }) => {
                     onChange={(e) =>
                       setTaskData({ ...taskData, name: e.target.value })
                     }
-                    isInvalid={!!errors.name}
-                    errorMessage={errors.name}
                   />
+                  {errors.name && (
+                    <span className="text-xs text-danger">
+                      {errors.name}
+                    </span>
+                  )}
                 </div>
                 <div className="w-32">
                   <input
@@ -908,9 +916,12 @@ const TaskManagement = ({ context, currentUser, contextData }) => {
                 onChange={(e) =>
                   setTaskData({ ...taskData, description: e.target.value })
                 }
-                isInvalid={!!errors.description}
-                errorMessage={errors.description}
               />
+              {errors.description && (
+                    <span className="text-xs text-danger">
+                      {errors.description}
+                    </span>
+                  )}
 
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div>
