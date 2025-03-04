@@ -31,6 +31,13 @@ const taskSchema = new mongoose.Schema({
     notificationDate: {
         type: Date,
     },
+    notificationTime: {
+        type: String,
+    },
+    notificationSubscription: {
+        type: Object,
+        default: null
+    },
     privacy: {
         type: String,
         enum: ["private", "public"],

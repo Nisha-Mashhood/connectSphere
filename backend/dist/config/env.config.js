@@ -20,7 +20,10 @@ const config = {
     githubcallbackurl: process.env.GITHUB_CALLBACK_URL,
     baseurl: process.env.BASE_URL,
     sessionsecret: process.env.SESSION_SECRET,
-    adminpasscode: process.env.PASSKEY_ADMIN
+    adminpasscode: process.env.PASSKEY_ADMIN,
+    vapidPublicKey: process.env.VAPID_PUBLIC_KEY,
+    vapidPrivateKey: process.env.VAPID_PRIVATE_KEY,
+    vapidEmail: process.env.VAPID_EMAIL
 };
 export default config;
 //# sourceMappingURL=env.config.js.map

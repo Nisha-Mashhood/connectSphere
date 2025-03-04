@@ -5,7 +5,7 @@ import { signOut } from "../redux/Slice/userSlice";
 import toast from "react-hot-toast";
 
 export const axiosInstance = axios.create({
-  baseURL: "http://localhost:3000/api",
+  baseURL: import.meta.env.VITE_BACKEND_URL,
   withCredentials: true,
 });
 

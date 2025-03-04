@@ -13,9 +13,11 @@ import groupRoutes from "./routes/group.routes.js";
 import feedbackRoutes from './routes/feedback.routes.js';
 import user_userCollabRoutes from './routes/userCollaboration.routes.js';
 import taskRoutes from './routes/tasks.routes.js';
+import notificationRoutes from './routes/notification.routes.js';
 import helmet from "helmet";
 import cors from "cors";
 import cookieParser from "cookie-parser";
+import { scheduleNotifications } from "./utils/node-cron.utils.js";
 dotenv.config();
 const app = express();
 // Connect to DB
@@ -40,6 +42,7 @@ app.use("/api/group", groupRoutes);
 app.use("/api/feedback", feedbackRoutes);
 app.use("/api/user-userCollab", user_userCollabRoutes);
 app.use("/api/task", taskRoutes);
+app.use("/api/notification", notificationRoutes);
 // Placeholder route
 app.get("/", (_req, res) => {
     res.send("Connect Sphere Backend is running!");
@@ -49,6 +52,8 @@ app.use((err, _req, res, _next) => {
     console.error(err.stack);
     res.status(500).send({ error: "Something went wrong!" });
 });
+// Start Cron Jobs 
+scheduleNotifications();
 // Start server
 app.listen(config.port, () => {
     console.log(`Server is running on http://localhost:${config.port}`);

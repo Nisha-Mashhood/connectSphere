@@ -47,6 +47,7 @@ import {
   update_task_priority,
   update_task_status,
 } from "../../../Service/Task.Service";
+import { registerSW, sendSubscriptionToServer, subcribeTOSW } from "../../../Service/NotificationService";
 
 interface ITaskData {
   name: string;
@@ -55,6 +56,7 @@ interface ITaskData {
   startDate: string;
   dueDate: string;
   notificationDate: string;
+  notificationTime: string;
   privacy: "private";
   status: "pending" | "in-progress" | "completed" | "not-completed";
   assignedGroups: Set<string>;
@@ -69,6 +71,7 @@ interface ITaskErrors {
   startDate?: string;
   dueDate?: string;
   notificationDate?: string;
+  notificationTime?: string;
 }
 
 const TaskManagement = ({ context, currentUser, contextData }) => {
@@ -100,6 +103,7 @@ const TaskManagement = ({ context, currentUser, contextData }) => {
     startDate: "",
     dueDate: "",
     notificationDate: "",
+    notificationTime: "",
     privacy: "private",
     status: "pending",
     assignedGroups: new Set([]),
@@ -134,12 +138,16 @@ const TaskManagement = ({ context, currentUser, contextData }) => {
       newErrors.name = "Task name is required";
     }
 
-    if(!taskData.description.trim()) {
-      newErrors.description ="task description is required"
+    if (!taskData.description.trim()) {
+      newErrors.description = "task description is required";
     }
 
     if (!taskData.startDate) {
       newErrors.startDate = "Start date is required";
+    }
+
+    if (!taskData.notificationTime) {
+      newErrors.startDate = "Notification Time is required";
     }
 
     if (!taskData.dueDate) {
@@ -179,14 +187,18 @@ const TaskManagement = ({ context, currentUser, contextData }) => {
     try {
       const response = await get_tasks_by_context(context, contextData?._id);
       if (response) {
-        const myTasks = response.filter(task => task.createdBy._id === currentUser._id);
-      const assignedByOthers = response.filter(task => task.createdBy._id !== currentUser._id);
+        const myTasks = response.filter(
+          (task) => task.createdBy._id === currentUser._id
+        );
+        const assignedByOthers = response.filter(
+          (task) => task.createdBy._id !== currentUser._id
+        );
 
-      console.log("My Tasks:", myTasks);
-      console.log("Assigned by Others:", assignedByOthers);
+        console.log("My Tasks:", myTasks);
+        console.log("Assigned by Others:", assignedByOthers);
 
-      setTasks(myTasks);
-      setAssignedByOthers(assignedByOthers);
+        setTasks(myTasks);
+        setAssignedByOthers(assignedByOthers);
       }
     } catch (error) {
       console.error("Error fetching tasks:", error);
@@ -198,7 +210,24 @@ const TaskManagement = ({ context, currentUser, contextData }) => {
     fetchTasks();
   }, [context, currentUser, contextData]);
 
+  const generateTimeOptions = () => {
+    const options = [];
 
+    for (let hour = 0; hour < 24; hour++) {
+      // Format as 12-hour time with AM/PM
+      const period = hour < 12 ? "AM" : "PM";
+      const displayHour = hour === 0 ? 12 : hour > 12 ? hour - 12 : hour;
+
+      // Format with leading zeros for hours less than 10
+      const formattedHour = displayHour < 10 ? `0${displayHour}` : displayHour;
+
+      // Add the hour and half-hour options
+      options.push(`${formattedHour}:00 ${period}`);
+      options.push(`${formattedHour}:30 ${period}`);
+    }
+
+    return options;
+  };
 
   const handleTaskCreate = async () => {
     if (!validateDates()) {
@@ -242,7 +271,6 @@ const TaskManagement = ({ context, currentUser, contextData }) => {
           : [],
       };
 
-      console.log("New TaskData :" , newTask)
 
       // Append task data as a JSON string
       formData.append("taskData", JSON.stringify(newTask));
@@ -252,17 +280,117 @@ const TaskManagement = ({ context, currentUser, contextData }) => {
         formData.append("image", taskData.taskImage);
       }
 
-     const response = await create_task(currentUser._id, formData);
+      const response = await create_task(currentUser._id, formData);
+      console.log("Created Task : ",response);
+      let newTaskData = response.task;
 
       if (response) {
         toast.success("Task created successfully!");
         setIsOpen(false);
         resetForm();
         fetchTasks();
+        
+      const subscriptionResult = await handleSubscribe(newTaskData);
+      if (subscriptionResult?.success) {
+        toast.success("subscriptionResult ok");
+      } else {
+        toast.error("subscriptionResult not ok");
+      }
       }
     } catch (error) {
       toast.error("Failed to create task");
       console.error("Error creating task:", error);
+    }
+  };
+
+
+  //TODO: handle subscription
+  const convertTo24HourFormat = (timeStr: string) => {
+    const match = timeStr.match(/^(\d{1,2}):(\d{2})\s?(AM|PM)?$/i);
+    if (!match) return null;
+  
+    let [_, hours, minutes, period] = match;
+    let hoursInt = parseInt(hours, 10);
+  
+    if (period?.toUpperCase() === "PM" && hoursInt !== 12) {
+      hoursInt += 12; // Convert PM hours (except 12 PM)
+    } else if (period?.toUpperCase() === "AM" && hoursInt === 12) {
+      hoursInt = 0; // Convert 12 AM to 00
+    }
+  
+    return `${hoursInt.toString().padStart(2, "0")}:${minutes}`;
+  };
+  
+  const handleSubscribe = async (taskData) => {
+    try {
+      // Register a service worker
+      await registerSW();
+  
+      if (!taskData?.notificationDate || !taskData?.notificationTime) {
+        console.error("Notification date and time are required.");
+        return;
+      }
+  
+      // Validate notificationDate
+      if (isNaN(Date.parse(taskData.notificationDate))) {
+        console.error("Invalid notification date:", taskData.notificationDate);
+        return;
+      }
+  
+      // Convert to 24-hour format
+      const notificationTime24 = convertTo24HourFormat(taskData.notificationTime);
+      if (!notificationTime24) {
+        console.error("Invalid notification time format:", taskData.notificationTime);
+        return;
+      }
+  
+      // Check if notificationDate is already in ISO format
+      const isIsoDate = taskData.notificationDate.includes('T');
+  
+      // Construct Date-Time String properly
+      let dateTimeString;
+      if (isIsoDate) {
+        // If it's already ISO format, extract just the date part
+        const datePart = taskData.notificationDate.split('T')[0];
+        dateTimeString = `${datePart}T${notificationTime24}:00`;
+      } else {
+        // Use as is if it's just a date
+        dateTimeString = `${taskData.notificationDate}T${notificationTime24}:00`;
+      }
+  
+      console.log("Date-Time String before conversion:", dateTimeString);
+      
+      // Convert to Date object
+      const notificationDateTime = new Date(dateTimeString);
+  
+      console.log("AFTER CONVERTING TO DATE OBJECT:", notificationDateTime);
+      
+      if (isNaN(notificationDateTime.getTime())) {
+        console.error("Invalid Date-Time Value:", notificationDateTime);
+        return;
+      }
+  
+      const isoString = notificationDateTime.toISOString();
+      console.log("Final Notification Date-Time (ISO):", isoString);
+  
+      const notifPermission = await Notification.requestPermission();
+      if(notifPermission === 'default' || notifPermission === 'denied'){
+        toast.error("please allow notification permission");
+        return;
+      }
+      
+      // Subscribe to the registered service worker
+      const subscription = await subcribeTOSW();
+  
+      // Send task data also to store in task modal
+      if (subscription) {
+        await sendSubscriptionToServer(subscription, { notificationDateTime: isoString }, taskData);
+        console.log("Subscription & notification time sent!");
+        return { success: true, message: `Your notification is set for ${taskData.notificationDate} at ${taskData.notificationTime}.` };
+      }
+    } catch (error) {
+      console.error("Subscription failed:", error);
+      return { success: false, message: "Failed to set notification." };
     }
   };
 
@@ -393,6 +521,7 @@ const TaskManagement = ({ context, currentUser, contextData }) => {
       startDate: formatDate(task.startDate),
       dueDate: formatDate(task.dueDate),
       notificationDate: formatDate(task.notificationDate),
+      notificationTime: task.notificationTime,
       privacy: task.privacy || "private",
       status: task.status || "pending",
       assignedGroups: new Set(task.assignedGroups || []),
@@ -427,6 +556,7 @@ const TaskManagement = ({ context, currentUser, contextData }) => {
       startDate: "",
       dueDate: "",
       notificationDate: "",
+      notificationTime: "",
       privacy: "private",
       status: "pending",
       assignedGroups: new Set([]),
@@ -640,224 +770,243 @@ const TaskManagement = ({ context, currentUser, contextData }) => {
         selectedKey={selectedTab}
         onSelectionChange={(key) => setSelectedTab(key.toString())}
       >
-        
-<Tab
-  key="my-tasks"
-  title={
-    <div className="flex items-center gap-2">
-      <MdAssignment />
-      <span>My Tasks</span>
-    </div>
-  }
->
-  <Tabs 
-    aria-label="My Tasks"
-    className="mt-2"
-    variant="light"
-  >
-    <Tab
-      key="my-upcoming"
-      title={
-        <div className="flex items-center gap-2">
-          <FaArrowUp />
-          <span>Upcoming</span>
-        </div>
-      }
-    >
-      <div className="mt-4">
-        {getUpcomingTasks().map((task, index) => (
-          <div key={task._id || index}>{renderTaskCard(task)}</div>
-        ))}
-        {getUpcomingTasks().length === 0 && (
-          <div className="text-center py-8 text-gray-500">
-            No upcoming tasks found
-          </div>
-        )}
-      </div>
-    </Tab>
-    <Tab
-      key="my-pending"
-      title={
-        <div className="flex items-center gap-2">
-          <FaHourglassHalf />
-          <span>Pending</span>
-        </div>
-      }
-    >
-      <div className="mt-4">
-        {getPendingTasks().map((task, index) => (
-          <div key={task._id || index}>{renderTaskCard(task)}</div>
-        ))}
-        {getPendingTasks().length === 0 && (
-          <div className="text-center py-8 text-gray-500">
-            No pending tasks found
-          </div>
-        )}
-      </div>
-    </Tab>
-    <Tab
-      key="my-completed"
-      title={
-        <div className="flex items-center gap-2">
-          <FaListUl />
-          <span>Completed</span>
-        </div>
-      }
-    >
-      <div className="mt-4">
-        {tasks.filter(task => task.status === "completed").map((task, index) => (
-          <div key={task._id || index}>{renderTaskCard(task)}</div>
-        ))}
-        {tasks.filter(task => task.status === "completed").length === 0 && (
-          <div className="text-center py-8 text-gray-500">
-            No completed tasks found
-          </div>
-        )}
-      </div>
-    </Tab>
-    <Tab
-      key="my-not-completed"
-      title={
-        <div className="flex items-center gap-2">
-          <FaTimes />
-          <span>Not Completed</span>
-        </div>
-      }
-    >
-      <div className="mt-4">
-        {tasks.filter(task => task.status === "not-completed").map((task, index) => (
-          <div key={task._id || index}>{renderTaskCard(task)}</div>
-        ))}
-        {tasks.filter(task => task.status === "not-completed").length === 0 && (
-          <div className="text-center py-8 text-gray-500">
-            No not-completed tasks found
-          </div>
-        )}
-      </div>
-    </Tab>
-  </Tabs>
-</Tab>
+        <Tab
+          key="my-tasks"
+          title={
+            <div className="flex items-center gap-2">
+              <MdAssignment />
+              <span>My Tasks</span>
+            </div>
+          }
+        >
+          <Tabs aria-label="My Tasks" className="mt-2" variant="light">
+            <Tab
+              key="my-upcoming"
+              title={
+                <div className="flex items-center gap-2">
+                  <FaArrowUp />
+                  <span>Upcoming</span>
+                </div>
+              }
+            >
+              <div className="mt-4">
+                {getUpcomingTasks().map((task, index) => (
+                  <div key={task._id || index}>{renderTaskCard(task)}</div>
+                ))}
+                {getUpcomingTasks().length === 0 && (
+                  <div className="text-center py-8 text-gray-500">
+                    No upcoming tasks found
+                  </div>
+                )}
+              </div>
+            </Tab>
+            <Tab
+              key="my-pending"
+              title={
+                <div className="flex items-center gap-2">
+                  <FaHourglassHalf />
+                  <span>Pending</span>
+                </div>
+              }
+            >
+              <div className="mt-4">
+                {getPendingTasks().map((task, index) => (
+                  <div key={task._id || index}>{renderTaskCard(task)}</div>
+                ))}
+                {getPendingTasks().length === 0 && (
+                  <div className="text-center py-8 text-gray-500">
+                    No pending tasks found
+                  </div>
+                )}
+              </div>
+            </Tab>
+            <Tab
+              key="my-completed"
+              title={
+                <div className="flex items-center gap-2">
+                  <FaListUl />
+                  <span>Completed</span>
+                </div>
+              }
+            >
+              <div className="mt-4">
+                {tasks
+                  .filter((task) => task.status === "completed")
+                  .map((task, index) => (
+                    <div key={task._id || index}>{renderTaskCard(task)}</div>
+                  ))}
+                {tasks.filter((task) => task.status === "completed").length ===
+                  0 && (
+                  <div className="text-center py-8 text-gray-500">
+                    No completed tasks found
+                  </div>
+                )}
+              </div>
+            </Tab>
+            <Tab
+              key="my-not-completed"
+              title={
+                <div className="flex items-center gap-2">
+                  <FaTimes />
+                  <span>Not Completed</span>
+                </div>
+              }
+            >
+              <div className="mt-4">
+                {tasks
+                  .filter((task) => task.status === "not-completed")
+                  .map((task, index) => (
+                    <div key={task._id || index}>{renderTaskCard(task)}</div>
+                  ))}
+                {tasks.filter((task) => task.status === "not-completed")
+                  .length === 0 && (
+                  <div className="text-center py-8 text-gray-500">
+                    No not-completed tasks found
+                  </div>
+                )}
+              </div>
+            </Tab>
+          </Tabs>
+        </Tab>
 
-{/* Assigned By Others Section */}
-<Tab
-  key="assigned-tasks"
-  title={
-    <div className="flex items-center gap-2">
-      <BsPersonCheck />
-      <span>Assigned By Others</span>
-      {assignedByOthers.length > 0 && (
-        <Chip size="sm" color="secondary">{assignedByOthers.length}</Chip>
-      )}
-    </div>
-  }
->
-  <Tabs 
-    aria-label="Assigned Tasks"
-    className="mt-2"
-    variant="light"
-  >
-    <Tab
-      key="assigned-upcoming"
-      title={
-        <div className="flex items-center gap-2">
-          <FaArrowUp />
-          <span>Upcoming</span>
-        </div>
-      }
-    >
-      <div className="mt-4">
-        {assignedByOthers.filter(task => {
-          const startDate = new Date(task.startDate);
-          const today = new Date();
-          return startDate > today && task.status !== "completed";
-        }).map((task, index) => (
-          <div key={task._id || index}>{renderTaskCard(task)}</div>
-        ))}
-        {assignedByOthers.filter(task => {
-          const startDate = new Date(task.startDate);
-          const today = new Date();
-          return startDate > today && task.status !== "completed";
-        }).length === 0 && (
-          <div className="text-center py-8 text-gray-500">
-            No upcoming assigned tasks found
-          </div>
-        )}
-      </div>
-    </Tab>
-    <Tab
-      key="assigned-pending"
-      title={
-        <div className="flex items-center gap-2">
-          <FaHourglassHalf />
-          <span>Pending</span>
-        </div>
-      }
-    >
-      <div className="mt-4">
-        {assignedByOthers.filter(task => {
-          const startDate = new Date(task.startDate);
-          const dueDate = new Date(task.dueDate);
-          const today = new Date();
-          return startDate <= today && today <= dueDate && task.status !== "completed";
-        }).map((task, index) => (
-          <div key={task._id || index}>{renderTaskCard(task)}</div>
-        ))}
-        {assignedByOthers.filter(task => {
-          const startDate = new Date(task.startDate);
-          const dueDate = new Date(task.dueDate);
-          const today = new Date();
-          return startDate <= today && today <= dueDate && task.status !== "completed";
-        }).length === 0 && (
-          <div className="text-center py-8 text-gray-500">
-            No pending assigned tasks found
-          </div>
-        )}
-      </div>
-    </Tab>
-    <Tab
-      key="assigned-completed"
-      title={
-        <div className="flex items-center gap-2">
-          <FaListUl />
-          <span>Completed</span>
-        </div>
-      }
-    >
-      <div className="mt-4">
-        {assignedByOthers.filter(task => task.status === "completed").map((task, index) => (
-          <div key={task._id || index}>{renderTaskCard(task)}</div>
-        ))}
-        {assignedByOthers.filter(task => task.status === "completed").length === 0 && (
-          <div className="text-center py-8 text-gray-500">
-            No completed assigned tasks found
-          </div>
-        )}
-      </div>
-    </Tab>
-    <Tab
-      key="assigned-not-completed"
-      title={
-        <div className="flex items-center gap-2">
-          <FaTimes />
-          <span>Not Completed</span>
-        </div>
-      }
-    >
-      <div className="mt-4">
-        {assignedByOthers.filter(task => task.status === "not-completed").map((task, index) => (
-          <div key={task._id || index}>{renderTaskCard(task)}</div>
-        ))}
-        {assignedByOthers.filter(task => task.status === "not-completed").length === 0 && (
-          <div className="text-center py-8 text-gray-500">
-            No not-completed assigned tasks found
-          </div>
-        )}
-      </div>
-    </Tab>
-  </Tabs>
-</Tab>
+        {/* Assigned By Others Section */}
+        <Tab
+          key="assigned-tasks"
+          title={
+            <div className="flex items-center gap-2">
+              <BsPersonCheck />
+              <span>Assigned By Others</span>
+              {assignedByOthers.length > 0 && (
+                <Chip size="sm" color="secondary">
+                  {assignedByOthers.length}
+                </Chip>
+              )}
+            </div>
+          }
+        >
+          <Tabs aria-label="Assigned Tasks" className="mt-2" variant="light">
+            <Tab
+              key="assigned-upcoming"
+              title={
+                <div className="flex items-center gap-2">
+                  <FaArrowUp />
+                  <span>Upcoming</span>
+                </div>
+              }
+            >
+              <div className="mt-4">
+                {assignedByOthers
+                  .filter((task) => {
+                    const startDate = new Date(task.startDate);
+                    const today = new Date();
+                    return startDate > today && task.status !== "completed";
+                  })
+                  .map((task, index) => (
+                    <div key={task._id || index}>{renderTaskCard(task)}</div>
+                  ))}
+                {assignedByOthers.filter((task) => {
+                  const startDate = new Date(task.startDate);
+                  const today = new Date();
+                  return startDate > today && task.status !== "completed";
+                }).length === 0 && (
+                  <div className="text-center py-8 text-gray-500">
+                    No upcoming assigned tasks found
+                  </div>
+                )}
+              </div>
+            </Tab>
+            <Tab
+              key="assigned-pending"
+              title={
+                <div className="flex items-center gap-2">
+                  <FaHourglassHalf />
+                  <span>Pending</span>
+                </div>
+              }
+            >
+              <div className="mt-4">
+                {assignedByOthers
+                  .filter((task) => {
+                    const startDate = new Date(task.startDate);
+                    const dueDate = new Date(task.dueDate);
+                    const today = new Date();
+                    return (
+                      startDate <= today &&
+                      today <= dueDate &&
+                      task.status !== "completed"
+                    );
+                  })
+                  .map((task, index) => (
+                    <div key={task._id || index}>{renderTaskCard(task)}</div>
+                  ))}
+                {assignedByOthers.filter((task) => {
+                  const startDate = new Date(task.startDate);
+                  const dueDate = new Date(task.dueDate);
+                  const today = new Date();
+                  return (
+                    startDate <= today &&
+                    today <= dueDate &&
+                    task.status !== "completed"
+                  );
+                }).length === 0 && (
+                  <div className="text-center py-8 text-gray-500">
+                    No pending assigned tasks found
+                  </div>
+                )}
+              </div>
+            </Tab>
+            <Tab
+              key="assigned-completed"
+              title={
+                <div className="flex items-center gap-2">
+                  <FaListUl />
+                  <span>Completed</span>
+                </div>
+              }
+            >
+              <div className="mt-4">
+                {assignedByOthers
+                  .filter((task) => task.status === "completed")
+                  .map((task, index) => (
+                    <div key={task._id || index}>{renderTaskCard(task)}</div>
+                  ))}
+                {assignedByOthers.filter((task) => task.status === "completed")
+                  .length === 0 && (
+                  <div className="text-center py-8 text-gray-500">
+                    No completed assigned tasks found
+                  </div>
+                )}
+              </div>
+            </Tab>
+            <Tab
+              key="assigned-not-completed"
+              title={
+                <div className="flex items-center gap-2">
+                  <FaTimes />
+                  <span>Not Completed</span>
+                </div>
+              }
+            >
+              <div className="mt-4">
+                {assignedByOthers
+                  .filter((task) => task.status === "not-completed")
+                  .map((task, index) => (
+                    <div key={task._id || index}>{renderTaskCard(task)}</div>
+                  ))}
+                {assignedByOthers.filter(
+                  (task) => task.status === "not-completed"
+                ).length === 0 && (
+                  <div className="text-center py-8 text-gray-500">
+                    No not-completed assigned tasks found
+                  </div>
+                )}
+              </div>
+            </Tab>
+          </Tabs>
+        </Tab>
       </Tabs>
 
+          {/* create new task modal  */}
       <Modal isOpen={isOpen} onClose={() => setIsOpen(false)} size="2xl">
         <ModalContent>
           <ModalHeader>Create New Task</ModalHeader>
@@ -874,9 +1023,7 @@ const TaskManagement = ({ context, currentUser, contextData }) => {
                     }
                   />
                   {errors.name && (
-                    <span className="text-xs text-danger">
-                      {errors.name}
-                    </span>
+                    <span className="text-xs text-danger">{errors.name}</span>
                   )}
                 </div>
                 <div className="w-32">
@@ -918,10 +1065,10 @@ const TaskManagement = ({ context, currentUser, contextData }) => {
                 }
               />
               {errors.description && (
-                    <span className="text-xs text-danger">
-                      {errors.description}
-                    </span>
-                  )}
+                <span className="text-xs text-danger">
+                  {errors.description}
+                </span>
+              )}
 
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div>
@@ -934,7 +1081,6 @@ const TaskManagement = ({ context, currentUser, contextData }) => {
                       setTaskData({ ...taskData, startDate: e.target.value })
                     }
                     startContent={<FaCalendar className="text-default-400" />}
-                    isInvalid={!!errors.startDate}
                   />
                   {errors.startDate && (
                     <span className="text-xs text-danger">
@@ -953,7 +1099,6 @@ const TaskManagement = ({ context, currentUser, contextData }) => {
                       setTaskData({ ...taskData, dueDate: e.target.value })
                     }
                     startContent={<FaCalendar className="text-default-400" />}
-                    isInvalid={!!errors.dueDate}
                   />
                   {errors.dueDate && (
                     <span className="text-xs text-danger">
@@ -975,11 +1120,36 @@ const TaskManagement = ({ context, currentUser, contextData }) => {
                       })
                     }
                     startContent={<FaBell className="text-default-400" />}
-                    isInvalid={!!errors.notificationDate}
                   />
                   {errors.notificationDate && (
                     <span className="text-xs text-danger">
                       {errors.notificationDate}
+                    </span>
+                  )}
+                </div>
+
+                <div>
+                  <Select
+                    label="Notification Time"
+                    placeholder="Select notification time"
+                    value={taskData.notificationTime}
+                    onChange={(e) =>
+                      setTaskData({
+                        ...taskData,
+                        notificationTime: e.target.value,
+                      })
+                    }
+                    startContent={<FaBell className="text-default-400" />}
+                  >
+                    {generateTimeOptions().map((time) => (
+                      <SelectItem key={time} value={time}>
+                        {time}
+                      </SelectItem>
+                    ))}
+                  </Select>
+                  {errors.notificationTime && (
+                    <span className="text-xs text-danger">
+                      {errors.notificationTime}
                     </span>
                   )}
                 </div>
@@ -1186,7 +1356,6 @@ const TaskManagement = ({ context, currentUser, contextData }) => {
                       setTaskData({ ...taskData, startDate: e.target.value })
                     }
                     startContent={<FaCalendar className="text-default-400" />}
-                    isInvalid={!!errors.startDate}
                   />
                   {errors.startDate && (
                     <span className="text-xs text-danger">
@@ -1205,7 +1374,6 @@ const TaskManagement = ({ context, currentUser, contextData }) => {
                       setTaskData({ ...taskData, dueDate: e.target.value })
                     }
                     startContent={<FaCalendar className="text-default-400" />}
-                    isInvalid={!!errors.dueDate}
                   />
                   {errors.dueDate && (
                     <span className="text-xs text-danger">
@@ -1227,11 +1395,36 @@ const TaskManagement = ({ context, currentUser, contextData }) => {
                       })
                     }
                     startContent={<FaBell className="text-default-400" />}
-                    isInvalid={!!errors.notificationDate}
                   />
                   {errors.notificationDate && (
                     <span className="text-xs text-danger">
                       {errors.notificationDate}
+                    </span>
+                  )}
+                </div>
+
+                <div>
+                  <Select
+                    label="Notification Time"
+                    placeholder="Select notification time"
+                    value={taskData.notificationTime}
+                    onChange={(e) =>
+                      setTaskData({
+                        ...taskData,
+                        notificationTime: e.target.value,
+                      })
+                    }
+                    startContent={<FaBell className="text-default-400" />}
+                  >
+                    {generateTimeOptions().map((time) => (
+                      <SelectItem key={time} value={time}>
+                        {time}
+                      </SelectItem>
+                    ))}
+                  </Select>
+                  {errors.notificationTime && (
+                    <span className="text-xs text-danger">
+                      {errors.notificationTime}
                     </span>
                   )}
                 </div>

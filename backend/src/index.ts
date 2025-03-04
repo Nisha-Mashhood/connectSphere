@@ -13,9 +13,11 @@ import groupRoutes from "./routes/group.routes.js";
 import feedbackRoutes from './routes/feedback.routes.js';
 import user_userCollabRoutes from './routes/userCollaboration.routes.js';
 import taskRoutes from './routes/tasks.routes.js';
+import  notificationRoutes from './routes/notification.routes.js';
 import helmet from "helmet";
 import cors from "cors";
 import cookieParser from "cookie-parser";
+import { scheduleNotifications } from "./utils/node-cron.utils.js";
 
 dotenv.config();
 
@@ -46,7 +48,8 @@ app.use("/api/collaboration",collaborationRoutes);
 app.use("/api/group", groupRoutes);
 app.use("/api/feedback", feedbackRoutes);
 app.use("/api/user-userCollab",user_userCollabRoutes);
-app.use("/api/task", taskRoutes)
+app.use("/api/task", taskRoutes);
+app.use("/api/notification", notificationRoutes);
 
 // Placeholder route
 app.get("/", (_req, res) => {
@@ -58,6 +61,9 @@ app.use((err: any, _req: any, res: any, _next: any) => {
   console.error(err.stack);
   res.status(500).send({ error: "Something went wrong!" });
 });
+
+// Start Cron Jobs 
+scheduleNotifications();
 
 // Start server
 app.listen(config.port, () => {

@@ -8,6 +8,8 @@ export interface ITask extends Document {
     startDate: Date;
     dueDate: Date;
     notificationDate?: Date;
+    notificationTime?: String;
+    notificationSubscription: Object;
     privacy: "private" | "public";
     contextType: "profile" | "group" | "collaboration";
     contextId: mongoose.Types.ObjectId;

@@ -223,7 +223,7 @@ const RequestsSection = ({ handleProfileClick }) => {
                 
                 {isSent && request.isAccepted === "Accepted" && !request.isPaid && (
                   <StripeCheckout
-                  stripeKey="pk_test_51QjEUpLJKggnYdjdkq6nC53RrJ8U0Uti4Qwvw1CYK7VDzo7hqF8CVldtejMOhiJblOeipP7uwgxU8JGFMo1bD6aZ00XOGuBYhU"
+                  stripeKey={import.meta.env.VITE_STRIPE_KEY}
                   token={handlePayment}
                   amount={request.price * 100}
                   name="ConnectSphere Mentorship"

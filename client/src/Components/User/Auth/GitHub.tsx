@@ -1,10 +1,10 @@
 const GitHub = () => {
 
  const loginWithGithub = () => {
-    const clientId = "Ov23livTA0yK7iMC3x1A"; 
-    const redirectUri = "http://localhost:5173/github/callback"; 
-    const state = encodeURIComponent("login");
-    const githubUrl = `https://github.com/login/oauth/authorize?client_id=${clientId}&redirect_uri=${redirectUri}&state=${state}&scope=user:email`;
+  const clientId = import.meta.env.VITE_GITHUB_CLIENTID; 
+  const redirectUri = import.meta.env.VITE_GITHUB_REDIRECTURI; 
+  const state = encodeURIComponent("login");
+  const githubUrl = `${import.meta.env.VITE_GITHUB_URL}?client_id=${clientId}&redirect_uri=${redirectUri}&state=${state}&scope=user:email`;
     
     console.log("Login URL:", githubUrl); 
     window.location.assign(githubUrl)

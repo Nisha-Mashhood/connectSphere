@@ -19,6 +19,9 @@ declare const config: {
     baseurl: string | undefined;
     sessionsecret: string | undefined;
     adminpasscode: string | undefined;
+    vapidPublicKey: string | undefined;
+    vapidPrivateKey: string | undefined;
+    vapidEmail: string | undefined;
 };
 export default config;
 //# sourceMappingURL=env.config.d.ts.map
