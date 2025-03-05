@@ -1,41 +1,62 @@
 import * as notificationRepository from "../repositories/notification.repositry.js";
 import webPush from "../utils/webPushUtil.js";
 //Store subscription details in DB
-export const storeSubscription = async (taskId, subscription) => {
+export const storeSubscription = async (currentUserId, taskId, subscription) => {
     // Validate subscription object before storing
     if (!subscription || !subscription.endpoint || !subscription.keys) {
         throw new Error("Invalid subscription object");
     }
-    return notificationRepository.saveSubscription(taskId, subscription);
+    return notificationRepository.saveSubscription(taskId, subscription, { userId: currentUserId });
 };
-;
-//Send a push notification
-export const sendPushNotification = async (message) => {
+// Send push notifications for a specific task and user
+export const sendPushNotification = async (taskId, message, specificUserId) => {
     try {
-        const tasks = await notificationRepository.getTasksForNotification();
-        if (!tasks || tasks.length === 0) {
-            console.log("No tasks with subscriptions found");
+        // Get task details
+        const task = await notificationRepository.getTasksForNotification(taskId);
+        if (!task) {
+            console.log("No notifications found for this Task");
             return;
         }
-        for (const task of tasks) {
-            // Validate subscription object before sending
-            const subscription = task.notificationSubscription;
-            // Validate subscription object before sending
-            if (!subscription || !subscription.endpoint || !subscription.keys) {
-                console.warn(`Invalid subscription for task: ${task._id}`);
-                continue;
+        let recipients = [];
+        // If a specific user ID is provided, use only that user
+        if (specificUserId) {
+            recipients = [specificUserId];
+        }
+        else {
+            // Existing logic for determining recipients based on context
+            if (task.contextType === "profile") {
+                recipients.push(task.createdBy.toString());
             }
+            else if (task.contextType === "group") {
+                const groupMembers = await notificationRepository.getGroupMembers(task.contextId.toString());
+                recipients = groupMembers.map(member => member.toString());
+            }
+            else if (task.contextType === "collaboration") {
+                const collaborationIds = await notificationRepository.getMentorIdAndUserId(task.contextId.toString());
+                if (collaborationIds) {
+                    recipients = [collaborationIds.userId, collaborationIds.mentorUserId]
+                        .filter((id) => id !== null);
+                }
+            }
+        }
+        for (const userId of recipients) {
+            // Get the subscription for the specific userID
+            const taskWithSubscription = await notificationRepository.getUserSubscription(userId);
+            if (!taskWithSubscription?.notificationSubscription)
+                continue;
+            const subscription = taskWithSubscription.notificationSubscription;
             const payload = JSON.stringify({
-                title: `Reminder to task "${task.name}"`,
+                title: `Reminder: ${task.name}`,
                 body: message || `Remember to complete "${task.name}"`,
                 icon: task.image || "/default-icon.png",
+                taskId: task._id
             });
             try {
                 await webPush.sendNotification(subscription, payload);
-                console.log(`Notification sent for Task: ${task._id}`);
+                console.log(`Notification sent for Task: ${task._id} to User: ${userId}`);
             }
             catch (error) {
-                console.error(`Error sending notification for task ${task._id}:`, error);
+                console.error(`Error sending notification for task ${task._id} to user ${userId}:`, error);
             }
         }
     }

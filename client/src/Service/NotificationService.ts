@@ -49,7 +49,7 @@ export const registerSW = async () => {
     return subscription;
   }
 
-  export const sendSubscriptionToServer =  async(subscription, notificationDateTime, taskData) => {
+  export const sendSubscriptionToServer =  async(subscription, notificationDateTime, taskData, currentUserId) => {
     console.log("Sending subscription:", { subscription, notificationDateTime });
   
     try {
@@ -64,7 +64,7 @@ export const registerSW = async () => {
       const auth = subscription.getKey ? 
         btoa(String.fromCharCode.apply(null, new Uint8Array(subscription.getKey('auth')))) : '';
       
-      const response = await axiosInstance.post("/notification/subscribe", {
+      const response = await axiosInstance.post(`/notification/subscribe/${currentUserId}`, {
         subscription: {
           endpoint: subscription.endpoint,
           keys: {

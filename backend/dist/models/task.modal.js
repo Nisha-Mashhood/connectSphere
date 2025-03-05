@@ -35,7 +35,14 @@ const taskSchema = new mongoose.Schema({
         type: String,
     },
     notificationSubscription: {
-        type: Object,
+        type: {
+            endpoint: String,
+            keys: {
+                auth: String,
+                p256dh: String
+            },
+            userId: String
+        },
         default: null
     },
     privacy: {

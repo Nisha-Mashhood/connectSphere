@@ -2,9 +2,11 @@ import * as notificationService from "../services/notification.service.js";
 export const subscribeToNotifications = async (req, res) => {
     try {
         const { subscription, notificationDateTime, taskData } = req.body;
+        const { currentUserId } = req.params;
         console.log("Task Id :", taskData);
         console.log("Subscription :", subscription);
         console.log("Notification Day and Time : ", notificationDateTime);
+        console.log("Current User ID:", currentUserId);
         if (!taskData || !subscription) {
             res.status(400).json({ message: "Task data and subscription are required." });
             return;
@@ -14,7 +16,7 @@ export const subscribeToNotifications = async (req, res) => {
             res.status(400).json({ message: "Invalid subscription format. Must include endpoint and keys (auth & p256dh)." });
             return;
         }
-        const updatedTask = await notificationService.storeSubscription(taskData._id, subscription);
+        const updatedTask = await notificationService.storeSubscription(currentUserId, taskData._id, subscription);
         res.status(200).json({ message: "Subscribed successfully.", task: updatedTask });
         return;
     }

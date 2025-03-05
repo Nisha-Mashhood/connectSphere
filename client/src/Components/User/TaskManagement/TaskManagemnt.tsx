@@ -384,7 +384,7 @@ const TaskManagement = ({ context, currentUser, contextData }) => {
   
       // Send task data also to store in task modal
       if (subscription) {
-        await sendSubscriptionToServer(subscription, { notificationDateTime: isoString }, taskData);
+        await sendSubscriptionToServer(subscription, { notificationDateTime: isoString }, taskData, currentUser._id);
         console.log("Subscription & notification time sent!");
         return { success: true, message: `Your notification is set for ${taskData.notificationDate} at ${taskData.notificationTime}.` };
       }

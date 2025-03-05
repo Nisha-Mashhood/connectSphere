@@ -1,6 +1,7 @@
 import cron from "node-cron";
 import * as notificationService from "../services/notification.service.js";
-import * as notificationRepo from "../repositories/notification.repositry.js";
+import { getAllTasksForNotification } from "src/repositories/notification.repositry.js";
+import mongoose from "mongoose";
 // Function to convert 12-hour format to 24-hour format
 const convertTo24HourFormat = (time12h) => {
     const match = time12h.match(/^(\d{1,2}):(\d{2})\s?(AM|PM)$/i);
@@ -21,30 +22,48 @@ export const scheduleNotifications = () => {
         console.log("Checking for notifications...");
         const currentTime = new Date();
         try {
-            const tasks = await notificationRepo.getTasksForNotification();
-            if (!tasks || tasks.length === 0) {
+            // Fetch tasks that are due for notification
+            const tasks = await getAllTasksForNotification();
+            if (tasks.length === 0) {
                 console.log("No tasks require notifications.");
                 return;
             }
             for (const task of tasks) {
-                // Skip tasks without notification date
-                if (!task.notificationDate) {
-                    console.warn(`Skipping task ${task.name}: No notification date.`);
+                // Skip tasks without notification date or time
+                if (!task.notificationDate || !task.notificationTime) {
+                    console.warn(`Skipping task ${task.name}: Missing notification details.`);
                     continue;
                 }
                 const taskNotificationTime = new Date(task.notificationDate);
                 // Ensure notificationTime exists and is properly formatted
-                const notificationTime = String(task.notificationTime ?? "00:00 AM"); // ✅ Fix applied
+                const notificationTime = String(task.notificationTime ?? "00:00 AM");
                 const time24 = convertTo24HourFormat(notificationTime);
                 if (!time24) {
                     console.warn(`Skipping task ${task.name}: Invalid notification time format.`);
                     continue;
                 }
                 taskNotificationTime.setHours(time24.hours, time24.minutes, 0, 0);
+                // Check if current time matches or exceeds task notification time
                 if (currentTime >= taskNotificationTime) {
-                    await notificationService.sendPushNotification(`Reminder: ${task.name} is due soon!`);
+                    // Type-safe extraction of userId
+                    const subscriptionWithUserId = task.notificationSubscription;
+                    if (subscriptionWithUserId && subscriptionWithUserId.userId) {
+                        try {
+                            // Explicitly convert _id to string using mongoose.Types.ObjectId method
+                            const taskId = task._id instanceof mongoose.Types.ObjectId
+                                ? task._id.toString()
+                                : String(task._id);
+                            await notificationService.sendPushNotification(taskId, `Reminder: ${task.name} is due soon!`, subscriptionWithUserId.userId);
+                        }
+                        catch (notificationError) {
+                            console.error(`Failed to send notification for task ${task.name}:`, notificationError);
+                        }
+                    }
+                    else {
+                        console.warn(`No user ID found in subscription for task ${task.name}`);
+                    }
                 }
-                // Stop notifications when task is completed or due date is passed
+                // Optional: Stop notifications when task is completed or due date is passed
                 if (currentTime > new Date(task.dueDate)) {
                     console.log(`Task ${task.name} is past due. Stopping notifications.`);
                 }

@@ -11,7 +11,14 @@ export interface ITask extends Document {
     dueDate: Date;
     notificationDate?: Date;
     notificationTime?: String;
-    notificationSubscription:Object;
+    notificationSubscription?: {
+      endpoint: string;
+      keys: {
+        auth: string;
+        p256dh: string;
+      };
+      userId?: string;
+    };
     privacy: "private" | "public";
     contextType: "profile" | "group" | "collaboration";
     contextId: mongoose.Types.ObjectId;
@@ -58,8 +65,15 @@ const taskSchema: Schema<ITask> = new mongoose.Schema({
   notificationTime: {
     type: String,
   },
-  notificationSubscription: {  // Stores push subscription data
-    type: Object, 
+  notificationSubscription: {
+    type: {
+      endpoint: String,
+      keys: {
+        auth: String,
+        p256dh: String
+      },
+      userId: String
+    },
     default: null 
   },
   privacy: {
