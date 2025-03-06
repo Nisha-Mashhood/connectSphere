@@ -240,30 +240,6 @@ export const groupDetilsByUserId = async(userId: string) =>{
 }
 
 //FOR ADMIN
-// export const getAllGroups = async() =>{
-//   try {
-//     const groups = await Group.find()
-//     .populate("members.userId")
-//     .populate("adminId")
-//     return groups;
-//   } catch (error: any) {
-//     throw new Error(`Error fetching groups: ${error.message}`);
-//   }
-// }
-
-// //get getDetails using groupId
-// export const getGroupDeatilsById = async(groupId:string) =>{
-//   try {
-//     const groupDetails = await Group.findById(groupId)
-//     .populate("members.userId")
-//     .populate("adminId");
-//     return groupDetails;
-//   } catch (error:any) {
-//     throw new Error(`Error fetching group Details: ${error.message}`);
-//   }
-// }
-
-//get all group requsets
 export const getAllGrouprequsets = async() =>{
   try {
     const AllGrouprequsets = await GroupRequest.find()
@@ -276,13 +252,26 @@ export const getAllGrouprequsets = async() =>{
 }
 
 //get the group requset details using requset Id
-export const getGroupRequsetById = async(requsetId : string) =>{
+export const getGroupRequestById = async (requestId: string) => {
   try {
-    const groupRequsetDetails = await GroupRequest.findById(requsetId)
-    .populate("groupId")
-    .populate("userId");
-    return groupRequsetDetails;
-  } catch (error:any) {
-    throw new Error(`Error fetching group Requset Details: ${error.message}`);
+    const groupRequestDetails = await GroupRequest.findById(requestId)
+      .populate({
+        path: "groupId",
+        populate: [
+          {
+            path: "adminId",
+            model: "User", // adminId of the group
+          },
+          {
+            path: "members.userId",
+            model: "User", //userId of each member in the group
+          },
+        ],
+      })
+      .populate("userId"); //the user who made the request
+
+    return groupRequestDetails;
+  } catch (error: any) {
+    throw new Error(`Error fetching group request details: ${error.message}`);
   }
-}
+};

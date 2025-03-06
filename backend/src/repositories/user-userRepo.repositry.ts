@@ -77,4 +77,3 @@ export const getUserConnectionWithId = async (connectionId:string): Promise<IUse
   throw new Error("Error retrieving  details from the database");
  }
 };
-

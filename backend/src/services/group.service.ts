@@ -13,7 +13,7 @@ import {
   getGroupRequestsByAdminId,
   getGroupRequestsByGroupId,
   getGroupRequestsByuserId,
-  getGroupRequsetById,
+  getGroupRequestById,
   getGroups,
   getGroupsByAdminId,
   getGroupsByGroupId,
@@ -271,6 +271,6 @@ export const fetchAllGroupRequests = async () => {
 
 //  get group request details by request ID
 export const fetchGroupRequestById = async (requestId: string) => {
-  return await getGroupRequsetById(requestId);
+  return await getGroupRequestById(requestId);
 };
 

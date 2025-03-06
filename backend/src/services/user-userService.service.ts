@@ -46,3 +46,4 @@ export const fetchAllUserConnections = async (): Promise<IUserConnection[]> => {
 export const fetchUserConnectionById = async (connectionId: string): Promise<IUserConnection> => {
   return await userConnectionRepo.getUserConnectionWithId(connectionId);
 };
+

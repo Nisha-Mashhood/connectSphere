@@ -105,7 +105,7 @@ export declare const getAllGrouprequsets: () => Promise<(mongoose.Document<unkno
 }> & {
     __v: number;
 })[]>;
-export declare const getGroupRequsetById: (requsetId: string) => Promise<(mongoose.Document<unknown, {}, import("../models/groupRequest.model.js").GroupRequestDocument> & import("../models/groupRequest.model.js").GroupRequestDocument & Required<{
+export declare const getGroupRequestById: (requestId: string) => Promise<(mongoose.Document<unknown, {}, import("../models/groupRequest.model.js").GroupRequestDocument> & import("../models/groupRequest.model.js").GroupRequestDocument & Required<{
     _id: unknown;
 }> & {
     __v: number;
