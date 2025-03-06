@@ -3,7 +3,11 @@ import {
   createCollaboration,
   createTemporaryRequest,
   deleteMentorRequest,
+  fetchMentorRequsetDetails,
+  findCollab,
   findCollabById,
+  findCollabDetails,
+  findMentorRequest,
   getCollabDataForMentor,
   getCollabDataForUser,
   getMentorRequestsByMentorId,
@@ -191,4 +195,33 @@ export const removecollab = async (collabId: string, reason: string) => {
   console.log(`Cancellation email sent to mentor: ${mentorEmail}`);
 
   return await markCollabAsCancelled(collabId);
+};
+
+//FOR ADMIN
+// Service to get all mentor requests
+export const getMentorRequestsService = async () => {
+  try {
+    return await findMentorRequest();
+  } catch (error: any) {
+    throw new Error(error.message);
+  }
+};
+
+// Service to get all collaborations
+export const getCollabsService = async () => {
+  try {
+    return await findCollab();
+  } catch (error: any) {
+    throw new Error(error.message);
+  }
+};
+
+//get the collab Details by collab Id
+export const fetchCollabById = async (collabId: string) => {
+  return await findCollabDetails(collabId);
+};
+
+//get the requset details by requset Id
+export const fetchRequsetById = async (requestId: string) => {
+  return await fetchMentorRequsetDetails(requestId);
 };

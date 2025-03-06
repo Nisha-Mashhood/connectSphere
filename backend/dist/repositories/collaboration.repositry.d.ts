@@ -47,4 +47,16 @@ export declare const getCollabDataForMentor: (mentorId: string) => Promise<(impo
 }> & {
     __v: number;
 })[]>;
+export declare const findMentorRequest: () => Promise<(import("mongoose").Document<unknown, {}, import("../models/mentorRequset.js").IMentorRequest> & import("../models/mentorRequset.js").IMentorRequest & Required<{
+    _id: unknown;
+}> & {
+    __v: number;
+})[]>;
+export declare const findCollab: () => Promise<ICollaboration[] | null>;
+export declare const fetchMentorRequsetDetails: (requsetId: string) => Promise<(import("mongoose").Document<unknown, {}, import("../models/mentorRequset.js").IMentorRequest> & import("../models/mentorRequset.js").IMentorRequest & Required<{
+    _id: unknown;
+}> & {
+    __v: number;
+}) | null>;
+export declare const findCollabDetails: (collabId: string) => Promise<ICollaboration[] | null>;
 //# sourceMappingURL=collaboration.repositry.d.ts.map

@@ -1,4 +1,8 @@
-import { createGroupService, deleteGroupByIdService, fetchGroupDetails, fetchGroupDetailsService, fetchGroupRequestsByAdminId, fetchGroupRequestsByGroupId, fetchGroupRequestsByuserId, fetchGroups, groupDetilsForMembers, modifyGroupRequestStatus, processGroupPaymentService, removeMemberFromGroup, requestToJoinGroup, updateGroupImageService, } from "../services/group.service.js";
+import { createGroupService, deleteGroupByIdService, fetchAllGroupRequests, 
+// fetchAllGroups,
+fetchGroupDetails, 
+// fetchGroupDetailsById,
+fetchGroupDetailsService, fetchGroupRequestById, fetchGroupRequestsByAdminId, fetchGroupRequestsByGroupId, fetchGroupRequestsByuserId, fetchGroups, groupDetilsForMembers, modifyGroupRequestStatus, processGroupPaymentService, removeMemberFromGroup, requestToJoinGroup, updateGroupImageService, } from "../services/group.service.js";
 import { findRequestById } from "../repositories/group.repositry.js";
 import fs from "fs";
 import { uploadImage } from "../utils/cloudinary.utils.js";
@@ -261,6 +265,54 @@ export const fetchGroupDetailsForMembers = async (req, res) => {
     catch (error) {
         console.error("Error fetching group details:", error);
         res.status(500).json({ message: "Internal server error" });
+    }
+};
+// // Get all groups
+// export const getAllGroupsController = async (_req: Request, res: Response) => {
+//   try {
+//     const groups = await fetchAllGroups();
+//     res.status(200).json(groups);
+//   } catch (error: any) {
+//     res.status(500).json({ message: error.message });
+//   }
+// };
+// // Get group details by ID
+// export const getGroupDetailsByIdController = async (req: Request, res: Response) => {
+//   try {
+//     const groupId = req.params.groupId;
+//     const groupDetails = await fetchGroupDetailsById(groupId);
+//     if (!groupDetails) {
+//       res.status(404).json({ message: "Group not found" });
+//       return 
+//     }
+//     res.status(200).json(groupDetails);
+//   } catch (error: any) {
+//     res.status(500).json({ message: error.message });
+//   }
+// };
+// Get all group requests
+export const getAllGroupRequestsController = async (_req, res) => {
+    try {
+        const groupRequests = await fetchAllGroupRequests();
+        res.status(200).json(groupRequests);
+    }
+    catch (error) {
+        res.status(500).json({ message: error.message });
+    }
+};
+// Get group request details by request ID
+export const getGroupRequestByIdController = async (req, res) => {
+    try {
+        const requestId = req.params.requestId;
+        const requestDetails = await fetchGroupRequestById(requestId);
+        if (!requestDetails) {
+            res.status(404).json({ message: "Group request not found" });
+            return;
+        }
+        res.status(200).json(requestDetails);
+    }
+    catch (error) {
+        res.status(500).json({ message: error.message });
     }
 };
 //# sourceMappingURL=group.controller.js.map

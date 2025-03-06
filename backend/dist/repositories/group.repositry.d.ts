@@ -100,4 +100,14 @@ export declare const groupDetilsByUserId: (userId: string) => Promise<(mongoose.
 }> & {
     __v: number;
 })[]>;
+export declare const getAllGrouprequsets: () => Promise<(mongoose.Document<unknown, {}, import("../models/groupRequest.model.js").GroupRequestDocument> & import("../models/groupRequest.model.js").GroupRequestDocument & Required<{
+    _id: unknown;
+}> & {
+    __v: number;
+})[]>;
+export declare const getGroupRequsetById: (requsetId: string) => Promise<(mongoose.Document<unknown, {}, import("../models/groupRequest.model.js").GroupRequestDocument> & import("../models/groupRequest.model.js").GroupRequestDocument & Required<{
+    _id: unknown;
+}> & {
+    __v: number;
+}) | null>;
 //# sourceMappingURL=group.repositry.d.ts.map

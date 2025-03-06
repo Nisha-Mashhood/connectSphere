@@ -123,4 +123,89 @@ export const getCollabDataForMentor = async (mentorId) => {
         throw new Error(`Error getting collaboration data for mentor: ${error.message}`);
     }
 };
+//FOR ADMIN
+//Get All Requsets
+export const findMentorRequest = async () => {
+    try {
+        return await MentorRequest.find()
+            .populate({
+            path: "mentorId",
+            model: "Mentor",
+            populate: {
+                path: "userId",
+                model: "User",
+            },
+        })
+            .populate({
+            path: "userId",
+            model: "User",
+        });
+    }
+    catch (error) {
+        throw new Error(`Error fetching mentor request : ${error.message}`);
+    }
+};
+//Get All Collab
+export const findCollab = async () => {
+    try {
+        return await Collaboration.find()
+            .populate({
+            path: "mentorId",
+            model: "Mentor",
+            populate: {
+                path: "userId",
+                model: "User",
+            },
+        })
+            .populate({
+            path: "userId",
+            model: "User",
+        });
+    }
+    catch (error) {
+        throw new Error("Error fetching collaborations: " + error.message);
+    }
+};
+//get requset details
+export const fetchMentorRequsetDetails = async (requsetId) => {
+    try {
+        return await MentorRequest.findById(requsetId)
+            .populate({
+            path: "mentorId",
+            model: "Mentor",
+            populate: {
+                path: "userId",
+                model: "User",
+            },
+        })
+            .populate({
+            path: "userId",
+            model: "User",
+        });
+    }
+    catch (error) {
+        throw new Error(`Error fetching mentor request : ${error.message}`);
+    }
+};
+//get collab details
+export const findCollabDetails = async (collabId) => {
+    try {
+        return await Collaboration.findById(collabId)
+            .populate({
+            path: "mentorId",
+            model: "Mentor",
+            populate: {
+                path: "userId",
+                model: "User",
+            },
+        })
+            .populate({
+            path: "userId",
+            model: "User",
+        });
+    }
+    catch (error) {
+        throw new Error("Error fetching collaboration Details: " + error.message);
+    }
+};
 //# sourceMappingURL=collaboration.repositry.js.map

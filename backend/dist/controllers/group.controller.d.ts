@@ -13,4 +13,6 @@ export declare const removeGroupMember: (req: Request, res: Response) => Promise
 export declare const deleteGroup: (req: Request, res: Response) => Promise<void>;
 export declare const updateGroupImage: (req: Request, res: Response) => Promise<void>;
 export declare const fetchGroupDetailsForMembers: (req: Request, res: Response) => Promise<void>;
+export declare const getAllGroupRequestsController: (_req: Request, res: Response) => Promise<void>;
+export declare const getGroupRequestByIdController: (req: Request, res: Response) => Promise<void>;
 //# sourceMappingURL=group.controller.d.ts.map

@@ -1,5 +1,5 @@
 import { sendEmail } from "../utils/email.utils.js";
-import { createCollaboration, createTemporaryRequest, deleteMentorRequest, findCollabById, getCollabDataForMentor, getCollabDataForUser, getMentorRequestsByMentorId, getRequestByUserId, markCollabAsCancelled, updateMentorRequestStatus, } from "../repositories/collaboration.repositry.js";
+import { createCollaboration, createTemporaryRequest, deleteMentorRequest, fetchMentorRequsetDetails, findCollab, findCollabById, findCollabDetails, findMentorRequest, getCollabDataForMentor, getCollabDataForUser, getMentorRequestsByMentorId, getRequestByUserId, markCollabAsCancelled, updateMentorRequestStatus, } from "../repositories/collaboration.repositry.js";
 import stripe from "../utils/stripe.utils.js";
 import { v4 as uuid } from "uuid";
 export const TemporaryRequestService = async (requestData) => {
@@ -152,5 +152,32 @@ export const removecollab = async (collabId, reason) => {
     await sendEmail(mentorEmail, subject, text);
     console.log(`Cancellation email sent to mentor: ${mentorEmail}`);
     return await markCollabAsCancelled(collabId);
+};
+//FOR ADMIN
+// Service to get all mentor requests
+export const getMentorRequestsService = async () => {
+    try {
+        return await findMentorRequest();
+    }
+    catch (error) {
+        throw new Error(error.message);
+    }
+};
+// Service to get all collaborations
+export const getCollabsService = async () => {
+    try {
+        return await findCollab();
+    }
+    catch (error) {
+        throw new Error(error.message);
+    }
+};
+//get the collab Details by collab Id
+export const fetchCollabById = async (collabId) => {
+    return await findCollabDetails(collabId);
+};
+//get the requset details by requset Id
+export const fetchRequsetById = async (requestId) => {
+    return await fetchMentorRequsetDetails(requestId);
 };
 //# sourceMappingURL=collaboration.service.js.map

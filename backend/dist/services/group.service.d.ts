@@ -67,4 +67,14 @@ export declare const groupDetilsForMembers: (userId: string) => Promise<(import(
 }> & {
     __v: number;
 })[]>;
+export declare const fetchAllGroupRequests: () => Promise<(import("mongoose").Document<unknown, {}, import("../models/groupRequest.model.js").GroupRequestDocument> & import("../models/groupRequest.model.js").GroupRequestDocument & Required<{
+    _id: unknown;
+}> & {
+    __v: number;
+})[]>;
+export declare const fetchGroupRequestById: (requestId: string) => Promise<(import("mongoose").Document<unknown, {}, import("../models/groupRequest.model.js").GroupRequestDocument> & import("../models/groupRequest.model.js").GroupRequestDocument & Required<{
+    _id: unknown;
+}> & {
+    __v: number;
+}) | null>;
 //# sourceMappingURL=group.service.d.ts.map

@@ -1,6 +1,6 @@
 import cron from "node-cron";
 import * as notificationService from "../services/notification.service.js";
-import { getAllTasksForNotification } from "src/repositories/notification.repositry.js";
+import { getAllTasksForNotification } from "../repositories/notification.repositry.js";
 import mongoose from "mongoose";
 // Function to convert 12-hour format to 24-hour format
 const convertTo24HourFormat = (time12h) => {
@@ -18,7 +18,7 @@ const convertTo24HourFormat = (time12h) => {
 };
 // Schedule push notifications
 export const scheduleNotifications = () => {
-    cron.schedule("* * * * *", async () => {
+    cron.schedule("*/30 * * * *", async () => {
         console.log("Checking for notifications...");
         const currentTime = new Date();
         try {

@@ -94,3 +94,22 @@ export const SendRequsetToMentor = async (data) => {
       handleError(error);
     }
   };
+
+  //get collab details
+  export const fetchCollabDetails = async (collabId) => {
+    try {
+      const response = await axiosInstance.get(`/collaboration/getCollab/${collabId}`);
+      return response.data;
+    } catch (error) {
+      handleError(error);
+    }
+  };
+  //get requset details
+  export const fetchCollabRequsetDetails = async (requestId) => {
+    try {
+      const response = await axiosInstance.get(`/collaboration/getCollabRequset/${requestId}`);
+      return response.data;
+    } catch (error) {
+      handleError(error);
+    }
+  };

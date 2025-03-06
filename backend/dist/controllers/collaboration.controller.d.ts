@@ -8,4 +8,8 @@ export declare const makeStripePaymentController: (req: Request, res: Response) 
 export declare const getCollabDataForUserController: (req: Request, res: Response) => Promise<void>;
 export declare const getCollabDataForMentorController: (req: Request, res: Response) => Promise<void>;
 export declare const deleteCollab: (req: Request, res: Response) => Promise<void>;
+export declare const getAllMentorRequests: (_req: Request, res: Response) => Promise<void>;
+export declare const getAllCollabs: (_req: Request, res: Response) => Promise<void>;
+export declare const getCollabDeatilsbyCollabId: (req: Request, res: Response) => Promise<void>;
+export declare const getRequestDeatilsbyRequestId: (req: Request, res: Response) => Promise<void>;
 //# sourceMappingURL=collaboration.controller.d.ts.map

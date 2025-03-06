@@ -15,4 +15,6 @@ export declare const getUserRequests: (userId: string) => Promise<{
         __v: number;
     })[];
 }>;
+export declare const getAllUserConnections: () => Promise<IUserConnection[]>;
+export declare const getUserConnectionWithId: (connectionId: string) => Promise<IUserConnection>;
 //# sourceMappingURL=user-userRepo.repositry.d.ts.map

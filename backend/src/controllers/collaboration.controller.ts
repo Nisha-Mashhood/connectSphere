@@ -1,9 +1,13 @@
 import { Request, Response } from "express";
 import {
   acceptRequest,
+  fetchCollabById,
+  fetchRequsetById,
   getCollabDataForMentorService,
   getCollabDataForUserService,
+  getCollabsService,
   getMentorRequests,
+  getMentorRequestsService,
   getRequsetForUser,
   processPaymentService,
   rejectRequest,
@@ -186,5 +190,63 @@ export const deleteCollab = async (req: Request, res: Response) => {
   } catch (error: any) {
     console.error("Error:", error.message);
     res.status(500).json({ status: "failure", error: error.message });
+  }
+};
+
+//FOR ADMIN
+
+// Get all mentor requests
+export const getAllMentorRequests = async (_req: Request, res: Response) => {
+  try {
+    const mentorRequests = await getMentorRequestsService();
+    res.status(200).json(mentorRequests);
+  } catch (error: any) {
+    res.status(500).json({ message: error.message });
+  }
+};
+
+// Get all collaborations
+export const getAllCollabs = async (_req: Request, res: Response) => {
+  try {
+    const collaborations = await getCollabsService();
+    res.status(200).json(collaborations);
+  } catch (error: any) {
+    res.status(500).json({ message: error.message });
+  }
+};
+
+//get collab details by collabId
+export const getCollabDeatilsbyCollabId = async (
+  req: Request,
+  res: Response
+) => {
+  const { collabId } = req.params;
+  try {
+    const collabDetails = await fetchCollabById(collabId);
+    res
+      .status(200)
+      .json({ message: "Collab details accessed successfully", data: collabDetails });
+    return;
+  } catch (error: any) {
+    res.status(500).json({ message: error.message });
+    return;
+  }
+};
+
+//get Requset deatils using requsetId
+export const getRequestDeatilsbyRequestId = async (
+  req: Request,
+  res: Response
+) => {
+  const { requestId } = req.params;
+  try {
+    const requestDetails = await fetchRequsetById(requestId);
+    res
+      .status(200)
+      .json({ message: "Requset details accessed successfully", data: requestDetails });
+    return;
+  } catch (error: any) {
+    res.status(500).json({ message: error.message });
+    return;
   }
 };

@@ -21,7 +21,7 @@ export const groupDetailsWithAdminId = async (id: any) => {
   }
 };
 
-//Get group Details
+//Get all groups 
 export const groupDetails = async () => {
   try {
     const response = await axiosInstance.get(`/group/group-details`);
@@ -144,5 +144,33 @@ export const groupDetailsForMembers = async (userid) => {
     return response.data;
   } catch (error) {
     handleError(error);
+  }
+};
+
+//get all group requests
+export const getAllGroupRequests = async () => {
+  try {
+    const response = await axiosInstance.get(
+      `/group/group-requests`
+    );
+    return response.data;
+  } catch (error: any) {
+    throw new Error(
+      error.response?.data?.message || "Failed to fetch group requsts"
+    );
+  }
+};
+
+//get group requests Details
+export const getGroupRequestDetails = async (requestId: string) => {
+  try {
+    const response = await axiosInstance.get(
+      `/group/group-requests/${requestId}`
+    );
+    return response.data;
+  } catch (error: any) {
+    throw new Error(
+      error.response?.data?.message || "Failed to fetch group requst Details"
+    );
   }
 };

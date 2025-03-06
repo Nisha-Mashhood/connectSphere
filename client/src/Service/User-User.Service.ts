@@ -54,6 +54,19 @@ export const getUser_UserConnections = async (userId: string) => {
   }
 };
 
+//Fetch connection details using the connectionId
+export const User_UserConnectionsById = async (connectionId: string) => {
+  console.log("connection Id :",connectionId)
+  try {
+    const response = await axiosInstance.get(
+      `/user-userCollab/getConnection/${connectionId}`
+    );
+    return response.data;
+  } catch (error) {
+    handleError(error);
+  }
+};
+
 // Get Sent & Received User-User Requests
 export const getUser_UserRequests = async (userId: string) => {
   try {
@@ -65,3 +78,15 @@ export const getUser_UserRequests = async (userId: string) => {
     handleError(error);
   }
 };
+
+  //Fetch all user-user connection
+  export const fetchAllUserConnections = async () => {
+    try {
+      const response = await axiosInstance.get(
+        `/user-userCollab/getAllconnection`
+      );
+      return response.data;
+    } catch (error) {
+      handleError(error);
+    }
+  };

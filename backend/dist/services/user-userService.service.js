@@ -24,4 +24,13 @@ export const fetchUserConnections = async (userId) => {
 export const fetchUserRequests = async (userId) => {
     return await userConnectionRepo.getUserRequests(userId);
 };
+//FOR ADMIN
+// Service to get all user-user collaborations
+export const fetchAllUserConnections = async () => {
+    return await userConnectionRepo.getAllUserConnections();
+};
+// Service to get user-user collaboration by ID
+export const fetchUserConnectionById = async (connectionId) => {
+    return await userConnectionRepo.getUserConnectionWithId(connectionId);
+};
 //# sourceMappingURL=user-userService.service.js.map

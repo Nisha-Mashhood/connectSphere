@@ -1,5 +1,8 @@
 import { sendEmail } from "../utils/email.utils.js";
-import { addMemberToGroup, createGroupRepository, deleteGroupById, deleteGroupRequest, deleteGroupRequestsByGroupId, findGrouptById, findRequestById, getGroupRequestsByAdminId, getGroupRequestsByGroupId, getGroupRequestsByuserId, getGroups, getGroupsByAdminId, getGroupsByGroupId, groupDetilsByUserId, removeGroupMemberById, sendRequestToGroup, updateGroupImageRepositry, updateGroupPaymentStatus, updateGroupReqStatus,
+import { addMemberToGroup, createGroupRepository, deleteGroupById, deleteGroupRequest, deleteGroupRequestsByGroupId, findGrouptById, findRequestById, getAllGrouprequsets, 
+// getAllGroups,
+// getGroupDeatilsById,
+getGroupRequestsByAdminId, getGroupRequestsByGroupId, getGroupRequestsByuserId, getGroupRequsetById, getGroups, getGroupsByAdminId, getGroupsByGroupId, groupDetilsByUserId, removeGroupMemberById, sendRequestToGroup, updateGroupImageRepositry, updateGroupPaymentStatus, updateGroupReqStatus,
 // updateGroupRequestStatus,
  } from "../repositories/group.repositry.js";
 import stripe from "../utils/stripe.utils.js";
@@ -161,19 +164,6 @@ ConnectSphere Team`;
         throw new Error(error.message);
     }
 };
-// export const removeMemberFromGroup = async (
-//   groupId: string,
-//   userId: string
-// ) => {
-//   // Check if the group exists
-//   const group = await findGrouptById(groupId);
-//   if (!group) {
-//     throw new Error("Group not found");
-//   }
-//   // Call the repository function to remove the user
-//   const updatedGroup = await removeGroupMemberById(groupId, userId);
-//   return updatedGroup;
-// };
 export const deleteGroupByIdService = async (groupId) => {
     // Check if the group exists
     const group = await findGrouptById(groupId);
@@ -208,5 +198,13 @@ export const groupDetilsForMembers = async (userId) => {
         console.error("Error in GroupService:", error);
         throw new Error("Error retrieving group details");
     }
+};
+//  get all group requests
+export const fetchAllGroupRequests = async () => {
+    return await getAllGrouprequsets();
+};
+//  get group request details by request ID
+export const fetchGroupRequestById = async (requestId) => {
+    return await getGroupRequsetById(requestId);
 };
 //# sourceMappingURL=group.service.js.map

@@ -7,9 +7,13 @@ import {
   deleteGroupRequestsByGroupId,
   findGrouptById,
   findRequestById,
+  getAllGrouprequsets,
+  // getAllGroups,
+  // getGroupDeatilsById,
   getGroupRequestsByAdminId,
   getGroupRequestsByGroupId,
   getGroupRequestsByuserId,
+  getGroupRequsetById,
   getGroups,
   getGroupsByAdminId,
   getGroupsByGroupId,
@@ -220,21 +224,6 @@ ConnectSphere Team`;
   }
 };
 
-// export const removeMemberFromGroup = async (
-//   groupId: string,
-//   userId: string
-// ) => {
-//   // Check if the group exists
-//   const group = await findGrouptById(groupId);
-//   if (!group) {
-//     throw new Error("Group not found");
-//   }
-
-//   // Call the repository function to remove the user
-//   const updatedGroup = await removeGroupMemberById(groupId, userId);
-//   return updatedGroup;
-// };
-
 export const deleteGroupByIdService = async (groupId: string) => {
   // Check if the group exists
   const group = await findGrouptById(groupId);
@@ -274,3 +263,14 @@ export const groupDetilsForMembers = async(userId: string) =>{
     throw new Error("Error retrieving group details");
   }
 }
+
+//  get all group requests
+export const fetchAllGroupRequests = async () => {
+  return await getAllGrouprequsets();
+};
+
+//  get group request details by request ID
+export const fetchGroupRequestById = async (requestId: string) => {
+  return await getGroupRequsetById(requestId);
+};
+

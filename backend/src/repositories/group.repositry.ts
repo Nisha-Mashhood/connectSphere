@@ -37,6 +37,7 @@ export const getGroupsByGroupId = async(groupId : string) =>{
   try {
     const groups = await Group.findById(groupId)
     .populate("members.userId")
+    .populate("adminId")
     return groups;
   } catch (error: any) {
     throw new Error(`Error fetching groups: ${error.message}`);
@@ -108,6 +109,7 @@ export const getGroupRequestsByuserId = async (userId: string) => {
 export const findRequestById = async (id: string) => {
   try {
     return await GroupRequest.findById(id);
+    
   } catch (error: any) {
     throw new Error(`Error fetching group request by ID: ${error.message}`);
   }
@@ -115,7 +117,9 @@ export const findRequestById = async (id: string) => {
 
 export const findGrouptById = async (id:any) => {
   try {
-    return await Group.findById(id);
+    return await Group.findById(id)
+    .populate("members.userId")
+     .populate("adminId");
   } catch (error: any) {
     throw new Error(`Error fetching group  by ID: ${error.message}`);
   }
@@ -232,5 +236,53 @@ export const groupDetilsByUserId = async(userId: string) =>{
   } catch (error) {
     console.error("Error in GroupRepository:", error);
     throw new Error("Error retrieving group details from the database");
+  }
+}
+
+//FOR ADMIN
+// export const getAllGroups = async() =>{
+//   try {
+//     const groups = await Group.find()
+//     .populate("members.userId")
+//     .populate("adminId")
+//     return groups;
+//   } catch (error: any) {
+//     throw new Error(`Error fetching groups: ${error.message}`);
+//   }
+// }
+
+// //get getDetails using groupId
+// export const getGroupDeatilsById = async(groupId:string) =>{
+//   try {
+//     const groupDetails = await Group.findById(groupId)
+//     .populate("members.userId")
+//     .populate("adminId");
+//     return groupDetails;
+//   } catch (error:any) {
+//     throw new Error(`Error fetching group Details: ${error.message}`);
+//   }
+// }
+
+//get all group requsets
+export const getAllGrouprequsets = async() =>{
+  try {
+    const AllGrouprequsets = await GroupRequest.find()
+    .populate("groupId")
+    .populate("userId");
+    return AllGrouprequsets;
+  } catch (error:any) {
+    throw new Error(`Error fetching group Requsets: ${error.message}`);
+  }
+}
+
+//get the group requset details using requset Id
+export const getGroupRequsetById = async(requsetId : string) =>{
+  try {
+    const groupRequsetDetails = await GroupRequest.findById(requsetId)
+    .populate("groupId")
+    .populate("userId");
+    return groupRequsetDetails;
+  } catch (error:any) {
+    throw new Error(`Error fetching group Requset Details: ${error.message}`);
   }
 }

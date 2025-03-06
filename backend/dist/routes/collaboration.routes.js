@@ -1,6 +1,6 @@
 import express from "express";
 import { apiLimiter } from "../middlewares/ratelimit.middleware.js";
-import { checkBlockedStatus, verifyToken } from "../middlewares/auth.middleware.js";
+import { authorize, checkBlockedStatus, verifyToken } from "../middlewares/auth.middleware.js";
 import * as collaborationController from '../controllers/collaboration.controller.js';
 const router = express.Router();
 //User- Mentor routes
@@ -13,5 +13,10 @@ router.post("/process-payment", [apiLimiter, verifyToken, checkBlockedStatus], c
 router.get('/get-collabData-user/:id', [apiLimiter, verifyToken, checkBlockedStatus], collaborationController.getCollabDataForUserController);
 router.get('/get-collabData-mentor/:id', [apiLimiter, verifyToken, checkBlockedStatus], collaborationController.getCollabDataForMentorController);
 router.delete('/cancel-collab/:collabId', [apiLimiter, verifyToken, checkBlockedStatus], collaborationController.deleteCollab);
+router.get('/getCollab/:collabId', [apiLimiter, verifyToken, checkBlockedStatus], collaborationController.getCollabDeatilsbyCollabId);
+router.get('/getCollabRequset/:requestId', [apiLimiter, verifyToken, checkBlockedStatus], collaborationController.getRequestDeatilsbyRequestId);
+//FOR ADMIN
+router.get("/getAllRequest", [apiLimiter, verifyToken, authorize('admin')], collaborationController.getAllMentorRequests);
+router.get("/getAllCollab", [apiLimiter, verifyToken, authorize('admin')], collaborationController.getAllCollabs);
 export default router;
 //# sourceMappingURL=collaboration.routes.js.map

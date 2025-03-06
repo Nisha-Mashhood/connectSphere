@@ -14,7 +14,6 @@ import feedbackRoutes from './routes/feedback.routes.js';
 import user_userCollabRoutes from './routes/userCollaboration.routes.js';
 import taskRoutes from './routes/tasks.routes.js';
 import notificationRoutes from './routes/notification.routes.js';
-import helmet from "helmet";
 import cors from "cors";
 import cookieParser from "cookie-parser";
 import { scheduleNotifications } from "./utils/node-cron.utils.js";
@@ -25,7 +24,6 @@ connectDB();
 // Middleware
 app.use(express.json());
 app.use(cookieParser());
-app.use(helmet());
 app.use(cors({
     origin: process.env.FRONTEND_URL || "http://localhost:5173",
     credentials: true

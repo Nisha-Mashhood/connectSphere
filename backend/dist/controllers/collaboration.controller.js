@@ -1,4 +1,4 @@
-import { acceptRequest, getCollabDataForMentorService, getCollabDataForUserService, getMentorRequests, getRequsetForUser, processPaymentService, rejectRequest, removecollab, TemporaryRequestService, } from "../services/collaboration.service.js";
+import { acceptRequest, fetchCollabById, fetchRequsetById, getCollabDataForMentorService, getCollabDataForUserService, getCollabsService, getMentorRequests, getMentorRequestsService, getRequsetForUser, processPaymentService, rejectRequest, removecollab, TemporaryRequestService, } from "../services/collaboration.service.js";
 import mentorRequset from "../models/mentorRequset.js";
 export const TemporaryRequestController = async (req, res) => {
     try {
@@ -143,6 +143,57 @@ export const deleteCollab = async (req, res) => {
     catch (error) {
         console.error("Error:", error.message);
         res.status(500).json({ status: "failure", error: error.message });
+    }
+};
+//FOR ADMIN
+// Get all mentor requests
+export const getAllMentorRequests = async (_req, res) => {
+    try {
+        const mentorRequests = await getMentorRequestsService();
+        res.status(200).json(mentorRequests);
+    }
+    catch (error) {
+        res.status(500).json({ message: error.message });
+    }
+};
+// Get all collaborations
+export const getAllCollabs = async (_req, res) => {
+    try {
+        const collaborations = await getCollabsService();
+        res.status(200).json(collaborations);
+    }
+    catch (error) {
+        res.status(500).json({ message: error.message });
+    }
+};
+//get collab details by collabId
+export const getCollabDeatilsbyCollabId = async (req, res) => {
+    const { collabId } = req.params;
+    try {
+        const collabDetails = await fetchCollabById(collabId);
+        res
+            .status(200)
+            .json({ message: "Collab details accessed successfully", data: collabDetails });
+        return;
+    }
+    catch (error) {
+        res.status(500).json({ message: error.message });
+        return;
+    }
+};
+//get Requset deatils using requsetId
+export const getRequestDeatilsbyRequestId = async (req, res) => {
+    const { requestId } = req.params;
+    try {
+        const requestDetails = await fetchRequsetById(requestId);
+        res
+            .status(200)
+            .json({ message: "Requset details accessed successfully", data: requestDetails });
+        return;
+    }
+    catch (error) {
+        res.status(500).json({ message: error.message });
+        return;
     }
 };
 //# sourceMappingURL=collaboration.controller.js.map

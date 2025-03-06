@@ -61,4 +61,32 @@ export const getUserRequestsController = async (req, res) => {
         res.status(500).json({ message: error.message });
     }
 };
+//FOR ADMIN
+// Get all user-user collaborations
+export const getAllUserConnectionsController = async (_req, res) => {
+    try {
+        const connections = await userConnectionService.fetchAllUserConnections();
+        res.status(200).json(connections);
+    }
+    catch (error) {
+        res.status(500).json({ message: error.message });
+    }
+};
+// Get a specific user-user collaboration by ID
+export const getUserConnectionByIdController = async (req, res) => {
+    console.log("Inside the controller");
+    try {
+        const connectionId = req.params.connectionId;
+        console.log("Connection Id in Controller :", connectionId);
+        const connection = await userConnectionService.fetchUserConnectionById(connectionId);
+        if (!connection) {
+            console.log("No connection found for this connectionId");
+        }
+        res.status(200).json(connection);
+    }
+    catch (error) {
+        console.log(error);
+        res.status(404).json({ message: error.message });
+    }
+};
 //# sourceMappingURL=user-userCollab.controller.js.map

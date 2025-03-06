@@ -104,3 +104,4 @@ const GroupSchema: Schema = new Schema<GroupDocument>(
 const Group = mongoose.model<GroupDocument>('Group', GroupSchema);
 
 export default Group;
+

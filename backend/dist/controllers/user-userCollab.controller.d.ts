@@ -4,4 +4,6 @@ export declare const respondToRequestController: (req: Request, res: Response) =
 export declare const disconnectConnectionController: (req: Request, res: Response) => Promise<void>;
 export declare const getUserConnectionsController: (req: Request, res: Response) => Promise<void>;
 export declare const getUserRequestsController: (req: Request, res: Response) => Promise<void>;
+export declare const getAllUserConnectionsController: (_req: Request, res: Response) => Promise<void>;
+export declare const getUserConnectionByIdController: (req: Request, res: Response) => Promise<void>;
 //# sourceMappingURL=user-userCollab.controller.d.ts.map

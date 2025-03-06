@@ -30,7 +30,7 @@ const convertTo24HourFormat = (time12h: string): { hours: number; minutes: numbe
 
 // Schedule push notifications
 export const scheduleNotifications = () => {
-  cron.schedule("* * * * *", async () => {
+  cron.schedule("*/30 * * * *", async () => {
     console.log("Checking for notifications...");
 
     const currentTime = new Date();

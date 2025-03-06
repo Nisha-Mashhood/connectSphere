@@ -1,4 +1,4 @@
-import { FaUser, FaTasks, FaChartBar, FaSignOutAlt } from 'react-icons/fa';
+import { FaUser, FaTasks, FaSignOutAlt, FaLayerGroup, FaChalkboardTeacher, FaUserFriends } from 'react-icons/fa';
 import { Button, Avatar } from "@nextui-org/react";
 import { useDispatch, useSelector } from "react-redux";
 import { useNavigate } from "react-router-dom";
@@ -84,16 +84,26 @@ const AdminSidebar = () => {
           <Button
             color="secondary"
             className="w-full text-left"
-            startContent={<FaChartBar />}
+            onPress={() => navigate("/admin/userMentorManagemnt")}
+            startContent={<FaChalkboardTeacher />}
           >
-            Report
+            User-Mentor Managemnt
           </Button>
           <Button
             color="secondary"
             className="w-full text-left"
-            startContent={<FaTasks />}
+            onPress={() => navigate("/admin/userUserMangemnt")}
+            startContent={<FaUserFriends />}
           >
-            Task Management
+            User-User Managemnt
+          </Button>
+          <Button
+            color="secondary"
+            className="w-full text-left"
+            onPress={() => navigate("/admin/groupManagemnt")}
+            startContent={<FaLayerGroup />}
+          >
+            Group Managemnt
           </Button>
         </div>
 

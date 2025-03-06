@@ -1,3 +1,4 @@
+import { IUserConnection } from "../models/userConnection.modal.js";
 import * as userConnectionRepo from "../repositories/user-userRepo.repositry.js";
 
 export const sendUserConnectionRequest = async (requesterId: string, recipientId: string) => {
@@ -34,3 +35,14 @@ export const fetchUserConnections = async (userId: string) => {
 export const fetchUserRequests = async (userId: string) => {
     return await userConnectionRepo.getUserRequests(userId);
   };
+
+  //FOR ADMIN
+  // Service to get all user-user collaborations
+export const fetchAllUserConnections = async (): Promise<IUserConnection[]> => {
+  return await userConnectionRepo.getAllUserConnections();
+};
+
+// Service to get user-user collaboration by ID
+export const fetchUserConnectionById = async (connectionId: string): Promise<IUserConnection> => {
+  return await userConnectionRepo.getUserConnectionWithId(connectionId);
+};

@@ -42,4 +42,22 @@ export const getUserRequests = async (userId) => {
         .sort({ requestSentAt: -1 });
     return { sentRequests, receivedRequests };
 };
+//FOR ADMIN
+//Get All user-user collaborations
+export const getAllUserConnections = async () => {
+    return await UserConnection.find().populate("requester recipient");
+};
+//Get the user connection details with connection Id
+export const getUserConnectionWithId = async (connectionId) => {
+    try {
+        const userConnection = await UserConnection.findById(connectionId).populate("requester recipient");
+        if (!userConnection) {
+            throw new Error("no user connection found for this Id");
+        }
+        return userConnection;
+    }
+    catch (error) {
+        throw new Error("Error retrieving  details from the database");
+    }
+};
 //# sourceMappingURL=user-userRepo.repositry.js.map
