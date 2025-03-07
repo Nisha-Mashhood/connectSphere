@@ -62,7 +62,7 @@ const GroupDetails = () => {
     }
     alert(groupId);
     try {
-      // await removeGroup(groupId);
+      await removeGroup(groupId);
       toast.success("Group deleted successfully!");
       navigate("/admin/groupManagemnt");
     } catch (err: any) {
@@ -78,7 +78,7 @@ const GroupDetails = () => {
     };
     alert(data);
     try {
-      // await removeUserFromGroup(data);
+      await removeUserFromGroup(data);
       toast.success("Member removed successfully");
       fetchDetails();
     } catch (err: any) {

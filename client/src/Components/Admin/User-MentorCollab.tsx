@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { UserToMentorCollab, UserToMentorRequset } from "../../Service/Admin.Service";
+import { UserToMentorCollab, UserToMentorRequset } from "../../Service/collaboration.Service";
 
 const UserMentorCollab = () => {
   const [userToMentorRequests, setUserToMentorRequests] = useState([]);

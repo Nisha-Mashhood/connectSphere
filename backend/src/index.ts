@@ -14,6 +14,7 @@ import feedbackRoutes from './routes/feedback.routes.js';
 import user_userCollabRoutes from './routes/userCollaboration.routes.js';
 import taskRoutes from './routes/tasks.routes.js';
 import  notificationRoutes from './routes/notification.routes.js';
+import adminRoutes from './routes/Admin/adminDashboard.routes.js';
 import cors from "cors";
 import cookieParser from "cookie-parser";
 import { scheduleNotifications } from "./utils/node-cron.utils.js";
@@ -48,6 +49,7 @@ app.use("/api/feedback", feedbackRoutes);
 app.use("/api/user-userCollab",user_userCollabRoutes);
 app.use("/api/task", taskRoutes);
 app.use("/api/notification", notificationRoutes);
+app.use("/api/admin", adminRoutes);
 
 // Placeholder route
 app.get("/", (_req, res) => {
