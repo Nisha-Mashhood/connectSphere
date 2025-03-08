@@ -18,7 +18,7 @@ const convertTo24HourFormat = (time12h) => {
 };
 // Schedule push notifications
 export const scheduleNotifications = () => {
-    cron.schedule("*/30 * * * *", async () => {
+    cron.schedule("* * * * *", async () => {
         console.log("Checking for notifications...");
         const currentTime = new Date();
         try {
@@ -35,7 +35,6 @@ export const scheduleNotifications = () => {
                     continue;
                 }
                 const taskNotificationTime = new Date(task.notificationDate);
-                // Ensure notificationTime exists and is properly formatted
                 const notificationTime = String(task.notificationTime ?? "00:00 AM");
                 const time24 = convertTo24HourFormat(notificationTime);
                 if (!time24) {
@@ -45,11 +44,9 @@ export const scheduleNotifications = () => {
                 taskNotificationTime.setHours(time24.hours, time24.minutes, 0, 0);
                 // Check if current time matches or exceeds task notification time
                 if (currentTime >= taskNotificationTime) {
-                    // Type-safe extraction of userId
                     const subscriptionWithUserId = task.notificationSubscription;
                     if (subscriptionWithUserId && subscriptionWithUserId.userId) {
                         try {
-                            // Explicitly convert _id to string using mongoose.Types.ObjectId method
                             const taskId = task._id instanceof mongoose.Types.ObjectId
                                 ? task._id.toString()
                                 : String(task._id);
@@ -63,7 +60,6 @@ export const scheduleNotifications = () => {
                         console.warn(`No user ID found in subscription for task ${task.name}`);
                     }
                 }
-                // Optional: Stop notifications when task is completed or due date is passed
                 if (currentTime > new Date(task.dueDate)) {
                     console.log(`Task ${task.name} is past due. Stopping notifications.`);
                 }

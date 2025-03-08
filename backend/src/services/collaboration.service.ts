@@ -70,37 +70,56 @@ export const getRequsetForUser = async (userId: string) => {
 
 //make payemnt using stripe
 export const processPaymentService = async (
-  token: any,
+  paymentMethodId: string,
   amount: number,
   requestId: string,
-  mentorRequestData: any
+  mentorRequestData: any,
+  email: string,
+  returnUrl: string
 ) => {
   const idempotencyKey = uuid();
 
   try {
-    const customer = await stripe.customers.create({
-      email: token.email,
-      source: token.id,
-    });
+    // Check if customer already exists, otherwise create one
+    let customers = await stripe.customers.list({ email, limit: 1 });
+    let customer = customers.data.length > 0 ? customers.data[0] : null;
 
-    const charge = await stripe.charges.create(
+    if (!customer) {
+      customer = await stripe.customers.create({
+        email: email,
+        payment_method: paymentMethodId,
+        invoice_settings: { default_payment_method: paymentMethodId }, // Attach default payment method
+      });
+    }
+
+    // Create a PaymentIntent
+    const paymentIntent = await stripe.paymentIntents.create(
       {
         amount,
         currency: "inr",
         customer: customer.id,
-        receipt_email: token.email,
+        payment_method: paymentMethodId,
+        confirm: true,
+        receipt_email: email,
         description: `Payment for Request ID: ${requestId}`,
+        metadata: { requestId },
+        return_url: `${returnUrl}?payment_status=success&request_id=${requestId}`,
+        // Disable redirect based payment methods if you don't want 3DS or other redirects
+        // Uncomment the below line to specifically disable redirects
+        /* automatic_payment_methods: {
+          enabled: true,
+          allow_redirects: 'never'
+        },*/
       },
       { idempotencyKey }
     );
 
-    if (charge.status === "succeeded") {
-      // Calculate dates
+    // If payment is successful, create a collaboration entry and delete mentor request
+    if (paymentIntent.status === "succeeded") {
       const startDate = new Date();
       const endDate = new Date(startDate);
-      endDate.setDate(startDate.getDate() + 30); // Add 30 days
+      endDate.setDate(startDate.getDate() + 30); // 30-day access
 
-      // Create a collaboration document
       await createCollaboration({
         mentorId: mentorRequestData.mentorId,
         userId: mentorRequestData.userId,
@@ -112,11 +131,10 @@ export const processPaymentService = async (
         endDate,
       });
 
-      // Delete the mentor request document
       await deleteMentorRequest(requestId);
     }
 
-    return charge;
+    return paymentIntent;
   } catch (error: any) {
     throw new Error(error.message);
   }

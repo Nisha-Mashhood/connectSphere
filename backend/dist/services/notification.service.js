@@ -2,7 +2,6 @@ import * as notificationRepository from "../repositories/notification.repositry.
 import webPush from "../utils/webPushUtil.js";
 //Store subscription details in DB
 export const storeSubscription = async (currentUserId, taskId, subscription) => {
-    // Validate subscription object before storing
     if (!subscription || !subscription.endpoint || !subscription.keys) {
         throw new Error("Invalid subscription object");
     }
@@ -23,7 +22,6 @@ export const sendPushNotification = async (taskId, message, specificUserId) => {
             recipients = [specificUserId];
         }
         else {
-            // Existing logic for determining recipients based on context
             if (task.contextType === "profile") {
                 recipients.push(task.createdBy.toString());
             }

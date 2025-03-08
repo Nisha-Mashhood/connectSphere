@@ -11,7 +11,8 @@ import {
   getRelativeTime,
 } from "../../../../lib/helperforprofile";
 import toast from "react-hot-toast";
-import StripeCheckout from "react-stripe-checkout";
+import { loadStripe } from "@stripe/stripe-js";
+import { Elements, CardElement, useStripe, useElements } from "@stripe/react-stripe-js";
 import { RootState } from "../../../../redux/store";
 import { 
   FaCheckCircle, 
@@ -20,7 +21,8 @@ import {
   FaInbox,
   FaClock,
   FaCalendarAlt,
-  FaMoneyBillWave
+  FaMoneyBillWave,
+  FaCreditCard
 } from "react-icons/fa";
 import {
   Card,
@@ -32,7 +34,139 @@ import {
   Button,
   Badge,
   Tooltip,
+  Modal,
+  ModalContent,
+  ModalHeader,
+  ModalBody,
+  ModalFooter,
+  useDisclosure,
 } from "@nextui-org/react";
+
+// Load Stripe outside component to avoid recreating it on every render
+const stripePromise = loadStripe(import.meta.env.VITE_STRIPE_KEY);
+
+// Payment Form component using Stripe Elements
+const PaymentForm = ({ request, onSuccessfulPayment }) => {
+  const stripe = useStripe();
+  const elements = useElements();
+  const [isProcessing, setIsProcessing] = useState(false);
+  const { currentUser } = useSelector((state: RootState) => state.user);
+
+  // Get the current URL to use for return_url
+  const getReturnUrl = () => {
+    // Use window.location if available, or fallback to a hardcoded base URL
+    return typeof window !== 'undefined' 
+      ? `${window.location.origin}/profile` 
+      : 'https://yourwebsite.com/payment-result';
+  };
+
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+    
+    if (!stripe || !elements) {
+      return;
+    }
+
+    setIsProcessing(true);
+
+    try {
+      // Get card element
+      const cardElement = elements.getElement(CardElement);
+
+      // Create payment method
+      const { error, paymentMethod } = await stripe.createPaymentMethod({
+        type: 'card',
+        card: cardElement,
+      });
+
+      if (error) {
+        toast.error(error.message);
+        setIsProcessing(false);
+        return;
+      }
+
+      // Get the return URL for potential redirects
+      const returnUrl = getReturnUrl();
+
+      // Process payment with your backend
+      const response = await processStripePayment({
+        paymentMethodId: paymentMethod.id,
+        amount: request.price * 100,
+        requestId: request._id,
+        email: currentUser.email,
+        returnUrl: returnUrl
+      });
+
+      if (response.status === "success") {
+        toast.success("Payment successful! Your session is now booked.");
+        onSuccessfulPayment();
+      } else {
+        toast.error("Payment failed. Please try again.");
+      }
+    } catch (error) {
+      console.error("Error processing payment:", error.message);
+      toast.error("Payment processing error. Please try again.");
+    } finally {
+      setIsProcessing(false);
+    }
+  };
+
+  // Check URL parameters on component mount for payment result
+  useEffect(() => {
+    if (typeof window === 'undefined') return;
+    
+    const urlParams = new URLSearchParams(window.location.search);
+    const paymentStatus = urlParams.get('payment_status');
+    
+    if (paymentStatus === 'success') {
+      toast.success("Payment successful! Your session is now booked.");
+      onSuccessfulPayment();
+    } else if (paymentStatus === 'failed') {
+      toast.error("Payment failed. Please try again.");
+    }
+  }, []);
+
+  return (
+    <form onSubmit={handleSubmit}>
+      <div className="mb-4">
+        <label className="block text-sm font-medium mb-2">Card Details</label>
+        <div className="p-3 border rounded-md">
+          <CardElement 
+            options={{
+              style: {
+                base: {
+                  fontSize: '16px',
+                  color: '#424770',
+                  '::placeholder': {
+                    color: '#aab7c4',
+                  },
+                },
+                invalid: {
+                  color: '#9e2146',
+                },
+              },
+            }}
+          />
+        </div>
+      </div>
+      
+      <div className="flex justify-between items-center mt-4">
+        <div className="text-sm">
+          <span className="font-medium">Total:</span> ${request.price}
+        </div>
+        <Button 
+          type="submit" 
+          color="primary"
+          isLoading={isProcessing}
+          isDisabled={!stripe || isProcessing}
+          startContent={!isProcessing && <FaCreditCard />}
+        >
+          Pay Now
+        </Button>
+      </div>
+    </form>
+  );
+};
 
 const RequestsSection = ({ handleProfileClick }) => {
   const { currentUser } = useSelector((state: RootState) => state.user);
@@ -41,6 +175,7 @@ const RequestsSection = ({ handleProfileClick }) => {
   const [receivedRequests, setReceivedRequests] = useState([]);
   const [selectedRequest, setSelectedRequest] = useState(null);
   const [isLoading, setIsLoading] = useState(true);
+  const { isOpen, onOpen, onClose } = useDisclosure();
 
   const fetchRequests = async () => {
     setIsLoading(true);
@@ -84,24 +219,14 @@ const RequestsSection = ({ handleProfileClick }) => {
     }
   };
 
-  const handlePayment = async (token) => {
-    try {
-      const response = await processStripePayment({
-        token,
-        amount: selectedRequest.price * 100,
-        requestId: selectedRequest._id,
-      });
+  const handlePaymentSuccess = () => {
+    onClose();
+    fetchRequests();
+  };
 
-      if (response.status === "success") {
-        toast.success("Payment successful! Your session is now booked.");
-        fetchRequests();
-      } else {
-        toast.error("Payment failed. Please try again.");
-      }
-    } catch (error) {
-      console.error("Error processing payment:", error.message);
-      toast.error("Payment processing error. Please try again.");
-    }
+  const openPaymentModal = (request) => {
+    setSelectedRequest(request);
+    onOpen();
   };
 
   // Status badges with consistent styling
@@ -119,6 +244,17 @@ const RequestsSection = ({ handleProfileClick }) => {
 
   useEffect(() => {
     fetchRequests();
+    
+    // Check for payment redirect results
+    if (typeof window !== 'undefined') {
+      const urlParams = new URLSearchParams(window.location.search);
+      const paymentStatus = urlParams.get('payment_status');
+      
+      if (paymentStatus === 'success') {
+        toast.success("Payment successful! Your session is now booked.");
+        fetchRequests();
+      }
+    }
   }, [currentUser._id]);
 
   // Render a single request card
@@ -128,23 +264,22 @@ const RequestsSection = ({ handleProfileClick }) => {
       : (request.userId || {});
 
     const profileId = isSent 
-    ? (request.mentorId?._id) // Use mentorId for sent requests to mentors
-    : (otherPerson._id);   
+      ? (request.mentorId?._id) // Use mentorId for sent requests to mentors
+      : (otherPerson._id);   
 
-    
     const profilePic = otherPerson.profilePic || "/default-avatar.png";
     const name = otherPerson.name || "Unknown User";
     
     return (
       <Card key={request._id} className="mb-4 shadow-sm hover:shadow-md transition-shadow">
-        <CardBody>
+        <CardBody onMouseEnter={() => setSelectedRequest(request)} 
+          className="cursor-pointer transition-transform duration-300 hover:scale-105">
           <div className="flex items-start gap-4">
             <Badge 
               content={getStatusBadge(request.isAccepted)} 
               placement="top-right"
               classNames={{
                 badge: "border-none cursor-pointer"
-
               }}
             >
               <Avatar
@@ -221,21 +356,16 @@ const RequestsSection = ({ handleProfileClick }) => {
                   </div>
                 )}
                 
-                {isSent && request.isAccepted === "Accepted" && !request.isPaid && (
-                  <StripeCheckout
-                  stripeKey={import.meta.env.VITE_STRIPE_KEY}
-                  token={handlePayment}
-                  amount={request.price * 100}
-                  name="ConnectSphere Mentorship"
-                  description={`Book a slot with ${request.mentorId?.userId?.name}`}
-                  email={currentUser.email}
-                ></StripeCheckout>
-                )}
-                
-                {request.isPaid && (
-                  <Chip color="success" variant="flat">
-                    Paid Session
-                  </Chip>
+                {isSent && request.isAccepted === "Accepted" && (
+                  <Button 
+                    color="primary" 
+                    variant="solid" 
+                    size="sm"
+                    startContent={<FaCreditCard />}
+                    onClick={() => openPaymentModal(request)}
+                  >
+                    Pay Now
+                  </Button>
                 )}
               </div>
             </div>
@@ -318,6 +448,53 @@ const RequestsSection = ({ handleProfileClick }) => {
           </Tab>
         )}
       </Tabs>
+
+      {/* Payment Modal */}
+      <Modal 
+        isOpen={isOpen} 
+        onClose={onClose}
+        size="md"
+      >
+        <ModalContent>
+          {(onClose) => (
+            <>
+              <ModalHeader>Complete Payment</ModalHeader>
+              <ModalBody>
+                {selectedRequest && (
+                  <div>
+                    <div className="mb-4">
+                      <h3 className="text-lg font-medium">
+                        Session Details
+                      </h3>
+                      <p className="text-sm text-default-500">
+                        Mentor: {selectedRequest.mentorId?.userId?.name}
+                      </p>
+                      <p className="text-sm text-default-500">
+                        Date: {selectedRequest.selectedSlot.day} at {selectedRequest.selectedSlot.timeSlots}
+                      </p>
+                      <p className="text-sm text-default-500">
+                        Fee: ${selectedRequest.price}
+                      </p>
+                    </div>
+                    
+                    <Elements stripe={stripePromise}>
+                      <PaymentForm 
+                        request={selectedRequest} 
+                        onSuccessfulPayment={handlePaymentSuccess} 
+                      />
+                    </Elements>
+                  </div>
+                )}
+              </ModalBody>
+              <ModalFooter>
+                <Button variant="flat" onPress={onClose}>
+                  Cancel
+                </Button>
+              </ModalFooter>
+            </>
+          )}
+        </ModalContent>
+      </Modal>
     </div>
   );
 };

@@ -73,6 +73,16 @@ const AdminDashboard = () => {
         getRecentCollaborations(5) // Limit to 5
       ]);
 
+      console.log("users : ",users);
+      console.log("mentors : ",mentors);
+      console.log("revenue : ",revenue);
+      console.log("pendingReqs : ",pendingReqs);
+      console.log("activeCollab : ",activeCollab);
+      console.log("revData : ",revData);
+      console.log("growthData : ",growthData);
+      console.log("pendingMentorsList : ",pendingMentorsList);
+      console.log("topMentorsList : ",topMentorsList);
+      console.log("recentCollabsList : ",recentCollabsList);
      
       setStatsData({
         totalUsers: users?.totalUsers || 0,
@@ -82,7 +92,7 @@ const AdminDashboard = () => {
         activeCollaborations: activeCollab?.activeCollaborations || 0
       });
 
-      
+      //for graph
       const formattedRevenueTrends = revData && revData.length > 0 
         ? revData.map(item => ({
             date: item.name,
@@ -91,20 +101,20 @@ const AdminDashboard = () => {
         : [];
       setRevenueTrends(formattedRevenueTrends);
       
-      
+      //for graph
       setUserGrowth(growthData || []);
       
-   
+          //pending mentor list
       const formattedPendingMentors = pendingMentorsList && pendingMentorsList.length > 0
         ? pendingMentorsList.map(mentor => ({
-            name: mentor.name || 'Unknown',
-            email: mentor.email || 'No email',
+            name: mentor.userId.name || 'Unknown',
+            email: mentor.userId.email || 'No email',
             requestId: mentor._id
           }))
         : [];
       setPendingMentors(formattedPendingMentors);
       
-      
+      //top mentors
       const formattedTopMentors = topMentorsList && topMentorsList.length > 0
         ? topMentorsList.map(mentor => ({
             name: mentor.name || 'Unknown',

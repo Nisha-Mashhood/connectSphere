@@ -30,7 +30,7 @@ const convertTo24HourFormat = (time12h: string): { hours: number; minutes: numbe
 
 // Schedule push notifications
 export const scheduleNotifications = () => {
-  cron.schedule("*/30 * * * *", async () => {
+  cron.schedule("* * * * *", async () => {
     console.log("Checking for notifications...");
 
     const currentTime = new Date();
@@ -52,7 +52,6 @@ export const scheduleNotifications = () => {
 
         const taskNotificationTime = new Date(task.notificationDate);
 
-        // Ensure notificationTime exists and is properly formatted
         const notificationTime: string = String(task.notificationTime ?? "00:00 AM");
         const time24 = convertTo24HourFormat(notificationTime);
         if (!time24) {
@@ -64,12 +63,12 @@ export const scheduleNotifications = () => {
 
         // Check if current time matches or exceeds task notification time
         if (currentTime >= taskNotificationTime) {
-          // Type-safe extraction of userId
+
           const subscriptionWithUserId = task.notificationSubscription as NotificationSubscription;
           
           if (subscriptionWithUserId && subscriptionWithUserId.userId) {
             try {
-              // Explicitly convert _id to string using mongoose.Types.ObjectId method
+              
               const taskId = task._id instanceof mongoose.Types.ObjectId 
                 ? task._id.toString() 
                 : String(task._id);
@@ -87,7 +86,6 @@ export const scheduleNotifications = () => {
           }
         }
 
-        // Optional: Stop notifications when task is completed or due date is passed
         if (currentTime > new Date(task.dueDate)) {
           console.log(`Task ${task.name} is past due. Stopping notifications.`);
         }
@@ -99,3 +97,5 @@ export const scheduleNotifications = () => {
 
   console.log("✅ Notification scheduler started.");
 };
+
+

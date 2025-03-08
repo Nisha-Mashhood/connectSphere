@@ -103,21 +103,43 @@ export const modifyGroupRequestStatus = async (requestId, status) => {
     }
     throw new Error("Invalid status.");
 };
-export const processGroupPaymentService = async (token, amount, requestId, groupRequestData) => {
+export const processGroupPaymentService = async (paymentMethodId, amount, requestId, email, groupRequestData) => {
+    // Generate a unique key for this transaction to prevent duplicate charges
     const idempotencyKey = uuid();
     try {
+        // Create a customer in Stripe with payment_method instead of source
         const customer = await stripe.customers.create({
-            email: token.email,
-            source: token.id,
+            email,
+            payment_method: paymentMethodId,
+            // Don't use source parameter as it's causing the error
         });
-        const charge = await stripe.charges.create({
+        // Attach the payment method to the customer
+        await stripe.paymentMethods.attach(paymentMethodId, {
+            customer: customer.id,
+        });
+        // Set the payment method as the default
+        await stripe.customers.update(customer.id, {
+            invoice_settings: {
+                default_payment_method: paymentMethodId,
+            },
+        });
+        // Create a PaymentIntent instead of a direct charge
+        const paymentIntent = await stripe.paymentIntents.create({
             amount,
             currency: "inr",
             customer: customer.id,
-            receipt_email: token.email,
+            payment_method: paymentMethodId,
+            confirm: true, // Confirm the payment immediately
             description: `Payment for Group Request ID: ${requestId}`,
+            receipt_email: email,
+            metadata: {
+                requestId,
+                groupId: groupRequestData.groupId,
+                userId: groupRequestData.userId
+            },
         }, { idempotencyKey });
-        if (charge.status === "succeeded") {
+        // If payment succeeded, update database records
+        if (paymentIntent.status === "succeeded") {
             // Update group payment status to "Paid"
             await updateGroupPaymentStatus(requestId, amount / 100);
             // Add the user to the group as a member
@@ -125,10 +147,11 @@ export const processGroupPaymentService = async (token, amount, requestId, group
             // Delete the group request since payment is completed
             await deleteGroupRequest(requestId);
         }
-        return charge;
+        return paymentIntent;
     }
     catch (error) {
-        throw new Error(error.message);
+        console.error("Stripe payment error:", error);
+        throw new Error(error.message || "Payment processing failed");
     }
 };
 export const removeMemberFromGroup = async (groupId, userId) => {

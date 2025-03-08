@@ -1,5 +1,5 @@
 import { useDispatch, useSelector } from "react-redux";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { AppDispatch, RootState } from "../../../../redux/store";
 import { calculateTimeLeft } from "../../../../lib/helperforprofile";
 import { FaClock, FaStar } from "react-icons/fa";
@@ -15,6 +15,18 @@ const ActiveCollaborations = ({ handleProfileClick }) => {
   const [selectedCollab, setSelectedCollab] = useState(null);
   const dispatch = useDispatch<AppDispatch>();
 
+  // Fetch collaboration data when component mounts or when currentUser changes
+  useEffect(() => {
+    if (currentUser && currentUser._id) {
+      dispatch(
+        fetchCollabDetails({
+          userId: currentUser._id,
+          role: currentUser.role,
+        })
+      );
+    }
+  }, [dispatch, currentUser]);
+
   const handleCollabClick = (collabId) => {
     navigate(`/collaboration/${collabId}`);
   };
@@ -26,24 +38,19 @@ const ActiveCollaborations = ({ handleProfileClick }) => {
   };
 
   const handleFeedbackComplete = () => {
-    // refresh the collaborations
-    // after feedback is submitted
-
-    // Fetch collaboration status
+    // refresh the collaborations after feedback is submitted
     dispatch(
       fetchCollabDetails({
         userId: currentUser._id,
         role: currentUser.role,
       })
-    )
-   
-      console.log("Feedback completed");
+    );
+    console.log("Feedback completed");
   };
-  
 
   // Sort collaborations into ongoing and completed
-  const currentDate = new Date(); 
-  console.log("Collab Data :", collabDetails)
+  const currentDate = new Date();
+  console.log("Collab Data:", collabDetails);
 
   const ongoingCollabs =
     collabDetails?.data?.filter(

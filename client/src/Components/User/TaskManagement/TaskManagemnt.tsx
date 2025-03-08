@@ -221,9 +221,10 @@ const TaskManagement = ({ context, currentUser, contextData }) => {
       // Format with leading zeros for hours less than 10
       const formattedHour = displayHour < 10 ? `0${displayHour}` : displayHour;
 
-      // Add the hour and half-hour options
-      options.push(`${formattedHour}:00 ${period}`);
-      options.push(`${formattedHour}:30 ${period}`);
+      for (let minute = 0; minute < 60; minute++) {
+        const formattedMinute = minute < 10 ? `0${minute}` : minute;
+        options.push(`${formattedHour}:${formattedMinute} ${period}`);
+      }
     }
 
     return options;
@@ -394,11 +395,11 @@ const TaskManagement = ({ context, currentUser, contextData }) => {
     }
   };
 
+  //Task update
   const handleTaskUpdate = async () => {
     if (!validateDates()) {
       return;
     }
-
     try {
       if (!selectedTask) return;
 

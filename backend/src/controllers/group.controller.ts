@@ -180,37 +180,55 @@ export const updaterequsetDeatils = async (req: Request, res: Response) => {
 };
 
 //Make payemnt requset
-export const makeStripePaymentController = async (
-  req: Request,
-  res: Response
-) => {
-  const { token, amount, requestId, groupRequestData } = req.body;
-  console.log(req.body);
-  try {
-    // Retrieve the mentor request document
-    const groupRequest = await findRequestById(requestId);
+export const makeStripePaymentController = async (req: Request, res: Response) => {
+  const { paymentMethodId, amount, requestId, email, groupRequestData } = req.body;
+  console.log("Payment request received:", req.body);
 
+  try {
+    // Validate input
+    if (!paymentMethodId || !amount || !requestId || !email || !groupRequestData) {
+       res.status(400).json({
+        status: "failure",
+        message: "Missing required payment information"
+      });
+      return
+    }
+
+    // Retrieve the group request document
+    const groupRequest = await findRequestById(requestId);
     if (!groupRequest) {
-      res
-        .status(404)
-        .json({ status: "failure", message: "Group request not found" });
-      return;
+      res.status(404).json({
+        status: "failure",
+        message: "Group request not found"
+      });
+      return
     }
 
     // Process payment and handle members in group collection
     const paymentResult = await processGroupPaymentService(
-      token,
+      paymentMethodId,
       amount,
       requestId,
+      email,
       groupRequestData
     );
 
-    res.status(200).json({ status: "success", charge: paymentResult });
-    return;
+     res.status(200).json({
+      status: "success",
+      data: {
+        charge: paymentResult,
+        message: "Payment processed successfully"
+      }
+    });
+    return
+    
   } catch (error: any) {
-    console.error("Payment error:", error.message);
-    res.status(500).json({ status: "failure", error: error.message });
-    return;
+    console.error("Payment processing error:", error.message);
+    res.status(500).json({
+      status: "failure",
+      error: error.message || "An error occurred during payment processing"
+    });
+    return
   }
 };
 

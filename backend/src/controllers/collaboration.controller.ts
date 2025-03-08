@@ -113,9 +113,18 @@ export const makeStripePaymentController = async (
   req: Request,
   res: Response
 ) => {
-  const { token, amount, requestId } = req.body;
+  const { paymentMethodId, amount, requestId, email, returnUrl } = req.body;
 
   try {
+    // Validate returnUrl
+    if (!returnUrl) {
+      res.status(400).json({ 
+        status: "failure", 
+        error: "A return URL is required for processing the payment" 
+      });
+      return;
+    }
+
     // Retrieve the mentor request document
     const mentorRequestData = await mentorRequset.findById(requestId);
 
@@ -128,14 +137,35 @@ export const makeStripePaymentController = async (
 
     // Process payment and handle collaboration creation
     const paymentResult = await processPaymentService(
-      token,
+      paymentMethodId,
       amount,
       requestId,
-      mentorRequestData
+      mentorRequestData,
+      email,
+      returnUrl
     );
 
-    res.status(200).json({ status: "success", charge: paymentResult });
-    return;
+    // Handle different payment intent statuses
+    if (paymentResult.status === "requires_action" && paymentResult.next_action) {
+      // Payment requires additional action (like 3D Secure)
+      res.status(200).json({ 
+        status: "requires_action", 
+        charge: paymentResult 
+      });
+      return;
+    } else if (paymentResult.status === "succeeded") {
+      // Payment succeeded
+      res.status(200).json({ status: "success", charge: paymentResult });
+      return;
+    } else {
+      // Payment failed or is pending
+      res.status(200).json({ 
+        status: "pending", 
+        charge: paymentResult,
+        message: `Payment status: ${paymentResult.status}` 
+      });
+      return;
+    }
   } catch (error: any) {
     console.error("Payment error:", error.message);
     res.status(500).json({ status: "failure", error: error.message });
