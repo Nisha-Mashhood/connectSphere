@@ -150,11 +150,11 @@ export const updaterequsetDeatils = async (req, res) => {
 };
 //Make payemnt requset
 export const makeStripePaymentController = async (req, res) => {
-    const { paymentMethodId, amount, requestId, email, groupRequestData } = req.body;
+    const { paymentMethodId, amount, requestId, email, groupRequestData, returnUrl } = req.body;
     console.log("Payment request received:", req.body);
     try {
         // Validate input
-        if (!paymentMethodId || !amount || !requestId || !email || !groupRequestData) {
+        if (!paymentMethodId || !amount || !requestId || !email || !groupRequestData || !returnUrl) {
             res.status(400).json({
                 status: "failure",
                 message: "Missing required payment information"
@@ -171,15 +171,30 @@ export const makeStripePaymentController = async (req, res) => {
             return;
         }
         // Process payment and handle members in group collection
-        const paymentResult = await processGroupPaymentService(paymentMethodId, amount, requestId, email, groupRequestData);
-        res.status(200).json({
-            status: "success",
-            data: {
+        const paymentResult = await processGroupPaymentService(paymentMethodId, amount, requestId, email, groupRequestData, returnUrl);
+        // Handle different payment intent statuses
+        if (paymentResult.status === "requires_action" && paymentResult.next_action) {
+            // Payment requires additional action (like 3D Secure)
+            res.status(200).json({
+                status: "requires_action",
+                charge: paymentResult
+            });
+            return;
+        }
+        else if (paymentResult.status === "succeeded") {
+            // Payment succeeded
+            res.status(200).json({ status: "success", charge: paymentResult });
+            return;
+        }
+        else {
+            // Payment failed or is pending
+            res.status(200).json({
+                status: "pending",
                 charge: paymentResult,
-                message: "Payment processed successfully"
-            }
-        });
-        return;
+                message: `Payment status: ${paymentResult.status}`
+            });
+            return;
+        }
     }
     catch (error) {
         console.error("Payment processing error:", error.message);

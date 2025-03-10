@@ -27,6 +27,14 @@ const CheckoutForm = ({ request, currentUser, onSuccess }) => {
   const [isProcessing, setIsProcessing] = useState(false);
   const [error, setError] = useState("");
 
+  const getReturnUrl = () => {
+    // Use window.location if available, or fallback to a hardcoded base URL
+    return typeof window !== 'undefined' 
+      ? `${window.location.origin}/profile` 
+      : 'https://yourwebsite.com/payment-result';
+  };
+
+
   const handleSubmit = async (e) => {
     e.preventDefault();
 
@@ -52,6 +60,9 @@ const CheckoutForm = ({ request, currentUser, onSuccess }) => {
         return;
       }
 
+      // Get the return URL for potential redirects
+      const returnUrl = getReturnUrl();
+
       // Process payment with your backend
       const response = await processStripePaymentForGroups({
         paymentMethodId: paymentMethod.id,
@@ -62,6 +73,7 @@ const CheckoutForm = ({ request, currentUser, onSuccess }) => {
           groupId: request.groupId._id,
           userId: currentUser._id,
         },
+        returnUrl: returnUrl
       });
 
       if (response?.status === "success") {
@@ -77,6 +89,21 @@ const CheckoutForm = ({ request, currentUser, onSuccess }) => {
       setIsProcessing(false);
     }
   };
+
+    // Check URL parameters on component mount for payment result
+    useEffect(() => {
+      if (typeof window === 'undefined') return;
+      
+      const urlParams = new URLSearchParams(window.location.search);
+      const paymentStatus = urlParams.get('payment_status');
+      
+      if (paymentStatus === 'success') {
+        toast.success("Payment successful! Your session is now booked.");
+        onSuccess();
+      } else if (paymentStatus === 'failed') {
+        toast.error("Payment failed. Please try again.");
+      }
+    }, []);
 
   return (
     <form onSubmit={handleSubmit} className="mt-3">

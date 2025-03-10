@@ -9,7 +9,10 @@ import stripe from "../utils/stripe.utils.js";
 import { v4 as uuid } from "uuid";
 import { findUserById } from "../repositories/user.repositry.js";
 export const createGroupService = async (groupData) => {
-    if (!groupData.name || !groupData.bio || !groupData.adminId || !groupData.startDate) {
+    if (!groupData.name ||
+        !groupData.bio ||
+        !groupData.adminId ||
+        !groupData.startDate) {
         throw new Error("Missing required fields: name, bio, or adminId");
     }
     if (!groupData.availableSlots || groupData.availableSlots.length === 0) {
@@ -103,40 +106,46 @@ export const modifyGroupRequestStatus = async (requestId, status) => {
     }
     throw new Error("Invalid status.");
 };
-export const processGroupPaymentService = async (paymentMethodId, amount, requestId, email, groupRequestData) => {
+export const processGroupPaymentService = async (paymentMethodId, amount, requestId, email, groupRequestData, returnUrl) => {
     // Generate a unique key for this transaction to prevent duplicate charges
     const idempotencyKey = uuid();
     try {
+        // Check if customer already exists, otherwise create one
+        let customers = await stripe.customers.list({ email, limit: 1 });
+        let customer = customers.data.length > 0 ? customers.data[0] : null;
         // Create a customer in Stripe with payment_method instead of source
-        const customer = await stripe.customers.create({
-            email,
-            payment_method: paymentMethodId,
-            // Don't use source parameter as it's causing the error
-        });
-        // Attach the payment method to the customer
-        await stripe.paymentMethods.attach(paymentMethodId, {
-            customer: customer.id,
-        });
-        // Set the payment method as the default
-        await stripe.customers.update(customer.id, {
-            invoice_settings: {
-                default_payment_method: paymentMethodId,
-            },
-        });
+        if (!customer) {
+            customer = await stripe.customers.create({
+                email,
+                payment_method: paymentMethodId,
+                invoice_settings: { default_payment_method: paymentMethodId },
+            });
+        }
+        // // Attach the payment method to the customer
+        // await stripe.paymentMethods.attach(paymentMethodId, {
+        //   customer: customer.id,
+        // });
+        // // Set the payment method as the default
+        // await stripe.customers.update(customer.id, {
+        //   invoice_settings: {
+        //     default_payment_method: paymentMethodId,
+        //   },
+        // });
         // Create a PaymentIntent instead of a direct charge
         const paymentIntent = await stripe.paymentIntents.create({
             amount,
             currency: "inr",
             customer: customer.id,
             payment_method: paymentMethodId,
-            confirm: true, // Confirm the payment immediately
+            confirm: true,
             description: `Payment for Group Request ID: ${requestId}`,
             receipt_email: email,
             metadata: {
                 requestId,
                 groupId: groupRequestData.groupId,
-                userId: groupRequestData.userId
+                userId: groupRequestData.userId,
             },
+            return_url: `${returnUrl}?payment_status=success&request_id=${requestId}`
         }, { idempotencyKey });
         // If payment succeeded, update database records
         if (paymentIntent.status === "succeeded") {

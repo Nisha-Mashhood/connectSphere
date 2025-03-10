@@ -104,7 +104,7 @@ export const processPaymentService = async (
         description: `Payment for Request ID: ${requestId}`,
         metadata: { requestId },
         return_url: `${returnUrl}?payment_status=success&request_id=${requestId}`,
-        // Disable redirect based payment methods if you don't want 3DS or other redirects
+        // // Disable redirect based payment methods if you don't want 3DS or other redirects
         // Uncomment the below line to specifically disable redirects
         /* automatic_payment_methods: {
           enabled: true,

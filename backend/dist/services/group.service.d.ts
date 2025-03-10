@@ -49,7 +49,7 @@ export declare const modifyGroupRequestStatus: (requestId: string, status: "Acce
 export declare const processGroupPaymentService: (paymentMethodId: string, amount: number, requestId: string, email: string, groupRequestData: {
     groupId: string;
     userId: string;
-}) => Promise<import("stripe").Stripe.Response<import("stripe").Stripe.PaymentIntent>>;
+}, returnUrl: string) => Promise<import("stripe").Stripe.Response<import("stripe").Stripe.PaymentIntent>>;
 export declare const removeMemberFromGroup: (groupId: string, userId: string) => Promise<(import("mongoose").Document<unknown, {}, import("../models/group.model.js").GroupDocument> & import("../models/group.model.js").GroupDocument & Required<{
     _id: unknown;
 }> & {

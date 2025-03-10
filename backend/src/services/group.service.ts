@@ -31,7 +31,12 @@ import { v4 as uuid } from "uuid";
 import { findUserById } from "../repositories/user.repositry.js";
 
 export const createGroupService = async (groupData: GroupFormData) => {
-  if (!groupData.name || !groupData.bio || !groupData.adminId || !groupData.startDate) {
+  if (
+    !groupData.name ||
+    !groupData.bio ||
+    !groupData.adminId ||
+    !groupData.startDate
+  ) {
     throw new Error("Missing required fields: name, bio, or adminId");
   }
 
@@ -60,15 +65,15 @@ export const fetchGroupDetails = async (adminId: string) => {
 };
 
 //Get group details using groupId
-export const fetchGroupDetailsService = async(groupId : any) =>{
+export const fetchGroupDetailsService = async (groupId: any) => {
   try {
-   // Fetch groups using the repository
-   const groups = await getGroupsByGroupId(groupId);
-   return groups;
- } catch (error: any) {
-   throw new Error(`Error in group fetching: ${error.message}`);
- }
-}
+    // Fetch groups using the repository
+    const groups = await getGroupsByGroupId(groupId);
+    return groups;
+  } catch (error: any) {
+    throw new Error(`Error in group fetching: ${error.message}`);
+  }
+};
 
 //Get all Groups
 export const fetchGroups = async () => {
@@ -146,30 +151,37 @@ export const processGroupPaymentService = async (
   amount: number,
   requestId: string,
   email: string,
-  groupRequestData: { groupId: string; userId: string }
+  groupRequestData: { groupId: string; userId: string },
+  returnUrl: string
 ) => {
   // Generate a unique key for this transaction to prevent duplicate charges
   const idempotencyKey = uuid();
 
   try {
+    // Check if customer already exists, otherwise create one
+    let customers = await stripe.customers.list({ email, limit: 1 });
+    let customer = customers.data.length > 0 ? customers.data[0] : null;
+
     // Create a customer in Stripe with payment_method instead of source
-    const customer = await stripe.customers.create({
-      email,
-      payment_method: paymentMethodId,
-      // Don't use source parameter as it's causing the error
-    });
+    if (!customer) {
+      customer = await stripe.customers.create({
+        email,
+        payment_method: paymentMethodId,
+        invoice_settings: { default_payment_method: paymentMethodId },
+      });
+    }
 
-    // Attach the payment method to the customer
-    await stripe.paymentMethods.attach(paymentMethodId, {
-      customer: customer.id,
-    });
+    // // Attach the payment method to the customer
+    // await stripe.paymentMethods.attach(paymentMethodId, {
+    //   customer: customer.id,
+    // });
 
-    // Set the payment method as the default
-    await stripe.customers.update(customer.id, {
-      invoice_settings: {
-        default_payment_method: paymentMethodId,
-      },
-    });
+    // // Set the payment method as the default
+    // await stripe.customers.update(customer.id, {
+    //   invoice_settings: {
+    //     default_payment_method: paymentMethodId,
+    //   },
+    // });
 
     // Create a PaymentIntent instead of a direct charge
     const paymentIntent = await stripe.paymentIntents.create(
@@ -178,14 +190,15 @@ export const processGroupPaymentService = async (
         currency: "inr",
         customer: customer.id,
         payment_method: paymentMethodId,
-        confirm: true, // Confirm the payment immediately
+        confirm: true,
         description: `Payment for Group Request ID: ${requestId}`,
         receipt_email: email,
         metadata: {
           requestId,
           groupId: groupRequestData.groupId,
-          userId: groupRequestData.userId
+          userId: groupRequestData.userId,
         },
+         return_url: `${returnUrl}?payment_status=success&request_id=${requestId}`
       },
       { idempotencyKey }
     );
@@ -194,10 +207,10 @@ export const processGroupPaymentService = async (
     if (paymentIntent.status === "succeeded") {
       // Update group payment status to "Paid"
       await updateGroupPaymentStatus(requestId, amount / 100);
-      
+
       // Add the user to the group as a member
       await addMemberToGroup(groupRequestData.groupId, groupRequestData.userId);
-      
+
       // Delete the group request since payment is completed
       await deleteGroupRequest(requestId);
     }
@@ -215,23 +228,23 @@ export const removeMemberFromGroup = async (
 ) => {
   try {
     // Check if the group exists
-  const group = await findGrouptById(groupId);
-  if (!group) {
-    throw new Error("Group not found");
-  }
+    const group = await findGrouptById(groupId);
+    if (!group) {
+      throw new Error("Group not found");
+    }
 
-  // Check if the user exists
-  const user = await findUserById(userId);
-  if (!user) {
-    throw new Error("User not found");
-  }
+    // Check if the user exists
+    const user = await findUserById(userId);
+    if (!user) {
+      throw new Error("User not found");
+    }
 
-  // Call the repository function to remove the user
-  const updatedGroup = await removeGroupMemberById(groupId, userId);
+    // Call the repository function to remove the user
+    const updatedGroup = await removeGroupMemberById(groupId, userId);
 
-  // Compose email details
-  const subject = `You have been removed from the group "${group.name}"`;
-  const text = `Hi ${user.name},
+    // Compose email details
+    const subject = `You have been removed from the group "${group.name}"`;
+    const text = `Hi ${user.name},
 
 We wanted to inform you that you have been removed from the group "${group.name}" on ConnectSphere.
 
@@ -240,12 +253,12 @@ If you believe this was a mistake or have any questions, feel free to reach out 
 Best regards,
 ConnectSphere Team`;
 
-  // Send email notification
-  await sendEmail(user.email, subject, text);
-  console.log(`Removal email sent to: ${user.email}`);
+    // Send email notification
+    await sendEmail(user.email, subject, text);
+    console.log(`Removal email sent to: ${user.email}`);
 
-  return updatedGroup;
-  } catch (error : any) {
+    return updatedGroup;
+  } catch (error: any) {
     throw new Error(error.message);
   }
 };
@@ -265,22 +278,25 @@ export const deleteGroupByIdService = async (groupId: string) => {
   return deletedGroup;
 };
 
-
 //upload group images
-export const updateGroupImageService = async(groupId: string, profilePic?: string, coverPic?: string) =>{
+export const updateGroupImageService = async (
+  groupId: string,
+  profilePic?: string,
+  coverPic?: string
+) => {
   const updateData: { profilePic?: string; coverPic?: string } = {};
 
   if (profilePic) updateData.profilePic = profilePic;
   if (coverPic) updateData.coverPic = coverPic;
 
   return await updateGroupImageRepositry(groupId, updateData);
-}
+};
 
 //Get details of the group for the members of the group
-export const groupDetilsForMembers = async(userId: string) =>{
+export const groupDetilsForMembers = async (userId: string) => {
   try {
     const groupDetails = await groupDetilsByUserId(userId);
-    if(!groupDetails){
+    if (!groupDetails) {
       throw new Error("User is not a member of any of the registered groups");
     }
     return groupDetails;
@@ -288,7 +304,7 @@ export const groupDetilsForMembers = async(userId: string) =>{
     console.error("Error in GroupService:", error);
     throw new Error("Error retrieving group details");
   }
-}
+};
 
 //  get all group requests
 export const fetchAllGroupRequests = async () => {
@@ -299,4 +315,3 @@ export const fetchAllGroupRequests = async () => {
 export const fetchGroupRequestById = async (requestId: string) => {
   return await getGroupRequestById(requestId);
 };
-
