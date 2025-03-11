@@ -1,14 +1,33 @@
+import { findCollabById, updateCollabFeedback } from "../repositories/collaboration.repositry.js";
 import * as FeedbackRepository from "../repositories/feeback.repositry.js";
 export const createFeedback = async (feedbackData) => {
     try {
-        // Check if feedback already exists for this collaboration
-        const existingFeedback = await FeedbackRepository.getFeedbackByCollaborationId(feedbackData.collaborationId.toString());
-        if (existingFeedback) {
-            throw new Error("Feedback already exists for this collaboration");
+        // Ensure collaborationId is valid
+        const collabId = feedbackData.collaborationId?.toString();
+        if (!collabId) {
+            throw new Error("Collaboration ID is required");
         }
+        // // Check if feedback already exists for this collaboration
+        // const existingFeedback = await FeedbackRepository.getFeedbackByCollaborationId(collabId);
+        // console.log(existingFeedback);
+        // if (existingFeedback) {
+        //   throw new Error("Feedback already exists for this collaboration");
+        // }
+        // Find the collaboration details
+        const collabDetails = await findCollabById(collabId);
+        if (!collabDetails) {
+            throw new Error("Collaboration not found");
+        }
+        // Check if the collaboration is completed
+        const today = new Date();
+        if (collabDetails.endDate && new Date(collabDetails.endDate) <= today) {
+            await updateCollabFeedback(collabId);
+        }
+        // Create feedback entry
         return await FeedbackRepository.createFeedback(feedbackData);
     }
     catch (error) {
+        console.log(error);
         throw error;
     }
 };

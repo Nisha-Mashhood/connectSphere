@@ -8,7 +8,6 @@ export interface IFeedback extends Document {
     communication: number;
     expertise: number;
     punctuality: number;
-    professionalism: number;
     comments: string;
     wouldRecommend: boolean;
     createdAt: Date;

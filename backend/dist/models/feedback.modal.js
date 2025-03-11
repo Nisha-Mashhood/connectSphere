@@ -44,16 +44,10 @@ const FeedbackSchema = new Schema({
         min: 1,
         max: 5,
     },
-    professionalism: {
-        type: Number,
-        required: false,
-        min: 1,
-        max: 5,
-    },
     comments: {
         type: String,
         required: true,
-        minlength: 10,
+        minlength: 5,
         maxlength: 500,
     },
     wouldRecommend: {

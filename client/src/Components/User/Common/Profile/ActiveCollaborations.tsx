@@ -9,7 +9,6 @@ import {
   fetchCollabDetails,
   fetchMentorDetails,
 } from "../../../../redux/Slice/profileSlice";
-import { getFeedBack } from "../../../../Service/Feedback.service";
 
 const ActiveCollaborations = ({ handleProfileClick }) => {
   const navigate = useNavigate();
@@ -17,9 +16,7 @@ const ActiveCollaborations = ({ handleProfileClick }) => {
   const { collabDetails } = useSelector((state: RootState) => state.profile);
   const [feedbackModalOpen, setFeedbackModalOpen] = useState(false);
   const [selectedCollab, setSelectedCollab] = useState(null);
-  const [collaborationsWithFeedback, setCollaborationsWithFeedback] = useState({});
   const dispatch = useDispatch<AppDispatch>();
-  let userId = currentUser._id;
   // Fetch collaboration data when component mounts or when currentUser changes
 
   const fetchCollaborations = async () => {
@@ -30,7 +27,6 @@ const ActiveCollaborations = ({ handleProfileClick }) => {
             fetchMentorDetails(currentUser._id)
           ).unwrap();
           if (mentorDetails?._id) {
-            userId = mentorDetails._id;
             await dispatch(
               fetchCollabDetails({ userId: mentorDetails._id, role: "mentor" })
             );
@@ -47,41 +43,15 @@ const ActiveCollaborations = ({ handleProfileClick }) => {
       }
     }
   };
-  const checkExistingCollab = async(role,userId,completedCollabs) =>{
-    if (!completedCollabs || completedCollabs.length === 0) {
-      return {};
-    }
-    try {
-      const feedbackStatus = {};
-      
-      // For each completed collaboration, check if feedback exists
-      for (const collab of completedCollabs) {
-        try {
-          const response = await getFeedBack(role, userId, collab._id);
-          
-          // If feedback exists, mark this collaboration
-          feedbackStatus[collab._id] = response?.feedback ? true : false;
-        } catch (error) {
-          console.error(`Error checking feedback for collab ${collab._id}:`, error);
-          feedbackStatus[collab._id] = false;
-        }
-      }
-      
-      setCollaborationsWithFeedback(feedbackStatus);
-      console.log("Collaboration With Feedback :",collaborationsWithFeedback);
-      return feedbackStatus;
-
-    } catch (error) {
-      console.error("Error checking feedback for collaborations:", error);
-      return {};
-    }
-
-  }
-
+ console.log("Collab Details : ",collabDetails);
   useEffect(() => {
-    if (currentUser && currentUser._id) {
-      fetchCollaborations();
-    }
+    const fetchData = async () => {
+      if (currentUser && currentUser._id) {
+        await fetchCollaborations();
+      }
+    };
+    
+    fetchData();
   }, [dispatch, currentUser]);
 
   const handleCollabClick = (collabId) => {
@@ -115,10 +85,6 @@ const ActiveCollaborations = ({ handleProfileClick }) => {
     collabDetails?.data?.filter(
       (collab) => new Date(collab.endDate) <= currentDate || collab.isCancelled
     ) || [];
-
-    const existingCollab = checkExistingCollab(currentUser.role, userId, completedCollabs);
-
-    console.log("Existing Collab :", existingCollab);
 
   const renderCollaboration = (collab, isCompleted = false) => (
     <div
@@ -178,18 +144,27 @@ const ActiveCollaborations = ({ handleProfileClick }) => {
 
         {/* Status Badge or Feedback Button */}
         <div className="flex items-center">
-          {isCompleted ? (
+        {isCompleted ? (
+          collab.feedbackGiven ? (
+            <button
+              disabled
+              className="px-3 py-1 text-sm font-medium rounded-full bg-gray-300 text-gray-700 dark:bg-gray-800 dark:text-gray-400 cursor-not-allowed"
+            >
+               Feedback Provided
+            </button>
+          ) : (
             <button
               onClick={(e) => handleFeedbackClick(e, collab)}
               className="px-3 py-1 text-sm font-medium rounded-full bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-200 flex items-center"
             >
-              <FaStar className="mr-1" /> Feedback
+              <FaStar className="mr-1" /> Give Feedback
             </button>
-          ) : (
-            <span className="px-3 py-1 text-sm font-medium rounded-full bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200">
-              Active
-            </span>
-          )}
+          )
+        ) : (
+          <span className="px-3 py-1 text-sm font-medium rounded-full bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200">
+            Active
+          </span>
+        )}
         </div>
       </div>
 

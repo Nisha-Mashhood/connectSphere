@@ -103,6 +103,19 @@ export const markCollabAsCancelled = async (collabId: string) => {
   }
 };
 
+//update feedback given filed of the collaboartion
+export const updateCollabFeedback = async (collabId: string) => {
+  try {
+    return await Collaboration.findByIdAndUpdate(
+      collabId,
+      { feedbackGiven: true }, 
+      { new: true }
+    );
+  } catch (error: any) {
+    throw new Error(`Error updating collaboration feedback status: ${error.message}`);
+  }
+};
+
 //Get collab data For user
 export const getCollabDataForUser = async (userId: string) => {
   try {
@@ -114,6 +127,7 @@ export const getCollabDataForUser = async (userId: string) => {
         select: 'name email profilePic'
       }
     })
+    .populate('userId');
     return collabData;
   } catch (error:any) {
     throw new Error(`Error getting collaboration data for user: ${error.message}`);
@@ -124,7 +138,8 @@ export const getCollabDataForUser = async (userId: string) => {
 export const getCollabDataForMentor = async (mentorId: string) => {
   try {
     const collabData = await Collaboration.find({ mentorId, isCancelled:false })
-      .populate("userId", "name email profilePic") 
+    .populate('mentorId')
+    .populate("userId", "name email profilePic") 
     return collabData;
   } catch (error:any) {
     throw new Error(`Error getting collaboration data for mentor: ${error.message}`);

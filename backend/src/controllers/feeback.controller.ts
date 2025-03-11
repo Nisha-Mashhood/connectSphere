@@ -13,10 +13,11 @@ export const createFeedback = async (req: Request, res: Response) => {
       punctuality: req.body.punctuality,
       comments: req.body.comments,
       wouldRecommend: req.body.wouldRecommend,
+      givenBy:req.body.role,
     };
 
-    // console.log(feedbackData)
     const feedback = await FeedbackService.createFeedback(feedbackData);
+    console.log(feedback)
     res.status(201).json({ success: true, data: feedback });
   } catch (error: any) {
     res.status(400).json({ success: false, message: error.message });
@@ -42,15 +43,3 @@ export const getUserFeedbacks = async (req: Request, res: Response) => {
     res.status(400).json({ success: false, message: error.message });
   }
 };
-
-export const getFeedbackOnRoles = async(req: Request, res:Response) =>{
-  try {
-    const { role, userId, collaborationId } = req.body;
-    const feedback = await FeedbackService.getFeedbackByRole(role, userId, collaborationId);
-    res.status(200).json({ success: true, feedback });
-    return 
-  } catch (error: any) {
-    res.status(400).json({ success: false, message: error.message });
-    return 
-  }
-}

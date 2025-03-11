@@ -16,7 +16,12 @@ import {
   Tab,
   Input,
 } from "@nextui-org/react";
-import { FaCalendarAlt, FaUser, FaClipboardList, FaInfoCircle } from "react-icons/fa";
+import {
+  FaCalendarAlt,
+  FaUser,
+  FaClipboardList,
+  FaInfoCircle,
+} from "react-icons/fa";
 import { AppDispatch, RootState } from "../../../../redux/store";
 import { cancelCollab } from "../../../../Service/collaboration.Service";
 import { fetchCollabDetails } from "../../../../redux/Slice/profileSlice";
@@ -28,7 +33,7 @@ const CollaborationDetails = () => {
   const dispatch = useDispatch<AppDispatch>();
   const [showCancelDialog, setShowCancelDialog] = useState(false);
 
-  const [reason, setReason] = useState('');
+  const [reason, setReason] = useState("");
   const [activeTab, setActiveTab] = useState("details");
 
   const { currentUser } = useSelector((state: RootState) => state.user);
@@ -47,8 +52,14 @@ const CollaborationDetails = () => {
   }
 
   const isMentor = currentUser.role === "mentor";
-  const startDate = new Date(collaboration.startDate).toLocaleDateString();
-  const endDate = new Date(collaboration.endDate).toLocaleDateString();
+  const today = new Date();
+const startDate = new Date(collaboration.startDate);
+const endDate = new Date(collaboration.endDate);
+const isCollaborationCompleted = today > endDate;
+
+// For display purposes only
+const startDateDisplay = startDate.toLocaleDateString();
+const endDateDisplay = endDate.toLocaleDateString();
 
   // Determine which user's details to show based on role
   const otherPartyDetails = isMentor
@@ -115,16 +126,16 @@ const CollaborationDetails = () => {
         </Card>
 
         {/* Tabs for Content Organization */}
-        <Tabs 
-          aria-label="Collaboration Options" 
+        <Tabs
+          aria-label="Collaboration Options"
           selectedKey={activeTab}
           onSelectionChange={(key) => setActiveTab(key.toString())}
           className="mb-6"
           variant="bordered"
           color="primary"
         >
-          <Tab 
-            key="details" 
+          <Tab
+            key="details"
             title={
               <div className="flex items-center gap-2">
                 <FaInfoCircle />
@@ -139,15 +150,19 @@ const CollaborationDetails = () => {
                   <div className="flex items-center space-x-3">
                     <FaCalendarAlt className="text-xl text-blue-500" />
                     <div>
-                      <p className="text-sm text-gray-500 dark:text-gray-400">Start Date</p>
-                      <p className="font-medium text-lg">{startDate}</p>
+                      <p className="text-sm text-gray-500 dark:text-gray-400">
+                        Start Date
+                      </p>
+                      <p className="font-medium text-lg">{startDateDisplay}</p>
                     </div>
                   </div>
                   <div className="flex items-center space-x-3">
                     <FaCalendarAlt className="text-xl text-blue-500" />
                     <div>
-                      <p className="text-sm text-gray-500 dark:text-gray-400">End Date</p>
-                      <p className="font-medium text-lg">{endDate}</p>
+                      <p className="text-sm text-gray-500 dark:text-gray-400">
+                        End Date
+                      </p>
+                      <p className="font-medium text-lg">{endDateDisplay}</p>
                     </div>
                   </div>
                 </div>
@@ -193,30 +208,37 @@ const CollaborationDetails = () => {
 
                 {/* Cancel Button or Message */}
                 <div className="flex justify-end mt-6">
-                  {isMentor ? (
+                  {isCollaborationCompleted ? (
+                    <Button
+                      color="success"
+                      size="lg"
+                      className="font-medium"
+                      isDisabled
+                    >
+                      Collaboration Completed
+                    </Button>
+                  ) : isMentor ? (
                     <p className="text-gray-600 dark:text-gray-400 italic bg-gray-100 dark:bg-gray-800 p-3 rounded-lg">
-                      Since payment is accepted, cancellation can only be initiated
-                      by the mentee
+                      Since payment is accepted, cancellation can only be
+                      initiated by the mentee
                     </p>
-                  ) : (
-                    !collaboration.isCancelled && (
-                      <Button
-                        color="danger"
-                        onPress={() => setShowCancelDialog(true)}
-                        size="lg"
-                        className="font-medium"
-                      >
-                        Cancel Mentorship
-                      </Button>
-                    )
-                  )}
+                  ) : !collaboration.isCancelled ? (
+                    <Button
+                      color="danger"
+                      onPress={() => setShowCancelDialog(true)}
+                      size="lg"
+                      className="font-medium"
+                    >
+                      Cancel Mentorship
+                    </Button>
+                  ) : null}
                 </div>
               </CardBody>
             </Card>
           </Tab>
-          
-          <Tab 
-            key="tasks" 
+
+          <Tab
+            key="tasks"
             title={
               <div className="flex items-center gap-2">
                 <FaClipboardList />
@@ -254,18 +276,18 @@ const CollaborationDetails = () => {
           <ModalContent>
             <ModalHeader>Cancel Mentorship</ModalHeader>
             <ModalBody>
-            <div className="space-y-4">
-            <p>Are you sure you want to cancel this mentorship? Please note that
-              your payment will not be retrieved once you initiate the
-              cancellation.</p>
-              <Input
-          placeholder="Enter reason for deletion"
-          value={reason}
-          onChange={(e) => setReason(e.target.value)}
-        />
-
-            </div>
-              
+              <div className="space-y-4">
+                <p>
+                  Are you sure you want to cancel this mentorship? Please note
+                  that your payment will not be retrieved once you initiate the
+                  cancellation.
+                </p>
+                <Input
+                  placeholder="Enter reason for deletion"
+                  value={reason}
+                  onChange={(e) => setReason(e.target.value)}
+                />
+              </div>
             </ModalBody>
             <ModalFooter>
               <Button

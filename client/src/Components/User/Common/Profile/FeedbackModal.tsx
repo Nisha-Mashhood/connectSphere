@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import {
   Modal,
   ModalContent,
@@ -12,10 +12,12 @@ import {
 } from "@nextui-org/react";
 import { FaStar } from 'react-icons/fa';
 import toast from 'react-hot-toast';
-import { sendFeedBackToMentor } from '../../../../Service/Feedback.service';
+import { useSelector } from 'react-redux';
+import { sendFeedBack } from '../../../../Service/Feedback.service';
+import { RootState } from '../../../../redux/store';
 
 const FeedbackModal = ({ isOpen, onClose, collaborationData, onComplete }) => {
-  console.log("collaboration Data",collaborationData);
+  const { currentUser } = useSelector((state: RootState) => state.user);
   const [feedback, setFeedback] = useState({
     rating: 0,
     communication: 0,
@@ -25,6 +27,21 @@ const FeedbackModal = ({ isOpen, onClose, collaborationData, onComplete }) => {
     wouldRecommend: null
   });
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [recipientType, setRecipientType] = useState('');
+  const [recipientName, setRecipientName] = useState('');
+
+  useEffect(() => {
+    // Determine if current user is the mentor or the user in this collaboration
+    if (collaborationData) {
+      if (currentUser.role === 'mentor') {
+        setRecipientType('User');
+        setRecipientName(collaborationData.userId?.name || 'User');
+      } else {
+        setRecipientType('Mentor');
+        setRecipientName(collaborationData.mentorId?.userId?.name || 'Mentor');
+      }
+    }
+  }, [collaborationData, currentUser]);
 
   const handleRatingChange = (category, value) => {
     setFeedback(prev => ({
@@ -50,6 +67,7 @@ const FeedbackModal = ({ isOpen, onClose, collaborationData, onComplete }) => {
       </div>
     );
   };
+  console.log("Collaboration Data :", collaborationData);
 
   const handleSubmit = async () => {
     try {
@@ -64,26 +82,33 @@ const FeedbackModal = ({ isOpen, onClose, collaborationData, onComplete }) => {
       }
 
       const feedbackData = {
+        // Common feedback data
         rating: feedback.rating,
         communication: feedback.communication,
         expertise: feedback.expertise,
         punctuality: feedback.punctuality,
         comments: feedback.comments,
         wouldRecommend: feedback.wouldRecommend,
-        userId: collaborationData.userId,
-        mentorId: collaborationData.mentorId?._id, 
-        collaborationId: collaborationData?._id, 
+        collaborationId: collaborationData?._id,
+        
+        // Role-specific data
+        role: currentUser.role,
+        userId: currentUser.role === 'user' ? currentUser._id : collaborationData.userId?._id,
+        mentorId: currentUser.role === 'mentor' ? 
+          (currentUser.mentorId || collaborationData.mentorId?._id) : 
+          collaborationData.mentorId?._id
       };
 
-      const response = await sendFeedBackToMentor(feedbackData);
-      console.log(response);
+      const response = await sendFeedBack(feedbackData);
+      
       if (response) {
-      toast.success("Feedback submitted successfully!");
-      onComplete(); 
-      onClose(); 
-    }
+        toast.success(`Feedback for ${recipientName} submitted successfully!`);
+        onComplete(); 
+        onClose(); 
+      }
     } catch (error) {
       console.error('Error submitting feedback:', error);
+      toast.error('Failed to submit feedback. Please try again.');
     } finally {
       setIsSubmitting(false);
     }
@@ -97,7 +122,7 @@ const FeedbackModal = ({ isOpen, onClose, collaborationData, onComplete }) => {
     >
       <ModalContent>
         <ModalHeader>
-          <h2 className="text-xl">Mentorship Feedback</h2>
+          <h2 className="text-xl">{recipientType} Feedback</h2>
         </ModalHeader>
         <ModalBody>
           <div className="space-y-6">
@@ -117,7 +142,7 @@ const FeedbackModal = ({ isOpen, onClose, collaborationData, onComplete }) => {
 
             <div>
               <label className="block text-sm font-medium mb-2">
-                Expertise
+                {recipientType === 'Mentor' ? 'Expertise' : 'Engagement'}
               </label>
               {renderStars('expertise', feedback.expertise)}
             </div>
@@ -131,10 +156,10 @@ const FeedbackModal = ({ isOpen, onClose, collaborationData, onComplete }) => {
 
             <div>
               <label className="block text-sm font-medium mb-2">
-                Comments (min length 10 character)
+                Comments (min length 10 characters)
               </label>
               <Textarea
-                placeholder="Share your experience with this mentor..."
+                placeholder={`Share your experience with this ${recipientType.toLowerCase()}...`}
                 value={feedback.comments}
                 onChange={(e) => setFeedback(prev => ({
                   ...prev,
@@ -146,7 +171,7 @@ const FeedbackModal = ({ isOpen, onClose, collaborationData, onComplete }) => {
 
             <div>
               <label className="block text-sm font-medium mb-2">
-                Would you recommend this mentor?
+                Would you recommend this {recipientType.toLowerCase()}?
               </label>
               <RadioGroup
                 orientation="horizontal"
