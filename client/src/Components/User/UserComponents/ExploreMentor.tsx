@@ -785,41 +785,49 @@ const ExploreMentors = () => {
             <>
               <ModalHeader>Join Group</ModalHeader>
               <ModalBody>
-                {selectedGroup && (
-                  <div>
-                    <h3 className="text-xl font-bold">{selectedGroup.name}</h3>
-                    <p className="text-gray-600">{selectedGroup.bio}</p>
-                    <p className="text-sm text-gray-600">
-                      Price: ₹{selectedGroup.price}
-                    </p>
-                    <div className="space-y-2">
-                  <div className="flex items-center justify-between text-sm">
-                    <span>Current Members:</span>
-                    <span className="font-medium">{selectedGroup.currentMembers}</span>
-                  </div>
-                  <div className="flex items-center justify-between text-sm">
-                    <span>Maximum Capacity:</span>
-                    <span className="font-medium">{selectedGroup.maxMembers}</span>
-                  </div>
-                  <div className="flex items-center justify-between text-sm">
-                    <span>Available Spots:</span>
-                    <span className="font-medium text-green-600">
-                      {selectedGroup.maxMembers - selectedGroup.currentMembers}
-                    </span>
-                  </div>
-                  
-                  {/* Progress bar */}
-                  <div className="w-full bg-gray-200 rounded-full h-2 mt-2">
-                    <div 
-                      className="bg-blue-600 h-2 rounded-full"
-                      style={{ 
-                        width: `${(selectedGroup.currentMembers / selectedGroup.maxMembers) * 100}%` 
-                      }}
-                    ></div>
-                  </div>
-                </div>
+              {selectedGroup && (
+            <div>
+              <h3 className="text-xl font-bold">{selectedGroup.name}</h3>
+              <p className="text-gray-600">{selectedGroup.bio}</p>
+              <p className="text-sm text-gray-600">
+                Price: ₹{selectedGroup.price}
+              </p>
+              <div className="space-y-2">
+                {/* Use the getMemberCounts function here to get the member count */}
+                {(() => {
+                  const memberCounts = getMemberCounts(selectedGroup);
+                  return (
+                    <>
+                      <div className="flex items-center justify-between text-sm">
+                        <span>Current Members:</span>
+                        <span className="font-medium">{memberCounts.current}</span>
+                      </div>
+                      <div className="flex items-center justify-between text-sm">
+                        <span>Maximum Capacity:</span>
+                        <span className="font-medium">{memberCounts.total}</span>
+                      </div>
+                      <div className="flex items-center justify-between text-sm">
+                        <span>Available Spots:</span>
+                        <span className="font-medium text-green-600">
+                          {memberCounts.remaining}
+                        </span>
+                      </div>
+                      
+                      {/* Progress bar */}
+                      <div className="w-full bg-gray-200 rounded-full h-2 mt-2">
+                        <div 
+                          className="bg-blue-600 h-2 rounded-full"
+                          style={{ 
+                            width: `${(memberCounts.current / memberCounts.total) * 100}%` 
+                          }}
+                        ></div>
+                      </div>
+                    </>
+                  );
+                })()}
               </div>
-                )}
+            </div>
+          )}
               </ModalBody>
               <ModalFooter>
                 <Button color="default" onPress={onClose}>

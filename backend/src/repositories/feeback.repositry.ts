@@ -26,12 +26,14 @@ export const getFeedbacksByUserId = async (
     .sort({ createdAt: -1 });
 };
 
-export const getFeedbackByCollaborationId = async (
-  collaborationId: string
-): Promise<IFeedback | null> => {
-  return await Feedback.findOne({
+export const getFeedbackByCollaborationId = async (collaborationId: string) => {
+  const feedback = await Feedback.find({
     collaborationId: new mongoose.Types.ObjectId(collaborationId),
-  });
+  })
+  .populate("mentorId")
+  .populate("userId")
+
+   return feedback;
 };
 
 export const getMentorAverageRating = async (

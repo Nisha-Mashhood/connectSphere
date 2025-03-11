@@ -66,9 +66,7 @@ const PaymentForm = ({ request, onSuccessfulPayment }) => {
     if (!stripe || !elements) {
       return;
     }
-
     setIsProcessing(true);
-
     try {
       // Get card element
       const cardElement = elements.getElement(CardElement);
@@ -78,16 +76,13 @@ const PaymentForm = ({ request, onSuccessfulPayment }) => {
         type: 'card',
         card: cardElement,
       });
-
       if (error) {
         toast.error(error.message);
         setIsProcessing(false);
         return;
       }
-
       // Get the return URL for potential redirects
       const returnUrl = getReturnUrl();
-
       // Process payment with your backend
       const response = await processStripePayment({
         paymentMethodId: paymentMethod.id,

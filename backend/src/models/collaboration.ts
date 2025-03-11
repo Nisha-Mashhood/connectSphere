@@ -11,6 +11,7 @@ export interface ICollaboration extends Document {
   isCancelled: boolean;
   startDate: Date;
   endDate?: Date;
+  feedbackGiven: boolean;
   createdAt: Date;
 }
 
@@ -52,6 +53,10 @@ const CollaborationSchema: Schema = new Schema(
     endDate: {
       type: Date,
       default: null,
+    },
+    feedbackGiven: {
+      type: Boolean,
+      default: false, 
     },
   },
   { timestamps: true }

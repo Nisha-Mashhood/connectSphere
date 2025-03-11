@@ -5,7 +5,11 @@ import { calculateTimeLeft } from "../../../../lib/helperforprofile";
 import { FaClock, FaStar } from "react-icons/fa";
 import { useNavigate } from "react-router-dom";
 import FeedbackModal from "./FeedbackModal";
-import { fetchCollabDetails } from "../../../../redux/Slice/profileSlice";
+import {
+  fetchCollabDetails,
+  fetchMentorDetails,
+} from "../../../../redux/Slice/profileSlice";
+import { getFeedBack } from "../../../../Service/Feedback.service";
 
 const ActiveCollaborations = ({ handleProfileClick }) => {
   const navigate = useNavigate();
@@ -13,17 +17,70 @@ const ActiveCollaborations = ({ handleProfileClick }) => {
   const { collabDetails } = useSelector((state: RootState) => state.profile);
   const [feedbackModalOpen, setFeedbackModalOpen] = useState(false);
   const [selectedCollab, setSelectedCollab] = useState(null);
+  const [collaborationsWithFeedback, setCollaborationsWithFeedback] = useState({});
   const dispatch = useDispatch<AppDispatch>();
-
+  let userId = currentUser._id;
   // Fetch collaboration data when component mounts or when currentUser changes
+
+  const fetchCollaborations = async () => {
+    if (currentUser && currentUser._id) {
+      if (currentUser.role === "mentor") {
+        try {
+          const mentorDetails = await dispatch(
+            fetchMentorDetails(currentUser._id)
+          ).unwrap();
+          if (mentorDetails?._id) {
+            userId = mentorDetails._id;
+            await dispatch(
+              fetchCollabDetails({ userId: mentorDetails._id, role: "mentor" })
+            );
+          } else {
+            console.error("Unable to retrieve mentor details");
+          }
+        } catch (error) {
+          console.error("Error fetching mentor details:", error);
+        }
+      } else {
+        await dispatch(
+          fetchCollabDetails({ userId: currentUser._id, role: "user" })
+        );
+      }
+    }
+  };
+  const checkExistingCollab = async(role,userId,completedCollabs) =>{
+    if (!completedCollabs || completedCollabs.length === 0) {
+      return {};
+    }
+    try {
+      const feedbackStatus = {};
+      
+      // For each completed collaboration, check if feedback exists
+      for (const collab of completedCollabs) {
+        try {
+          const response = await getFeedBack(role, userId, collab._id);
+          
+          // If feedback exists, mark this collaboration
+          feedbackStatus[collab._id] = response?.feedback ? true : false;
+        } catch (error) {
+          console.error(`Error checking feedback for collab ${collab._id}:`, error);
+          feedbackStatus[collab._id] = false;
+        }
+      }
+      
+      setCollaborationsWithFeedback(feedbackStatus);
+      console.log("Collaboration With Feedback :",collaborationsWithFeedback);
+      return feedbackStatus;
+
+    } catch (error) {
+      console.error("Error checking feedback for collaborations:", error);
+      return {};
+    }
+
+  }
+
   useEffect(() => {
     if (currentUser && currentUser._id) {
-      dispatch(
-        fetchCollabDetails({
-          userId: currentUser._id,
-          role: currentUser.role,
-        })
-      );
+      fetchCollaborations();
     }
   }, [dispatch, currentUser]);
 
@@ -39,12 +96,9 @@ const ActiveCollaborations = ({ handleProfileClick }) => {
 
   const handleFeedbackComplete = () => {
     // refresh the collaborations after feedback is submitted
-    dispatch(
-      fetchCollabDetails({
-        userId: currentUser._id,
-        role: currentUser.role,
-      })
-    );
+    if (currentUser && currentUser._id) {
+      fetchCollaborations();
+    }
     console.log("Feedback completed");
   };
 
@@ -61,6 +115,10 @@ const ActiveCollaborations = ({ handleProfileClick }) => {
     collabDetails?.data?.filter(
       (collab) => new Date(collab.endDate) <= currentDate || collab.isCancelled
     ) || [];
+
+    const existingCollab = checkExistingCollab(currentUser.role, userId, completedCollabs);
+
+    console.log("Existing Collab :", existingCollab);
 
   const renderCollaboration = (collab, isCompleted = false) => (
     <div
@@ -121,14 +179,12 @@ const ActiveCollaborations = ({ handleProfileClick }) => {
         {/* Status Badge or Feedback Button */}
         <div className="flex items-center">
           {isCompleted ? (
-            currentUser.role === "user" && (
-              <button
-                onClick={(e) => handleFeedbackClick(e, collab)}
-                className="px-3 py-1 text-sm font-medium rounded-full bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-200 flex items-center"
-              >
-                <FaStar className="mr-1" /> Feedback
-              </button>
-            )
+            <button
+              onClick={(e) => handleFeedbackClick(e, collab)}
+              className="px-3 py-1 text-sm font-medium rounded-full bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-200 flex items-center"
+            >
+              <FaStar className="mr-1" /> Feedback
+            </button>
           ) : (
             <span className="px-3 py-1 text-sm font-medium rounded-full bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200">
               Active

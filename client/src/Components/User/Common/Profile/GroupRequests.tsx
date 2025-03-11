@@ -14,8 +14,10 @@ import {
   Elements,
   CardElement,
   useStripe,
-  useElements
+  useElements, 
 } from "@stripe/react-stripe-js";
+import { Button } from "@nextui-org/react";
+import { FaCreditCard } from "react-icons/fa";
 
 // Initialize Stripe outside the component
 const stripePromise = loadStripe("pk_test_51QjEUpLJKggnYdjdkq6nC53RrJ8U0Uti4Qwvw1CYK7VDzo7hqF8CVldtejMOhiJblOeipP7uwgxU8JGFMo1bD6aZ00XOGuBYhU");
@@ -25,37 +27,36 @@ const CheckoutForm = ({ request, currentUser, onSuccess }) => {
   const stripe = useStripe();
   const elements = useElements();
   const [isProcessing, setIsProcessing] = useState(false);
-  const [error, setError] = useState("");
 
-  const getReturnUrl = () => {
-    // Use window.location if available, or fallback to a hardcoded base URL
-    return typeof window !== 'undefined' 
-      ? `${window.location.origin}/profile` 
-      : 'https://yourwebsite.com/payment-result';
-  };
-
+    // Get the current URL to use for return_url
+    const getReturnUrl = () => {
+      // Use window.location if available, or fallback to a hardcoded base URL
+      return typeof window !== 'undefined' 
+        ? `${window.location.origin}/profile` 
+        : 'https://yourwebsite.com/payment-result';
+    };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-
+    
     if (!stripe || !elements) {
       return;
     }
 
-    const cardElement = elements.getElement(CardElement);
-
     setIsProcessing(true);
-    setError("");
 
     try {
+      // Get card element
+      const cardElement = elements.getElement(CardElement);
+
       // Create payment method
-      const { error: paymentMethodError, paymentMethod } = await stripe.createPaymentMethod({
+      const { error, paymentMethod } = await stripe.createPaymentMethod({
         type: 'card',
         card: cardElement,
       });
 
-      if (paymentMethodError) {
-        setError(paymentMethodError.message);
+      if (error) {
+        toast.error(error.message);
         setIsProcessing(false);
         return;
       }
@@ -63,9 +64,8 @@ const CheckoutForm = ({ request, currentUser, onSuccess }) => {
       // Get the return URL for potential redirects
       const returnUrl = getReturnUrl();
 
-      // Process payment with your backend
       const response = await processStripePaymentForGroups({
-        paymentMethodId: paymentMethod.id,
+        paymentMethodId: paymentMethod,
         amount: request.groupId.price * 100,
         requestId: request._id,
         email: currentUser.email,
@@ -73,7 +73,7 @@ const CheckoutForm = ({ request, currentUser, onSuccess }) => {
           groupId: request.groupId._id,
           userId: currentUser._id,
         },
-        returnUrl: returnUrl
+        returnUrl: returnUrl,
       });
 
       if (response?.status === "success") {
@@ -83,8 +83,8 @@ const CheckoutForm = ({ request, currentUser, onSuccess }) => {
         toast.error("Payment failed. Please try again.");
       }
     } catch (err) {
+      toast.error("Payment processing error. Please try again.");
       console.error("Payment error:", err);
-      setError("Payment processing failed. Please try again.");
     } finally {
       setIsProcessing(false);
     }
@@ -106,39 +106,44 @@ const CheckoutForm = ({ request, currentUser, onSuccess }) => {
     }, []);
 
   return (
-    <form onSubmit={handleSubmit} className="mt-3">
-      <div className="mb-3">
-        <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
-          Card details
-        </label>
-        <div className="p-3 border border-gray-300 dark:border-gray-600 rounded-md bg-white dark:bg-gray-800">
-          <CardElement
-            options={{
-              style: {
-                base: {
-                  fontSize: '16px',
-                  color: '#424770',
-                  '::placeholder': {
-                    color: '#aab7c4',
-                  },
-                },
-                invalid: {
-                  color: '#9e2146',
+    <form onSubmit={handleSubmit}>
+    <div className="mb-4">
+      <label className="block text-sm font-medium mb-2">Card Details</label>
+      <div className="p-3 border rounded-md">
+        <CardElement 
+          options={{
+            style: {
+              base: {
+                fontSize: '16px',
+                color: '#424770',
+                '::placeholder': {
+                  color: '#aab7c4',
                 },
               },
-            }}
-          />
-        </div>
-        {error && <div className="text-red-500 mt-1 text-sm">{error}</div>}
+              invalid: {
+                color: '#9e2146',
+              },
+            },
+          }}
+        />
       </div>
-      <button
-        type="submit"
-        disabled={!stripe || isProcessing}
-        className="w-full py-2 px-4 bg-blue-600 hover:bg-blue-700 text-white font-medium rounded-md shadow-sm disabled:opacity-50"
+    </div>
+    
+    <div className="flex justify-between items-center mt-4">
+      <div className="text-sm">
+        <span className="font-medium">Total:</span> ${request.price}
+      </div>
+      <Button 
+        type="submit" 
+        color="primary"
+        isLoading={isProcessing}
+        isDisabled={!stripe || isProcessing}
+        startContent={!isProcessing && <FaCreditCard />}
       >
-        {isProcessing ? "Processing..." : `Pay ₹${request.groupId.price}`}
-      </button>
-    </form>
+        Pay Now
+      </Button>
+    </div>
+  </form>
   );
 };
 

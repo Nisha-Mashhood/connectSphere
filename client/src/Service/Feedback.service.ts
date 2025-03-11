@@ -10,3 +10,16 @@ export const sendFeedBackToMentor = async (feedbackData: any) => {
       handleError(error);
     }
   };
+
+  export const getFeedBack = async (userRole, userId, collabId) => {
+    try {
+      const response = await axiosInstance.post("/feedback/get-feedback",{
+        userRole,
+        userId,
+        collabId,
+      });
+      return response.data;
+    } catch (error) {
+      handleError(error);
+    }
+  };

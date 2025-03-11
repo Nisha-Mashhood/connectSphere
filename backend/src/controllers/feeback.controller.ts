@@ -42,3 +42,15 @@ export const getUserFeedbacks = async (req: Request, res: Response) => {
     res.status(400).json({ success: false, message: error.message });
   }
 };
+
+export const getFeedbackOnRoles = async(req: Request, res:Response) =>{
+  try {
+    const { role, userId, collaborationId } = req.body;
+    const feedback = await FeedbackService.getFeedbackByRole(role, userId, collaborationId);
+    res.status(200).json({ success: true, feedback });
+    return 
+  } catch (error: any) {
+    res.status(400).json({ success: false, message: error.message });
+    return 
+  }
+}

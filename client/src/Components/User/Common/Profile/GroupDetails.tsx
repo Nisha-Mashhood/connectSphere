@@ -59,6 +59,7 @@ const GroupDetails = () => {
 
       if (groupResponse?.data) {
         setGroup(groupResponse.data);
+        console.log("Group Response:", group);
       } else {
         setError("Failed to fetch group details");
       }
@@ -126,11 +127,15 @@ const GroupDetails = () => {
 
   const handleDeleteGroup = async () => {
     if (!groupId) return;
-    
-    if (!confirm("Are you sure you want to delete this group? This action cannot be undone.")) {
+
+    if (
+      !confirm(
+        "Are you sure you want to delete this group? This action cannot be undone."
+      )
+    ) {
       return;
     }
-    
+
     try {
       await removeGroup(groupId);
       toast.success("Group deleted successfully!");
@@ -186,7 +191,9 @@ const GroupDetails = () => {
     );
   }
 
-  const pendingRequestsCount = groupRequests.filter(req => req.status === "Pending").length;
+  const pendingRequestsCount = groupRequests.filter(
+    (req) => req.status === "Pending"
+  ).length;
 
   return (
     <div className="max-w-7xl mx-auto p-4">
@@ -205,7 +212,7 @@ const GroupDetails = () => {
                 alt="Group Cover"
                 className="w-full h-full object-cover"
               />
-              {isHoveringCover && group.adminId === currentUser._id && (
+              {isHoveringCover && group.adminId._id === currentUser._id && (
                 <div className="absolute inset-0 bg-black/50 flex items-center justify-center">
                   <label className="cursor-pointer">
                     <Button
@@ -227,7 +234,7 @@ const GroupDetails = () => {
 
               {/* Group Actions Buttons (Top Right) */}
               <div className="absolute top-4 right-4 flex gap-2">
-                {group.adminId === currentUser._id && (
+                {group.adminId._id === currentUser._id && (
                   <Button
                     color="danger"
                     variant="flat"
@@ -252,19 +259,20 @@ const GroupDetails = () => {
                     src={group.profilePic || "/api/placeholder/200/200"}
                     className="w-24 h-24 text-large border-4 border-white shadow-md"
                   />
-                  {isHoveringProfile && group.adminId === currentUser._id && (
-                    <div className="absolute inset-0 bg-black/50 rounded-full flex items-center justify-center">
-                      <label className="cursor-pointer">
-                        <FaCamera className="text-white text-xl" />
-                        <input
-                          type="file"
-                          className="hidden"
-                          accept="image/*"
-                          onChange={(e) => handlePhotoUpload(e, "profile")}
-                        />
-                      </label>
-                    </div>
-                  )}
+                  {isHoveringProfile &&
+                    group.adminId._id === currentUser._id && (
+                      <div className="absolute inset-0 bg-black/50 rounded-full flex items-center justify-center">
+                        <label className="cursor-pointer">
+                          <FaCamera className="text-white text-xl" />
+                          <input
+                            type="file"
+                            className="hidden"
+                            accept="image/*"
+                            onChange={(e) => handlePhotoUpload(e, "profile")}
+                          />
+                        </label>
+                      </div>
+                    )}
                 </div>
               </div>
             </div>
@@ -281,11 +289,13 @@ const GroupDetails = () => {
                     <Chip color="secondary" variant="flat">
                       {group.members?.length || 0} Members
                     </Chip>
-                    {pendingRequestsCount > 0 && group.adminId === currentUser._id && (
-                      <Chip color="warning" variant="flat">
-                        {pendingRequestsCount} Pending Request{pendingRequestsCount !== 1 ? 's' : ''}
-                      </Chip>
-                    )}
+                    {pendingRequestsCount > 0 &&
+                      group.adminId === currentUser._id && (
+                        <Chip color="warning" variant="flat">
+                          {pendingRequestsCount} Pending Request
+                          {pendingRequestsCount !== 1 ? "s" : ""}
+                        </Chip>
+                      )}
                   </div>
                 </div>
               </div>
@@ -295,8 +305,8 @@ const GroupDetails = () => {
           {/* Content Tabs Card */}
           <Card className="w-full shadow-md">
             <CardBody className="p-0">
-              <Tabs 
-                aria-label="Group sections" 
+              <Tabs
+                aria-label="Group sections"
                 selectedKey={selectedTab}
                 onSelectionChange={setSelectedTab as any}
                 color="primary"
@@ -304,7 +314,7 @@ const GroupDetails = () => {
                 classNames={{
                   tabList: "px-6 pt-3",
                   panel: "p-0",
-                  tab: "py-3"
+                  tab: "py-3",
                 }}
                 fullWidth
               >
@@ -325,7 +335,7 @@ const GroupDetails = () => {
                     />
                   </div>
                 </Tab>
-                
+
                 <Tab
                   key="members"
                   title={
@@ -336,55 +346,79 @@ const GroupDetails = () => {
                   }
                 >
                   <div className="p-6">
-                    <h3 className="text-xl font-semibold mb-4">Group Members</h3>
-                    
+                    <h3 className="text-xl font-semibold mb-4">
+                      Group Members
+                    </h3>
+
                     {/* Admin Card */}
                     <div className="mb-6">
                       <Card className="bg-primary-50 border-primary">
                         <CardBody>
-                          {group.admin ? (
+                          {group.adminId ? (
                             <User
-                              name={`${group.admin?.name || "Unknown"} (Admin)`}
-                              description={group.admin?.jobTitle || "No job title"}
+                              name={`${
+                                group.adminId?.name || "Unknown"
+                              } (Admin)`}
+                              description={
+                                group.adminId?.jobTitle || "No job title"
+                              }
                               avatarProps={{
-                                src: group.admin?.profilePic || "/api/placeholder/100/100",
-                                className: "border-2 border-primary"
+                                src:
+                                  group.adminId?.profilePic ||
+                                  "/api/placeholder/100/100",
+                                className: "border-2 border-primary",
                               }}
                             />
                           ) : (
-                            <p className="text-center">Admin information unavailable</p>
+                            <p className="text-center">
+                              Admin information unavailable
+                            </p>
                           )}
                         </CardBody>
                       </Card>
                     </div>
-                    
+
                     {/* Members List */}
                     {group?.members?.length > 0 ? (
                       <div className="space-y-4">
                         {group.members
-                          .filter((member) => member.userId?._id !== group.adminId)
+                          .filter(
+                            (member) => member.userId?._id !== group.adminId._id
+                          )
                           .map((member) => (
-                            <Card key={member._id} className="border border-default-200">
+                            <Card
+                              key={member._id}
+                              className="border border-default-200"
+                            >
                               <CardBody>
                                 <div className="flex justify-between items-center">
                                   <User
                                     name={member.userId?.name || "Unknown"}
-                                    description={member.userId?.jobTitle || "No job title"}
+                                    description={
+                                      member.userId?.jobTitle || "No job title"
+                                    }
                                     avatarProps={{
-                                      src: member.userId?.profilePic || "/api/placeholder/100/100",
+                                      src:
+                                        member.userId?.profilePic ||
+                                        "/api/placeholder/100/100",
                                     }}
                                   />
 
                                   <div className="flex items-center gap-4">
                                     <Chip variant="flat" size="sm">
-                                      Joined {new Date(member.joinedAt).toLocaleDateString()}
+                                      Joined{" "}
+                                      {new Date(
+                                        member.joinedAt
+                                      ).toLocaleDateString()}
                                     </Chip>
-                                    {group.adminId === currentUser._id && (
+                                    {group.adminId._id === currentUser._id && (
                                       <Button
                                         color="danger"
                                         variant="light"
                                         size="sm"
-                                        onClick={() => handleRemoveUser(member.userId?._id)}
+                                        onClick={() =>
+                                          handleRemoveUser(member.userId?._id)
+                                        }
                                       >
                                         Remove
                                       </Button>
@@ -406,8 +440,8 @@ const GroupDetails = () => {
                     )}
                   </div>
                 </Tab>
-                
-                {group.adminId === currentUser._id && (
+
+                {group.adminId._id === currentUser._id && (
                   <Tab
                     key="requests"
                     title={
@@ -423,8 +457,10 @@ const GroupDetails = () => {
                     }
                   >
                     <div className="p-6">
-                      <h3 className="text-xl font-semibold mb-4">Group Join Requests</h3>
-                      
+                      <h3 className="text-xl font-semibold mb-4">
+                        Group Join Requests
+                      </h3>
+
                       {groupRequests.length === 0 ? (
                         <Card>
                           <CardBody>
@@ -436,17 +472,25 @@ const GroupDetails = () => {
                       ) : (
                         <div className="space-y-4">
                           {groupRequests.map((req) => (
-                            <Card key={req._id} className={`border ${
-                              req.status === 'Pending' ? 'border-warning' : 
-                              req.status === 'Accepted' ? 'border-success' : 'border-danger'
-                            }`}>
+                            <Card
+                              key={req._id}
+                              className={`border ${
+                                req.status === "Pending"
+                                  ? "border-warning"
+                                  : req.status === "Accepted"
+                                  ? "border-success"
+                                  : "border-danger"
+                              }`}
+                            >
                               <CardBody>
                                 <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
                                   <User
                                     name={req.userId.name}
                                     description={req.userId.email}
                                     avatarProps={{
-                                      src: req.userId.profilePic || "/api/placeholder/100/100",
+                                      src:
+                                        req.userId.profilePic ||
+                                        "/api/placeholder/100/100",
                                     }}
                                   />
 
@@ -458,7 +502,10 @@ const GroupDetails = () => {
                                           variant="flat"
                                           startContent={<FaCheck />}
                                           onClick={() =>
-                                            handleRequestUpdate(req._id, "Accepted")
+                                            handleRequestUpdate(
+                                              req._id,
+                                              "Accepted"
+                                            )
                                           }
                                           size="sm"
                                         >
@@ -469,7 +516,10 @@ const GroupDetails = () => {
                                           variant="flat"
                                           startContent={<FaTimes />}
                                           onClick={() =>
-                                            handleRequestUpdate(req._id, "Rejected")
+                                            handleRequestUpdate(
+                                              req._id,
+                                              "Rejected"
+                                            )
                                           }
                                           size="sm"
                                         >
@@ -497,7 +547,7 @@ const GroupDetails = () => {
                     </div>
                   </Tab>
                 )}
-                
+
                 <Tab
                   key="info"
                   title={
@@ -508,40 +558,60 @@ const GroupDetails = () => {
                   }
                 >
                   <div className="p-6">
-                    <h3 className="text-xl font-semibold mb-4">Group Information</h3>
+                    <h3 className="text-xl font-semibold mb-4">
+                      Group Information
+                    </h3>
                     <Card>
                       <CardBody>
                         <div className="space-y-4">
                           <div>
-                            <h4 className="text-sm font-medium text-default-500">Group Name</h4>
+                            <h4 className="text-sm font-medium text-default-500">
+                              Group Name
+                            </h4>
                             <p className="text-lg">{group.name}</p>
                           </div>
-                          
+
                           <div>
-                            <h4 className="text-sm font-medium text-default-500">Description</h4>
+                            <h4 className="text-sm font-medium text-default-500">
+                              Description
+                            </h4>
                             <p>{group.bio || "No description provided"}</p>
                           </div>
-                          
+
                           <div>
-                            <h4 className="text-sm font-medium text-default-500">Created</h4>
-                            <p>{group.createdAt ? new Date(group.createdAt).toLocaleDateString(undefined, {
-                              year: 'numeric',
-                              month: 'long',
-                              day: 'numeric'
-                            }) : "Unknown"}</p>
+                            <h4 className="text-sm font-medium text-default-500">
+                              Created
+                            </h4>
+                            <p>
+                              {group.createdAt
+                                ? new Date(group.createdAt).toLocaleDateString(
+                                    undefined,
+                                    {
+                                      year: "numeric",
+                                      month: "long",
+                                      day: "numeric",
+                                    }
+                                  )
+                                : "Unknown"}
+                            </p>
                           </div>
-                          
+
                           <div>
-                            <h4 className="text-sm font-medium text-default-500">Members</h4>
-                            <p>{group.members?.length || 0} of {group.maxMembers} (max)</p>
+                            <h4 className="text-sm font-medium text-default-500">
+                              Members
+                            </h4>
+                            <p>
+                              {group.members?.length || 0} of {group.maxMembers}{" "}
+                              (max)
+                            </p>
                           </div>
                         </div>
                       </CardBody>
                     </Card>
                   </div>
                 </Tab>
-                
-                {group.adminId === currentUser._id && (
+
+                {group.adminId._id === currentUser._id && (
                   <Tab
                     key="settings"
                     title={
@@ -552,55 +622,85 @@ const GroupDetails = () => {
                     }
                   >
                     <div className="p-6">
-                      <h3 className="text-xl font-semibold mb-4">Group Settings</h3>
+                      <h3 className="text-xl font-semibold mb-4">
+                        Group Settings
+                      </h3>
                       <Card className="mb-4">
                         <CardBody>
                           <div className="space-y-6">
                             <div>
-                              <h4 className="text-lg font-medium mb-2">Group Photos</h4>
+                              <h4 className="text-lg font-medium mb-2">
+                                Group Photos
+                              </h4>
                               <div className="flex flex-wrap gap-4">
                                 <div className="space-y-2">
-                                  <p className="text-sm text-default-500">Profile Picture</p>
-                                  <Button
-                                    color="primary"
-                                    variant="flat"
-                                    startContent={<FaCamera />}
-                                    size="sm"
-                                  >
-                                    Change Profile
+                                  <p className="text-sm text-default-500">
+                                    Profile Picture
+                                  </p>
+                                  <label className="cursor-pointer">
                                     <input
                                       type="file"
+                                      id="profile-pic-input"
                                       className="hidden"
                                       accept="image/*"
-                                      onChange={(e) => handlePhotoUpload(e, "profile")}
+                                      onChange={(e) =>
+                                        handlePhotoUpload(e, "profile")
+                                      }
                                     />
-                                  </Button>
+                                    <Button
+                                      color="primary"
+                                      variant="flat"
+                                      startContent={<FaCamera />}
+                                      size="sm"
+                                      onClick={() =>
+                                        document
+                                          .getElementById("profile-pic-input")
+                                          ?.click()
+                                      }
+                                    >
+                                      Change Profile
+                                    </Button>
+                                  </label>
                                 </div>
-                                
+
                                 <div className="space-y-2">
-                                  <p className="text-sm text-default-500">Cover Photo</p>
-                                  <Button
-                                    color="primary"
-                                    variant="flat"
-                                    startContent={<FaCamera />}
-                                    size="sm"
-                                  >
-                                    Change Cover
+                                  <p className="text-sm text-default-500">
+                                    Cover Photo
+                                  </p>
+                                  <label className="cursor-pointer">
                                     <input
                                       type="file"
+                                      id="cover-pic-input"
                                       className="hidden"
                                       accept="image/*"
-                                      onChange={(e) => handlePhotoUpload(e, "cover")}
+                                      onChange={(e) =>
+                                        handlePhotoUpload(e, "cover")
+                                      }
                                     />
-                                  </Button>
+                                    <Button
+                                      color="primary"
+                                      variant="flat"
+                                      startContent={<FaCamera />}
+                                      size="sm"
+                                      onClick={() =>
+                                        document
+                                          .getElementById("cover-pic-input")
+                                          ?.click()
+                                      }
+                                    >
+                                      Change Cover
+                                    </Button>
+                                  </label>
                                 </div>
                               </div>
                             </div>
-                            
+
                             <Divider />
-                            
+
                             <div>
-                              <h4 className="text-lg font-medium mb-2">Danger Zone</h4>
+                              <h4 className="text-lg font-medium mb-2">
+                                Danger Zone
+                              </h4>
                               <Button
                                 color="danger"
                                 variant="flat"
@@ -610,7 +710,8 @@ const GroupDetails = () => {
                                 Delete This Group
                               </Button>
                               <p className="text-xs text-default-500 mt-2">
-                                This action cannot be undone. All group data will be permanently deleted.
+                                This action cannot be undone. All group data
+                                will be permanently deleted.
                               </p>
                             </div>
                           </div>

@@ -197,7 +197,7 @@ const GroupDetails = () => {
 
   // Filter out admin from members list if available
   const membersList = group?.members?.filter(
-    (member) => member.userId?._id !== group.adminId
+    (member) => member.userId?._id !== group.adminId._id
   ) || [];
 
   const pendingRequestsCount = groupRequests.filter(
@@ -228,7 +228,7 @@ const GroupDetails = () => {
         <div className="absolute inset-0 bg-black/40"></div>
         
         {/* Cover Image Upload Button */}
-        {group.adminId === currentUser._id && (
+        {group.adminId._id === currentUser._id && (
           <div className="absolute bottom-4 right-4">
             <label className="cursor-pointer">
               <Button
@@ -302,7 +302,7 @@ const GroupDetails = () => {
                 </div>
 
                 <div className="flex gap-2 self-start mt-4 md:mt-0">
-                  {group.adminId === currentUser._id ? (
+                  {group.adminId._id === currentUser._id ? (
                     <Button
                       color="danger"
                       variant="flat"
@@ -352,13 +352,13 @@ const GroupDetails = () => {
                     <h3 className="font-semibold mb-4">Admin Details</h3>
                     <div className="flex items-center gap-3">
                       <Avatar
-                        src={group.admin?.profilePic || "/api/placeholder/100/100"}
+                        src={group.adminId?.profilePic || "/api/placeholder/100/100"}
                         size="md"
                       />
                       <div>
-                        <p className="font-medium">{group.admin?.name || "Admin"}</p>
+                        <p className="font-medium">{group.adminId?.name || "Admin"}</p>
                         <p className="text-sm text-default-500">
-                          {group.admin?.jobTitle || ""}
+                          {group.adminId?.jobTitle || ""}
                         </p>
                       </div>
                     </div>

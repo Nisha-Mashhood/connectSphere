@@ -170,26 +170,12 @@ export const processGroupPaymentService = async (
         invoice_settings: { default_payment_method: paymentMethodId },
       });
     }
-
-    // // Attach the payment method to the customer
-    // await stripe.paymentMethods.attach(paymentMethodId, {
-    //   customer: customer.id,
-    // });
-
-    // // Set the payment method as the default
-    // await stripe.customers.update(customer.id, {
-    //   invoice_settings: {
-    //     default_payment_method: paymentMethodId,
-    //   },
-    // });
-
     // Create a PaymentIntent instead of a direct charge
     const paymentIntent = await stripe.paymentIntents.create(
       {
         amount,
         currency: "inr",
         customer: customer.id,
-        payment_method: paymentMethodId,
         confirm: true,
         description: `Payment for Group Request ID: ${requestId}`,
         receipt_email: email,

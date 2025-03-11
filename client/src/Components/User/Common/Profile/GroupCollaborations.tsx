@@ -1,17 +1,28 @@
-import { useSelector } from 'react-redux';
-import { RootState } from '../../../../redux/store';
-import { FaUsers } from 'react-icons/fa';
-import { useNavigate } from 'react-router-dom';
+import { useDispatch, useSelector } from "react-redux";
+import { AppDispatch, RootState } from "../../../../redux/store";
+import { FaUsers } from "react-icons/fa";
+import { useNavigate } from "react-router-dom";
+import { fetchGroupDetailsForMembers } from "../../../../redux/Slice/profileSlice";
+import { useEffect } from "react";
 
 const GroupCollaborations = ({ handleProfileClick }) => {
-    const navigate = useNavigate();
+  const navigate = useNavigate();
+  const dispatch = useDispatch<AppDispatch>();
   const { groupMemberships } = useSelector((state: RootState) => state.profile);
   const { currentUser } = useSelector((state: RootState) => state.user);
-  const filteredGroupmembership = groupMemberships?.filter(group => group.adminId?._id !== currentUser._id)
+  const filteredGroupmembership = groupMemberships?.filter(
+    (group) => group.adminId?._id !== currentUser._id
+  );
 
   const handleGroupClick = (groupId: string) => {
     navigate(`/group/${groupId}`);
   };
+
+  useEffect(() => {
+    if (currentUser?._id) {
+      dispatch(fetchGroupDetailsForMembers(currentUser._id));
+    }
+  }, [dispatch, currentUser]);
 
   return (
     <div className="bg-white dark:bg-gray-800 p-6 rounded-lg shadow">
@@ -60,7 +71,7 @@ const GroupCollaborations = ({ handleProfileClick }) => {
               {/* Status Badge */}
               <div className="flex items-center">
                 <span className="px-3 py-1 text-sm font-medium rounded-full bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200">
-                  {group.status || 'Active'}
+                  {group.status || "Active"}
                 </span>
               </div>
             </div>
