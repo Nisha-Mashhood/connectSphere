@@ -10,6 +10,7 @@ export interface ICollaboration extends Document {
     isCancelled: boolean;
     startDate: Date;
     endDate?: Date;
+    feedbackGiven: boolean;
     createdAt: Date;
 }
 declare const _default: mongoose.Model<ICollaboration, {}, {}, {}, mongoose.Document<unknown, {}, ICollaboration> & ICollaboration & Required<{

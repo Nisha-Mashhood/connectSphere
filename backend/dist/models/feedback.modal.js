@@ -2,53 +2,64 @@ import mongoose, { Schema } from 'mongoose';
 const FeedbackSchema = new Schema({
     userId: {
         type: mongoose.Schema.Types.ObjectId,
-        ref: 'User',
-        required: true
+        ref: "User",
+        required: true,
     },
     mentorId: {
         type: mongoose.Schema.Types.ObjectId,
-        ref: 'Mentor',
-        required: true
+        ref: "Mentor",
+        required: true,
     },
     collaborationId: {
         type: mongoose.Schema.Types.ObjectId,
-        ref: 'Collaboration',
-        required: true
+        ref: "Collaboration",
+        required: true,
+    },
+    givenBy: {
+        type: String,
+        enum: ["user", "mentor"],
+        required: true,
     },
     rating: {
         type: Number,
         required: true,
         min: 1,
-        max: 5
+        max: 5,
     },
     communication: {
         type: Number,
         required: true,
         min: 1,
-        max: 5
+        max: 5,
     },
     expertise: {
         type: Number,
         required: true,
         min: 1,
-        max: 5
+        max: 5,
     },
     punctuality: {
         type: Number,
         required: true,
         min: 1,
-        max: 5
+        max: 5,
+    },
+    professionalism: {
+        type: Number,
+        required: false,
+        min: 1,
+        max: 5,
     },
     comments: {
         type: String,
         required: true,
         minlength: 10,
-        maxlength: 500
+        maxlength: 500,
     },
     wouldRecommend: {
         type: Boolean,
-        required: true
+        required: true,
     },
 }, { timestamps: true });
-export default mongoose.model('Feedback', FeedbackSchema);
+export default mongoose.model("Feedback", FeedbackSchema);
 //# sourceMappingURL=feedback.modal.js.map

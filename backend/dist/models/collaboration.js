@@ -37,6 +37,10 @@ const CollaborationSchema = new Schema({
         type: Date,
         default: null,
     },
+    feedbackGiven: {
+        type: Boolean,
+        default: false,
+    },
 }, { timestamps: true });
 export default mongoose.model("Collaboration", CollaborationSchema);
 //# sourceMappingURL=collaboration.js.map

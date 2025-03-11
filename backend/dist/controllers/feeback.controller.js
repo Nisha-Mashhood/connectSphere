@@ -40,4 +40,16 @@ export const getUserFeedbacks = async (req, res) => {
         res.status(400).json({ success: false, message: error.message });
     }
 };
+export const getFeedbackOnRoles = async (req, res) => {
+    try {
+        const { role, userId, collaborationId } = req.body;
+        const feedback = await FeedbackService.getFeedbackByRole(role, userId, collaborationId);
+        res.status(200).json({ success: true, feedback });
+        return;
+    }
+    catch (error) {
+        res.status(400).json({ success: false, message: error.message });
+        return;
+    }
+};
 //# sourceMappingURL=feeback.controller.js.map
