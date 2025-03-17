@@ -14,6 +14,9 @@ import {
   getRequestByUserId,
   markCollabAsCancelled,
   updateMentorRequestStatus,
+  updateRequestStatus,
+  updateTemporarySlotChanges,
+  updateUnavailableDays,
 } from "../repositories/collaboration.repositry.js";
 import stripe from "../utils/stripe.utils.js";
 import { v4 as uuid } from "uuid";
@@ -104,12 +107,6 @@ export const processPaymentService = async (
         description: `Payment for Request ID: ${requestId}`,
         metadata: { requestId },
         return_url: `${returnUrl}?payment_status=success&request_id=${requestId}`,
-        // // Disable redirect based payment methods if you don't want 3DS or other redirects
-        // Uncomment the below line to specifically disable redirects
-        /* automatic_payment_methods: {
-          enabled: true,
-          allow_redirects: 'never'
-        },*/
       },
       { idempotencyKey }
     );
@@ -118,7 +115,27 @@ export const processPaymentService = async (
     if (paymentIntent.status === "succeeded") {
       const startDate = new Date();
       const endDate = new Date(startDate);
-      endDate.setDate(startDate.getDate() + 30); // 30-day access
+
+      // Number of sessions user is entitled to
+      const totalSessions = mentorRequestData.timePeriod; 
+      console.log("total sessions:", totalSessions)
+      
+      // Find the weekly session day 
+      const sessionDay = mentorRequestData.selectedSlot?.day; // "Monday"
+
+      let sessionCount = 0;
+
+      // Loop until total sessions
+      while (sessionCount < totalSessions) {
+      endDate.setDate(endDate.getDate() + 1); // Move to the next day
+
+        // Check if the current day matches the mentor's available session day
+        if (endDate.toLocaleDateString('en-US', { weekday: 'long' }) === sessionDay) {
+        sessionCount++; // incremennt the session
+        }
+      }
+
+      //problem is with while loop
 
       await createCollaboration({
         mentorId: mentorRequestData.mentorId,
@@ -217,18 +234,18 @@ export const removecollab = async (collabId: string, reason: string) => {
 
 //FOR ADMIN
 // Service to get all mentor requests
-export const getMentorRequestsService = async () => {
+export const getMentorRequestsService = async ({ page, limit, search }: { page: number, limit: number, search: string }) => {
   try {
-    return await findMentorRequest();
+    return await findMentorRequest({ page, limit, search });
   } catch (error: any) {
     throw new Error(error.message);
   }
 };
 
-// Service to get all collaborations
-export const getCollabsService = async () => {
+//For getting all collab details
+export const getCollabsService = async ({ page, limit, search }: { page: number, limit: number, search: string }) => {
   try {
-    return await findCollab();
+    return await findCollab({ page, limit, search });
   } catch (error: any) {
     throw new Error(error.message);
   }
@@ -242,4 +259,59 @@ export const fetchCollabById = async (collabId: string) => {
 //get the requset details by requset Id
 export const fetchRequsetById = async (requestId: string) => {
   return await fetchMentorRequsetDetails(requestId);
+};
+
+
+  // Service for updating unavailable days
+export const markUnavailableDaysService = async (
+  collabId: string,
+  updateData: any
+) => {
+  console.log("came to collaboartion service");
+  try {
+    const updatedCollaboartion = await updateUnavailableDays(collabId, updateData);
+    console.log("Updated collaboartion from service file :",updatedCollaboartion);
+    return updatedCollaboartion;
+  } catch (error) {
+    console.log("error in collaboartion service file :",error);
+    throw new Error(`Service Error: ${error}`);
+  }
+};
+
+// Service for updating temporary slot changes
+export const updateTemporarySlotChangesService = async (
+  collabId: string,
+  updateData: any
+) => {
+  try {
+    const updatedCollaboartion = await updateTemporarySlotChanges(collabId, updateData);
+    console.log("Updated collaboartion from service file :",updatedCollaboartion);
+    return updatedCollaboartion;
+  } catch (error) {
+    console.log("error in collaboartion service file :",error);
+    throw new Error(`Service Error: ${error}`);
+  }
+}
+
+//service for updating the status
+export const processTimeSlotRequest = async (
+  collabId: string,
+  requestId: string,
+  isApproved: boolean,
+  requestType: "unavailable" | "timeSlot",
+) => {
+  try {
+    const status = isApproved ? "approved" : "rejected";
+    const updatedCollaboration = await updateRequestStatus(
+      collabId,
+      requestId,
+      requestType,
+      status,
+    );
+    console.log("updated collaboration from service file :",updatedCollaboration);
+    return updatedCollaboration;
+  } catch (error: any) {
+    console.log("error in service file : ",error);
+    throw new Error(`Failed to process time slot request: ${error.message}`);
+  }
 };

@@ -21,7 +21,7 @@ import About from "../Components/User/Common/About";
 import CreateGroupForm from "../Components/User/Groups/CreateGroupForm";
 import GroupDetails from "../Components/User/Common/Profile/GroupDetails";
 import GroupDetailView from "../Components/User/Common/Profile/GroupDetailView";
-import CollaborationDetails from "../Components/User/Common/Profile/CollaborationDetails";
+import CollaborationDetails from "../Components/User/Common/Profile/CollaboartionDetails/CollaborationDetails";
 
 
 

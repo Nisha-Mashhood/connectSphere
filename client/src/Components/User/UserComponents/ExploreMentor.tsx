@@ -165,6 +165,7 @@ const ExploreMentors = () => {
         timeSlots: timeSlot.trim(),
       },
       price: selectedMentor.price,
+      timePeriod:selectedMentor.timePeriod,
     };
 
     try {

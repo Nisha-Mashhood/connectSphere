@@ -6,10 +6,36 @@ export const submitMentorRequest = async (data: Partial<IMentor>): Promise<IMent
 };
 
 //get all mentor request
-export const getAllMentorRequests = async (): Promise<IMentor[]> => {
-  return await Mentor.find()
-    .populate("userId") // Populate user details
-    .populate("skills", "name"); // Populate skills with only the 'name' field
+export const getAllMentorRequests = async (
+  page: number = 1,
+  limit: number = 10,
+  search: string = "",
+  status: string = "",
+  sort: string = "desc"
+): Promise<{ mentors: IMentor[]; total: number }> => {
+  const query: any = {};
+  if (status) query.isApproved = status;
+
+  const mentors = await Mentor.find(query)
+    .populate("userId", "name email")
+    .populate("skills", "name")
+    .sort({ createdAt: sort === "desc" ? -1 : 1 });
+
+  // Filter in memory
+  const filteredMentors = search
+    ? mentors.filter((mentor) => {
+        const user = mentor.userId as any;
+        return (
+          (user?.name && user.name.toLowerCase().includes(search.toLowerCase())) ||
+          (user?.email && user.email.toLowerCase().includes(search.toLowerCase()))
+        );
+      })
+    : mentors;
+
+  const total = filteredMentors.length;
+  const paginatedMentors = filteredMentors.slice((page - 1) * limit, page * limit);
+
+  return { mentors: paginatedMentors, total };
 };
 
 //get All Mentors

@@ -34,7 +34,7 @@ export const getMentorDetails = async (req: Request, res: Response) =>{
 
 //create mentor record
 export const createMentor = async (req: Request, res: Response) => {
-  const { userId, specialization, bio, price, skills, availableSlots } = req.body;
+  const { userId, specialization, bio, price, skills, availableSlots, timePeriod } = req.body;
 
   try {
 
@@ -77,6 +77,7 @@ export const createMentor = async (req: Request, res: Response) => {
       bio,
       price,
       availableSlots: JSON.parse(availableSlots),
+      timePeriod,
       certifications: uploadedCertificates,
     });
 
@@ -93,10 +94,22 @@ export const createMentor = async (req: Request, res: Response) => {
 
 }
 
-export const getAllMentorRequests = async (_req: Request, res: Response) => {
+export const getAllMentorRequests = async (req: Request, res: Response) => {
   try {
-    const mentorRequests = await MentorService.getAllMentorRequests();
-    res.json(mentorRequests);
+    const { page = "1", limit = "10", search = "", status = "", sort = "desc" } = req.query;
+    const mentorRequests = await MentorService.getAllMentorRequests(
+      parseInt(page as string),
+      parseInt(limit as string),
+      search as string,
+      status as string,
+      sort as string
+    );
+    res.json({
+      mentors: mentorRequests.mentors,
+      total: mentorRequests.total,
+      currentPage: parseInt(page as string),
+      totalPages: Math.ceil(mentorRequests.total / parseInt(limit as string)),
+    });
   } catch (error: any) {
     console.error("Error fetching mentor requests:", error);
     res.status(500).json({ message: "Server error. Please try again later." });

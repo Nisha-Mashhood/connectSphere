@@ -17,6 +17,9 @@ router.get('/get-collabData-mentor/:id',[apiLimiter, verifyToken, checkBlockedSt
 router.delete('/cancel-collab/:collabId',[apiLimiter, verifyToken, checkBlockedStatus], collaborationController.deleteCollab);
 router.get('/getCollab/:collabId', [apiLimiter, verifyToken, checkBlockedStatus], collaborationController.getCollabDeatilsbyCollabId);
 router.get('/getCollabRequset/:requestId' , [apiLimiter, verifyToken, checkBlockedStatus], collaborationController.getRequestDeatilsbyRequestId);
+router.put("/markUnavailable/:collabId", [apiLimiter, verifyToken, checkBlockedStatus], collaborationController.markUnavailableDays);
+router.put("/updateTimeslot/:collabId", [apiLimiter, verifyToken, checkBlockedStatus], collaborationController.updateTemporarySlotChanges);
+router.put("/approveTimeSlot/:collabId", [apiLimiter, verifyToken, checkBlockedStatus], collaborationController.approveTimeSlotRequest)
 
 //FOR ADMIN
 

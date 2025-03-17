@@ -3,3 +3,7 @@ node_modules/
 
 # Ignore environment variables file
 .env
+
+
+# dist folder which contains transpled files
+backend/dist/

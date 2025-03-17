@@ -147,32 +147,23 @@ export const getCollabDataForMentor = async (mentorId: string) => {
 };
 
 //FOR ADMIN
-
-//Get All Requsets
-export const findMentorRequest = async () => {
+//Find all requset data for ADMIN
+export const findMentorRequest = async ({ page, limit, search }: { page: number, limit: number, search: string }) => {
   try {
-    return await MentorRequest.find()
-    .populate({
-      path: "mentorId",
-      model: "Mentor",
-      populate: {
-        path: "userId",
-        model: "User",
-      },
-    })
-    .populate({
-      path: "userId",
-      model: "User",
-    }) ;
-  } catch (error: any) {
-    throw new Error(`Error fetching mentor request : ${error.message}`);
-  }
-};
+    const query = search
+      ? {
+          $or: [
+            { "userId.name": { $regex: search, $options: "i" } },
+            { "userId.email": { $regex: search, $options: "i" } },
+            { "mentorId.userId.name": { $regex: search, $options: "i" } },
+            { "mentorId.userId.email": { $regex: search, $options: "i" } },
+            { "mentorId.specialization": { $regex: search, $options: "i" } },
+          ],
+        }
+      : {};
 
-//Get All Collab
-export const findCollab = async (): Promise<ICollaboration[] | null> => {
-  try {
-    return await Collaboration.find()
+    const total = await MentorRequest.countDocuments(query);
+    const requests = await MentorRequest.find(query)
       .populate({
         path: "mentorId",
         model: "Mentor",
@@ -184,7 +175,49 @@ export const findCollab = async (): Promise<ICollaboration[] | null> => {
       .populate({
         path: "userId",
         model: "User",
-      }) as ICollaboration[] | null;
+      })
+      .skip((page - 1) * limit)
+      .limit(limit);
+
+    return { requests, total, page, pages: Math.ceil(total / limit) };
+  } catch (error: any) {
+    throw new Error(`Error fetching mentor request: ${error.message}`);
+  }
+};
+
+//Find All collab datas for ADMIN
+export const findCollab = async ({ page, limit, search }: { page: number, limit: number, search: string }) => {
+  try {
+    const query = search
+      ? {
+          $or: [
+            { "userId.name": { $regex: search, $options: "i" } },
+            { "userId.email": { $regex: search, $options: "i" } },
+            { "mentorId.userId.name": { $regex: search, $options: "i" } },
+            { "mentorId.userId.email": { $regex: search, $options: "i" } },
+            { "mentorId.specialization": { $regex: search, $options: "i" } },
+          ],
+        }
+      : {};
+
+    const total = await Collaboration.countDocuments(query);
+    const collabs = await Collaboration.find(query)
+      .populate({
+        path: "mentorId",
+        model: "Mentor",
+        populate: {
+          path: "userId",
+          model: "User",
+        },
+      })
+      .populate({
+        path: "userId",
+        model: "User",
+      })
+      .skip((page - 1) * limit)
+      .limit(limit);
+
+    return { collabs, total, page, pages: Math.ceil(total / limit) };
   } catch (error: any) {
     throw new Error("Error fetching collaborations: " + error.message);
   }
@@ -231,3 +264,146 @@ export const findCollabDetails = async (collabId: string): Promise<ICollaboratio
     throw new Error("Error fetching collaboration Details: " + error.message);
   }
 };
+
+// Update Unavailable Days
+export const updateUnavailableDays = async (
+  collabId: string,
+  updateData: {
+    datesAndReasons: any;  // Dates and reasons array
+    requestedBy: string;
+    requesterId: string;
+    approvedById: string;
+    isApproved: string;
+  }
+) => {
+  try {
+    const updatedCollaboration = await Collaboration.findByIdAndUpdate(
+      collabId,
+      {
+        $push: {
+          "unavailableDays": {
+            datesAndReasons: updateData.datesAndReasons,
+            requestedBy: updateData.requestedBy,
+            requesterId: updateData.requesterId,
+            approvedById: updateData.approvedById,
+            isApproved: updateData.isApproved
+          }
+        }
+      },
+      { new: true }
+    );
+    console.log("Updated Collaboration :",updatedCollaboration)
+    return updatedCollaboration;
+  } catch (error) {
+    console.log("error in collaboaration repositry :",error)
+    throw new Error(`Error updating unavailable days: ${error}`);
+  }
+};
+
+// Update Temporary Slot Changes
+export const updateTemporarySlotChanges = async (
+  collabId: string,
+  updateData: {
+    datesAndNewSlots: any;  // New time slots with dates
+    requestedBy: string;
+    requesterId: string;
+    approvedById: string;
+    isApproved: string;
+  }
+) => {
+  try {
+    const updatedCollaboration = await Collaboration.findByIdAndUpdate(
+      collabId,
+      {
+        $push: {
+          "temporarySlotChanges": {
+            datesAndNewSlots: updateData.datesAndNewSlots,
+            requestedBy: updateData.requestedBy,
+            requesterId: updateData.requesterId,
+            approvedById: updateData.approvedById,
+            isApproved: updateData.isApproved
+          }
+        }
+      },
+      { new: true }
+    );
+    console.log("Updated Collaboration :",updatedCollaboration)
+    return updatedCollaboration;
+  } catch (error) {
+    console.log("error in collaboaration repositry :",error)
+    throw new Error(`Error updating temporary slot changes: ${error}`);
+  }
+};
+
+//Update the is Approved of the collaboration
+export const updateRequestStatus = async (
+  collabId: string,
+  requestId: string,
+  requestType: "unavailable" | "timeSlot",
+  status: "approved" | "rejected",
+): Promise<ICollaboration | null> => {
+  try {
+    const updateField =
+      requestType === "unavailable" ? "unavailableDays" : "temporarySlotChanges";
+
+      const collaboration = await Collaboration.findOneAndUpdate(
+        {
+          _id: collabId,
+          [`${updateField}._id`]: requestId,
+        },
+        {
+          $set: {
+            [`${updateField}.$.isApproved`]: status // Changed from 'status' to 'isApproved'
+          },
+        },
+        { new: true }
+      )
+        .populate({
+          path: "mentorId",
+          model: "Mentor",
+          populate: {
+            path: "userId",
+            model: "User",
+          },
+        })
+        .populate({
+          path: "userId",
+          model: "User",
+        });
+
+        
+    if (!collaboration) {
+      throw new Error("Collaboration or request not found");
+    }
+
+    console.log("Updated collboartion :",collaboration);
+    return collaboration;
+  } catch (error: any) {
+    console.log("Error in repositry file :",error);
+    throw new Error(`Error updating request status: ${error.message}`);
+  }
+};
+
+  export const  getCollaborationByCollabId = async(collabId: string) => {
+      try {
+          return await Collaboration.findOne({ collabId });
+      } catch (error:any) {
+          throw new Error(`Error retrieving collaboration by collabId: ${error.message}`);
+      }
+  }
+
+  export const  getCollaborationsByRequesterId = async(requesterId: string) => {
+      try {
+          return await Collaboration.find({ requesterId });
+      } catch (error:any) {
+          throw new Error(`Error retrieving collaborations by requesterId: ${error.message}`);
+      }
+  }
+
+  export const getCollaborationsByApproverId = async (approverId: string) => {
+      try {
+          return await Collaboration.find({ approverId });
+      } catch (error:any) {
+          throw new Error(`Error retrieving collaborations by approverId: ${error.message}`);
+      }
+  }

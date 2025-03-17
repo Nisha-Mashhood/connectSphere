@@ -11,12 +11,20 @@ export const createMentorProfile = async (formdata:FormData) => {
 };
 
 // Fetch mentor requests
-export const fetchMentorRequests = async () => {
+export const fetchMentorRequests = async (
+  page: number = 1,
+  limit: number = 10,
+  search: string = "",
+  status: string = "",
+  sort: string = "desc"
+) => {
   try {
-    const { data } = await axiosInstance.get("/mentors/getallmentorrequest");
+    const { data } = await axiosInstance.get("/mentors/getallmentorrequest", {
+      params: { page, limit, search, status, sort },
+    });
     return data;
   } catch (error) {
-    handleError(error)
+    handleError(error);
   }
 };
 

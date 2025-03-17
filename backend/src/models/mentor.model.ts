@@ -12,6 +12,7 @@ export interface IMentor extends Document {
   bio:string;
   price:number;
   availableSlots?: object[];
+  timePeriod?:number
   createdAt: Date;
   updatedAt: Date;
 }
@@ -61,6 +62,11 @@ const MentorSchema: Schema = new Schema(
           timeSlots: [{ type: String }],
         },
       ],
+      timePeriod: {
+        type: Number, 
+        required: true,
+        default:30
+      }
   },
   { timestamps: true }
 );

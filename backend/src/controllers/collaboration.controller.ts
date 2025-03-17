@@ -9,10 +9,13 @@ import {
   getMentorRequests,
   getMentorRequestsService,
   getRequsetForUser,
+  markUnavailableDaysService,
   processPaymentService,
+  processTimeSlotRequest,
   rejectRequest,
   removecollab,
   TemporaryRequestService,
+  updateTemporarySlotChangesService,
 } from "../services/collaboration.service.js";
 import mentorRequset from "../models/mentorRequset.js";
 
@@ -21,9 +24,9 @@ export const TemporaryRequestController = async (
   res: Response
 ) => {
   try {
-    const { mentorId, userId, selectedSlot, price } = req.body;
+    const { mentorId, userId, selectedSlot, price, timePeriod } = req.body;
 
-    if (!mentorId || !userId || !selectedSlot || !price) {
+    if (!mentorId || !userId || !selectedSlot || !price || !timePeriod) {
       res.status(400).json({ message: "All fields are required" });
       return;
     }
@@ -33,6 +36,7 @@ export const TemporaryRequestController = async (
       userId,
       selectedSlot,
       price,
+      timePeriod,
     };
     const newRequest = await TemporaryRequestService(requestData);
 
@@ -114,7 +118,7 @@ export const makeStripePaymentController = async (
   res: Response
 ) => {
   const { paymentMethodId, amount, requestId, email, returnUrl } = req.body;
-
+  // console.log(req.body);
   try {
     // Validate returnUrl
     if (!returnUrl) {
@@ -147,6 +151,7 @@ export const makeStripePaymentController = async (
 
     // Handle different payment intent statuses
     if (paymentResult.status === "requires_action" && paymentResult.next_action) {
+      console.log(paymentResult.status)
       // Payment requires additional action (like 3D Secure)
       res.status(200).json({ 
         status: "requires_action", 
@@ -226,19 +231,28 @@ export const deleteCollab = async (req: Request, res: Response) => {
 //FOR ADMIN
 
 // Get all mentor requests
-export const getAllMentorRequests = async (_req: Request, res: Response) => {
+export const getAllMentorRequests = async (req: Request, res: Response) => {
   try {
-    const mentorRequests = await getMentorRequestsService();
+    const { page = 1, limit = 10, search = '' } = req.query;
+    const mentorRequests = await getMentorRequestsService({
+      page: Number(page),
+      limit: Number(limit),
+      search: String(search)
+    });
     res.status(200).json(mentorRequests);
   } catch (error: any) {
     res.status(500).json({ message: error.message });
   }
 };
 
-// Get all collaborations
-export const getAllCollabs = async (_req: Request, res: Response) => {
+export const getAllCollabs = async (req: Request, res: Response) => {
   try {
-    const collaborations = await getCollabsService();
+    const { page = 1, limit = 10, search = '' } = req.query;
+    const collaborations = await getCollabsService({
+      page: Number(page),
+      limit: Number(limit),
+      search: String(search)
+    });
     res.status(200).json(collaborations);
   } catch (error: any) {
     res.status(500).json({ message: error.message });
@@ -278,5 +292,85 @@ export const getRequestDeatilsbyRequestId = async (
   } catch (error: any) {
     res.status(500).json({ message: error.message });
     return;
+  }
+};
+
+
+// Mark Dates as Unavailable
+export const markUnavailableDays = async (req: Request, res: Response) => {
+  const { collabId } = req.params;
+  const { datesAndReasons, requestedBy, requesterId, approvedById, isApproved } =
+    req.body;
+
+  try {
+    const updatedCollaboration = await markUnavailableDaysService(collabId, {
+      datesAndReasons,
+      requestedBy,
+      requesterId,
+      approvedById,
+      isApproved,
+    });
+
+    console.log("collaboration collection updated");
+    res
+      .status(200)
+      .json({ message: "Unavailable days updated", data: updatedCollaboration });
+      return 
+  } catch (error:any) {
+    res.status(500).json({ message: error.message });
+    return
+  }
+};
+
+// Update Time Slots
+export const updateTemporarySlotChanges = async (req: Request, res: Response) => {
+  const { collabId } = req.params;
+  const { datesAndNewSlots, requestedBy, requesterId, approvedById, isApproved } =
+    req.body;
+
+  try {
+    const updatedCollaboration = await updateTemporarySlotChangesService(collabId, {
+      datesAndNewSlots,
+      requestedBy,
+      requesterId,
+      approvedById,
+      isApproved,
+    });
+
+    res
+      .status(200)
+      .json({ message: "Temporary slot changes updated", data: updatedCollaboration });
+      return 
+  } catch (error:any) {
+    res.status(500).json({ message: error.message });
+    return
+  }
+};
+
+export const approveTimeSlotRequest = async (req: Request, res: Response) => {
+  const { collabId } = req.params;
+  const { requestId, isApproved, requestType } = req.body;
+
+  try {
+    console.log("Processing time slot request for collabId:", collabId);
+    console.log("Request Body:", req.body);
+    console.log("requestId:", requestId);
+    console.log("isApproved:", isApproved);
+    console.log("requestType:", requestType);
+
+    const updatedCollaboration = await processTimeSlotRequest(
+      collabId,
+      requestId,
+      isApproved,
+      requestType as "unavailable" | "timeSlot",
+    );
+
+    res.status(200).json({
+      message: "Time slot request processed successfully",
+      data: updatedCollaboration,
+    });
+  } catch (error: any) {
+    console.error("Error processing time slot request:", error);
+    res.status(500).json({ message: error.message });
   }
 };

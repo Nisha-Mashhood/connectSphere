@@ -6,6 +6,8 @@ export interface ICollaboration extends Document {
   mentorId: IMentor | string;
   userId: UserInterface | string;
   selectedSlot: object[];
+  unavailableDays: object[];
+  temporarySlotChanges: object[];
   price: number;
   payment: boolean;
   isCancelled: boolean;
@@ -33,6 +35,56 @@ const CollaborationSchema: Schema = new Schema(
         timeSlots: [{ type: String }],
       },
     ],
+    unavailableDays: [
+      {
+        datesAndReasons: [
+          {
+            date: { type: Date },
+            reason: { type: String },
+          },
+        ],
+        requestedBy: {
+          type: String,
+          enum: ["user", "mentor"],
+        },
+        requesterId: {
+          type: Schema.Types.ObjectId,
+        },
+        isApproved: {
+          type: String,
+          enum: ["pending", "approved", "rejected"],
+          default: "pending",
+        },
+        approvedById: {
+          type: Schema.Types.ObjectId,
+        },
+      },
+    ],
+    temporarySlotChanges: [
+      {
+        datesAndNewSlots: [
+          {
+            date: { type: Date },
+            newTimeSlots: [{ type: String }],
+          },
+        ],
+        requestedBy: {
+          type: String,
+          enum: ["user", "mentor"],
+        },
+        requesterId: {
+          type: Schema.Types.ObjectId,
+        },
+        isApproved: {
+          type: String,
+          enum: ["pending", "approved", "rejected"],
+          default: "pending",
+        },
+        approvedById: {
+          type: Schema.Types.ObjectId,
+        },
+      },
+    ],
     payment: {
       type: Boolean,
       default: false,
@@ -56,7 +108,7 @@ const CollaborationSchema: Schema = new Schema(
     },
     feedbackGiven: {
       type: Boolean,
-      default: false, 
+      default: false,
     },
   },
   { timestamps: true }
@@ -66,3 +118,5 @@ export default mongoose.model<ICollaboration>(
   "Collaboration",
   CollaborationSchema
 );
+
+

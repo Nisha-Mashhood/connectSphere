@@ -11,6 +11,7 @@ export const submitMentorRequest = async (mentorData: {
   bio:string,
   price:number,
   availableSlots: string[];
+  timePeriod:number,
   certifications: string[];
 }) => {
   try {
@@ -23,9 +24,15 @@ export const submitMentorRequest = async (mentorData: {
 };
 
 // Get all mentor requests
-export const getAllMentorRequests = async () => {
+export const getAllMentorRequests = async (
+  page: number = 1,
+  limit: number = 10,
+  search: string = "",
+  status: string = "",
+  sort: string = "desc"
+) => {
   try {
-    return await MentorRepository.getAllMentorRequests();
+    return await MentorRepository.getAllMentorRequests(page, limit, search, status, sort);
   } catch (error: any) {
     throw new Error("Error fetching mentor requests: " + error.message);
   }

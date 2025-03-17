@@ -5,6 +5,7 @@ export interface IMentorRequest extends Document {
   userId: string; 
   selectedSlot: object;
   price: number;
+  timePeriod:number;
   paymentStatus: "Pending" | "Paid" | "Failed";
   isAccepted: String;
   createdAt: Date;
@@ -30,6 +31,11 @@ const MentorRequestSchema: Schema = new Schema(
     price: { 
       type: Number, 
       required: true 
+    },
+    timePeriod: {
+      type: Number,
+      required:true,
+      default:30
     },
     paymentStatus: { 
       type: String, 

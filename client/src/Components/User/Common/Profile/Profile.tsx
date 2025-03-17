@@ -7,7 +7,6 @@ import {
   CardBody,
   Avatar,
   Button,
-  Divider,
   Chip,
   Tooltip,
   Image,
@@ -23,6 +22,8 @@ import {
   SelectItem,
   Tabs,
   Tab,
+  Accordion,
+  AccordionItem,
 } from "@nextui-org/react";
 import {
   FaCalendarAlt,
@@ -30,15 +31,13 @@ import {
   FaEnvelope,
   FaPhone,
   FaBriefcase,
-  FaInfoCircle,
   FaBirthdayCake,
   FaPencilAlt,
   FaPlus,
   FaCamera,
   FaUserFriends,
-  FaUserCog,
-  FaUserGraduate,
   FaLayerGroup,
+  FaUserGraduate,
 } from "react-icons/fa";
 import RequestsSection from "./RequestSection";
 import GroupRequests from "./GroupRequests";
@@ -64,652 +63,321 @@ import UserConnections from "./UserConnections";
 const Profile = () => {
   const { currentUser } = useSelector((state: RootState) => state.user);
   const { mentorDetails } = useSelector((state: RootState) => state.profile);
-  const [selectedDay, setSelectedDay] = useState("");
-  const [selectedTime, setSelectedTime] = useState("");
   const navigate = useNavigate();
   const dispatch = useDispatch();
 
-  // States for edit modals
-  const {
-    isOpen: isProfessionalModalOpen,
-    onOpen: onProfessionalModalOpen,
-    onClose: onProfessionalModalClose,
-  } = useDisclosure();
-
-  const {
-    isOpen: isContactModalOpen,
-    onOpen: onContactModalOpen,
-    onClose: onContactModalClose,
-  } = useDisclosure();
-
-  const {
-    isOpen: isMentorModalOpen,
-    onOpen: onMentorModalOpen,
-    onClose: onMentorModalClose,
-  } = useDisclosure();
+  // Modal states
+  const { isOpen: isProfessionalModalOpen, onOpen: onProfessionalModalOpen, onClose: onProfessionalModalClose } = useDisclosure();
+  const { isOpen: isContactModalOpen, onOpen: onContactModalOpen, onClose: onContactModalClose } = useDisclosure();
+  const { isOpen: isMentorModalOpen, onOpen: onMentorModalOpen, onClose: onMentorModalClose } = useDisclosure();
 
   // Form states
-  const [professionalInfo, setProfessionalInfo] = useState({
-    industry: currentUser.industry || "",
-    reasonForJoining: currentUser.reasonForJoining || "",
-  });
+  const [professionalInfo, setProfessionalInfo] = useState({ industry: currentUser.industry || "", reasonForJoining: currentUser.reasonForJoining || "" });
+  const [contactInfo, setContactInfo] = useState({ email: currentUser.email || "", phone: currentUser.phone || "", dateOfBirth: currentUser.dateOfBirth || "" });
+  const [mentorshipInfo, setMentorshipInfo] = useState({ bio: mentorDetails?.bio || "", availableSlots: mentorDetails?.availableSlots || [] });
+  const [selectedDay, setSelectedDay] = useState("");
+  const [selectedTime, setSelectedTime] = useState("");
 
-  const [contactInfo, setContactInfo] = useState({
-    email: currentUser.email || "",
-    phone: currentUser.phone || "",
-    dateOfBirth: currentUser.dateOfBirth || "",
-  });
+  const DAYS_OF_WEEK = ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday"];
+  const TIME_SLOTS = ["09:00 AM - 10:00 AM", "10:00 AM - 11:00 AM", "11:00 AM - 12:00 PM", "02:00 PM - 03:00 PM", "03:00 PM - 04:00 PM", "04:00 PM - 05:00 PM"];
 
-  const [mentorshipInfo, setMentorshipInfo] = useState({
-    bio: mentorDetails?.bio || "",
-    availableSlots: mentorDetails?.availableSlots || [],
-  });
+  const formatDate = (dateString) => dateString ? new Date(dateString).toLocaleDateString("en-US", { year: "numeric", month: "long", day: "numeric" }) : "Not specified";
 
-  // Handle form submissions
-  const handleProfessionalSubmit = async () => {
+  // Handlers
+  const handleImageUpload = async (file: File, type: "profilePic" | "coverPic") => {
+    const formData = new FormData();
+    formData.append(type, file);
     try {
-      const { user } = await updateUserProfessionalInfo(currentUser._id, {
-        industry: professionalInfo.industry,
-        reasonForJoining: professionalInfo.reasonForJoining,
-        jobTitle: currentUser.jobTitle,
-      });
-
-      onProfessionalModalClose();
-      if (user) {
-        // Dispatch action to update Redux state
-        dispatch(updateUserProfile(user));
-        toast.success("Profile Updated Successfully");
-      }
+      const { user } = await updateUserImages(currentUser._id, formData);
+      dispatch(updateUserProfile(user));
+      toast.success("Image updated successfully");
     } catch (error) {
-      console.error("Error updating professional info:", error);
-      toast.error(error);
+      toast.error("Failed to update image");
+    }
+  };
+
+  const handleProfessionalSubmit = async () => {
+    if (!professionalInfo.industry || !professionalInfo.reasonForJoining) {
+      toast.error("Please fill all fields");
+      return;
+    }
+    try {
+      const { user } = await updateUserProfessionalInfo(currentUser._id, { ...professionalInfo, jobTitle: currentUser.jobTitle });
+      dispatch(updateUserProfile(user));
+      toast.success("Professional info updated");
+      onProfessionalModalClose();
+    } catch (error) {
+      toast.error("Failed to update professional info");
     }
   };
 
   const handleContactSubmit = async () => {
+    if (!contactInfo.email || !contactInfo.phone || !contactInfo.dateOfBirth) {
+      toast.error("Please fill all fields");
+      return;
+    }
     try {
-      const { user } = await updateContactInfo(currentUser._id, {
-        email: contactInfo.email,
-        phone: contactInfo.phone,
-        dateOfBirth: contactInfo.dateOfBirth,
-      });
+      const { user } = await updateContactInfo(currentUser._id, contactInfo);
+      dispatch(updateUserProfile(user));
+      toast.success("Contact info updated");
       onContactModalClose();
-      if (user) {
-        // Dispatch action to update Redux state
-        dispatch(updateUserProfile(user));
-        toast.success("Profile Updated Successfully");
-      }
     } catch (error) {
-      console.error("Error updating contact info:", error);
-      toast.error(error);
+      toast.error("Failed to update contact info");
     }
   };
 
-  // Update mentor submission handler
   const handleMentorshipSubmit = async () => {
+    if (!mentorshipInfo.bio || mentorshipInfo.availableSlots.length === 0) {
+      toast.error("Please provide bio and at least one time slot");
+      return;
+    }
     try {
-      const { MentorData } = await updateMentorProfile(
-        mentorDetails._id,
-        mentorshipInfo
-      );
+      const { MentorData } = await updateMentorProfile(mentorDetails._id, mentorshipInfo);
+      dispatch(updateMentorInfo(MentorData));
+      toast.success("Mentorship info updated");
       onMentorModalClose();
-      if (MentorData) {
-        // Update Redux state with the returned data
-        dispatch(updateMentorInfo(MentorData));
-        toast.success("Profile Updated Successfully");
-      }
     } catch (error) {
-      console.error("Error updating mentor info:", error);
-      toast.error(error);
+      toast.error("Failed to update mentorship info");
     }
   };
-
-  const handleUserProfileClick = (Id) => {
-    navigate(`/profileDispaly/${Id}`);
-  };
-
-  // Image uploads
-  const handleImageUpload = async (
-    file: File,
-    type: "profilePic" | "coverPic"
-  ) => {
-    try {
-      const formData = new FormData();
-      formData.append(type, file);
-
-      const { user } = await updateUserImages(currentUser._id, formData);
-      if (user) {
-        // Dispatch action to update Redux state
-        dispatch(updateUserProfile(user));
-        toast.success("Profile Updated Successfully");
-      }
-    } catch (error) {
-      console.error(`Error updating ${type}:`, error);
-    }
-  };
-
-  // Format date
-  const formatDate = (dateString) => {
-    if (!dateString) return "Not specified";
-    const date = new Date(dateString);
-    return date.toLocaleDateString("en-US", {
-      year: "numeric",
-      month: "long",
-      day: "numeric",
-    });
-  };
-
-  const DAYS_OF_WEEK = [
-    "Monday",
-    "Tuesday",
-    "Wednesday",
-    "Thursday",
-    "Friday",
-    "Saturday",
-    "Sunday",
-  ];
-
-  const TIME_SLOTS = [
-    "09:00 AM - 10:00 AM",
-    "10:00 AM - 11:00 AM",
-    "11:00 AM - 12:00 PM",
-    "02:00 PM - 03:00 PM",
-    "03:00 PM - 04:00 PM",
-    "04:00 PM - 05:00 PM",
-  ];
 
   const handleAddSlot = () => {
     if (!selectedDay || !selectedTime) {
       toast.error("Please select both day and time");
       return;
     }
-
     setMentorshipInfo((prev) => {
-      const existingDaySlot = prev.availableSlots.find(
-        (slot) => slot.day === selectedDay
-      );
-
+      const existingDaySlot = prev.availableSlots.find((slot) => slot.day === selectedDay);
       if (existingDaySlot) {
-        if (existingDaySlot.timeSlots.includes(selectedTime)) {
-          toast.error("This time slot already exists for the selected day");
-          return prev;
-        }
-
+        if (existingDaySlot.timeSlots.includes(selectedTime)) return prev;
         return {
           ...prev,
           availableSlots: prev.availableSlots.map((slot) =>
-            slot.day === selectedDay
-              ? { ...slot, timeSlots: [...slot.timeSlots, selectedTime].sort() }
-              : slot
+            slot.day === selectedDay ? { ...slot, timeSlots: [...slot.timeSlots, selectedTime].sort() } : slot
           ),
         };
       }
-
       return {
         ...prev,
-        availableSlots: [
-          ...prev.availableSlots,
-          { day: selectedDay, timeSlots: [selectedTime] },
-        ].sort(
+        availableSlots: [...prev.availableSlots, { day: selectedDay, timeSlots: [selectedTime] }].sort(
           (a, b) => DAYS_OF_WEEK.indexOf(a.day) - DAYS_OF_WEEK.indexOf(b.day)
         ),
       };
     });
-
     setSelectedTime("");
   };
 
-  //handle Remove slots
   const handleRemoveSlot = (day, time) => {
     setMentorshipInfo((prev) => ({
       ...prev,
       availableSlots: prev.availableSlots
-        .map((slot) => {
-          if (slot.day === day) {
-            const newTimeSlots = slot.timeSlots.filter((t) => t !== time);
-            return newTimeSlots.length
-              ? { ...slot, timeSlots: newTimeSlots }
-              : null;
-          }
-          return slot;
-        })
-        .filter((slot) => slot !== null),
+        .map((slot) => (slot.day === day ? { ...slot, timeSlots: slot.timeSlots.filter((t) => t !== time) } : slot))
+        .filter((slot) => slot.timeSlots.length > 0),
     }));
   };
 
-  //Handle Become Mentor
   const handleBecomeMentor = async () => {
-    if (!currentUser) {
-      toast.error("Please log in to apply as a mentor.");
-      navigate("/login");
-      return;
-    }
     try {
-      // Step 1: Check if the profile is complete
       const profileResponse = await checkProfile(currentUser._id);
-      const isProfileComplete = profileResponse.isProfileComplete;
-
-      if (!isProfileComplete) {
-        toast.error(
-          "For becoming a mentor, you should complete your profile first."
-        );
-        navigate("/complete-profile", { replace: true });
+      if (!profileResponse.isProfileComplete) {
+        toast.error("Please complete your profile first");
+        navigate("/complete-profile");
         return;
       }
-
-      // Step 2: Check if the user is already a mentor and the approval status
       const mentorResponse = await checkMentorProfile(currentUser._id);
-      const mentor = mentorResponse.mentor;
-
-      if (!mentor) {
-        // If there's no mentor record, show the mentor profile form
-        navigate("/mentorProfile");
-      } else {
-        switch (mentor.isApproved) {
-          case "Processing":
-            toast.success("Your mentor request is still under review.");
-            break;
-          case "Completed":
-            toast.success("You are an approved mentor!");
-            navigate("/profile");
-            break;
-          case "Rejected":
-            toast.error("Your mentor application has been rejected.");
-            break;
-          default:
-            toast.error("Unknown status. Please contact support.");
+      if (!mentorResponse.mentor) navigate("/mentorProfile");
+      else {
+        switch (mentorResponse.mentor.isApproved) {
+          case "Processing": toast.success("Mentor request under review"); break;
+          case "Completed": toast.success("You are an approved mentor!"); navigate("/profile"); break;
+          case "Rejected": toast.error("Mentor application rejected"); break;
+          default: toast.error("Unknown status");
         }
       }
     } catch (error) {
-      toast.error("An error occurred while checking your mentor status.");
+      toast.error("Error checking mentor status");
     }
   };
 
   return (
-    <div className="max-w-7xl mx-auto p-4 space-y-6">
-      {/* Profile Header */}
-      <Card className="w-full overflow-hidden shadow-lg">
-        <div className="relative">
-          {/* Cover Photo */}
-          <div className="relative h-64 w-full">
-            <Image
-              src={currentUser.coverPic || "/default-cover.jpg"}
-              alt="Cover photo"
-              className="w-full h-full object-cover"
-              removeWrapper
+    <div className="max-w-7xl mx-auto p-6 space-y-8">
+      {/* Header Section */}
+      <Card className="relative overflow-hidden rounded-xl shadow-lg">
+        <div className="relative h-48">
+          <Image
+            src={currentUser.coverPic || "/default-cover.jpg"}
+            alt="Cover"
+            className="w-full h-full object-cover opacity-90"
+            removeWrapper
+          />
+          <Tooltip content="Change Cover Photo">
+            <Button
+              isIconOnly
+              color="primary"
+              className="absolute top-4 right-4 bg-white/90 hover:bg-white z-10 shadow-md"
+              radius="full"
+            >
+              <label className="cursor-pointer">
+                <input
+                  type="file"
+                  className="hidden"
+                  accept="image/*"
+                  onChange={(e) => e.target.files?.[0] && handleImageUpload(e.target.files[0], "coverPic")}
+                />
+                <FaCamera />
+              </label>
+            </Button>
+          </Tooltip>
+        </div>
+        <div className="p-6 flex flex-col sm:flex-row items-center sm:items-start gap-6">
+          <div className="relative">
+            <Avatar
+              src={currentUser.profilePic}
+              className="w-28 h-28 border-4 border-white shadow-md"
+              fallback={<FaUsers className="w-14 h-14 text-gray-400" />}
             />
-            <Tooltip content="Change Cover Photo">
+            <Tooltip content="Change Profile Photo">
               <Button
                 isIconOnly
                 color="primary"
-                variant="flat"
-                className="absolute bottom-4 right-4 bg-white/80 backdrop-blur-sm shadow-md z-10 hover:bg-white transition-all"
+                size="sm"
+                className="absolute bottom-0 right-0 bg-white/90 hover:bg-white z-10 shadow-md"
+                radius="full"
               >
                 <label className="cursor-pointer">
                   <input
                     type="file"
                     className="hidden"
                     accept="image/*"
-                    onChange={(e) => {
-                      const file = e.target.files?.[0];
-                      if (file) handleImageUpload(file, "coverPic");
-                    }}
+                    onChange={(e) => e.target.files?.[0] && handleImageUpload(e.target.files[0], "profilePic")}
                   />
-                  <FaCamera />
+                  <FaCamera size={14} />
                 </label>
               </Button>
             </Tooltip>
           </div>
-
-          {/* Profile Photo */}
-          <div className="absolute left-6 top-40 z-10">
-            <div className="relative">
-              <Avatar
-                src={currentUser.profilePic}
-                className="w-32 h-32 border-4 border-white shadow-lg"
-                fallback={<FaUsers className="w-16 h-16 text-default-500" />}
-              />
-              <Tooltip content="Change Profile Photo">
-                <Button
-                  isIconOnly
-                  color="primary"
-                  size="sm"
-                  variant="flat"
-                  className="absolute bottom-0 right-0 bg-white/80 backdrop-blur-sm shadow-sm hover:bg-white transition-all"
-                >
-                  <label className="cursor-pointer">
-                    <input
-                      type="file"
-                      className="hidden"
-                      accept="image/*"
-                      onChange={(e) => {
-                        const file = e.target.files?.[0];
-                        if (file) handleImageUpload(file, "profilePic");
-                      }}
-                    />
-                    <FaCamera size={14} />
-                  </label>
-                </Button>
-              </Tooltip>
+          <div className="flex-1 text-center sm:text-left">
+            <div className="flex items-center gap-2 justify-center sm:justify-start">
+              <h1 className="text-3xl font-bold">{currentUser.name}</h1>
+              <Chip color={currentUser.role === "mentor" ? "success" : "primary"} variant="flat" size="sm">
+                {currentUser.role === "mentor" ? "Mentor" : "User"}
+              </Chip>
             </div>
+            <p className="text-lg text-gray-600">{currentUser.jobTitle || "No job title"}</p>
+            <Button
+              color="primary"
+              size="sm"
+              className="mt-4"
+              startContent={<FaPlus />}
+              onPress={() => navigate("/create-group")}
+            >
+              Create Group
+            </Button>
           </div>
         </div>
-
-        <CardBody className="p-6 pt-20 md:pt-6 md:pl-44">
-          <div className="flex flex-col md:flex-row md:items-center justify-between gap-6">
-            <div className="flex-1 space-y-2 mt-10 md:mt-0">
-              <div className="flex items-center gap-2">
-                <h1 className="text-2xl font-bold">{currentUser.name}</h1>
-                {currentUser.role === 'mentor' ? (
-                  <Chip color="success" variant="flat">
-                    Mentor
-                  </Chip>
-                ) : (
-                  <Chip color="primary" variant="flat">
-                    User
-                  </Chip>
-                )}
-              </div>
-              <p className="text-lg text-default-600">{currentUser.jobTitle}</p>
-            </div>
-            <div className="flex gap-2">
-              <Button
-                color="primary"
-                onPress={() => navigate("/create-group")}
-                startContent={<FaPlus />}
-              >
-                Create Group
-              </Button>
-            </div>
-          </div>
-        </CardBody>
       </Card>
 
-      {/* Profile Info and Tasks Section */}
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-        {/* Left Column - Profile Details */}
+      {/* Main Content */}
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+        {/* Profile Details */}
         <div className="space-y-6">
-          {/* Professional Info - With Edit Button */}
-          <Card className="w-full shadow-md hover:shadow-lg transition-shadow">
-            <CardHeader className="flex justify-between items-center bg-primary-50">
-              <div className="flex items-center gap-2">
-                <FaBriefcase className="text-xl text-primary" />
-                <p className="text-lg font-semibold">Professional Info</p>
-              </div>
-              <Tooltip content="Edit Professional Info">
-                <Button
-                  isIconOnly
-                  variant="light"
-                  size="sm"
-                  onPress={onProfessionalModalOpen}
-                >
-                  <FaPencilAlt size={14} />
-                </Button>
-              </Tooltip>
+          <Card className="rounded-xl shadow-md">
+            <CardHeader className="bg-gray-100 p-4 rounded-t-xl">
+              <h2 className="text-xl font-semibold">Profile Details</h2>
             </CardHeader>
-            <Divider />
-            <CardBody className="py-4">
-              <div className="space-y-4">
-                <div>
-                  <p className="text-sm text-default-500 font-medium">Industry</p>
-                  <p className="font-medium">
-                    {currentUser.industry || "Not specified"}
-                  </p>
-                </div>
-                <div>
-                  <p className="text-sm text-default-500 font-medium">
-                    Reason for Joining
-                  </p>
-                  <p className="font-medium">
-                    {currentUser.reasonForJoining || "Not specified"}
-                  </p>
-                </div>
-              </div>
-            </CardBody>
-          </Card>
-
-          {/* Contact Info - With Edit Button */}
-          <Card className="w-full shadow-md hover:shadow-lg transition-shadow">
-            <CardHeader className="flex justify-between items-center bg-primary-50">
-              <div className="flex items-center gap-2">
-                <FaInfoCircle className="text-xl text-primary" />
-                <p className="text-lg font-semibold">Contact Information</p>
-              </div>
-              <Tooltip content="Edit Contact Info">
-                <Button
-                  isIconOnly
-                  variant="light"
-                  size="sm"
-                  onPress={onContactModalOpen}
-                >
-                  <FaPencilAlt size={14} />
-                </Button>
-              </Tooltip>
-            </CardHeader>
-            <Divider />
-            <CardBody className="py-4">
-              <div className="space-y-4">
-                <div className="flex items-center gap-2">
-                  <FaEnvelope className="text-primary" />
-                  <p>{currentUser.email || "No email provided"}</p>
-                </div>
-                <div className="flex items-center gap-2">
-                  <FaPhone className="text-primary" />
-                  <p>{currentUser.phone || "No phone provided"}</p>
-                </div>
-                <div className="flex items-center gap-2">
-                  <FaBirthdayCake className="text-primary" />
-                  <p>{formatDate(currentUser.dateOfBirth)}</p>
-                </div>
-              </div>
-            </CardBody>
-          </Card>
-
-          {/* Mentor Details or Become Mentor */}
-          {currentUser.role === "mentor" && mentorDetails ? (
-            <Card className="w-full shadow-md hover:shadow-lg transition-shadow">
-              <CardHeader className="flex justify-between items-center bg-primary-50">
-                <div className="flex items-center gap-2">
-                  <FaUserGraduate className="text-xl text-primary" />
-                  <p className="text-lg font-semibold">Mentorship Details</p>
-                </div>
-                <Tooltip content="Edit Mentorship Details">
-                  <Button
-                    isIconOnly
-                    variant="light"
-                    size="sm"
-                    onPress={onMentorModalOpen}
-                  >
-                    <FaPencilAlt size={14} />
-                  </Button>
-                </Tooltip>
-              </CardHeader>
-              <Divider />
-              <CardBody className="py-4">
-                <div className="space-y-4">
-                  <div>
-                    <p className="text-sm text-default-500 font-medium">Bio</p>
-                    <p className="font-medium">
-                      {mentorDetails.bio || "No bio available"}
-                    </p>
+            <CardBody className="p-6">
+              <Accordion variant="light">
+                <AccordionItem key="professional" title={<span className="flex items-center gap-2"><FaBriefcase /> Professional Info</span>} className="text-base">
+                  <div className="space-y-4">
+                    <p><strong>Industry:</strong> {currentUser.industry || "Not specified"}</p>
+                    <p><strong>Reason for Joining:</strong> {currentUser.reasonForJoining || "Not specified"}</p>
+                    <Button size="sm" variant="flat" color="primary" onPress={onProfessionalModalOpen} startContent={<FaPencilAlt />}>Edit</Button>
                   </div>
-                  <div>
-                    <p className="text-sm text-default-500 font-medium">
-                      Available Slots
-                    </p>
-                    {mentorDetails.availableSlots &&
-                    mentorDetails.availableSlots.length > 0 ? (
-                      <div className="grid grid-cols-1 gap-2">
-                        {mentorDetails.availableSlots.map((slot, index) => (
-                          <Chip
-                            key={index}
-                            variant="flat"
-                            className="w-full"
-                            color="primary"
-                          >
-                            {slot.day}: {slot.timeSlots.join(", ")}
-                          </Chip>
-                        ))}
+                </AccordionItem>
+                <AccordionItem key="contact" title={<span className="flex items-center gap-2"><FaEnvelope /> Contact Info</span>} className="text-base">
+                  <div className="space-y-4">
+                    <p className="flex items-center gap-2"><FaEnvelope /> {currentUser.email || "No email"}</p>
+                    <p className="flex items-center gap-2"><FaPhone /> {currentUser.phone || "No phone"}</p>
+                    <p className="flex items-center gap-2"><FaBirthdayCake /> {formatDate(currentUser.dateOfBirth)}</p>
+                    <Button size="sm" variant="flat" color="primary" onPress={onContactModalOpen} startContent={<FaPencilAlt />}>Edit</Button>
+                  </div>
+                </AccordionItem>
+                {currentUser.role === "mentor" && mentorDetails ? (
+                  <AccordionItem key="mentorship" title={<span className="flex items-center gap-2"><FaUserGraduate /> Mentorship Details</span>} className="text-base">
+                    <div className="space-y-4">
+                      <p><strong>Bio:</strong> {mentorDetails.bio || "No bio"}</p>
+                      <div>
+                        <strong>Available Slots:</strong>
+                        {mentorDetails.availableSlots?.length ? (
+                          <div className="mt-2 space-y-2">
+                            {mentorDetails.availableSlots.map((slot, i) => (
+                              <Chip key={i} variant="flat" color="primary">{slot.day}: {slot.timeSlots.join(", ")}</Chip>
+                            ))}
+                          </div>
+                        ) : (
+                          <p className="text-sm text-gray-500">No slots set</p>
+                        )}
                       </div>
-                    ) : (
-                      <p className="text-sm">No available slots set</p>
-                    )}
-                  </div>
-                </div>
-              </CardBody>
-            </Card>
-          ) : (
-            currentUser.role !== "mentor" && (
-              <Card className="w-full shadow-md hover:shadow-lg transition-shadow">
-                <CardHeader className="flex gap-3 bg-primary-50">
-                  <FaUserGraduate className="text-xl text-primary" />
-                  <div className="flex flex-col">
-                    <p className="text-lg font-semibold">Become a Mentor</p>
-                  </div>
-                </CardHeader>
-                <Divider />
-                <CardBody className="py-4 flex flex-col items-center justify-center">
-                  <p className="text-center mb-4">
-                    Share your expertise and help others grow!
-                  </p>
-                  <Button color="success" onPress={() => handleBecomeMentor()}>
-                    Apply to be a Mentor
-                  </Button>
-                </CardBody>
-              </Card>
-            )
-          )}
+                      <Button size="sm" variant="flat" color="primary" onPress={onMentorModalOpen} startContent={<FaPencilAlt />}>Edit</Button>
+                    </div>
+                  </AccordionItem>
+                ) : (
+                  <AccordionItem key="become-mentor" title={<span className="flex items-center gap-2"><FaUserGraduate /> Become a Mentor</span>} className="text-base">
+                    <div className="text-center">
+                      <p className="mb-4">Share your expertise with others!</p>
+                      <Button color="success" size="sm" onPress={handleBecomeMentor}>Apply Now</Button>
+                    </div>
+                  </AccordionItem>
+                )}
+              </Accordion>
+            </CardBody>
+          </Card>
         </div>
 
-        {/* Middle and Right Columns - Task Management and Activity Sections */}
+        {/* Tasks & Activity */}
         <div className="lg:col-span-2 space-y-6">
-          {/* Task Management Section */}
-          <Card className="shadow-md hover:shadow-lg transition-shadow">
-            <CardHeader className="flex gap-3 justify-between bg-primary-50">
-              <div className="flex items-center gap-2">
-                <FaCalendarAlt className="text-xl text-primary" />
-                <p className="text-lg font-semibold">My Tasks</p>
-              </div>
+          <Card className="rounded-xl shadow-md">
+            <CardHeader className="bg-gray-100 p-4 rounded-t-xl flex items-center gap-2">
+              <FaCalendarAlt className="text-primary" />
+              <h2 className="text-xl font-semibold">My Tasks</h2>
             </CardHeader>
-            <Divider />
-            <CardBody>
-              <TaskManagement
-                context="profile"
-                currentUser={currentUser}
-                contextData={currentUser}
-              />
+            <CardBody className="p-6">
+              <TaskManagement context="profile" currentUser={currentUser} contextData={currentUser} />
             </CardBody>
           </Card>
 
-          {/* Activity Sections - Tabbed Interface */}
-          <Card className="shadow-md hover:shadow-lg transition-shadow">
-            <CardHeader className="bg-primary-50">
-              <h2 className="text-xl font-bold">Activity & Connections</h2>
+          <Card className="rounded-xl shadow-md">
+            <CardHeader className="bg-gray-100 p-4 rounded-t-xl">
+              <h2 className="text-xl font-semibold">Activity & Connections</h2>
             </CardHeader>
-            <Divider />
-            <CardBody>
-              <Tabs 
-                aria-label="Profile Activity Sections" 
-                color="primary" 
-                variant="underlined"
-                classNames={{
-                  tabList: "gap-6 w-full relative rounded-none p-0 border-b border-divider",
-                  cursor: "w-full bg-primary",
-                  tab: "max-w-fit px-0 h-12",
-                  tabContent: "group-data-[selected=true]:text-primary"
-                }}
-              >
-                {/* User Connections Tab */}
-                <Tab
-                  key="connections"
-                  title={
-                    <div className="flex items-center gap-2">
-                      <FaUserFriends className="text-lg" />
-                      <span>Connections</span>
-                    </div>
-                  }
-                >
-                  <div className="mt-4 space-y-4">
-                    <Card shadow="sm">
-                      <CardHeader className="bg-blue-50">
-                        <h3 className="text-md font-semibold">Pending Requests</h3>
-                      </CardHeader>
-                      <CardBody>
-                        <RequestsSection handleProfileClick={handleUserProfileClick} />
-                      </CardBody>
-                    </Card>
-                    
-                    <Card shadow="sm">
-                      <CardHeader className="bg-blue-50">
-                        <h3 className="text-md font-semibold">Active Collaborations</h3>
-                      </CardHeader>
-                      <CardBody>
-                        <ActiveCollaborations handleProfileClick={handleUserProfileClick} />
-                      </CardBody>
-                    </Card>
-                    
-                    <Card shadow="sm">
-                      <CardHeader className="bg-blue-50">
-                        <h3 className="text-md font-semibold">My Network</h3>
-                      </CardHeader>
-                      <CardBody>
-                        <UserConnections
-                          currentUser={currentUser}
-                          handleProfileClick={handleUserProfileClick}
-                        />
-                      </CardBody>
-                    </Card>
-                  </div>
+            <CardBody className="p-6">
+              <Tabs variant="solid" color="primary" className="mb-4">
+                <Tab key="connections" title={<span className="flex items-center gap-2"><FaUserFriends /> Connections</span>}>
+                  <Accordion variant="light">
+                    <AccordionItem key="requests" title="Pending Requests">
+                      <RequestsSection handleProfileClick={(id) => navigate(`/profileDispaly/${id}`)} />
+                    </AccordionItem>
+                    <AccordionItem key="collaborations" title="Active Collaborations">
+                      <ActiveCollaborations handleProfileClick={(id) => navigate(`/profileDispaly/${id}`)} />
+                    </AccordionItem>
+                    <AccordionItem key="network" title="My Network">
+                      <UserConnections currentUser={currentUser} handleProfileClick={(id) => navigate(`/profileDispaly/${id}`)} />
+                    </AccordionItem>
+                  </Accordion>
                 </Tab>
-                
-                {/* Groups Tab */}
-                <Tab
-                  key="groups"
-                  title={
-                    <div className="flex items-center gap-2">
-                      <FaLayerGroup className="text-lg" />
-                      <span>Groups</span>
-                    </div>
-                  }
-                >
-                  <div className="mt-4 space-y-4">
-                    <Card shadow="sm">
-                      <CardHeader className="bg-green-50">
-                        <h3 className="text-md font-semibold">Group Invitations</h3>
-                      </CardHeader>
-                      <CardBody>
-                        <GroupRequests />
-                      </CardBody>
-                    </Card>
-                    
-                    <Card shadow="sm">
-                      <CardHeader className="bg-green-50">
-                        <h3 className="text-md font-semibold">My Groups</h3>
-                      </CardHeader>
-                      <CardBody>
-                        <GroupCollaborations handleProfileClick={handleUserProfileClick} />
-                      </CardBody>
-                    </Card>
-                  </div>
+                <Tab key="groups" title={<span className="flex items-center gap-2"><FaLayerGroup /> Groups</span>}>
+                  <Accordion variant="light">
+                    <AccordionItem key="invitations" title="Group Invitations">
+                      <GroupRequests />
+                    </AccordionItem>
+                    <AccordionItem key="my-groups" title="My Groups">
+                      <GroupCollaborations handleProfileClick={(id) => navigate(`/profileDispaly/${id}`)} />
+                    </AccordionItem>
+                  </Accordion>
                 </Tab>
-                
-                {/* Mentor Section Tab - Only if the user is a mentor */}
                 {mentorDetails && (
-                  <Tab
-                    key="mentoring"
-                    title={
-                      <div className="flex items-center gap-2">
-                        <FaUserCog className="text-lg" />
-                        <span>Mentoring</span>
-                      </div>
-                    }
-                  >
-                    <div className="mt-4">
-                      <p className="text-center text-default-500 mb-4">
-                        View and manage your mentoring activities here.
-                      </p>
-                      {/* Add mentoring-specific components here when needed */}
-                    </div>
+                  <Tab key="mentoring" title={<span className="flex items-center gap-2"><FaUserGraduate /> Mentoring</span>}>
+                    <p className="text-center text-gray-500">Manage your mentoring activities here.</p>
                   </Tab>
                 )}
               </Tabs>
@@ -719,236 +387,68 @@ const Profile = () => {
       </div>
 
       {/* Modals */}
-      {/* Modal for editing Professional Info */}
-      <Modal
-        isOpen={isProfessionalModalOpen}
-        onClose={onProfessionalModalClose}
-        placement="center"
-      >
+      <Modal isOpen={isProfessionalModalOpen} onClose={onProfessionalModalClose} size="lg">
         <ModalContent>
-          {(onClose) => (
-            <>
-              <ModalHeader className="flex flex-col gap-1">
-                Edit Professional Information
-              </ModalHeader>
-              <ModalBody>
-                <Input
-                  label="Industry"
-                  placeholder="Your industry"
-                  value={professionalInfo.industry}
-                  onChange={(e) =>
-                    setProfessionalInfo({
-                      ...professionalInfo,
-                      industry: e.target.value,
-                    })
-                  }
-                />
-                <Textarea
-                  label="Reason for Joining"
-                  placeholder="Why did you join our platform?"
-                  value={professionalInfo.reasonForJoining}
-                  onChange={(e) =>
-                    setProfessionalInfo({
-                      ...professionalInfo,
-                      reasonForJoining: e.target.value,
-                    })
-                  }
-                />
-              </ModalBody>
-              <ModalFooter>
-                <Button variant="light" onPress={onClose}>
-                  Cancel
-                </Button>
-                <Button color="primary" onPress={handleProfessionalSubmit}>
-                  Save Changes
-                </Button>
-              </ModalFooter>
-            </>
-          )}
+          <ModalHeader>Edit Professional Info</ModalHeader>
+          <ModalBody>
+            <Input label="Industry" value={professionalInfo.industry} onChange={(e) => setProfessionalInfo({ ...professionalInfo, industry: e.target.value })} />
+            <Textarea label="Reason for Joining" value={professionalInfo.reasonForJoining} onChange={(e) => setProfessionalInfo({ ...professionalInfo, reasonForJoining: e.target.value })} />
+          </ModalBody>
+          <ModalFooter>
+            <Button variant="flat" onPress={onProfessionalModalClose}>Cancel</Button>
+            <Button color="primary" onPress={handleProfessionalSubmit}>Save</Button>
+          </ModalFooter>
         </ModalContent>
       </Modal>
 
-      {/* Modal for editing Contact Info */}
-      <Modal
-        isOpen={isContactModalOpen}
-        onClose={onContactModalClose}
-        placement="center"
-      >
+      <Modal isOpen={isContactModalOpen} onClose={onContactModalClose} size="lg">
         <ModalContent>
-          {(onClose) => (
-            <>
-              <ModalHeader className="flex flex-col gap-1">
-                Edit Contact Information
-              </ModalHeader>
-              <ModalBody>
-                <Input
-                  label="Email"
-                  placeholder="Your email address"
-                  value={contactInfo.email}
-                  onChange={(e) =>
-                    setContactInfo({ ...contactInfo, email: e.target.value })
-                  }
-                />
-                <Input
-                  label="Phone"
-                  placeholder="Your phone number"
-                  value={contactInfo.phone}
-                  onChange={(e) =>
-                    setContactInfo({ ...contactInfo, phone: e.target.value })
-                  }
-                />
-                <Input
-                  type="date"
-                  label="Date of Birth"
-                  placeholder="MM/DD/YYYY"
-                  value={
-                    contactInfo.dateOfBirth
-                      ? new Date(contactInfo.dateOfBirth)
-                          .toISOString()
-                          .split("T")[0]
-                      : ""
-                  }
-                  onChange={(e) =>
-                    setContactInfo({
-                      ...contactInfo,
-                      dateOfBirth: e.target.value,
-                    })
-                  }
-                />
-              </ModalBody>
-              <ModalFooter>
-                <Button variant="light" onPress={onClose}>
-                  Cancel
-                </Button>
-                <Button color="primary" onPress={handleContactSubmit}>
-                  Save Changes
-                </Button>
-              </ModalFooter>
-            </>
-          )}
+          <ModalHeader>Edit Contact Info</ModalHeader>
+          <ModalBody>
+            <Input label="Email" value={contactInfo.email} onChange={(e) => setContactInfo({ ...contactInfo, email: e.target.value })} />
+            <Input label="Phone" value={contactInfo.phone} onChange={(e) => setContactInfo({ ...contactInfo, phone: e.target.value })} />
+            <Input type="date" label="Date of Birth" value={contactInfo.dateOfBirth.split("T")[0] || ""} onChange={(e) => setContactInfo({ ...contactInfo, dateOfBirth: e.target.value })} />
+          </ModalBody>
+          <ModalFooter>
+            <Button variant="flat" onPress={onContactModalClose}>Cancel</Button>
+            <Button color="primary" onPress={handleContactSubmit}>Save</Button>
+          </ModalFooter>
         </ModalContent>
       </Modal>
 
-      {/* Modal for editing Mentorship Info */}
-      <Modal
-        isOpen={isMentorModalOpen}
-        onClose={onMentorModalClose}
-        placement="center"
-        size="2xl"
-        scrollBehavior="inside"
-      >
+      <Modal isOpen={isMentorModalOpen} onClose={onMentorModalClose} size="2xl" scrollBehavior="inside">
         <ModalContent>
-          {(onClose) => (
-            <>
-              <ModalHeader className="flex flex-col gap-1">
-                Edit Mentorship Information
-              </ModalHeader>
-              <ModalBody className="max-h-[70vh] overflow-y-auto">
-                <div className="space-y-6">
-                  {/* Bio Section */}
-                  <div>
-                    <Textarea
-                      label="Bio"
-                      placeholder="Share your experience and expertise"
-                      value={mentorshipInfo.bio}
-                      onChange={(e) =>
-                        setMentorshipInfo({
-                          ...mentorshipInfo,
-                          bio: e.target.value,
-                        })
-                      }
-                      className="mb-4"
-                    />
-                  </div>
-
-                  {/* Slot Selection Section */}
-                  <div>
-                    <p className="text-md font-semibold mb-3">
-                      Available Time Slots
-                    </p>
-                    <div className="grid grid-cols-2 gap-2 mb-3">
-                      <Select
-                        label="Select Day"
-                        placeholder="Choose a day"
-                        value={selectedDay}
-                        onChange={(e) => setSelectedDay(e.target.value)}
-                      >
-                        {DAYS_OF_WEEK.map((day) => (
-                          <SelectItem key={day} value={day}>
-                            {day}
-                          </SelectItem>
-                        ))}
-                      </Select>
-
-                      <Select
-                        label="Select Time"
-                        placeholder="Choose a time"
-                        value={selectedTime}
-                        onChange={(e) => setSelectedTime(e.target.value)}
-                      >
-                        {TIME_SLOTS.map((time) => (
-                          <SelectItem key={time} value={time}>
-                            {time}
-                          </SelectItem>
-                        ))}
-                      </Select>
-                    </div>
-
-                    <Button
-                      color="primary"
-                      className="w-full mb-4"
-                      onPress={handleAddSlot}
-                      startContent={<FaPlus />}
-                    >
-                      Add Time Slot
-                    </Button>
-
-                    {/* Selected Slots Display */}
-                    <div className="space-y-3">
-                      <p className="text-sm font-medium text-default-600 mb-2">
-                        Currently Selected Slots:
-                      </p>
-                      {mentorshipInfo.availableSlots &&
-                      mentorshipInfo.availableSlots.length > 0 ? (
-                        <div className="divide-y">
-                          {mentorshipInfo.availableSlots.map((slot, dayIndex) => (
-                            <div key={dayIndex} className="py-2">
-                              <p className="font-medium text-primary">{slot.day}</p>
-                              <div className="grid grid-cols-2 gap-2 mt-2">
-                                {slot.timeSlots.map((time, timeIndex) => (
-                                  <Chip
-                                    key={`${dayIndex}-${timeIndex}`}
-                                    onClose={() => handleRemoveSlot(slot.day, time)}
-                                    variant="flat"
-                                    color="primary"
-                                    className="max-w-full"
-                                  >
-                                    {time}
-                                  </Chip>
-                                ))}
-                              </div>
-                            </div>
-                          ))}
-                        </div>
-                      ) : (
-                        <p className="text-sm text-default-500">
-                          No slots added yet. Please add your available time slots.
-                        </p>
-                      )}
+          <ModalHeader>Edit Mentorship Info</ModalHeader>
+          <ModalBody>
+            <Textarea label="Bio" value={mentorshipInfo.bio} onChange={(e) => setMentorshipInfo({ ...mentorshipInfo, bio: e.target.value })} />
+            <div className="space-y-4 mt-4">
+              <div className="grid grid-cols-2 gap-4">
+                <Select label="Day" value={selectedDay} onChange={(e) => setSelectedDay(e.target.value)}>
+                  {DAYS_OF_WEEK.map((day) => <SelectItem key={day} value={day}>{day}</SelectItem>)}
+                </Select>
+                <Select label="Time" value={selectedTime} onChange={(e) => setSelectedTime(e.target.value)}>
+                  {TIME_SLOTS.map((time) => <SelectItem key={time} value={time}>{time}</SelectItem>)}
+                </Select>
+              </div>
+              <Button color="primary" onPress={handleAddSlot} startContent={<FaPlus />}>Add Slot</Button>
+              <div className="space-y-2">
+                {mentorshipInfo.availableSlots.map((slot, i) => (
+                  <div key={i} className="flex flex-col gap-2">
+                    <p className="font-medium">{slot.day}</p>
+                    <div className="flex flex-wrap gap-2">
+                      {slot.timeSlots.map((time) => (
+                        <Chip key={time} variant="flat" color="primary" onClose={() => handleRemoveSlot(slot.day, time)}>{time}</Chip>
+                      ))}
                     </div>
                   </div>
-                </div>
-              </ModalBody>
-              <ModalFooter>
-                <Button variant="light" onPress={onClose}>
-                  Cancel
-                </Button>
-                <Button color="primary" onPress={handleMentorshipSubmit}>
-                  Save Changes
-                </Button>
-              </ModalFooter>
-            </>
-          )}
+                ))}
+              </div>
+            </div>
+          </ModalBody>
+          <ModalFooter>
+            <Button variant="flat" onPress={onMentorModalClose}>Cancel</Button>
+            <Button color="primary" onPress={handleMentorshipSubmit}>Save</Button>
+          </ModalFooter>
         </ModalContent>
       </Modal>
     </div>
@@ -956,6 +456,3 @@ const Profile = () => {
 };
 
 export default Profile;
-
-
-

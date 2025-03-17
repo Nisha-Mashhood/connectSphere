@@ -16,22 +16,40 @@ import { useSelector } from 'react-redux';
 import { sendFeedBack } from '../../../../Service/Feedback.service';
 import { RootState } from '../../../../redux/store';
 
+interface IFeedbackData {
+  rating: number;
+  communication: number;
+  expertise: number;
+  punctuality: number;
+  comments: string;
+  wouldRecommend: boolean | null;
+}
+
+interface IFeedbackErrors {
+  rating?: string;
+  communication?: string;
+  expertise?: string;
+  punctuality?: string;
+  comments?: string;
+  wouldRecommend?: string;
+}
+
 const FeedbackModal = ({ isOpen, onClose, collaborationData, onComplete }) => {
   const { currentUser } = useSelector((state: RootState) => state.user);
-  const [feedback, setFeedback] = useState({
+  const [feedback, setFeedback] = useState<IFeedbackData>({
     rating: 0,
     communication: 0,
     expertise: 0,
     punctuality: 0,
     comments: '',
-    wouldRecommend: null
+    wouldRecommend: null,
   });
+  const [errors, setErrors] = useState<IFeedbackErrors>({});
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [recipientType, setRecipientType] = useState('');
   const [recipientName, setRecipientName] = useState('');
 
   useEffect(() => {
-    // Determine if current user is the mentor or the user in this collaboration
     if (collaborationData) {
       if (currentUser.role === 'mentor') {
         setRecipientType('User');
@@ -43,14 +61,55 @@ const FeedbackModal = ({ isOpen, onClose, collaborationData, onComplete }) => {
     }
   }, [collaborationData, currentUser]);
 
-  const handleRatingChange = (category, value) => {
-    setFeedback(prev => ({
-      ...prev,
-      [category]: value
-    }));
+  const validateForm = (): IFeedbackErrors => {
+    const newErrors: IFeedbackErrors = {};
+
+    if (!feedback.rating) {
+      newErrors.rating = "Overall rating is required";
+    } else if (feedback.rating < 1 || feedback.rating > 5) {
+      newErrors.rating = "Rating must be between 1 and 5";
+    }
+
+    if (!feedback.communication) {
+      newErrors.communication = "Communication rating is required";
+    } else if (feedback.communication < 1 || feedback.communication > 5) {
+      newErrors.communication = "Communication rating must be between 1 and 5";
+    }
+
+    if (!feedback.expertise) {
+      newErrors.expertise = `${recipientType === 'Mentor' ? 'Expertise' : 'Engagement'} rating is required`;
+    } else if (feedback.expertise < 1 || feedback.expertise > 5) {
+      newErrors.expertise = `${recipientType === 'Mentor' ? 'Expertise' : 'Engagement'} rating must be between 1 and 5`;
+    }
+
+    if (!feedback.punctuality) {
+      newErrors.punctuality = "Punctuality rating is required";
+    } else if (feedback.punctuality < 1 || feedback.punctuality > 5) {
+      newErrors.punctuality = "Punctuality rating must be between 1 and 5";
+    }
+
+    if (!feedback.comments.trim()) {
+      newErrors.comments = "Comments are required";
+    } else if (feedback.comments.length < 10) {
+      newErrors.comments = "Comments must be at least 10 characters long";
+    } else if (feedback.comments.length > 500) {
+      newErrors.comments = "Comments cannot exceed 500 characters";
+    }
+
+    if (feedback.wouldRecommend === null) {
+      newErrors.wouldRecommend = "Please indicate if you would recommend this " + recipientType.toLowerCase();
+    }
+
+    return newErrors;
   };
 
-  const renderStars = (category, value) => {
+  const handleInputChange = (field: keyof IFeedbackData, value: any) => {
+    setFeedback((prev) => ({ ...prev, [field]: value }));
+    const newErrors = validateForm();
+    setErrors((prev) => ({ ...prev, [field]: newErrors[field] }));
+  };
+
+  const renderStars = (category: keyof IFeedbackData, value: number) => {
     return (
       <div className="flex space-x-1">
         {[1, 2, 3, 4, 5].map((star) => (
@@ -61,28 +120,25 @@ const FeedbackModal = ({ isOpen, onClose, collaborationData, onComplete }) => {
                 ? 'fill-yellow-400 text-yellow-400'
                 : 'text-gray-300'
             }`}
-            onClick={() => handleRatingChange(category, star)}
+            onClick={() => handleInputChange(category, star)}
           />
         ))}
       </div>
     );
   };
-  console.log("Collaboration Data :", collaborationData);
 
   const handleSubmit = async () => {
+    const validationErrors = validateForm();
+    setErrors(validationErrors);
+    if (Object.keys(validationErrors).length > 0) {
+      toast.error('Please fix the errors before submitting');
+      return;
+    }
+
     try {
       setIsSubmitting(true);
-      
-      // Validation
-      if (!feedback.rating || !feedback.communication || 
-          !feedback.expertise || !feedback.punctuality || 
-          !feedback.comments || feedback.wouldRecommend === null) {
-        toast.error('Please complete all fields');
-        return;
-      }
 
       const feedbackData = {
-        // Common feedback data
         rating: feedback.rating,
         communication: feedback.communication,
         expertise: feedback.expertise,
@@ -90,21 +146,19 @@ const FeedbackModal = ({ isOpen, onClose, collaborationData, onComplete }) => {
         comments: feedback.comments,
         wouldRecommend: feedback.wouldRecommend,
         collaborationId: collaborationData?._id,
-        
-        // Role-specific data
         role: currentUser.role,
         userId: currentUser.role === 'user' ? currentUser._id : collaborationData.userId?._id,
-        mentorId: currentUser.role === 'mentor' ? 
-          (currentUser.mentorId || collaborationData.mentorId?._id) : 
-          collaborationData.mentorId?._id
+        mentorId: currentUser.role === 'mentor' 
+          ? (currentUser.mentorId || collaborationData.mentorId?._id) 
+          : collaborationData.mentorId?._id,
       };
 
       const response = await sendFeedBack(feedbackData);
-      
+
       if (response) {
         toast.success(`Feedback for ${recipientName} submitted successfully!`);
-        onComplete(); 
-        onClose(); 
+        onComplete();
+        onClose();
       }
     } catch (error) {
       console.error('Error submitting feedback:', error);
@@ -127,17 +181,15 @@ const FeedbackModal = ({ isOpen, onClose, collaborationData, onComplete }) => {
         <ModalBody>
           <div className="space-y-6">
             <div>
-              <label className="block text-sm font-medium mb-2">
-                Overall Rating
-              </label>
+              <label className="block text-sm font-medium mb-2">Overall Rating</label>
               {renderStars('rating', feedback.rating)}
+              {errors.rating && <span className="text-red-500 text-sm mt-1 block">{errors.rating}</span>}
             </div>
 
             <div>
-              <label className="block text-sm font-medium mb-2">
-                Communication
-              </label>
+              <label className="block text-sm font-medium mb-2">Communication</label>
               {renderStars('communication', feedback.communication)}
+              {errors.communication && <span className="text-red-500 text-sm mt-1 block">{errors.communication}</span>}
             </div>
 
             <div>
@@ -145,28 +197,24 @@ const FeedbackModal = ({ isOpen, onClose, collaborationData, onComplete }) => {
                 {recipientType === 'Mentor' ? 'Expertise' : 'Engagement'}
               </label>
               {renderStars('expertise', feedback.expertise)}
+              {errors.expertise && <span className="text-red-500 text-sm mt-1 block">{errors.expertise}</span>}
             </div>
 
             <div>
-              <label className="block text-sm font-medium mb-2">
-                Punctuality
-              </label>
+              <label className="block text-sm font-medium mb-2">Punctuality</label>
               {renderStars('punctuality', feedback.punctuality)}
+              {errors.punctuality && <span className="text-red-500 text-sm mt-1 block">{errors.punctuality}</span>}
             </div>
 
             <div>
-              <label className="block text-sm font-medium mb-2">
-                Comments (min length 10 characters)
-              </label>
+              <label className="block text-sm font-medium mb-2">Comments (min length 10 characters)</label>
               <Textarea
                 placeholder={`Share your experience with this ${recipientType.toLowerCase()}...`}
                 value={feedback.comments}
-                onChange={(e) => setFeedback(prev => ({
-                  ...prev,
-                  comments: e.target.value
-                }))}
+                onChange={(e) => handleInputChange('comments', e.target.value)}
                 minRows={3}
               />
+              {errors.comments && <span className="text-red-500 text-sm mt-1 block">{errors.comments}</span>}
             </div>
 
             <div>
@@ -176,14 +224,12 @@ const FeedbackModal = ({ isOpen, onClose, collaborationData, onComplete }) => {
               <RadioGroup
                 orientation="horizontal"
                 value={feedback.wouldRecommend?.toString()}
-                onValueChange={(value) => setFeedback(prev => ({
-                  ...prev,
-                  wouldRecommend: value === 'true'
-                }))}
+                onValueChange={(value) => handleInputChange('wouldRecommend', value === 'true')}
               >
                 <Radio value="true">Yes</Radio>
                 <Radio value="false">No</Radio>
               </RadioGroup>
+              {errors.wouldRecommend && <span className="text-red-500 text-sm mt-1 block">{errors.wouldRecommend}</span>}
             </div>
           </div>
         </ModalBody>
