@@ -14,7 +14,7 @@ import {
 } from "../../../Service/Task.Service";
 import { registerSW, sendSubscriptionToServer, subcribeTOSW } from "../../../Service/NotificationService";
 import TaskList from "./TaskList";
-import TaskForm from "./TaskForm";
+import TaskForm from "../../Forms/TaskForm";
 import TaskViewModal from "./TaskViewModal";
 
 interface ITaskData {

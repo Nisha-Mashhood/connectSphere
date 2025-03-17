@@ -6,8 +6,8 @@ import CancelModal from "./CancelModal";
 import CollaborationHeader from "./CollaboartionHeader";
 import CollaborationTabs from "./CollaboartionTabs";
 import TimeSlotsModal from "./TimeSlotsModal";
-import PendingRequests from "./PEndingRequset";
 import UnavailableDatesModal from "./UnavailableDatesModal";
+import PendingRequests from "./PendingRequset";
 
 const CollaborationDetails = () => {
   const { collabId } = useParams();

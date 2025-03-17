@@ -5,9 +5,26 @@ import { UserInterface } from "./user.model.js";
 export interface ICollaboration extends Document {
   mentorId: IMentor | string;
   userId: UserInterface | string;
-  selectedSlot: object[];
-  unavailableDays: object[];
-  temporarySlotChanges: object[];
+  selectedSlot: {
+    day: "Sunday" | "Monday" | "Tuesday" | "Wednesday" | "Thursday" | "Friday" | "Saturday";
+    timeSlots: string[];
+  }[];
+  unavailableDays: {
+    _id: mongoose.Types.ObjectId;
+    datesAndReasons: { date: Date; reason: string }[];
+    requestedBy: "user" | "mentor";
+    requesterId: mongoose.Types.ObjectId;
+    isApproved: "pending" | "approved" | "rejected";
+    approvedById: mongoose.Types.ObjectId;
+  }[];
+  temporarySlotChanges: {
+    _id: mongoose.Types.ObjectId;
+    datesAndNewSlots: { date: Date; newTimeSlots: string[] }[];
+    requestedBy: "user" | "mentor";
+    requesterId: mongoose.Types.ObjectId;
+    isApproved: "pending" | "approved" | "rejected";
+    approvedById: mongoose.Types.ObjectId;
+  }[];
   price: number;
   payment: boolean;
   isCancelled: boolean;
@@ -17,21 +34,14 @@ export interface ICollaboration extends Document {
   createdAt: Date;
 }
 
+// Schema remains the same, just ensure it matches the interface
 const CollaborationSchema: Schema = new Schema(
   {
-    mentorId: {
-      type: Schema.Types.ObjectId,
-      ref: "Mentor",
-      required: true,
-    },
-    userId: {
-      type: Schema.Types.ObjectId,
-      ref: "User",
-      required: true,
-    },
+    mentorId: { type: Schema.Types.ObjectId, ref: "Mentor", required: true },
+    userId: { type: Schema.Types.ObjectId, ref: "User", required: true },
     selectedSlot: [
       {
-        day: { type: String },
+        day: { type: String, enum: ["Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"] },
         timeSlots: [{ type: String }],
       },
     ],
@@ -43,21 +53,10 @@ const CollaborationSchema: Schema = new Schema(
             reason: { type: String },
           },
         ],
-        requestedBy: {
-          type: String,
-          enum: ["user", "mentor"],
-        },
-        requesterId: {
-          type: Schema.Types.ObjectId,
-        },
-        isApproved: {
-          type: String,
-          enum: ["pending", "approved", "rejected"],
-          default: "pending",
-        },
-        approvedById: {
-          type: Schema.Types.ObjectId,
-        },
+        requestedBy: { type: String, enum: ["user", "mentor"] },
+        requesterId: { type: Schema.Types.ObjectId },
+        isApproved: { type: String, enum: ["pending", "approved", "rejected"], default: "pending" },
+        approvedById: { type: Schema.Types.ObjectId },
       },
     ],
     temporarySlotChanges: [
@@ -68,55 +67,20 @@ const CollaborationSchema: Schema = new Schema(
             newTimeSlots: [{ type: String }],
           },
         ],
-        requestedBy: {
-          type: String,
-          enum: ["user", "mentor"],
-        },
-        requesterId: {
-          type: Schema.Types.ObjectId,
-        },
-        isApproved: {
-          type: String,
-          enum: ["pending", "approved", "rejected"],
-          default: "pending",
-        },
-        approvedById: {
-          type: Schema.Types.ObjectId,
-        },
+        requestedBy: { type: String, enum: ["user", "mentor"] },
+        requesterId: { type: Schema.Types.ObjectId },
+        isApproved: { type: String, enum: ["pending", "approved", "rejected"], default: "pending" },
+        approvedById: { type: Schema.Types.ObjectId },
       },
     ],
-    payment: {
-      type: Boolean,
-      default: false,
-    },
-    isCancelled: {
-      type: Boolean,
-      default: false,
-    },
-    price: {
-      type: Number,
-      required: true,
-    },
-    startDate: {
-      type: Date,
-      required: true,
-      default: Date.now,
-    },
-    endDate: {
-      type: Date,
-      default: null,
-    },
-    feedbackGiven: {
-      type: Boolean,
-      default: false,
-    },
+    payment: { type: Boolean, default: false },
+    isCancelled: { type: Boolean, default: false },
+    price: { type: Number, required: true },
+    startDate: { type: Date, required: true, default: Date.now },
+    endDate: { type: Date, default: null },
+    feedbackGiven: { type: Boolean, default: false },
   },
   { timestamps: true }
 );
 
-export default mongoose.model<ICollaboration>(
-  "Collaboration",
-  CollaborationSchema
-);
-
-
+export default mongoose.model<ICollaboration>("Collaboration", CollaborationSchema);

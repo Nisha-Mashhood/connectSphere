@@ -4,7 +4,7 @@ import { AppDispatch, RootState } from "../../../../redux/store";
 import { calculateTimeLeft } from "../../../../lib/helperforprofile";
 import { FaClock, FaStar } from "react-icons/fa";
 import { useNavigate } from "react-router-dom";
-import FeedbackModal from "./FeedbackModal";
+import FeedbackModal from "../../../Forms/FeedbackModal";
 import {
   fetchCollabDetails,
   fetchMentorDetails,
