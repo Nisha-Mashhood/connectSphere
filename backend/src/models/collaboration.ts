@@ -6,7 +6,14 @@ export interface ICollaboration extends Document {
   mentorId: IMentor | string;
   userId: UserInterface | string;
   selectedSlot: {
-    day: "Sunday" | "Monday" | "Tuesday" | "Wednesday" | "Thursday" | "Friday" | "Saturday";
+    day:
+      | "Sunday"
+      | "Monday"
+      | "Tuesday"
+      | "Wednesday"
+      | "Thursday"
+      | "Friday"
+      | "Saturday";
     timeSlots: string[];
   }[];
   unavailableDays: {
@@ -41,7 +48,18 @@ const CollaborationSchema: Schema = new Schema(
     userId: { type: Schema.Types.ObjectId, ref: "User", required: true },
     selectedSlot: [
       {
-        day: { type: String, enum: ["Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"] },
+        day: {
+          type: String,
+          enum: [
+            "Sunday",
+            "Monday",
+            "Tuesday",
+            "Wednesday",
+            "Thursday",
+            "Friday",
+            "Saturday",
+          ],
+        },
         timeSlots: [{ type: String }],
       },
     ],
@@ -55,7 +73,11 @@ const CollaborationSchema: Schema = new Schema(
         ],
         requestedBy: { type: String, enum: ["user", "mentor"] },
         requesterId: { type: Schema.Types.ObjectId },
-        isApproved: { type: String, enum: ["pending", "approved", "rejected"], default: "pending" },
+        isApproved: {
+          type: String,
+          enum: ["pending", "approved", "rejected"],
+          default: "pending",
+        },
         approvedById: { type: Schema.Types.ObjectId },
       },
     ],
@@ -69,7 +91,11 @@ const CollaborationSchema: Schema = new Schema(
         ],
         requestedBy: { type: String, enum: ["user", "mentor"] },
         requesterId: { type: Schema.Types.ObjectId },
-        isApproved: { type: String, enum: ["pending", "approved", "rejected"], default: "pending" },
+        isApproved: {
+          type: String,
+          enum: ["pending", "approved", "rejected"],
+          default: "pending",
+        },
         approvedById: { type: Schema.Types.ObjectId },
       },
     ],
@@ -83,4 +109,7 @@ const CollaborationSchema: Schema = new Schema(
   { timestamps: true }
 );
 
-export default mongoose.model<ICollaboration>("Collaboration", CollaborationSchema);
+export default mongoose.model<ICollaboration>(
+  "Collaboration",
+  CollaborationSchema
+);

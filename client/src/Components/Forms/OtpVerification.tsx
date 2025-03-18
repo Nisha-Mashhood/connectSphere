@@ -1,5 +1,5 @@
 import  { useState, useEffect } from "react";
-import otpImage from "../../../assets/OTP verification.png";
+import otpImage from "../../assets/OTP verification.png";
 import { InputOtp } from "@nextui-org/input-otp";
 import { useDispatch, useSelector } from "react-redux";
 import { Link, useNavigate } from "react-router-dom";

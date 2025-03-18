@@ -1,5 +1,5 @@
 import { useDispatch, useSelector } from "react-redux";
-import restImage from "../../../assets/Reset Password.png";
+import restImage from "../../assets/Reset Password.png";
 import { Link, useNavigate } from "react-router-dom";
 import { RootState } from "../../redux/store";
 import toast from "react-hot-toast";

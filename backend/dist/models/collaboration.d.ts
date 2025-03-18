@@ -4,9 +4,32 @@ import { UserInterface } from "./user.model.js";
 export interface ICollaboration extends Document {
     mentorId: IMentor | string;
     userId: UserInterface | string;
-    selectedSlot: object[];
-    unavailableDays: object[];
-    temporarySlotChanges: object[];
+    selectedSlot: {
+        day: "Sunday" | "Monday" | "Tuesday" | "Wednesday" | "Thursday" | "Friday" | "Saturday";
+        timeSlots: string[];
+    }[];
+    unavailableDays: {
+        _id: mongoose.Types.ObjectId;
+        datesAndReasons: {
+            date: Date;
+            reason: string;
+        }[];
+        requestedBy: "user" | "mentor";
+        requesterId: mongoose.Types.ObjectId;
+        isApproved: "pending" | "approved" | "rejected";
+        approvedById: mongoose.Types.ObjectId;
+    }[];
+    temporarySlotChanges: {
+        _id: mongoose.Types.ObjectId;
+        datesAndNewSlots: {
+            date: Date;
+            newTimeSlots: string[];
+        }[];
+        requestedBy: "user" | "mentor";
+        requesterId: mongoose.Types.ObjectId;
+        isApproved: "pending" | "approved" | "rejected";
+        approvedById: mongoose.Types.ObjectId;
+    }[];
     price: number;
     payment: boolean;
     isCancelled: boolean;

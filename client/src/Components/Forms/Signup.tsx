@@ -5,7 +5,7 @@ import { toast } from "react-hot-toast";
 import { useDispatch } from "react-redux";
 import { signinStart, signinFailure } from "../../redux/Slice/userSlice.ts";
 import { register } from "../../Service/Auth.service.ts";
-import SignupImage from "../../../assets/Signup.png";
+import SignupImage from "../../assets/Signup.png";
 import SignupGoogle from "../User/Auth/SignupGoogle.tsx";
 import SignupGithub from "../User/Auth/SignupGithub.tsx";
 

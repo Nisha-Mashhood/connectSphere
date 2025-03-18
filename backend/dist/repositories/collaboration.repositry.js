@@ -297,14 +297,31 @@ export const updateTemporarySlotChanges = async (collabId, updateData) => {
 export const updateRequestStatus = async (collabId, requestId, requestType, status) => {
     try {
         const updateField = requestType === "unavailable" ? "unavailableDays" : "temporarySlotChanges";
-        const collaboration = await Collaboration.findOneAndUpdate({
+        let updateQuery = {
+            $set: {
+                [`${updateField}.$.isApproved`]: status,
+            },
+        };
+        // Fetch the collaboration to get current endDate and selected day
+        const collaboration = await Collaboration.findById(collabId);
+        if (!collaboration)
+            throw new Error("Collaboration not found");
+        // Only update endDate for unavailable requests when approved
+        if (requestType === "unavailable" && status === "approved") {
+            const request = collaboration.unavailableDays.find((req) => req._id.toString() === requestId);
+            if (request) {
+                const unavailableDates = request.datesAndReasons.map((item) => new Date(item.date));
+                const selectedDay = collaboration.selectedSlot[0].day;
+                const currentEndDate = collaboration.endDate || collaboration.startDate; // Fallback to startDate if endDate is null
+                const newEndDate = calculateNewEndDate(currentEndDate, unavailableDates, selectedDay);
+                updateQuery.$set["endDate"] = newEndDate;
+            }
+        }
+        // Perform the update
+        const updatedCollaboration = await Collaboration.findOneAndUpdate({
             _id: collabId,
             [`${updateField}._id`]: requestId,
-        }, {
-            $set: {
-                [`${updateField}.$.isApproved`]: status // Changed from 'status' to 'isApproved'
-            },
-        }, { new: true })
+        }, updateQuery, { new: true })
             .populate({
             path: "mentorId",
             model: "Mentor",
@@ -317,39 +334,40 @@ export const updateRequestStatus = async (collabId, requestId, requestType, stat
             path: "userId",
             model: "User",
         });
-        if (!collaboration) {
+        if (!updatedCollaboration) {
             throw new Error("Collaboration or request not found");
         }
-        console.log("Updated collboartion :", collaboration);
-        return collaboration;
+        console.log("Updated collaboration:", updatedCollaboration);
+        return updatedCollaboration;
     }
     catch (error) {
         console.log("Error in repositry file :", error);
         throw new Error(`Error updating request status: ${error.message}`);
     }
 };
-export const getCollaborationByCollabId = async (collabId) => {
-    try {
-        return await Collaboration.findOne({ collabId });
+// Helper function to calculate new end date based on unavailable days
+const calculateNewEndDate = (currentEndDate, unavailableDates, selectedDay) => {
+    const dayMap = {
+        Sunday: 0,
+        Monday: 1,
+        Tuesday: 2,
+        Wednesday: 3,
+        Thursday: 4,
+        Friday: 5,
+        Saturday: 6,
+    };
+    const selectedDayOfWeek = dayMap[selectedDay];
+    const newEndDate = new Date(currentEndDate);
+    const daysToAdd = unavailableDates.length; // Number of weeks to extend
+    // Move forward by the number of unavailable days, ensuring we land on the selected day
+    let currentDate = new Date(newEndDate);
+    let sessionsAdded = 0;
+    while (sessionsAdded < daysToAdd) {
+        currentDate.setDate(currentDate.getDate() + 1);
+        if (currentDate.getDay() === selectedDayOfWeek) {
+            sessionsAdded++;
+        }
     }
-    catch (error) {
-        throw new Error(`Error retrieving collaboration by collabId: ${error.message}`);
-    }
-};
-export const getCollaborationsByRequesterId = async (requesterId) => {
-    try {
-        return await Collaboration.find({ requesterId });
-    }
-    catch (error) {
-        throw new Error(`Error retrieving collaborations by requesterId: ${error.message}`);
-    }
-};
-export const getCollaborationsByApproverId = async (approverId) => {
-    try {
-        return await Collaboration.find({ approverId });
-    }
-    catch (error) {
-        throw new Error(`Error retrieving collaborations by approverId: ${error.message}`);
-    }
+    return currentDate;
 };
 //# sourceMappingURL=collaboration.repositry.js.map

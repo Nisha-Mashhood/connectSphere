@@ -33,7 +33,6 @@ const CollaborationTabs = ({
     >
       <DetailsTab
         collaboration={collaboration}
-        isMentor={isMentor}
         setShowTimeSlotsModal={setShowTimeSlotsModal}
         setShowUnavailableDatesModal={setShowUnavailableDatesModal}
         setShowCancelDialog={setShowCancelDialog}

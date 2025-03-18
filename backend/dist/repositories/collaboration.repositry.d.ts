@@ -109,19 +109,4 @@ export declare const updateTemporarySlotChanges: (collabId: string, updateData: 
     __v: number;
 }) | null>;
 export declare const updateRequestStatus: (collabId: string, requestId: string, requestType: "unavailable" | "timeSlot", status: "approved" | "rejected") => Promise<ICollaboration | null>;
-export declare const getCollaborationByCollabId: (collabId: string) => Promise<(import("mongoose").Document<unknown, {}, ICollaboration> & ICollaboration & Required<{
-    _id: unknown;
-}> & {
-    __v: number;
-}) | null>;
-export declare const getCollaborationsByRequesterId: (requesterId: string) => Promise<(import("mongoose").Document<unknown, {}, ICollaboration> & ICollaboration & Required<{
-    _id: unknown;
-}> & {
-    __v: number;
-})[]>;
-export declare const getCollaborationsByApproverId: (approverId: string) => Promise<(import("mongoose").Document<unknown, {}, ICollaboration> & ICollaboration & Required<{
-    _id: unknown;
-}> & {
-    __v: number;
-})[]>;
 //# sourceMappingURL=collaboration.repositry.d.ts.map

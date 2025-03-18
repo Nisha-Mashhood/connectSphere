@@ -1,4 +1,4 @@
-import LoginImage from "../../../assets/Login.png";
+import LoginImage from "../../assets/Login.png";
 import { Link, useNavigate } from "react-router-dom";
 import { useDispatch } from "react-redux";
 import { AppDispatch } from "../../redux/store";

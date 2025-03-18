@@ -1,5 +1,5 @@
 import { useDispatch } from "react-redux";
-import forgotImage from "../../../assets/Forgot password.png";
+import forgotImage from "../../assets/Forgot password.png";
 import { Link, useNavigate } from "react-router-dom";
 import toast from "react-hot-toast";
 import { setResetEmail, signinFailure, signinStart } from "../../redux/Slice/userSlice";
