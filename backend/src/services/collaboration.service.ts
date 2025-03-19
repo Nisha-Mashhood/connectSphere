@@ -298,20 +298,147 @@ export const processTimeSlotRequest = async (
   collabId: string,
   requestId: string,
   isApproved: boolean,
-  requestType: "unavailable" | "timeSlot",
+  requestType: "unavailable" | "timeSlot"
 ) => {
   try {
     const status = isApproved ? "approved" : "rejected";
+
+    // Fetch collaboration details with populated fields
+    const collaboration = await findCollabById(collabId);
+    if (!collaboration) {
+      throw new Error("Collaboration not found");
+    }
+
+    // Determine who requested based on requestType and requestId
+    let requestedBy: "user" | "mentor" | undefined;
+    if (requestType === "unavailable") {
+      const request = collaboration.unavailableDays.find(
+        (req) => req._id.toString() === requestId
+      );
+      if (!request) {
+        throw new Error("Unavailable days request not found");
+      }
+      requestedBy = request.requestedBy;
+    } else {
+      const request = collaboration.temporarySlotChanges.find(
+        (req) => req._id.toString() === requestId
+      );
+      if (!request) {
+        throw new Error("Time slot change request not found");
+      }
+      requestedBy = request.requestedBy;
+    }
+
+    if (!requestedBy) {
+      throw new Error("Unable to determine who requested the change");
+    }
+
+    // Prepare data for update
+    let newEndDate: Date | undefined;
+    if (requestType === "unavailable" && status === "approved") {
+      const request = collaboration.unavailableDays.find(
+        (req) => req._id.toString() === requestId
+      );
+      if (request) {
+        const unavailableDates = request.datesAndReasons.map(
+          (item) => new Date(item.date)
+        );
+        const selectedDay = collaboration.selectedSlot[0].day;
+        const currentEndDate = collaboration.endDate || collaboration.startDate;
+        newEndDate = calculateNewEndDate(currentEndDate, unavailableDates, selectedDay);
+      }
+    }
+
+    // Update the request status in the database
     const updatedCollaboration = await updateRequestStatus(
       collabId,
       requestId,
       requestType,
       status,
+      newEndDate
     );
-    console.log("updated collaboration from service file :",updatedCollaboration);
+    console.log("Updated collaboration from service file:", updatedCollaboration);
+
+    // Send email if the request is rejected
+    if (status === "rejected") {
+      // Type guard for userId
+      if (typeof collaboration.userId === "string") {
+        throw new Error("User details not populated");
+      }
+      const userEmail = collaboration.userId.email;
+      const userName = collaboration.userId.name;
+
+      // Type guard for mentorId
+      if (typeof collaboration.mentorId === "string") {
+        throw new Error("Mentor details not populated");
+      }
+      const mentorUser = collaboration.mentorId.userId;
+      if (typeof mentorUser === "string") {
+        throw new Error("Mentor's user details not populated");
+      }
+      const mentorEmail = mentorUser.email;
+      const mentorName = mentorUser.name;
+
+      if (!userEmail || !mentorEmail) {
+        throw new Error("User or mentor email not found");
+      }
+
+      // Determine recipient and sender based on who requested
+      const recipientEmail = requestedBy === "user" ? mentorEmail : userEmail;
+      const recipientName = requestedBy === "user" ? mentorName : userName;
+      const otherPartyName = requestedBy === "user" ? userName : mentorName;
+
+      const subject = "Request Rejection Notice";
+      const text = `Dear ${recipientName},
+
+We regret to inform you that the request for ${
+        requestType === "unavailable" ? "unavailable days" : "a time slot change"
+      } in your mentorship session with ${otherPartyName} has been rejected.
+
+If you have any questions, please contact support.
+
+Best regards,
+ConnectSphere Team`;
+
+      await sendEmail(recipientEmail, subject, text);
+      console.log(`Rejection email sent to ${requestedBy === "user" ? "mentor" : "user"}: ${recipientEmail}`);
+    }
+
     return updatedCollaboration;
   } catch (error: any) {
-    console.log("error in service file : ",error);
+    console.log("Error in service file:", error);
     throw new Error(`Failed to process time slot request: ${error.message}`);
   }
+};
+
+// Helper function to calculate new end date
+const calculateNewEndDate = (
+  currentEndDate: Date,
+  unavailableDates: Date[],
+  selectedDay: "Sunday" | "Monday" | "Tuesday" | "Wednesday" | "Thursday" | "Friday" | "Saturday"
+): Date => {
+  const dayMap: { [key in typeof selectedDay]: number } = {
+    Sunday: 0,
+    Monday: 1,
+    Tuesday: 2,
+    Wednesday: 3,
+    Thursday: 4,
+    Friday: 5,
+    Saturday: 6,
+  };
+  const selectedDayOfWeek = dayMap[selectedDay];
+  const newEndDate = new Date(currentEndDate);
+  const daysToAdd = unavailableDates.length;
+
+  let currentDate = new Date(newEndDate);
+  let sessionsAdded = 0;
+
+  while (sessionsAdded < daysToAdd) {
+    currentDate.setDate(currentDate.getDate() + 1);
+    if (currentDate.getDay() === selectedDayOfWeek) {
+      sessionsAdded++;
+    }
+  }
+
+  return currentDate;
 };

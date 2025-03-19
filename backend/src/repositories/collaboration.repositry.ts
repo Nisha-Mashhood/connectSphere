@@ -68,17 +68,28 @@ export const deleteMentorRequest = async (requestId: string): Promise<void> => {
 
 export const findCollabById = async(collabId:string): Promise<ICollaboration | null> =>{
   try {
-  return await Collaboration.findById(collabId)
-  .populate({
-    path: "mentorId",
-    populate: {
-      path: "userId", 
-      model: "User",
-    },
-  })
-  .populate("userId")as ICollaboration | null;; 
-  } catch (error:any) {
-    throw new Error("Error fetching group requests: " + error.message);
+    const collaboration = await Collaboration.findById(collabId)
+      .populate({
+        path: "mentorId",
+        model: "Mentor",
+        populate: {
+          path: "userId",
+          model: "User",
+        },
+      })
+      .populate({
+        path: "userId",
+        model: "User",
+      });
+
+    if (!collaboration) {
+      throw new Error("Collaboration not found");
+    }
+
+    return collaboration;
+  } catch (error: any) {
+    console.log("Error in repository file:", error);
+    throw new Error(`Error fetching collaboration: ${error.message}`);
   }
 }
 
@@ -341,9 +352,11 @@ export const updateRequestStatus = async (
   requestId: string,
   requestType: "unavailable" | "timeSlot",
   status: "approved" | "rejected",
+  newEndDate?: Date 
 ): Promise<ICollaboration | null> => {
   try {
-    const updateField = requestType === "unavailable" ? "unavailableDays" : "temporarySlotChanges";
+    const updateField =
+      requestType === "unavailable" ? "unavailableDays" : "temporarySlotChanges";
 
     let updateQuery: any = {
       $set: {
@@ -351,25 +364,11 @@ export const updateRequestStatus = async (
       },
     };
 
-    // Fetch the collaboration to get current endDate and selected day
-    const collaboration = await Collaboration.findById(collabId);
-    if (!collaboration) throw new Error("Collaboration not found");
-
-    // Only update endDate for unavailable requests when approved
-    if (requestType === "unavailable" && status === "approved") {
-      const request = collaboration.unavailableDays.find(
-        (req) => req._id.toString() === requestId
-      );
-      if (request) {
-        const unavailableDates = request.datesAndReasons.map((item) => new Date(item.date));
-        const selectedDay = collaboration.selectedSlot[0].day;
-        const currentEndDate = collaboration.endDate || collaboration.startDate; // Fallback to startDate if endDate is null
-        const newEndDate = calculateNewEndDate(currentEndDate, unavailableDates, selectedDay);
-        updateQuery.$set["endDate"] = newEndDate;
-      }
+    // Add endDate to the update query if provided
+    if (newEndDate) {
+      updateQuery.$set["endDate"] = newEndDate;
     }
 
-    // Perform the update
     const updatedCollaboration = await Collaboration.findOneAndUpdate(
       {
         _id: collabId,
@@ -395,44 +394,10 @@ export const updateRequestStatus = async (
       throw new Error("Collaboration or request not found");
     }
 
-    console.log("Updated collaboration:", updatedCollaboration);
+    console.log("Updated collaboration from repository:", updatedCollaboration);
     return updatedCollaboration;
   } catch (error: any) {
-    console.log("Error in repositry file :",error);
+    console.log("Error in repository file:", error);
     throw new Error(`Error updating request status: ${error.message}`);
   }
-};
-
-
-// Helper function to calculate new end date based on unavailable days
-const calculateNewEndDate = (
-  currentEndDate: Date,
-  unavailableDates: Date[],
-  selectedDay: "Sunday" | "Monday" | "Tuesday" | "Wednesday" | "Thursday" | "Friday" | "Saturday"
-): Date => {
-  const dayMap: { [key in typeof selectedDay]: number } = {
-    Sunday: 0,
-    Monday: 1,
-    Tuesday: 2,
-    Wednesday: 3,
-    Thursday: 4,
-    Friday: 5,
-    Saturday: 6,
-  };
-  const selectedDayOfWeek = dayMap[selectedDay];
-  const newEndDate = new Date(currentEndDate);
-  const daysToAdd = unavailableDates.length; // Number of weeks to extend
-
-  // Move forward by the number of unavailable days, ensuring we land on the selected day
-  let currentDate = new Date(newEndDate);
-  let sessionsAdded = 0;
-
-  while (sessionsAdded < daysToAdd) {
-    currentDate.setDate(currentDate.getDate() + 1);
-    if (currentDate.getDay() === selectedDayOfWeek) {
-      sessionsAdded++;
-    }
-  }
-
-  return currentDate;
 };

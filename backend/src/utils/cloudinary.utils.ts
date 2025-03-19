@@ -1,5 +1,6 @@
 import { v2 as cloudinary } from "cloudinary";
 import  config  from '../config/env.config.js';
+import fs from "fs/promises";
 
 cloudinary.config({
   cloud_name: config.cloudinaryCloudName,
@@ -16,8 +17,14 @@ export const uploadImage = async (filePath: string, folder: string) => {
         { quality: "auto", fetch_format: "auto" },
       ],
     });
+
+    await fs.unlink(filePath); // Remove the file from local storage
+    console.log(`Deleted local file: ${filePath}`);
+
+
     return result.secure_url;
   } catch (error) {
+    console.error(`Failed to upload image or delete file: ${filePath}`, error);
     throw new Error("Image upload failed");
   }
 };
