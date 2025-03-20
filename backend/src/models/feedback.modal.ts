@@ -1,6 +1,8 @@
 import mongoose, { Schema, Document } from 'mongoose';
+import { generateCustomId } from '../utils/idGenerator.utils.js';
 
 export interface IFeedback extends Document {
+  feedbackId: string;
   userId: mongoose.Types.ObjectId;
   mentorId: mongoose.Types.ObjectId;
   collaborationId: mongoose.Types.ObjectId;
@@ -16,6 +18,11 @@ export interface IFeedback extends Document {
 
 const FeedbackSchema: Schema = new Schema(
   {
+    feedbackId:{
+      type: String,
+      unique: true,
+      required:true,
+    },
     userId: {
       type: mongoose.Schema.Types.ObjectId,
       ref: "User",
@@ -73,5 +80,13 @@ const FeedbackSchema: Schema = new Schema(
   },
   { timestamps: true }
 );
+
+// Pre-save hook to generate feedbackId
+  FeedbackSchema.pre("save", async function(next) {
+      if (!this.feedbackId) {
+        this.feedbackId = await generateCustomId("feedback", "FDB");
+      }
+      next();
+    });
 
 export default mongoose.model<IFeedback>("Feedback", FeedbackSchema);

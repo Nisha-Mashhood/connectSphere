@@ -1,7 +1,8 @@
-import mongoose, { Schema, Document, Model, CallbackWithoutResultAndOptionalError } from "mongoose";
-
+import mongoose, { Schema, Document, Model } from "mongoose";
+import { generateCustomId } from '../utils/idGenerator.utils.js';
 
 export interface ITask extends Document {
+    taskId:string;
     name: string;
     description?: string;
     image?: string;
@@ -10,7 +11,7 @@ export interface ITask extends Document {
     startDate: Date;
     dueDate: Date;
     notificationDate?: Date;
-    notificationTime?: String;
+    notificationTime?: string;
     notificationSubscription?: {
       endpoint: string;
       keys: {
@@ -30,6 +31,11 @@ export interface ITask extends Document {
   }
 
 const taskSchema: Schema<ITask> = new mongoose.Schema({
+  taskId: {
+    type: String,
+    unique: true,
+    required: true
+  },
   name: {
     type: String,
     required: true,
@@ -102,7 +108,7 @@ const taskSchema: Schema<ITask> = new mongoose.Schema({
   assignedCollaborations: [
     {
       type: mongoose.Schema.Types.ObjectId,
-      ref: "Mentor",
+      ref: "Collaboration",
     },
   ],
   assignedGroups: [
@@ -119,12 +125,20 @@ const taskSchema: Schema<ITask> = new mongoose.Schema({
   createdAt: { type: Date, default: Date.now },
 });
 
-// Automatically mark as "not-completed" if past due date
-taskSchema.pre<ITask>("save", function (next: CallbackWithoutResultAndOptionalError) {
-    if (this.dueDate && new Date() > this.dueDate && this.status !== "completed") {
-      this.status = "not-completed";
-    }
-    next();
-  });
+
+taskSchema.pre("save", async function(next) {
+  // Generate taskId if not set
+  if (!this.taskId) {
+    this.taskId = await generateCustomId("task", "TSK");
+  }
+
+  // Update status if past due date
+  // Automatically mark as "not-completed" if past due date
+  if (this.dueDate && new Date() > this.dueDate && this.status !== "completed") {
+    this.status = "not-completed";
+  }
+
+  next();
+});
 
 export const Task: Model<ITask> = mongoose.model<ITask>("Task", taskSchema);

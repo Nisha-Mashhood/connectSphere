@@ -21,3 +21,4 @@ export const sendEmail = async (to: string, subject: string, text: string) => {
     throw new Error('Failed to send email.');
   }
 };
+

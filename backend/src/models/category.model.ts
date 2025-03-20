@@ -1,6 +1,8 @@
 import mongoose, { Schema, Document, Model } from "mongoose";
+import { generateCustomId } from "../utils/idGenerator.utils.js";
 
 export interface CategoryInterface extends Document {
+    categoryId: string;
     name: string;
     description?: string;
     imageUrl?:string | null;
@@ -11,6 +13,11 @@ export interface CategoryInterface extends Document {
   // Category Schema
 const categorySchema: Schema<CategoryInterface> = new mongoose.Schema(
     {
+      categoryId: { 
+        type: String, 
+        unique: true, 
+        required: true 
+    },
       name: { 
         type: String, 
         required: true, 
@@ -27,5 +34,13 @@ const categorySchema: Schema<CategoryInterface> = new mongoose.Schema(
     },
     { timestamps: true }
   );
+
+  // Pre-save hook to generate categoryId
+  categorySchema.pre("save", async function(next) {
+      if (!this.categoryId) {
+        this.categoryId = await generateCustomId("category", "CAT");
+      }
+      next();
+    });
 
  export  const Category: Model<CategoryInterface> = mongoose.model<CategoryInterface>("Category", categorySchema);

@@ -1,8 +1,10 @@
 import mongoose, { Schema, Document } from "mongoose";
 import { UserInterface } from "./user.model.js";
+import { generateCustomId } from '../utils/idGenerator.utils.js';
 
 
 export interface IMentor extends Document {
+  mentorId: string;
   userId: string | UserInterface;
   isApproved?: string;
   rejectionReason?:string;
@@ -19,6 +21,11 @@ export interface IMentor extends Document {
 
 const MentorSchema: Schema = new Schema(
   {
+    mentorId:{
+      type: String,
+      unique: true,
+      required: true
+    },
     userId: { 
         type: Schema.Types.ObjectId, 
         ref: "User", 
@@ -70,5 +77,13 @@ const MentorSchema: Schema = new Schema(
   },
   { timestamps: true }
 );
+
+// Pre-save hook to generate mentorId
+MentorSchema.pre("save", async function(next) {
+    if (!this.mentorId) {
+      this.mentorId = await generateCustomId("groupRequest", "GRQ");
+    }
+    next();
+  });
 
 export default mongoose.model<IMentor>("Mentor", MentorSchema);

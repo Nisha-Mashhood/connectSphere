@@ -73,4 +73,3 @@ export const isProfileComplete = (user: UserInterface): boolean => {
   }
   return true; // Profile is complete
 };
-

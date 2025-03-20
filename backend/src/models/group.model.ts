@@ -1,4 +1,5 @@
 import mongoose, { Schema, Document } from 'mongoose';
+import { generateCustomId } from '../utils/idGenerator.utils.js';
 
 export interface TimeSlot {
   day: string;
@@ -6,6 +7,7 @@ export interface TimeSlot {
 }
 
 export interface GroupDocument extends Document {
+  groupId: string;
   name: string;
   bio: string;
   price: number;
@@ -21,6 +23,11 @@ export interface GroupDocument extends Document {
 
 const GroupSchema: Schema = new Schema<GroupDocument>(
   {
+    groupId:{
+        type: String,
+        unique: true,
+        required: true
+    },
     name: 
     { 
         type: String, 
@@ -100,6 +107,14 @@ const GroupSchema: Schema = new Schema<GroupDocument>(
   },
   { timestamps: true }
 );
+
+// Pre-save hook to generate groupId
+GroupSchema.pre("save", async function(next) {
+    if (!this.groupId) {
+      this.groupId = await generateCustomId("group", "GRP");
+    }
+    next();
+  });
 
 const Group = mongoose.model<GroupDocument>('Group', GroupSchema);
 

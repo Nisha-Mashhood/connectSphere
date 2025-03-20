@@ -1,7 +1,9 @@
 import mongoose, { Schema, Document, Model } from "mongoose";
 import config from '../config/env.config.js'
+import { generateCustomId } from "../utils/idGenerator.utils.js";
 
 export interface UserInterface extends Document {
+  userId: string;
   name: string;
   email: string;
   phone?:string;
@@ -25,6 +27,11 @@ export interface UserInterface extends Document {
 
 const userSchema: Schema<UserInterface> = new mongoose.Schema(
   {
+    userId: { 
+        type: String, 
+        unique: true, 
+        required: true 
+    },
     name: { 
         type: String, 
         required: true 
@@ -95,6 +102,16 @@ const userSchema: Schema<UserInterface> = new mongoose.Schema(
   },
   { timestamps: true }
 );
+
+
+// Pre-save hook to generate userId
+userSchema.pre("save", async function(next) {
+    if (!this.userId) {
+      this.userId = await generateCustomId("user", "USR");
+    }
+    next();
+  });
+
 
 const User: Model<UserInterface> = mongoose.model<UserInterface>("User",userSchema);
 

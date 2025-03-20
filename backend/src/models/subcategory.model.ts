@@ -1,6 +1,8 @@
 import mongoose, { Schema, Document, Model } from "mongoose";
+import { generateCustomId } from '../utils/idGenerator.utils.js';
 
 export interface SubcategoryInterface extends Document {
+    subcategoryId:string;
     name: string;
     categoryId: mongoose.Types.ObjectId;
     description?: string;
@@ -12,6 +14,11 @@ export interface SubcategoryInterface extends Document {
   // Category Schema
 const SubcategorySchema: Schema<SubcategoryInterface> = new mongoose.Schema(
     {
+      subcategoryId: {
+        type: String,
+        unique: true,
+        required: true
+      },
       name: { 
         type: String, 
         required: true, 
@@ -34,6 +41,16 @@ const SubcategorySchema: Schema<SubcategoryInterface> = new mongoose.Schema(
     },
     { timestamps: true }
   );
+
+  // Pre-save hook to generate subcategoryId
+  SubcategorySchema.pre("save", async function(next) {
+      if (!this.subcategoryId) {
+        this.subcategoryId = await generateCustomId("subcategory", "SUB");
+      }
+      next();
+    });
+  
+
 
   export const Subcategory: Model<SubcategoryInterface> = mongoose.model<SubcategoryInterface>("Subcategory", SubcategorySchema);
 

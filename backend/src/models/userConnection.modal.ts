@@ -1,7 +1,9 @@
 import mongoose, { Schema, Document } from "mongoose";
 import { UserInterface } from "./user.model.js";
+import { generateCustomId } from "../utils/idGenerator.utils.js";
 
 export interface IUserConnection extends Document {
+  connectionId:string;
   requester: string | UserInterface;
   recipient: string | UserInterface;
   requestStatus: "Pending" | "Accepted" | "Rejected";
@@ -16,6 +18,11 @@ export interface IUserConnection extends Document {
 
 const UserConnectionSchema: Schema = new Schema(
   {
+    connectionId:{
+      type: String,
+      unique: true,
+      required: true
+    },
     requester: {
       type: Schema.Types.ObjectId,
       ref: "User",
@@ -53,5 +60,14 @@ const UserConnectionSchema: Schema = new Schema(
   },
   { timestamps: true }
 );
+
+// Pre-save hook to generate connectionId
+UserConnectionSchema.pre("save", async function(next) {
+    if (!this.connectionId) {
+      this.connectionId = await generateCustomId("userConnection", "UCN");
+    }
+    next();
+  });
+
 
 export default mongoose.model<IUserConnection>("UserConnection", UserConnectionSchema);

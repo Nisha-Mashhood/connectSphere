@@ -28,3 +28,4 @@ export const uploadImage = async (filePath: string, folder: string) => {
     throw new Error("Image upload failed");
   }
 };
+
