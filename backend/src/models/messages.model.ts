@@ -23,7 +23,6 @@ const messageSchema: Schema<IMessage> = new mongoose.Schema(
     messageId: { 
         type: String,
          unique: true, 
-         required: true 
         },  
     senderId: { 
         type: Schema.Types.ObjectId, 

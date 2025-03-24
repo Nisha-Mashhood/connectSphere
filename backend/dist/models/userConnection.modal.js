@@ -1,5 +1,10 @@
 import mongoose, { Schema } from "mongoose";
+import { generateCustomId } from "../utils/idGenerator.utils.js";
 const UserConnectionSchema = new Schema({
+    connectionId: {
+        type: String,
+        unique: true,
+    },
     requester: {
         type: Schema.Types.ObjectId,
         ref: "User",
@@ -35,5 +40,12 @@ const UserConnectionSchema = new Schema({
         default: null,
     },
 }, { timestamps: true });
+// Pre-save hook to generate connectionId
+UserConnectionSchema.pre("save", async function (next) {
+    if (!this.connectionId) {
+        this.connectionId = await generateCustomId("userConnection", "UCN");
+    }
+    next();
+});
 export default mongoose.model("UserConnection", UserConnectionSchema);
 //# sourceMappingURL=userConnection.modal.js.map

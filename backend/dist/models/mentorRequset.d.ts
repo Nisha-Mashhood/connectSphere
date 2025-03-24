@@ -1,5 +1,6 @@
 import mongoose, { Document } from "mongoose";
 export interface IMentorRequest extends Document {
+    mentorRequestId: string;
     mentorId: string;
     userId: string;
     selectedSlot: object;

@@ -20,7 +20,6 @@ import {
   updateGroupImageService,
 } from "../services/group.service.js";
 import { findRequestById } from "../repositories/group.repositry.js";
-import fs from "fs";
 import { uploadImage } from "../utils/cloudinary.utils.js";
 export const createGroup = async (req: Request, res: Response) => {
   try {
@@ -277,6 +276,8 @@ export const deleteGroup = async (req: Request, res: Response) => {
 
 //Update the profile picture and cover picture for the group
 export const updateGroupImage = async (req: Request, res: Response) => {
+
+  console.log(req.body);
   try {
     const { groupId } = req.params;
     const files = req.files as
@@ -300,13 +301,6 @@ export const updateGroupImage = async (req: Request, res: Response) => {
     let profilePicUrl: string | undefined;
     let coverPicUrl: string | undefined;
 
-    // Function to delete file
-    const deleteFile = (filePath: string) => {
-      fs.unlink(filePath, (err: any) => {
-        if (err) console.error(`Error deleting file: ${filePath}`, err);
-      });
-    };
-
     // Upload profile picture if available
     if (files["profilePic"]?.[0]) {
       const profilePicPath = files["profilePic"][0].path;
@@ -314,9 +308,6 @@ export const updateGroupImage = async (req: Request, res: Response) => {
         profilePicPath,
         "group_profile_pictures"
       );
-
-      // Delete the file asynchronously
-      deleteFile(profilePicPath);
     }
 
     // Upload cover picture if available
@@ -324,8 +315,6 @@ export const updateGroupImage = async (req: Request, res: Response) => {
       const coverPicPath = files["coverPic"][0].path;
       coverPicUrl = await uploadImage(coverPicPath, "group_cover_pictures");
 
-      // Delete the file asynchronously
-      deleteFile(coverPicPath);
     }
 
     // Update the group record

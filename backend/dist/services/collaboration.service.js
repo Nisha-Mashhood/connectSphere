@@ -2,6 +2,8 @@ import { sendEmail } from "../utils/email.utils.js";
 import { createCollaboration, createTemporaryRequest, deleteMentorRequest, fetchMentorRequsetDetails, findCollab, findCollabById, findCollabDetails, findMentorRequest, getCollabDataForMentor, getCollabDataForUser, getMentorRequestsByMentorId, getRequestByUserId, markCollabAsCancelled, updateMentorRequestStatus, updateRequestStatus, updateTemporarySlotChanges, updateUnavailableDays, } from "../repositories/collaboration.repositry.js";
 import stripe from "../utils/stripe.utils.js";
 import { v4 as uuid } from "uuid";
+import { getMentorById } from "../repositories/mentor.repositry.js";
+import { createContact } from "../repositories/contacts.repository.js";
 export const TemporaryRequestService = async (requestData) => {
     try {
         const newRequest = await createTemporaryRequest({
@@ -85,19 +87,19 @@ export const processPaymentService = async (paymentMethodId, amount, requestId, 
             // Number of sessions user is entitled to
             const totalSessions = mentorRequestData.timePeriod;
             console.log("total sessions:", totalSessions);
-            // Find the weekly session day 
+            // Find the weekly session day
             const sessionDay = mentorRequestData.selectedSlot?.day; // "Monday"
             let sessionCount = 0;
             // Loop until total sessions
             while (sessionCount < totalSessions) {
                 endDate.setDate(endDate.getDate() + 1); // Move to the next day
                 // Check if the current day matches the mentor's available session day
-                if (endDate.toLocaleDateString('en-US', { weekday: 'long' }) === sessionDay) {
+                if (endDate.toLocaleDateString("en-US", { weekday: "long" }) ===
+                    sessionDay) {
                     sessionCount++; // incremennt the session
                 }
             }
-            //problem is with while loop
-            await createCollaboration({
+            const collaboration = await createCollaboration({
                 mentorId: mentorRequestData.mentorId,
                 userId: mentorRequestData.userId,
                 selectedSlot: mentorRequestData.selectedSlot,
@@ -107,7 +109,29 @@ export const processPaymentService = async (paymentMethodId, amount, requestId, 
                 startDate,
                 endDate,
             });
+            // Fetch mentor details to get userId
+            const mentor = await getMentorById(mentorRequestData.mentorId);
+            if (!mentor || !mentor.userId) {
+                throw new Error("Mentor or mentor's userId not found");
+            }
+            // Create two Contact entries and capture their results
+            const [contact1, contact2] = await Promise.all([
+                createContact({
+                    userId: mentorRequestData.userId,
+                    targetUserId: mentor.userId,
+                    collaborationId: collaboration?._id,
+                    type: "user-mentor",
+                }),
+                createContact({
+                    userId: mentor.userId,
+                    targetUserId: mentorRequestData.userId,
+                    collaborationId: collaboration?._id,
+                    type: "user-mentor",
+                }),
+            ]);
+            //delete Mentor Requset collection
             await deleteMentorRequest(requestId);
+            return { paymentIntent, contacts: [contact1, contact2] };
         }
         return paymentIntent;
     }
@@ -178,7 +202,7 @@ export const removecollab = async (collabId, reason) => {
 };
 //FOR ADMIN
 // Service to get all mentor requests
-export const getMentorRequestsService = async ({ page, limit, search }) => {
+export const getMentorRequestsService = async ({ page, limit, search, }) => {
     try {
         return await findMentorRequest({ page, limit, search });
     }
@@ -187,7 +211,7 @@ export const getMentorRequestsService = async ({ page, limit, search }) => {
     }
 };
 //For getting all collab details
-export const getCollabsService = async ({ page, limit, search }) => {
+export const getCollabsService = async ({ page, limit, search, }) => {
     try {
         return await findCollab({ page, limit, search });
     }
@@ -298,7 +322,9 @@ export const processTimeSlotRequest = async (collabId, requestId, isApproved, re
             const subject = "Request Rejection Notice";
             const text = `Dear ${recipientName},
 
-We regret to inform you that the request for ${requestType === "unavailable" ? "unavailable days" : "a time slot change"} in your mentorship session with ${otherPartyName} has been rejected.
+We regret to inform you that the request for ${requestType === "unavailable"
+                ? "unavailable days"
+                : "a time slot change"} in your mentorship session with ${otherPartyName} has been rejected.
 
 If you have any questions, please contact support.
 

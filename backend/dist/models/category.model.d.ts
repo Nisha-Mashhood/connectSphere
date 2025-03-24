@@ -1,5 +1,6 @@
 import { Document, Model } from "mongoose";
 export interface CategoryInterface extends Document {
+    categoryId: string;
     name: string;
     description?: string;
     imageUrl?: string | null;

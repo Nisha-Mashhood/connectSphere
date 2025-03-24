@@ -1,6 +1,7 @@
 import mongoose, { Document } from "mongoose";
 import { UserInterface } from "./user.model.js";
 export interface IUserConnection extends Document {
+    connectionId: string;
     requester: string | UserInterface;
     recipient: string | UserInterface;
     requestStatus: "Pending" | "Accepted" | "Rejected";

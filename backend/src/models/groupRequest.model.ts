@@ -17,7 +17,6 @@ const GroupRequestSchema: Schema = new Schema<GroupRequestDocument>(
     groupRequestId:{
         type: String,
         unique: true,
-        required: true
     },
     groupId: 
     { 

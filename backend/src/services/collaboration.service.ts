@@ -20,6 +20,8 @@ import {
 } from "../repositories/collaboration.repositry.js";
 import stripe from "../utils/stripe.utils.js";
 import { v4 as uuid } from "uuid";
+import { getMentorById } from "../repositories/mentor.repositry.js";
+import { createContact } from "../repositories/contacts.repository.js";
 
 export const TemporaryRequestService = async (requestData: any) => {
   try {
@@ -117,27 +119,28 @@ export const processPaymentService = async (
       const endDate = new Date(startDate);
 
       // Number of sessions user is entitled to
-      const totalSessions = mentorRequestData.timePeriod; 
-      console.log("total sessions:", totalSessions)
-      
-      // Find the weekly session day 
+      const totalSessions = mentorRequestData.timePeriod;
+      console.log("total sessions:", totalSessions);
+
+      // Find the weekly session day
       const sessionDay = mentorRequestData.selectedSlot?.day; // "Monday"
 
       let sessionCount = 0;
 
       // Loop until total sessions
       while (sessionCount < totalSessions) {
-      endDate.setDate(endDate.getDate() + 1); // Move to the next day
+        endDate.setDate(endDate.getDate() + 1); // Move to the next day
 
         // Check if the current day matches the mentor's available session day
-        if (endDate.toLocaleDateString('en-US', { weekday: 'long' }) === sessionDay) {
-        sessionCount++; // incremennt the session
+        if (
+          endDate.toLocaleDateString("en-US", { weekday: "long" }) ===
+          sessionDay
+        ) {
+          sessionCount++; // incremennt the session
         }
       }
 
-      //problem is with while loop
-
-      await createCollaboration({
+      const collaboration = await createCollaboration({
         mentorId: mentorRequestData.mentorId,
         userId: mentorRequestData.userId,
         selectedSlot: mentorRequestData.selectedSlot,
@@ -148,7 +151,32 @@ export const processPaymentService = async (
         endDate,
       });
 
+      // Fetch mentor details to get userId
+      const mentor = await getMentorById(mentorRequestData.mentorId);
+      if (!mentor || !mentor.userId) {
+        throw new Error("Mentor or mentor's userId not found");
+      }
+
+      // Create two Contact entries and capture their results
+      const [contact1, contact2] = await Promise.all([
+        createContact({
+          userId: mentorRequestData.userId,
+          targetUserId: mentor.userId as string,
+          collaborationId: collaboration?._id as string,
+          type: "user-mentor",
+        }),
+        createContact({
+          userId: mentor.userId as string,
+          targetUserId: mentorRequestData.userId,
+          collaborationId: collaboration?._id as string,
+          type: "user-mentor",
+        }),
+      ]);
+
+      //delete Mentor Requset collection
       await deleteMentorRequest(requestId);
+
+      return { paymentIntent, contacts: [contact1, contact2] };
     }
 
     return paymentIntent;
@@ -234,7 +262,15 @@ export const removecollab = async (collabId: string, reason: string) => {
 
 //FOR ADMIN
 // Service to get all mentor requests
-export const getMentorRequestsService = async ({ page, limit, search }: { page: number, limit: number, search: string }) => {
+export const getMentorRequestsService = async ({
+  page,
+  limit,
+  search,
+}: {
+  page: number;
+  limit: number;
+  search: string;
+}) => {
   try {
     return await findMentorRequest({ page, limit, search });
   } catch (error: any) {
@@ -243,7 +279,15 @@ export const getMentorRequestsService = async ({ page, limit, search }: { page: 
 };
 
 //For getting all collab details
-export const getCollabsService = async ({ page, limit, search }: { page: number, limit: number, search: string }) => {
+export const getCollabsService = async ({
+  page,
+  limit,
+  search,
+}: {
+  page: number;
+  limit: number;
+  search: string;
+}) => {
   try {
     return await findCollab({ page, limit, search });
   } catch (error: any) {
@@ -261,19 +305,24 @@ export const fetchRequsetById = async (requestId: string) => {
   return await fetchMentorRequsetDetails(requestId);
 };
 
-
-  // Service for updating unavailable days
+// Service for updating unavailable days
 export const markUnavailableDaysService = async (
   collabId: string,
   updateData: any
 ) => {
   console.log("came to collaboartion service");
   try {
-    const updatedCollaboartion = await updateUnavailableDays(collabId, updateData);
-    console.log("Updated collaboartion from service file :",updatedCollaboartion);
+    const updatedCollaboartion = await updateUnavailableDays(
+      collabId,
+      updateData
+    );
+    console.log(
+      "Updated collaboartion from service file :",
+      updatedCollaboartion
+    );
     return updatedCollaboartion;
   } catch (error) {
-    console.log("error in collaboartion service file :",error);
+    console.log("error in collaboartion service file :", error);
     throw new Error(`Service Error: ${error}`);
   }
 };
@@ -284,14 +333,20 @@ export const updateTemporarySlotChangesService = async (
   updateData: any
 ) => {
   try {
-    const updatedCollaboartion = await updateTemporarySlotChanges(collabId, updateData);
-    console.log("Updated collaboartion from service file :",updatedCollaboartion);
+    const updatedCollaboartion = await updateTemporarySlotChanges(
+      collabId,
+      updateData
+    );
+    console.log(
+      "Updated collaboartion from service file :",
+      updatedCollaboartion
+    );
     return updatedCollaboartion;
   } catch (error) {
-    console.log("error in collaboartion service file :",error);
+    console.log("error in collaboartion service file :", error);
     throw new Error(`Service Error: ${error}`);
   }
-}
+};
 
 //service for updating the status
 export const processTimeSlotRequest = async (
@@ -345,7 +400,11 @@ export const processTimeSlotRequest = async (
         );
         const selectedDay = collaboration.selectedSlot[0].day;
         const currentEndDate = collaboration.endDate || collaboration.startDate;
-        newEndDate = calculateNewEndDate(currentEndDate, unavailableDates, selectedDay);
+        newEndDate = calculateNewEndDate(
+          currentEndDate,
+          unavailableDates,
+          selectedDay
+        );
       }
     }
 
@@ -357,7 +416,10 @@ export const processTimeSlotRequest = async (
       status,
       newEndDate
     );
-    console.log("Updated collaboration from service file:", updatedCollaboration);
+    console.log(
+      "Updated collaboration from service file:",
+      updatedCollaboration
+    );
 
     // Send email if the request is rejected
     if (status === "rejected") {
@@ -392,7 +454,9 @@ export const processTimeSlotRequest = async (
       const text = `Dear ${recipientName},
 
 We regret to inform you that the request for ${
-        requestType === "unavailable" ? "unavailable days" : "a time slot change"
+        requestType === "unavailable"
+          ? "unavailable days"
+          : "a time slot change"
       } in your mentorship session with ${otherPartyName} has been rejected.
 
 If you have any questions, please contact support.
@@ -401,7 +465,11 @@ Best regards,
 ConnectSphere Team`;
 
       await sendEmail(recipientEmail, subject, text);
-      console.log(`Rejection email sent to ${requestedBy === "user" ? "mentor" : "user"}: ${recipientEmail}`);
+      console.log(
+        `Rejection email sent to ${
+          requestedBy === "user" ? "mentor" : "user"
+        }: ${recipientEmail}`
+      );
     }
 
     return updatedCollaboration;
@@ -415,7 +483,14 @@ ConnectSphere Team`;
 const calculateNewEndDate = (
   currentEndDate: Date,
   unavailableDates: Date[],
-  selectedDay: "Sunday" | "Monday" | "Tuesday" | "Wednesday" | "Thursday" | "Friday" | "Saturday"
+  selectedDay:
+    | "Sunday"
+    | "Monday"
+    | "Tuesday"
+    | "Wednesday"
+    | "Thursday"
+    | "Friday"
+    | "Saturday"
 ): Date => {
   const dayMap: { [key in typeof selectedDay]: number } = {
     Sunday: 0,

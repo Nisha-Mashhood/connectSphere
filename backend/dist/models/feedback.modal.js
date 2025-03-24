@@ -1,5 +1,10 @@
 import mongoose, { Schema } from 'mongoose';
+import { generateCustomId } from '../utils/idGenerator.utils.js';
 const FeedbackSchema = new Schema({
+    feedbackId: {
+        type: String,
+        unique: true,
+    },
     userId: {
         type: mongoose.Schema.Types.ObjectId,
         ref: "User",
@@ -55,5 +60,12 @@ const FeedbackSchema = new Schema({
         required: true,
     },
 }, { timestamps: true });
+// Pre-save hook to generate feedbackId
+FeedbackSchema.pre("save", async function (next) {
+    if (!this.feedbackId) {
+        this.feedbackId = await generateCustomId("feedback", "FDB");
+    }
+    next();
+});
 export default mongoose.model("Feedback", FeedbackSchema);
 //# sourceMappingURL=feedback.modal.js.map

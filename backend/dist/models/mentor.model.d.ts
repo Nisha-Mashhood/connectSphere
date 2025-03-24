@@ -1,6 +1,7 @@
 import mongoose, { Document } from "mongoose";
 import { UserInterface } from "./user.model.js";
 export interface IMentor extends Document {
+    mentorId: string;
     userId: string | UserInterface;
     isApproved?: string;
     rejectionReason?: string;

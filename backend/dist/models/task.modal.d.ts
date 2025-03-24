@@ -1,5 +1,6 @@
 import mongoose, { Document, Model } from "mongoose";
 export interface ITask extends Document {
+    taskId: string;
     name: string;
     description?: string;
     image?: string;
@@ -8,7 +9,7 @@ export interface ITask extends Document {
     startDate: Date;
     dueDate: Date;
     notificationDate?: Date;
-    notificationTime?: String;
+    notificationTime?: string;
     notificationSubscription?: {
         endpoint: string;
         keys: {

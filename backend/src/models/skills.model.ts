@@ -17,7 +17,6 @@ const skillSchema: Schema<SkillInterface> = new Schema(
       skillId:{
         type: String,
         unique: true,
-        required: true,
       },
       name: { 
         type: String, 

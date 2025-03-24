@@ -26,7 +26,6 @@ const GroupSchema: Schema = new Schema<GroupDocument>(
     groupId:{
         type: String,
         unique: true,
-        required: true
     },
     name: 
     { 

@@ -1,4 +1,5 @@
 import { GroupFormData } from "../repositories/group.repositry.js";
+import { Stripe } from "stripe";
 export declare const createGroupService: (groupData: GroupFormData) => Promise<import("mongoose").Document<unknown, {}, import("../models/group.model.js").GroupDocument> & import("../models/group.model.js").GroupDocument & Required<{
     _id: unknown;
 }> & {
@@ -46,10 +47,12 @@ export declare const modifyGroupRequestStatus: (requestId: string, status: "Acce
 }) | {
     message: string;
 } | undefined>;
-export declare const processGroupPaymentService: (paymentMethodId: string, amount: number, requestId: string, email: string, groupRequestData: {
+export declare const processGroupPaymentService: (paymentMethodId: string | {
+    id: string;
+}, amount: number, requestId: string, email: string, groupRequestData: {
     groupId: string;
     userId: string;
-}, returnUrl: string) => Promise<import("stripe").Stripe.Response<import("stripe").Stripe.PaymentIntent>>;
+}, returnUrl: string) => Promise<Stripe.Response<Stripe.PaymentIntent>>;
 export declare const removeMemberFromGroup: (groupId: string, userId: string) => Promise<(import("mongoose").Document<unknown, {}, import("../models/group.model.js").GroupDocument> & import("../models/group.model.js").GroupDocument & Required<{
     _id: unknown;
 }> & {

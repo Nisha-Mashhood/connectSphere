@@ -1,5 +1,10 @@
 import mongoose, { Schema } from "mongoose";
+import { generateCustomId } from '../utils/idGenerator.utils.js';
 const MentorRequestSchema = new Schema({
+    mentorRequestId: {
+        type: String,
+        unique: true,
+    },
     mentorId: {
         type: Schema.Types.ObjectId,
         ref: "Mentor",
@@ -34,5 +39,12 @@ const MentorRequestSchema = new Schema({
         default: "Pending"
     },
 }, { timestamps: true });
+// Pre-save hook to generate mentorRequestId
+MentorRequestSchema.pre("save", async function (next) {
+    if (!this.mentorRequestId) {
+        this.mentorRequestId = await generateCustomId("mentorRequest", "MRQ");
+    }
+    next();
+});
 export default mongoose.model("MentorRequest", MentorRequestSchema);
 //# sourceMappingURL=mentorRequset.js.map

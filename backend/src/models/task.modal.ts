@@ -34,7 +34,6 @@ const taskSchema: Schema<ITask> = new mongoose.Schema({
   taskId: {
     type: String,
     unique: true,
-    required: true
   },
   name: {
     type: String,

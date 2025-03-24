@@ -19,7 +19,6 @@ const MentorRequestSchema: Schema = new Schema(
     mentorRequestId:{
       type: String,
       unique: true,
-      required: true
     },
     mentorId: { 
       type: Schema.Types.ObjectId, 

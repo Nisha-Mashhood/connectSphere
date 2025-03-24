@@ -23,7 +23,10 @@ export declare const getRequsetForUser: (userId: string) => Promise<(import("mon
 }> & {
     __v: number;
 })[]>;
-export declare const processPaymentService: (paymentMethodId: string, amount: number, requestId: string, mentorRequestData: any, email: string, returnUrl: string) => Promise<import("stripe").Stripe.Response<import("stripe").Stripe.PaymentIntent>>;
+export declare const processPaymentService: (paymentMethodId: string, amount: number, requestId: string, mentorRequestData: any, email: string, returnUrl: string) => Promise<import("stripe").Stripe.Response<import("stripe").Stripe.PaymentIntent> | {
+    paymentIntent: import("stripe").Stripe.Response<import("stripe").Stripe.PaymentIntent>;
+    contacts: import("../models/contacts.model.js").IContact[];
+}>;
 export declare const getCollabDataForUserService: (userId: string) => Promise<(import("mongoose").Document<unknown, {}, import("../models/collaboration.js").ICollaboration> & import("../models/collaboration.js").ICollaboration & Required<{
     _id: unknown;
 }> & {
@@ -39,7 +42,7 @@ export declare const removecollab: (collabId: string, reason: string) => Promise
 }> & {
     __v: number;
 }) | null>;
-export declare const getMentorRequestsService: ({ page, limit, search }: {
+export declare const getMentorRequestsService: ({ page, limit, search, }: {
     page: number;
     limit: number;
     search: string;
@@ -53,7 +56,7 @@ export declare const getMentorRequestsService: ({ page, limit, search }: {
     page: number;
     pages: number;
 }>;
-export declare const getCollabsService: ({ page, limit, search }: {
+export declare const getCollabsService: ({ page, limit, search, }: {
     page: number;
     limit: number;
     search: string;

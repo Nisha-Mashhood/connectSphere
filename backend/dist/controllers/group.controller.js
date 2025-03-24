@@ -4,7 +4,6 @@ fetchGroupDetails,
 // fetchGroupDetailsById,
 fetchGroupDetailsService, fetchGroupRequestById, fetchGroupRequestsByAdminId, fetchGroupRequestsByGroupId, fetchGroupRequestsByuserId, fetchGroups, groupDetilsForMembers, modifyGroupRequestStatus, processGroupPaymentService, removeMemberFromGroup, requestToJoinGroup, updateGroupImageService, } from "../services/group.service.js";
 import { findRequestById } from "../repositories/group.repositry.js";
-import fs from "fs";
 import { uploadImage } from "../utils/cloudinary.utils.js";
 export const createGroup = async (req, res) => {
     try {
@@ -235,6 +234,7 @@ export const deleteGroup = async (req, res) => {
 };
 //Update the profile picture and cover picture for the group
 export const updateGroupImage = async (req, res) => {
+    console.log(req.body);
     try {
         const { groupId } = req.params;
         const files = req.files;
@@ -251,26 +251,15 @@ export const updateGroupImage = async (req, res) => {
         }
         let profilePicUrl;
         let coverPicUrl;
-        // Function to delete file
-        const deleteFile = (filePath) => {
-            fs.unlink(filePath, (err) => {
-                if (err)
-                    console.error(`Error deleting file: ${filePath}`, err);
-            });
-        };
         // Upload profile picture if available
         if (files["profilePic"]?.[0]) {
             const profilePicPath = files["profilePic"][0].path;
             profilePicUrl = await uploadImage(profilePicPath, "group_profile_pictures");
-            // Delete the file asynchronously
-            deleteFile(profilePicPath);
         }
         // Upload cover picture if available
         if (files["coverPic"]?.[0]) {
             const coverPicPath = files["coverPic"][0].path;
             coverPicUrl = await uploadImage(coverPicPath, "group_cover_pictures");
-            // Delete the file asynchronously
-            deleteFile(coverPicPath);
         }
         // Update the group record
         const updatedGroup = await updateGroupImageService(groupId, profilePicUrl, coverPicUrl);

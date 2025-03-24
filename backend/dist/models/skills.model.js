@@ -1,6 +1,11 @@
 import mongoose, { Schema } from "mongoose";
+import { generateCustomId } from '../utils/idGenerator.utils.js';
 // Skill Schema
 const skillSchema = new Schema({
+    skillId: {
+        type: String,
+        unique: true,
+    },
     name: {
         type: String,
         required: true
@@ -24,5 +29,12 @@ const skillSchema = new Schema({
         default: null
     },
 }, { timestamps: true });
+// Pre-save hook to generate skillId
+skillSchema.pre("save", async function (next) {
+    if (!this.skillId) {
+        this.skillId = await generateCustomId("skill", "SKL");
+    }
+    next();
+});
 export const Skill = mongoose.model("Skill", skillSchema);
 //# sourceMappingURL=skills.model.js.map

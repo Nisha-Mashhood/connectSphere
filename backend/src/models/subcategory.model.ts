@@ -17,7 +17,6 @@ const SubcategorySchema: Schema<SubcategoryInterface> = new mongoose.Schema(
       subcategoryId: {
         type: String,
         unique: true,
-        required: true
       },
       name: { 
         type: String, 

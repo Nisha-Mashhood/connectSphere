@@ -1,5 +1,6 @@
 import mongoose, { Document } from 'mongoose';
 export interface GroupRequestDocument extends Document {
+    groupRequestId: string;
     groupId: mongoose.Types.ObjectId;
     userId: mongoose.Types.ObjectId;
     status: 'Pending' | 'Accepted' | 'Rejected';

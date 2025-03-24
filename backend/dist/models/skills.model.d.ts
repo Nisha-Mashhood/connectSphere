@@ -1,5 +1,6 @@
 import mongoose, { Document, Model } from "mongoose";
 export interface SkillInterface extends Document {
+    skillId: string;
     name: string;
     categoryId: mongoose.Types.ObjectId;
     subcategoryId: mongoose.Types.ObjectId;

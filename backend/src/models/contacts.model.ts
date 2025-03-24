@@ -4,11 +4,11 @@ import { generateCustomId } from "../utils/idGenerator.utils.js";
 export interface IContact extends Document {
   _id: mongoose.Types.ObjectId; 
   contactId: string; 
-  userId: mongoose.Types.ObjectId; 
-  targetUserId?: mongoose.Types.ObjectId; 
-  collaborationId?: mongoose.Types.ObjectId; 
-  userConnectionId?: mongoose.Types.ObjectId; 
-  groupId?: mongoose.Types.ObjectId; 
+  userId: string | mongoose.Types.ObjectId; 
+  targetUserId?: string | mongoose.Types.ObjectId; 
+  collaborationId?: string | mongoose.Types.ObjectId; 
+  userConnectionId?: string | mongoose.Types.ObjectId; 
+  groupId?: string | mongoose.Types.ObjectId; 
   type: "user-mentor" | "user-user" | "group"; 
   createdAt: Date;
   updatedAt: Date;
@@ -19,7 +19,6 @@ const contactSchema: Schema<IContact> = new mongoose.Schema(
     contactId: { 
         type: String, 
         unique: true, 
-        required: true 
     }, 
     userId: { 
         type: Schema.Types.ObjectId, 
@@ -58,5 +57,16 @@ contactSchema.pre("save", async function (next) {
   }
   next();
 });
+
+// Ensure contactId is set for bulk operations like insertMany
+contactSchema.pre("insertMany", async function (next, docs) {
+  for (const doc of docs) {
+    if (!doc.contactId) {
+      doc.contactId = await generateCustomId("contact", "CNT");
+    }
+  }
+  next();
+});
+
 
 export default mongoose.model<IContact>("Contact", contactSchema);

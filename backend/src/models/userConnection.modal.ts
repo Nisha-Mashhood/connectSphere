@@ -21,7 +21,6 @@ const UserConnectionSchema: Schema = new Schema(
     connectionId:{
       type: String,
       unique: true,
-      required: true
     },
     requester: {
       type: Schema.Types.ObjectId,

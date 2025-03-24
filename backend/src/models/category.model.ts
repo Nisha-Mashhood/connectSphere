@@ -16,7 +16,6 @@ const categorySchema: Schema<CategoryInterface> = new mongoose.Schema(
       categoryId: { 
         type: String, 
         unique: true, 
-        required: true 
     },
       name: { 
         type: String, 

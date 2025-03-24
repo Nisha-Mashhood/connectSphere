@@ -1,5 +1,6 @@
 import mongoose, { Document } from 'mongoose';
 export interface IFeedback extends Document {
+    feedbackId: string;
     userId: mongoose.Types.ObjectId;
     mentorId: mongoose.Types.ObjectId;
     collaborationId: mongoose.Types.ObjectId;

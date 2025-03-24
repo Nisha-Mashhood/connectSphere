@@ -1,3 +1,4 @@
+import { createContact } from "../repositories/contacts.repository.js";
 import * as userConnectionRepo from "../repositories/user-userRepo.repositry.js";
 export const sendUserConnectionRequest = async (requesterId, recipientId) => {
     // Prevent sending a request to self
@@ -13,7 +14,21 @@ export const sendUserConnectionRequest = async (requesterId, recipientId) => {
     return await userConnectionRepo.createUserConnection(requesterId, recipientId);
 };
 export const respondToConnectionRequest = async (connectionId, action) => {
-    return await userConnectionRepo.updateUserConnectionStatus(connectionId, action);
+    const updatedConnection = await userConnectionRepo.updateUserConnectionStatus(connectionId, action);
+    if (!updatedConnection) {
+        throw new Error("Connection not found");
+    }
+    // If the request is accepted, create Contact entries
+    if (action === "Accepted") {
+        const requesterId = updatedConnection.requester.toString();
+        const recipientId = updatedConnection.recipient.toString();
+        const [contact1, contact2] = await Promise.all([
+            createContact({ userId: requesterId, targetUserId: recipientId, userConnectionId: connectionId, type: "user-user" }),
+            createContact({ userId: recipientId, targetUserId: requesterId, userConnectionId: connectionId, type: "user-user" }),
+        ]);
+        return { updatedConnection, contacts: [contact1, contact2] };
+    }
+    return updatedConnection;
 };
 export const disconnectConnection = async (connectionId, reason) => {
     return await userConnectionRepo.disconnectUserConnection(connectionId, reason);

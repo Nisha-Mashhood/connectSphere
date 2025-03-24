@@ -1,6 +1,11 @@
 import mongoose from "mongoose";
 import config from '../config/env.config.js';
+import { generateCustomId } from "../utils/idGenerator.utils.js";
 const userSchema = new mongoose.Schema({
+    userId: {
+        type: String,
+        unique: true,
+    },
     name: {
         type: String,
         required: true
@@ -69,6 +74,13 @@ const userSchema = new mongoose.Schema({
         required: false
     },
 }, { timestamps: true });
+// Pre-save hook to generate userId
+userSchema.pre("save", async function (next) {
+    if (!this.userId) {
+        this.userId = await generateCustomId("user", "USR");
+    }
+    next();
+});
 const User = mongoose.model("User", userSchema);
 export default User;
 //# sourceMappingURL=user.model.js.map

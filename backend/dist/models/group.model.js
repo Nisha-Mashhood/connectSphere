@@ -1,5 +1,10 @@
 import mongoose, { Schema } from 'mongoose';
+import { generateCustomId } from '../utils/idGenerator.utils.js';
 const GroupSchema = new Schema({
+    groupId: {
+        type: String,
+        unique: true,
+    },
     name: {
         type: String,
         required: true
@@ -64,6 +69,13 @@ const GroupSchema = new Schema({
         default: Date.now
     },
 }, { timestamps: true });
+// Pre-save hook to generate groupId
+GroupSchema.pre("save", async function (next) {
+    if (!this.groupId) {
+        this.groupId = await generateCustomId("group", "GRP");
+    }
+    next();
+});
 const Group = mongoose.model('Group', GroupSchema);
 export default Group;
 //# sourceMappingURL=group.model.js.map

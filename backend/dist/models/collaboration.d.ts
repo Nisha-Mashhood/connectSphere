@@ -2,6 +2,7 @@ import mongoose, { Document } from "mongoose";
 import { IMentor } from "./mentor.model.js";
 import { UserInterface } from "./user.model.js";
 export interface ICollaboration extends Document {
+    collaborationId: string;
     mentorId: IMentor | string;
     userId: UserInterface | string;
     selectedSlot: {

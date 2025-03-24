@@ -1,3 +1,4 @@
+import { createContact } from "../repositories/contacts.repository.js";
 import { IUserConnection } from "../models/userConnection.modal.js";
 import * as userConnectionRepo from "../repositories/user-userRepo.repositry.js";
 
@@ -21,7 +22,24 @@ export const sendUserConnectionRequest = async (requesterId: string, recipientId
 };
 
 export const respondToConnectionRequest = async (connectionId: string, action: "Accepted" | "Rejected") => {
-  return await userConnectionRepo.updateUserConnectionStatus(connectionId, action);
+  const updatedConnection = await userConnectionRepo.updateUserConnectionStatus(connectionId, action);
+
+  if (!updatedConnection) {
+    throw new Error("Connection not found");
+  }
+
+  // If the request is accepted, create Contact entries
+  if (action === "Accepted") {
+    const requesterId = updatedConnection.requester.toString();
+  const recipientId = updatedConnection.recipient.toString();
+  const [contact1, contact2] = await Promise.all([
+    createContact({ userId: requesterId, targetUserId: recipientId, userConnectionId: connectionId, type: "user-user" }),
+    createContact({ userId: recipientId, targetUserId: requesterId, userConnectionId: connectionId, type: "user-user" }),
+  ]);
+  return { updatedConnection, contacts: [contact1, contact2] };
+  }
+
+  return updatedConnection;
 };
 
 export const disconnectConnection = async (connectionId: string, reason: string) => {

@@ -42,7 +42,6 @@ const CollaborationSchema: Schema = new Schema(
     collaborationId: {
       type: String, 
       unique: true, 
-      required: true
     },
     mentorId: { 
       type: Schema.Types.ObjectId, 

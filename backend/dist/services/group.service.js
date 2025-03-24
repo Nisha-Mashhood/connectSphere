@@ -8,6 +8,7 @@ getGroupRequestsByAdminId, getGroupRequestsByGroupId, getGroupRequestsByuserId, 
 import stripe from "../utils/stripe.utils.js";
 import { v4 as uuid } from "uuid";
 import { findUserById } from "../repositories/user.repositry.js";
+import { createContact } from "../repositories/contacts.repository.js";
 export const createGroupService = async (groupData) => {
     if (!groupData.name ||
         !groupData.bio ||
@@ -107,25 +108,31 @@ export const modifyGroupRequestStatus = async (requestId, status) => {
     throw new Error("Invalid status.");
 };
 export const processGroupPaymentService = async (paymentMethodId, amount, requestId, email, groupRequestData, returnUrl) => {
-    // Generate a unique key for this transaction to prevent duplicate charges
     const idempotencyKey = uuid();
     try {
-        // Check if customer already exists, otherwise create one
-        let customers = await stripe.customers.list({ email, limit: 1 });
-        let customer = customers.data.length > 0 ? customers.data[0] : null;
-        // Create a customer in Stripe with payment_method instead of source
-        if (!customer) {
-            customer = await stripe.customers.create({
-                email,
-                payment_method: paymentMethodId,
-                invoice_settings: { default_payment_method: paymentMethodId },
-            });
+        // Extract payment method ID if it's an object
+        const paymentMethodIdString = typeof paymentMethodId === "string" ? paymentMethodId : paymentMethodId.id;
+        if (!paymentMethodIdString || typeof paymentMethodIdString !== "string") {
+            throw new Error("Invalid paymentMethodId: must be a string or an object with an 'id' property");
         }
-        // Create a PaymentIntent instead of a direct charge
-        const paymentIntent = await stripe.paymentIntents.create({
+        console.log(`Processing payment with paymentMethodId: ${paymentMethodIdString}`);
+        // List customers with email filter (explicitly typed)
+        const customerListParams = { email, limit: 1 };
+        const customers = await stripe.customers.list(customerListParams);
+        let customer = customers.data.length > 0 ? customers.data[0] : null;
+        if (!customer) {
+            const customerCreateParams = {
+                email,
+                payment_method: paymentMethodIdString,
+                invoice_settings: { default_payment_method: paymentMethodIdString },
+            };
+            customer = await stripe.customers.create(customerCreateParams);
+        }
+        const paymentIntentParams = {
             amount,
             currency: "inr",
             customer: customer.id,
+            payment_method: paymentMethodIdString,
             confirm: true,
             description: `Payment for Group Request ID: ${requestId}`,
             receipt_email: email,
@@ -134,15 +141,17 @@ export const processGroupPaymentService = async (paymentMethodId, amount, reques
                 groupId: groupRequestData.groupId,
                 userId: groupRequestData.userId,
             },
-            return_url: `${returnUrl}?payment_status=success&request_id=${requestId}`
-        }, { idempotencyKey });
-        // If payment succeeded, update database records
+            return_url: `${returnUrl}?payment_status=success&request_id=${requestId}`,
+        };
+        const paymentIntent = await stripe.paymentIntents.create(paymentIntentParams, { idempotencyKey });
         if (paymentIntent.status === "succeeded") {
-            // Update group payment status to "Paid"
             await updateGroupPaymentStatus(requestId, amount / 100);
-            // Add the user to the group as a member
             await addMemberToGroup(groupRequestData.groupId, groupRequestData.userId);
-            // Delete the group request since payment is completed
+            await createContact({
+                userId: groupRequestData.userId,
+                groupId: groupRequestData.groupId,
+                type: "group",
+            });
             await deleteGroupRequest(requestId);
         }
         return paymentIntent;

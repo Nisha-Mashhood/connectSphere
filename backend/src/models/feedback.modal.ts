@@ -21,7 +21,6 @@ const FeedbackSchema: Schema = new Schema(
     feedbackId:{
       type: String,
       unique: true,
-      required:true,
     },
     userId: {
       type: mongoose.Schema.Types.ObjectId,

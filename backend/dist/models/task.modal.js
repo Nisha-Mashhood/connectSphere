@@ -1,5 +1,10 @@
 import mongoose from "mongoose";
+import { generateCustomId } from '../utils/idGenerator.utils.js';
 const taskSchema = new mongoose.Schema({
+    taskId: {
+        type: String,
+        unique: true,
+    },
     name: {
         type: String,
         required: true,
@@ -71,7 +76,7 @@ const taskSchema = new mongoose.Schema({
     assignedCollaborations: [
         {
             type: mongoose.Schema.Types.ObjectId,
-            ref: "Mentor",
+            ref: "Collaboration",
         },
     ],
     assignedGroups: [
@@ -87,8 +92,13 @@ const taskSchema = new mongoose.Schema({
     },
     createdAt: { type: Date, default: Date.now },
 });
-// Automatically mark as "not-completed" if past due date
-taskSchema.pre("save", function (next) {
+taskSchema.pre("save", async function (next) {
+    // Generate taskId if not set
+    if (!this.taskId) {
+        this.taskId = await generateCustomId("task", "TSK");
+    }
+    // Update status if past due date
+    // Automatically mark as "not-completed" if past due date
     if (this.dueDate && new Date() > this.dueDate && this.status !== "completed") {
         this.status = "not-completed";
     }

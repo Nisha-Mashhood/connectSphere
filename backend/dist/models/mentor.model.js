@@ -1,5 +1,10 @@
 import mongoose, { Schema } from "mongoose";
+import { generateCustomId } from '../utils/idGenerator.utils.js';
 const MentorSchema = new Schema({
+    mentorId: {
+        type: String,
+        unique: true,
+    },
     userId: {
         type: Schema.Types.ObjectId,
         ref: "User",
@@ -49,5 +54,12 @@ const MentorSchema = new Schema({
         default: 30
     }
 }, { timestamps: true });
+// Pre-save hook to generate mentorId
+MentorSchema.pre("save", async function (next) {
+    if (!this.mentorId) {
+        this.mentorId = await generateCustomId("groupRequest", "GRQ");
+    }
+    next();
+});
 export default mongoose.model("Mentor", MentorSchema);
 //# sourceMappingURL=mentor.model.js.map

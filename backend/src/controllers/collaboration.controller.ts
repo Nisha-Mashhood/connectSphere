@@ -118,13 +118,13 @@ export const makeStripePaymentController = async (
   res: Response
 ) => {
   const { paymentMethodId, amount, requestId, email, returnUrl } = req.body;
-  // console.log(req.body);
+
   try {
     // Validate returnUrl
     if (!returnUrl) {
-      res.status(400).json({ 
-        status: "failure", 
-        error: "A return URL is required for processing the payment" 
+      res.status(400).json({
+        status: "failure",
+        error: "A return URL is required for processing the payment",
       });
       return;
     }
@@ -150,24 +150,30 @@ export const makeStripePaymentController = async (
     );
 
     // Handle different payment intent statuses
-    if (paymentResult.status === "requires_action" && paymentResult.next_action) {
-      console.log(paymentResult.status)
+    const paymentIntent = "paymentIntent" in paymentResult ? paymentResult.paymentIntent : paymentResult;
+
+    if (paymentIntent.status === "requires_action" && paymentIntent.next_action) {
+      console.log(paymentIntent.status);
       // Payment requires additional action (like 3D Secure)
-      res.status(200).json({ 
-        status: "requires_action", 
-        charge: paymentResult 
+      res.status(200).json({
+        status: "requires_action",
+        charge: paymentIntent,
       });
       return;
-    } else if (paymentResult.status === "succeeded") {
+    } else if (paymentIntent.status === "succeeded") {
       // Payment succeeded
-      res.status(200).json({ status: "success", charge: paymentResult });
+      res.status(200).json({
+        status: "success",
+        charge: paymentIntent,
+        contacts: "contacts" in paymentResult ? paymentResult.contacts : undefined, // Include contacts if present
+      });
       return;
     } else {
       // Payment failed or is pending
-      res.status(200).json({ 
-        status: "pending", 
-        charge: paymentResult,
-        message: `Payment status: ${paymentResult.status}` 
+      res.status(200).json({
+        status: "pending",
+        charge: paymentIntent,
+        message: `Payment status: ${paymentIntent.status}`,
       });
       return;
     }

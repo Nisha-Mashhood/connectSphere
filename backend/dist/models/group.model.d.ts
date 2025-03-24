@@ -4,6 +4,7 @@ export interface TimeSlot {
     timeSlots: string[];
 }
 export interface GroupDocument extends Document {
+    groupId: string;
     name: string;
     bio: string;
     price: number;
