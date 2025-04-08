@@ -31,8 +31,10 @@ import { v4 as uuid } from "uuid";
 import { Stripe } from "stripe";
 import { findUserById } from "../repositories/user.repositry.js";
 import { createContact } from "../repositories/contacts.repository.js";
+import { GroupDocument } from "../models/group.model.js";
+import mongoose from "mongoose";
 
-export const createGroupService = async (groupData: GroupFormData) => {
+export const createGroupService = async (groupData: GroupFormData): Promise<GroupDocument> => {
   if (
     !groupData.name ||
     !groupData.bio ||
@@ -46,13 +48,26 @@ export const createGroupService = async (groupData: GroupFormData) => {
     throw new Error("At least one available slot is required");
   }
 
-  // Process data if necessary
-  const groupPayload = {
+  const groupPayload: GroupFormData = {
     ...groupData,
     createdAt: new Date(),
   };
 
-  return await createGroupRepository(groupPayload);
+  const newGroup: GroupDocument = await createGroupRepository(groupPayload);
+
+  if (!newGroup) {
+    throw new Error("No group created");
+  }
+  console.log("newGroup:", newGroup);
+  console.log("newGroup._id:", newGroup._id);
+
+  await createContact({
+    userId: groupData.adminId,
+    groupId: (newGroup._id as mongoose.Types.ObjectId).toString(), 
+    type: "group",
+  });
+
+  return newGroup;
 };
 
 //Get group details using adminId
@@ -134,10 +149,18 @@ export const modifyGroupRequestStatus = async (
     } else {
       // If no payment is required, add user to group and delete request
       await updateGroupReqStatus(requestId, "Accepted");
+      //Add members to the group
       await addMemberToGroup(
         (group._id as any).toString(),
         (request.userId as any).toString()
       );
+      //Add to contact collection
+      await createContact({
+        userId: (request.userId as any).toString(),
+        groupId: (group._id as any).toString(),
+        type: "group",
+      });
+
       await deleteGroupRequest(requestId);
       return { message: "User added to group successfully." };
     }

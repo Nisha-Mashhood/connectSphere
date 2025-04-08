@@ -4,7 +4,7 @@ fetchGroupDetails,
 // fetchGroupDetailsById,
 fetchGroupDetailsService, fetchGroupRequestById, fetchGroupRequestsByAdminId, fetchGroupRequestsByGroupId, fetchGroupRequestsByuserId, fetchGroups, groupDetilsForMembers, modifyGroupRequestStatus, processGroupPaymentService, removeMemberFromGroup, requestToJoinGroup, updateGroupImageService, } from "../services/group.service.js";
 import { findRequestById } from "../repositories/group.repositry.js";
-import { uploadImage } from "../utils/cloudinary.utils.js";
+import { uploadMedia } from "../utils/cloudinary.utils.js";
 export const createGroup = async (req, res) => {
     try {
         const groupData = req.body;
@@ -254,12 +254,14 @@ export const updateGroupImage = async (req, res) => {
         // Upload profile picture if available
         if (files["profilePic"]?.[0]) {
             const profilePicPath = files["profilePic"][0].path;
-            profilePicUrl = await uploadImage(profilePicPath, "group_profile_pictures");
+            const { url } = await uploadMedia(profilePicPath, "group_profile_pictures", profilePic.size);
+            profilePicUrl = url;
         }
         // Upload cover picture if available
         if (files["coverPic"]?.[0]) {
             const coverPicPath = files["coverPic"][0].path;
-            coverPicUrl = await uploadImage(coverPicPath, "group_cover_pictures");
+            const { url } = await uploadMedia(coverPicPath, "group_cover_pictures", coverPic.size);
+            coverPicUrl = url;
         }
         // Update the group record
         const updatedGroup = await updateGroupImageService(groupId, profilePicUrl, coverPicUrl);
@@ -289,29 +291,6 @@ export const fetchGroupDetailsForMembers = async (req, res) => {
         res.status(500).json({ message: "Internal server error" });
     }
 };
-// // Get all groups
-// export const getAllGroupsController = async (_req: Request, res: Response) => {
-//   try {
-//     const groups = await fetchAllGroups();
-//     res.status(200).json(groups);
-//   } catch (error: any) {
-//     res.status(500).json({ message: error.message });
-//   }
-// };
-// // Get group details by ID
-// export const getGroupDetailsByIdController = async (req: Request, res: Response) => {
-//   try {
-//     const groupId = req.params.groupId;
-//     const groupDetails = await fetchGroupDetailsById(groupId);
-//     if (!groupDetails) {
-//       res.status(404).json({ message: "Group not found" });
-//       return 
-//     }
-//     res.status(200).json(groupDetails);
-//   } catch (error: any) {
-//     res.status(500).json({ message: error.message });
-//   }
-// };
 // Get all group requests
 export const getAllGroupRequestsController = async (_req, res) => {
     try {

@@ -22,6 +22,7 @@ import CreateGroupForm from "../Components/Forms/CreateGroupForm";
 import GroupDetails from "../Components/User/Common/Profile/GroupDetails";
 import GroupDetailView from "../Components/User/Common/Profile/GroupDetailView";
 import CollaborationDetails from "../Components/User/Common/Profile/CollaboartionDetails/CollaborationDetails";
+import Chat from "../Components/User/Common/Chat/Chat";
 
 
 
@@ -49,6 +50,8 @@ const UserRoutes = () => (
         <Route path="/groupDetails/:groupId" element={<GroupDetails />} />
         <Route path="/group/:groupId" element={<GroupDetailView />} />
         <Route path="/collaboration/:collabId" element={<CollaborationDetails />} />
+        <Route path="/chat" element={<Chat />} />
+        <Route path="/chat/:type/:id" element={<Chat />} />
       </Route>
 
       <Route path="*" element={<PageNotFound />} />

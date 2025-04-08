@@ -52,57 +52,30 @@ const MentorProfileForm = () => {
   const validateForm = (): Errors => {
     const newErrors: Errors = {};
 
-    // Specialization
-    if (!specialization.trim()) {
-      newErrors.specialization = "Specialization is required";
-    } else if (specialization.length < 3) {
-      newErrors.specialization = "Specialization must be at least 3 characters";
-    } else if (specialization.length > 100) {
-      newErrors.specialization = "Specialization cannot exceed 100 characters";
-    }
+    if (!specialization.trim()) newErrors.specialization = "Specialization is required";
+    else if (specialization.length < 3) newErrors.specialization = "Specialization must be at least 3 characters";
+    else if (specialization.length > 100) newErrors.specialization = "Specialization cannot exceed 100 characters";
 
-    // Bio
-    if (!bio.trim()) {
-      newErrors.bio = "Bio is required";
-    } else if (bio.length < 10) {
-      newErrors.bio = "Bio must be at least 10 characters";
-    } else if (bio.length > 500) {
-      newErrors.bio = "Bio cannot exceed 500 characters";
-    }
+    if (!bio.trim()) newErrors.bio = "Bio is required";
+    else if (bio.length < 10) newErrors.bio = "Bio must be at least 10 characters";
+    else if (bio.length > 500) newErrors.bio = "Bio cannot exceed 500 characters";
 
-    // Price
-    if (!price) {
-      newErrors.price = "Price is required";
-    } else if (Number(price) <= 100) {
-      newErrors.price = "Price must be greater than ₹100";
-    }
+    if (!price) newErrors.price = "Price is required";
+    else if (Number(price) <= 100) newErrors.price = "Price must be greater than ₹100";
 
-    // Skills
-    if (selectedSkills.length === 0) {
-      newErrors.skills = "At least one skill is required";
-    }
+    if (selectedSkills.length === 0) newErrors.skills = "At least one skill is required";
 
-    // Certificates
-    if (certificates.length === 0) {
-      newErrors.certificates = "At least one certificate is required";
-    }
+    if (certificates.length === 0) newErrors.certificates = "At least one certificate is required";
 
-    // Available Slots
-    if (availableSlots.length === 0) {
-      newErrors.availableSlots = "At least one available slot is required";
-    }
+    if (availableSlots.length === 0) newErrors.availableSlots = "At least one available slot is required";
 
-    // Time Period
-    if (!timePeriod) {
-      newErrors.timePeriod = "Number of sessions is required";
-    } else if (Number(timePeriod) < 5) {
-      newErrors.timePeriod = "You must offer at least 5 sessions";
-    }
+    if (!timePeriod) newErrors.timePeriod = "Number of sessions is required";
+    else if (Number(timePeriod) < 5) newErrors.timePeriod = "You must offer at least 5 sessions";
 
     return newErrors;
   };
 
-  // Handle input changes with validation
+  // Handle input changes with immediate validation
   const handleInputChange = (field: keyof Errors, value: any) => {
     switch (field) {
       case "specialization":
@@ -127,8 +100,14 @@ const MentorProfileForm = () => {
         setAvailableSlots(value);
         break;
     }
+    // Validate immediately and update errors
     const newErrors = validateForm();
-    setErrors((prev) => ({ ...prev, [field]: newErrors[field] }));
+    setErrors((prev) => {
+      const updatedErrors = { ...prev };
+      if (!newErrors[field]) delete updatedErrors[field]; 
+      else updatedErrors[field] = newErrors[field];
+      return updatedErrors;
+    });
   };
 
   // Handle skill selection
@@ -223,7 +202,7 @@ const MentorProfileForm = () => {
         }
         return slot;
       })
-      .filter(Boolean);
+      .filter(Boolean) as { day: string; timeSlots: string[] }[];
     handleInputChange("availableSlots", updatedSlots);
   };
 
@@ -509,7 +488,7 @@ const MentorProfileForm = () => {
           type="submit"
           disabled={loading}
           className={`w-full px-4 py-2 font-bold rounded-md ${
-            loading ? "bg-gray-400 text-white cursor-not-allowed" : "bg-green-500 text-white"
+            loading ? "bg-gray-400 text-white cursor-not-allowed" : "bg-green-500 text-white hover:bg-green-600"
           }`}
         >
           {loading ? "Submitting..." : "Submit"}

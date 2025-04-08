@@ -4,6 +4,7 @@ import { FaUsers } from "react-icons/fa";
 import { useNavigate } from "react-router-dom";
 import { fetchGroupDetailsForMembers } from "../../../../redux/Slice/profileSlice";
 import { useEffect } from "react";
+import { Button } from "@nextui-org/react";
 
 const GroupCollaborations = ({ handleProfileClick }) => {
   const navigate = useNavigate();
@@ -73,6 +74,14 @@ const GroupCollaborations = ({ handleProfileClick }) => {
                 <span className="px-3 py-1 text-sm font-medium rounded-full bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200">
                   {group.status || "Active"}
                 </span>
+                <Button
+                  size="sm"
+                  color="primary"
+                  variant="flat"
+                  onPress={() => navigate(`/chat/group/${group._id}`)}
+                >
+                  Chat
+                </Button>
               </div>
             </div>
 

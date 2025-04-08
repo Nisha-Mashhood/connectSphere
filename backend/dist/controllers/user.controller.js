@@ -1,5 +1,5 @@
 import * as UserService from "../services/user.service.js";
-import { uploadImage } from "../utils/cloudinary.utils.js";
+import { uploadMedia } from "../utils/cloudinary.utils.js";
 export const getAllUsers = async (_req, res) => {
     const users = await UserService.getAllUsers();
     res.json(users);
@@ -10,19 +10,17 @@ export const getUserById = async (req, res) => {
 };
 export const updateUserProfile = async (req, res) => {
     const { profilePic, coverPic, ...data } = req.body;
+    const files = req.files;
     // Check if profile photo is uploaded
-    if (req.files &&
-        req.files.profilePhoto) {
-        // Handle profile photo upload
-        const uploadedProfilePic = await uploadImage(req.files.profilePhoto[0]
-            .path, "profile_photos");
+    if (files?.profilePhoto?.[0]) {
+        const profilePhoto = files.profilePhoto[0];
+        const uploadedProfilePic = await uploadMedia(profilePhoto.path, "profile_photos", profilePhoto.size);
         data.profilePic = uploadedProfilePic;
     }
     // Check if cover photo is uploaded
-    if (req.files &&
-        req.files.coverPhoto) {
-        // Handle cover photo upload
-        const uploadedCoverPic = await uploadImage(req.files.coverPhoto[0].path, "cover_photos");
+    if (files?.coverPhoto?.[0]) {
+        const coverPhoto = files.coverPhoto[0];
+        const uploadedCoverPic = await uploadMedia(coverPhoto.path, "cover_photos", coverPhoto.size);
         data.coverPic = uploadedCoverPic;
     }
     const updatedUser = await UserService.updateUserProfile(req.params.id, data);

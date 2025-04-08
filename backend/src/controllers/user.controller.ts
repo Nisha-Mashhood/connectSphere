@@ -1,6 +1,6 @@
 import { Request, Response } from "express";
 import * as UserService from "../services/user.service.js";
-import { uploadImage } from "../utils/cloudinary.utils.js";
+import { uploadMedia } from "../utils/cloudinary.utils.js";
 
 export const getAllUsers = async (_req: Request, res: Response) => {
   const users = await UserService.getAllUsers();
@@ -15,32 +15,30 @@ export const getUserById = async (req: Request, res: Response) => {
 export const updateUserProfile = async (req: Request, res: Response) => {
   const { profilePic, coverPic, ...data } = req.body;
 
+  const files = req.files as { [fieldname: string]: Express.Multer.File[] } | undefined;
+
   // Check if profile photo is uploaded
-  if (
-    req.files &&
-    (req.files as { profilePhoto?: Express.Multer.File[] }).profilePhoto
-  ) {
-    // Handle profile photo upload
-    const uploadedProfilePic = await uploadImage(
-      (req.files as { profilePhoto: Express.Multer.File[] }).profilePhoto[0]
-        .path,
-      "profile_photos"
+  if (files?.profilePhoto?.[0]) {
+    const profilePhoto = files.profilePhoto[0];
+    const uploadedProfilePic = await uploadMedia(
+      profilePhoto.path,
+      "profile_photos",
+      profilePhoto.size 
     );
     data.profilePic = uploadedProfilePic;
   }
 
   // Check if cover photo is uploaded
-  if (
-    req.files &&
-    (req.files as { coverPhoto?: Express.Multer.File[] }).coverPhoto
-  ) {
-    // Handle cover photo upload
-    const uploadedCoverPic = await uploadImage(
-      (req.files as { coverPhoto: Express.Multer.File[] }).coverPhoto[0].path,
-      "cover_photos"
+  if (files?.coverPhoto?.[0]) {
+    const coverPhoto = files.coverPhoto[0];
+    const uploadedCoverPic = await uploadMedia(
+      coverPhoto.path,
+      "cover_photos",
+      coverPhoto.size 
     );
     data.coverPic = uploadedCoverPic;
   }
+
   const updatedUser = await UserService.updateUserProfile(req.params.id, data);
   res.json(updatedUser);
 };

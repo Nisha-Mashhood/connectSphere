@@ -1,9 +1,9 @@
-import { uploadImage } from '../utils/cloudinary.utils.js';
+import { uploadMedia } from '../utils/cloudinary.utils.js';
 import { createTaskRepo, deleteTask, editTask, findTasksByContext, updateTaskPriority, updateTaskStatus } from '../repositories/task.repositry.js';
-export const createTaskService = async (taskData, imagePath) => {
+export const createTaskService = async (taskData, imagePath, fileSize) => {
     if (imagePath) {
-        const imageUrl = await uploadImage(imagePath, 'tasks');
-        taskData.image = imageUrl;
+        const { url } = await uploadMedia(imagePath, 'tasks', fileSize);
+        taskData.image = url;
     }
     return await createTaskRepo(taskData);
 };

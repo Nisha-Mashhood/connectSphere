@@ -4,7 +4,7 @@ import { generateAccessToken, generateRefreshToken, verifyRefreshToken, removeRe
 import { generateOTP } from "../utils/otp.utils.js";
 import { sendEmail } from "../utils/email.utils.js";
 import config from "../config/env.config.js";
-import { uploadImage } from "../utils/cloudinary.utils.js";
+import { uploadMedia } from "../utils/cloudinary.utils.js";
 import { OAuth2Client } from "../utils/googleconfig.utils.js";
 import axios from "axios";
 const gitclientId = config.githubclientid;
@@ -322,10 +322,12 @@ export const updateUserProfile = async (userId, data) => {
     let profilePicUrl = user.profilePic;
     let coverPicUrl = user.coverPic;
     if (data.profilePicFile) {
-        profilePicUrl = await uploadImage(data.profilePicFile.path, "profiles");
+        const { url } = await uploadMedia(data.profilePicFile.path, "profiles", data.profilePicFile.size);
+        profilePicUrl = url;
     }
     if (data.coverPicFile) {
-        coverPicUrl = await uploadImage(data.coverPicFile.path, "covers");
+        const { url } = await uploadMedia(data.coverPicFile.path, "covers", data.coverPicFile.size);
+        coverPicUrl = url;
     }
     // Update user data
     const updatedData = {

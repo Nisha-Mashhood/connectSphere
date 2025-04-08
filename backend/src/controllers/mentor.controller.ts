@@ -1,6 +1,6 @@
 import { Request, Response } from "express";
 import * as MentorService from "../services/mentor.service.js";
-import { uploadImage } from "../utils/cloudinary.utils.js";
+import { uploadMedia } from "../utils/cloudinary.utils.js";
 import * as UserService from '../services/user.service.js';
 
 export const checkMentorStatus = async (req: Request, res: Response) => {
@@ -58,15 +58,15 @@ export const createMentor = async (req: Request, res: Response) => {
 
     // Check if certificates are provided and upload them to Cloudinary
     let uploadedCertificates: string[] = [];
-    if (req.files && (req.files as Express.Multer.File[]).length > 0) {
+    if (req.files && Array.isArray(req.files) && req.files.length > 0) {
       const files = req.files as Express.Multer.File[];
       const uploadPromises = files.map((file) =>
-        uploadImage(file.path, "mentor_certificates") // Upload each file to Cloudinary
+        uploadMedia(file.path, "mentor_certificates", file.size).then(result => result.url) // Extract url
       );
       uploadedCertificates = await Promise.all(uploadPromises); // Get URLs of uploaded certificates
     } else {
       res.status(400).json({ message: "Certificates are required for mentor registration." });
-      return 
+      return;
     }
 
     // Create mentor record (submit for admin review)
@@ -91,7 +91,6 @@ export const createMentor = async (req: Request, res: Response) => {
    res.status(500).json({ message: "Server error. Please try again later." });
    return 
   }
-
 }
 
 export const getAllMentorRequests = async (req: Request, res: Response) => {

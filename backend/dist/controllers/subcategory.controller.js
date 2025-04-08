@@ -2,7 +2,8 @@ import * as SubcategoryService from "../services/subcategory.service.js";
 export const createSubcategory = async (req, res) => {
     try {
         const imagePath = req.file?.path;
-        const subcategory = await SubcategoryService.createSubcategory(req.body, imagePath);
+        const fileSize = req.file?.size;
+        const subcategory = await SubcategoryService.createSubcategory(req.body, imagePath, fileSize);
         res.status(201).json({ message: "Subcategory created successfully", subcategory });
     }
     catch (error) {
@@ -34,7 +35,8 @@ export const getSubcategoryById = async (req, res) => {
 export const updateSubcategory = async (req, res) => {
     try {
         const imagePath = req.file?.path;
-        const updatedSubcategory = await SubcategoryService.updateSubcategory(req.params.id, req.body, imagePath);
+        const fileSize = req.file?.size;
+        const updatedSubcategory = await SubcategoryService.updateSubcategory(req.params.id, req.body, imagePath, fileSize);
         if (!updatedSubcategory) {
             res.status(404).json({ message: "Subcategory not found" });
             return;

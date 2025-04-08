@@ -15,11 +15,17 @@ import user_userCollabRoutes from './routes/userCollaboration.routes.js';
 import taskRoutes from './routes/tasks.routes.js';
 import notificationRoutes from './routes/notification.routes.js';
 import adminRoutes from './routes/Admin/adminDashboard.routes.js';
+import chatRoutes from "./routes/chat.routes.js";
+import contactsRoutes from "./routes/contact.routes.js";
 import cors from "cors";
 import cookieParser from "cookie-parser";
 import { scheduleNotifications } from "./utils/node-cron.utils.js";
+import http from "http";
+import { Server } from "socket.io";
+import initializeSocket from "./socket/socket.js";
 dotenv.config();
 const app = express();
+const server = http.createServer(app);
 // Connect to DB
 connectDB();
 // Middleware
@@ -43,6 +49,8 @@ app.use("/api/user-userCollab", user_userCollabRoutes);
 app.use("/api/task", taskRoutes);
 app.use("/api/notification", notificationRoutes);
 app.use("/api/admin", adminRoutes);
+app.use("/api/chat", chatRoutes);
+app.use("/api/contacts", contactsRoutes);
 // Placeholder route
 app.get("/", (_req, res) => {
     res.send("Connect Sphere Backend is running!");
@@ -52,10 +60,19 @@ app.use((err, _req, res, _next) => {
     console.error(err.stack);
     res.status(500).send({ error: "Something went wrong!" });
 });
+// Initialize Socket.IO
+const io = new Server(server, {
+    cors: {
+        origin: process.env.FRONTEND_URL || "http://localhost:5173",
+        methods: ["GET", "POST"],
+        credentials: true,
+    },
+});
+initializeSocket(io); // Set up socket events
 // Start Cron Jobs 
 scheduleNotifications();
 // Start server
-app.listen(config.port, () => {
+server.listen(config.port, () => {
     console.log(`Server is running on http://localhost:${config.port}`);
 });
 //# sourceMappingURL=index.js.map

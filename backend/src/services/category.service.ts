@@ -1,8 +1,8 @@
-import { CategoryInterface } from "src/models/category.model.js";
+import { CategoryInterface } from "../models/category.model.js";
 import * as CategoryRepo from "../repositories/category.repositry.js";
 import { deleteManySubcategories } from "../repositories/subcategory.repositry.js";
 import { deleteManySkills } from "../repositories/skills.repositry.js";
-import { uploadImage } from "../utils/cloudinary.utils.js";
+import { uploadMedia } from "../utils/cloudinary.utils.js";
 
 export const isDuplicateCategoryName = async (
   name: string,
@@ -15,12 +15,14 @@ export const isDuplicateCategoryName = async (
 // Create a new category with optional image upload
 export const createCategory = async (
   data: Partial<CategoryInterface>,
-  imagePath?: string
+  imagePath?: string,
+  fileSize?: number
 ) => {
   let imageUrl = null;
   if (imagePath) {
     const folder = "categories";
-    imageUrl = await uploadImage(imagePath, folder);
+    const { url } = await uploadMedia(imagePath, folder, fileSize);
+    imageUrl = url;
   }
   return await CategoryRepo.createCategory({ ...data, imageUrl });
 };
@@ -31,12 +33,14 @@ export const getCategoryById = CategoryRepo.getCategoryById;
 export const updateCategory = async (
   id: string,
   data: Partial<CategoryInterface>,
-  imagePath?: string
+  imagePath?: string,
+  fileSize?: number
 ) => {
   let imageUrl = null;
   if (imagePath) {
     const folder = "categories";
-    imageUrl = await uploadImage(imagePath, folder);
+    const { url } = await uploadMedia(imagePath, folder, fileSize);
+    imageUrl = url;
   }
   return await CategoryRepo.updateCategory(id, {
     ...data,

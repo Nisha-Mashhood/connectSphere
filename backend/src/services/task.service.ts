@@ -1,12 +1,12 @@
-import { uploadImage } from '../utils/cloudinary.utils.js';
+import { uploadMedia } from '../utils/cloudinary.utils.js';
 import { ITask } from '../models/task.modal.js';
 import { createTaskRepo, deleteTask, editTask, findTasksByContext, updateTaskPriority, updateTaskStatus } from '../repositories/task.repositry.js';
 
 
- export const createTaskService = async(taskData: Partial<ITask>, imagePath?: string): Promise<ITask> => {
+ export const createTaskService = async(taskData: Partial<ITask>, imagePath?: string, fileSize?:number): Promise<ITask> => {
     if (imagePath) {
-      const imageUrl = await uploadImage(imagePath, 'tasks');
-      taskData.image = imageUrl;
+      const { url } =await uploadMedia(imagePath, 'tasks',fileSize);
+      taskData.image = url;
     }
     return await createTaskRepo(taskData);
   }

@@ -9,6 +9,7 @@ import {
   fetchCollabDetails,
   fetchMentorDetails,
 } from "../../../../redux/Slice/profileSlice";
+import { Button } from "@nextui-org/react";
 
 const ActiveCollaborations = ({ handleProfileClick }) => {
   const navigate = useNavigate();
@@ -45,13 +46,7 @@ const ActiveCollaborations = ({ handleProfileClick }) => {
   };
  console.log("Collab Details : ",collabDetails);
   useEffect(() => {
-    const fetchData = async () => {
-      if (currentUser && currentUser._id) {
-        await fetchCollaborations();
-      }
-    };
-    
-    fetchData();
+    fetchCollaborations();
   }, [dispatch, currentUser]);
 
   const handleCollabClick = (collabId) => {
@@ -165,9 +160,17 @@ const ActiveCollaborations = ({ handleProfileClick }) => {
             Active
           </span>
         )}
+        <Button
+          size="sm"
+          color="primary"
+          variant="flat"
+          onPress={() => navigate(`/chat/user-mentor/${collab._id}`)}
+        >
+          Chat
+        </Button>
         </div>
       </div>
-
+      
       {/* Progress Bar for ongoing collabs */}
       {!isCompleted && (
         <div className="mt-4">

@@ -48,7 +48,13 @@ const CollaborationDetails = () => {
   }, [collaboration]);
 
   if (!collaboration) {
-    return <div className="flex items-center justify-center min-h-screen"><p className="text-xl text-gray-600">Collaboration not found</p></div>;
+    return (
+    <div className="flex items-center justify-center min-h-screen">
+    <p className="text-xl text-gray-600">
+    Collaboration not found
+    </p>
+    </div>
+    )
   }
 
   const isMentor = currentUser.role === "mentor";
@@ -78,6 +84,8 @@ const CollaborationDetails = () => {
         />
       </div>
 
+
+      {/* Make this for other person only */}
       <TimeSlotsModal
         isOpen={showTimeSlotsModal}
         onClose={() => {

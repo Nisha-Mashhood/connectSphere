@@ -1,5 +1,5 @@
 import * as MentorService from "../services/mentor.service.js";
-import { uploadImage } from "../utils/cloudinary.utils.js";
+import { uploadMedia } from "../utils/cloudinary.utils.js";
 import * as UserService from '../services/user.service.js';
 export const checkMentorStatus = async (req, res) => {
     const userId = req.params.id;
@@ -51,9 +51,9 @@ export const createMentor = async (req, res) => {
         }
         // Check if certificates are provided and upload them to Cloudinary
         let uploadedCertificates = [];
-        if (req.files && req.files.length > 0) {
+        if (req.files && Array.isArray(req.files) && req.files.length > 0) {
             const files = req.files;
-            const uploadPromises = files.map((file) => uploadImage(file.path, "mentor_certificates") // Upload each file to Cloudinary
+            const uploadPromises = files.map((file) => uploadMedia(file.path, "mentor_certificates", file.size).then(result => result.url) // Extract url
             );
             uploadedCertificates = await Promise.all(uploadPromises); // Get URLs of uploaded certificates
         }

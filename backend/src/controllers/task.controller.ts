@@ -6,9 +6,10 @@ export const createTask = async (req: Request, res: Response): Promise<void> => 
     const { id } = req.params;
     try {
       const imagePath = req.file?.path;
+      const fileSize = req.file?.size;
       const taskData = JSON.parse(req.body.taskData);
       taskData.createdBy = id;
-      const newTask = await createTaskService(taskData, imagePath);
+      const newTask = await createTaskService(taskData, imagePath, fileSize);
       res.status(201).json({ message: "Task created successfully", task: newTask });
     } catch (error: any) {
       console.error("Error:", error);
