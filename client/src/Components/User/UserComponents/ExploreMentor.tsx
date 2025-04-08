@@ -76,7 +76,7 @@ const ExploreMentors = () => {
             groupDetails(),
             fetchAllUsers(),
           ]);
-
+          
           if (currentUser) {
             await Promise.all([
               // Fetch request status

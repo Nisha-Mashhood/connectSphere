@@ -1,5 +1,5 @@
 import { SubcategoryInterface } from "src/models/subcategory.model.js";
-export declare const createSubcategory: (data: Partial<SubcategoryInterface>, imagePath?: string) => Promise<import("mongoose").Document<unknown, {}, SubcategoryInterface> & SubcategoryInterface & Required<{
+export declare const createSubcategory: (data: Partial<SubcategoryInterface>, imagePath?: string, fileSize?: number) => Promise<import("mongoose").Document<unknown, {}, SubcategoryInterface> & SubcategoryInterface & Required<{
     _id: unknown;
 }> & {
     __v: number;
@@ -14,7 +14,7 @@ export declare const getSubcategoryById: (id: string) => Promise<(import("mongoo
 }> & {
     __v: number;
 }) | null>;
-export declare const updateSubcategory: (id: string, data: Partial<SubcategoryInterface>, imagePath?: string) => Promise<(import("mongoose").Document<unknown, {}, SubcategoryInterface> & SubcategoryInterface & Required<{
+export declare const updateSubcategory: (id: string, data: Partial<SubcategoryInterface>, imagePath?: string, fileSize?: number) => Promise<(import("mongoose").Document<unknown, {}, SubcategoryInterface> & SubcategoryInterface & Required<{
     _id: unknown;
 }> & {
     __v: number;

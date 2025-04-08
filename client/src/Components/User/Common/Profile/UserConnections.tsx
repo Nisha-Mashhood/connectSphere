@@ -22,6 +22,7 @@ import {
 } from "../../../../Service/User-User.Service";
 import { getRelativeTime } from "../../../../lib/helperforprofile";
 import toast from "react-hot-toast";
+import { useNavigate } from "react-router-dom";
 
 const UserConnections = ({ currentUser, handleProfileClick }) => {
   const [connections, setConnections] = useState([]);
@@ -29,6 +30,7 @@ const UserConnections = ({ currentUser, handleProfileClick }) => {
   const [selectedConnection, setSelectedConnection] = useState(null);
   const [disconnectReason, setDisconnectReason] = useState("");
   const { isOpen, onOpen, onClose } = useDisclosure();
+  const navigate = useNavigate();
 
   // Fetch both connections and requests
   const fetchUserData = async () => {
@@ -250,6 +252,13 @@ const UserConnections = ({ currentUser, handleProfileClick }) => {
                       }}
                     >
                       Disconnect
+                    </Button>
+                    <Button
+                      color="primary"
+                      variant="flat"
+                      onPress={() => navigate(`/chat/user-user/${connection._id}`)}
+                    >
+                      Chat
                     </Button>
                   </div>
                 </div>

@@ -1,4 +1,4 @@
-import multer from 'multer';
+import multer from "multer";
 import path from "path";
 
 // Define storage for multer
@@ -7,20 +7,31 @@ const storage = multer.diskStorage({
     cb(null, "uploads/"); // Temporary storage folder
   },
   filename: (_req, file, cb) => {
-    cb(null, Date.now() + "-" + file.originalname); // Append timestamp to file name
+    cb(null, `${Date.now()}-${file.originalname}`); // Append timestamp to file name
   },
 });
 
 // File type validation
 const fileFilter = (_req: any, file: any, cb: any) => {
-  const allowedFileTypes = /jpeg|jpg|png/;
-  const extname = allowedFileTypes.test(path.extname(file.originalname).toLowerCase());
-  const mimetype = allowedFileTypes.test(file.mimetype);
+  const allowedFileTypes = [
+    "image/jpeg", // JPEG
+    "image/jpg",  // JPG
+    "image/png",  // PNG
+    "video/mp4",  // MP4
+    "application/pdf", // PDF
+    "application/msword", // DOC
+    "application/vnd.openxmlformats-officedocument.wordprocessingml.document", // DOCX
+  ];
 
-  if (extname && mimetype) {
+  const mimetype = allowedFileTypes.includes(file.mimetype);
+  const extname = allowedFileTypes.some(type => 
+    path.extname(file.originalname).toLowerCase() === `.${type.split("/")[1]}`
+  );
+
+  if (mimetype && extname) {
     cb(null, true);
   } else {
-    cb(new Error("Invalid file type. Only JPEG, JPG, and PNG are allowed."));
+    cb(new Error("Invalid file type. Only JPEG, JPG, PNG, MP4, PDF, DOC, and DOCX are allowed."));
   }
 };
 
@@ -28,6 +39,5 @@ const fileFilter = (_req: any, file: any, cb: any) => {
 export const upload = multer({
   storage,
   fileFilter,
-  limits: { fileSize: 5 * 1024 * 1024 }, // File size limit: 5MB
+  limits: { fileSize: 50 * 1024 * 1024 },
 });
-

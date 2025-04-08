@@ -4,7 +4,8 @@ import * as SkillService from "../services/skills.service.js";
 export const createSkill = async(req:Request, res:Response): Promise<void> => {
     try {
       const imagePath = req.file?.path; 
-        const skill = await SkillService.createSkill(req.body,imagePath);
+      const fileSize = req.file?.size
+        const skill = await SkillService.createSkill(req.body,imagePath, fileSize);
         res.status(201).json({ message: "Skill created successfully", skill });
       } catch (error:any) {
         res.status(500).json({ message: "Error creating skill", error: error.message });
@@ -38,7 +39,8 @@ export const getSkillById = async(req:Request, res:Response): Promise<void> => {
 export const updateSkill = async(req:Request, res:Response): Promise<void> => {
     try {
       const imagePath = req.file?.path; 
-        const updatedSkill = await SkillService.updateSkill(req.params.id, req.body,imagePath);
+      const fileSize = req.file?.size
+        const updatedSkill = await SkillService.updateSkill(req.params.id, req.body,imagePath, fileSize);
         if (!updatedSkill) {
           res.status(404).json({ message: "Skill not found" });
           return 

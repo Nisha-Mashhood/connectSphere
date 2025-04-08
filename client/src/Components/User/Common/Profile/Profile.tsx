@@ -63,6 +63,7 @@ import UserConnections from "./UserConnections";
 const Profile = () => {
   const { currentUser } = useSelector((state: RootState) => state.user);
   const { mentorDetails } = useSelector((state: RootState) => state.profile);
+  const { collabDetails } = useSelector((state: RootState) => state.profile);
   const navigate = useNavigate();
   const dispatch = useDispatch();
 
@@ -83,6 +84,7 @@ const Profile = () => {
 
   const formatDate = (dateString) => dateString ? new Date(dateString).toLocaleDateString("en-US", { year: "numeric", month: "long", day: "numeric" }) : "Not specified";
 
+  console.log("COLLAB DETAILS OF THIS CURRENT USER : ",collabDetails);
   // Handlers
   const handleImageUpload = async (file: File, type: "profilePic" | "coverPic") => {
     const formData = new FormData();
@@ -264,6 +266,8 @@ const Profile = () => {
               </Chip>
             </div>
             <p className="text-lg text-gray-600">{currentUser.jobTitle || "No job title"}</p>
+            <div className="flex items-center justify-around sm:justify-around ">
+
             <Button
               color="primary"
               size="sm"
@@ -273,6 +277,15 @@ const Profile = () => {
             >
               Create Group
             </Button>
+
+            <Button
+              color="primary"
+              size="sm"
+              onPress={() => navigate("/chat")}
+            >
+              Chat
+            </Button>
+            </div>
           </div>
         </div>
       </Card>
@@ -358,6 +371,10 @@ const Profile = () => {
                       <RequestsSection handleProfileClick={(id) => navigate(`/profileDispaly/${id}`)} />
                     </AccordionItem>
                     <AccordionItem key="collaborations" title="Active Collaborations">
+                      {/* here check why new collaboartions are not showing  check fro new user and check for existing user
+                      check for the contact created
+                      according to that check for chats
+                      */}
                       <ActiveCollaborations handleProfileClick={(id) => navigate(`/profileDispaly/${id}`)} />
                     </AccordionItem>
                     <AccordionItem key="network" title="My Network">

@@ -2,7 +2,6 @@ import GroupRequest from "../models/groupRequest.model.js";
 import Group from "../models/group.model.js";
 import mongoose from "mongoose";
 export const createGroupRepository = async (groupData) => {
-    // Create a new group
     const newGroup = new Group(groupData);
     return await newGroup.save();
 };
@@ -228,6 +227,19 @@ export const getGroupRequestById = async (requestId) => {
     }
     catch (error) {
         throw new Error(`Error fetching group request details: ${error.message}`);
+    }
+};
+// Check if a user is a member of a group
+export const isUserInGroup = async (groupId, userId) => {
+    try {
+        const group = await Group.findOne({
+            _id: groupId,
+            "members.userId": userId,
+        }).exec();
+        return !!group;
+    }
+    catch (error) {
+        throw new Error(`Error checking group membership: ${error.message}`);
     }
 };
 //# sourceMappingURL=group.repositry.js.map

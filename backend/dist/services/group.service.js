@@ -19,12 +19,22 @@ export const createGroupService = async (groupData) => {
     if (!groupData.availableSlots || groupData.availableSlots.length === 0) {
         throw new Error("At least one available slot is required");
     }
-    // Process data if necessary
     const groupPayload = {
         ...groupData,
         createdAt: new Date(),
     };
-    return await createGroupRepository(groupPayload);
+    const newGroup = await createGroupRepository(groupPayload);
+    if (!newGroup) {
+        throw new Error("No group created");
+    }
+    console.log("newGroup:", newGroup);
+    console.log("newGroup._id:", newGroup._id);
+    await createContact({
+        userId: groupData.adminId,
+        groupId: newGroup._id.toString(),
+        type: "group",
+    });
+    return newGroup;
 };
 //Get group details using adminId
 export const fetchGroupDetails = async (adminId) => {
@@ -97,7 +107,14 @@ export const modifyGroupRequestStatus = async (requestId, status) => {
         else {
             // If no payment is required, add user to group and delete request
             await updateGroupReqStatus(requestId, "Accepted");
+            //Add members to the group
             await addMemberToGroup(group._id.toString(), request.userId.toString());
+            //Add to contact collection
+            await createContact({
+                userId: request.userId.toString(),
+                groupId: group._id.toString(),
+                type: "group",
+            });
             await deleteGroupRequest(requestId);
             return { message: "User added to group successfully." };
         }
@@ -116,7 +133,7 @@ export const processGroupPaymentService = async (paymentMethodId, amount, reques
             throw new Error("Invalid paymentMethodId: must be a string or an object with an 'id' property");
         }
         console.log(`Processing payment with paymentMethodId: ${paymentMethodIdString}`);
-        // List customers with email filter (explicitly typed)
+        // List customers with email filter 
         const customerListParams = { email, limit: 1 };
         const customers = await stripe.customers.list(customerListParams);
         let customer = customers.data.length > 0 ? customers.data[0] : null;

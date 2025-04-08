@@ -1,5 +1,5 @@
 import { SkillInterface } from "src/models/skills.model.js";
-export declare const createSkill: (data: Partial<SkillInterface>, imagePath?: string) => Promise<import("mongoose").Document<unknown, {}, SkillInterface> & SkillInterface & Required<{
+export declare const createSkill: (data: Partial<SkillInterface>, imagePath?: string, fileSize?: number) => Promise<import("mongoose").Document<unknown, {}, SkillInterface> & SkillInterface & Required<{
     _id: unknown;
 }> & {
     __v: number;
@@ -14,7 +14,7 @@ export declare const getSkillById: (id: string) => Promise<(import("mongoose").D
 }> & {
     __v: number;
 }) | null>;
-export declare const updateSkill: (id: string, data: Partial<SkillInterface>, imagePath?: string) => Promise<(import("mongoose").Document<unknown, {}, SkillInterface> & SkillInterface & Required<{
+export declare const updateSkill: (id: string, data: Partial<SkillInterface>, imagePath?: string, fileSize?: number) => Promise<(import("mongoose").Document<unknown, {}, SkillInterface> & SkillInterface & Required<{
     _id: unknown;
 }> & {
     __v: number;

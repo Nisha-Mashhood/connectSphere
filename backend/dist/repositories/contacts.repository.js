@@ -19,27 +19,76 @@ export const createContact = async (contactData) => {
         throw new Error(`Error creating contact: ${error.message}`);
     }
 };
-// Create multiple Contact documents (e.g., for user and mentor)
-export const createContactsForCollaboration = async (userId, mentorUserId, collaborationId) => {
+// Find a contact by its ID
+export const findContactById = async (contactId) => {
     try {
-        const contacts = await Contact.insertMany([
-            {
-                userId: toObjectId(userId),
-                targetUserId: toObjectId(mentorUserId),
-                collaborationId: toObjectId(collaborationId),
-                type: "user-mentor",
-            },
-            {
-                userId: toObjectId(mentorUserId),
-                targetUserId: toObjectId(userId),
-                collaborationId: toObjectId(collaborationId),
-                type: "user-mentor",
-            },
-        ]);
-        return contacts;
+        return await Contact.findById(toObjectId(contactId)).exec();
     }
     catch (error) {
-        throw new Error(`Error creating contacts for collaboration: ${error.message}`);
+        throw new Error(`Error finding contact by ID: ${error.message}`);
+    }
+};
+// Find a contact by userId and targetUserId (for user-user or user-mentor chats)
+export const findContactByUsers = async (userId, targetUserId) => {
+    try {
+        return await Contact.findOne({
+            $or: [
+                { userId: toObjectId(userId), targetUserId: toObjectId(targetUserId) },
+                { userId: toObjectId(targetUserId), targetUserId: toObjectId(userId) }, // Bidirectional check
+            ],
+            type: { $in: ["user-user", "user-mentor"] }, // Ensure type matches
+        }).exec();
+    }
+    catch (error) {
+        throw new Error(`Error finding contact by user IDs: ${error.message}`);
+    }
+};
+export const findContactsByUserId = async (userId) => {
+    try {
+        return await Contact.find({
+            $or: [
+                { userId: toObjectId(userId) },
+                { targetUserId: toObjectId(userId) },
+            ],
+        })
+            .populate({
+            path: "userId",
+            select: "name profilePic userId",
+            model: "User",
+        })
+            .populate({
+            path: "targetUserId",
+            select: "name profilePic userId",
+            model: "User",
+        })
+            .populate({
+            path: "collaborationId",
+            select: "mentorId userId",
+            model: "Collaboration",
+            populate: [
+                { path: "mentorId", select: "userId", populate: { path: "userId", select: "name profilePic" } },
+                { path: "userId", select: "name profilePic" },
+            ],
+        })
+            .populate({
+            path: "userConnectionId",
+            select: "requester recipient",
+            model: "UserConnection",
+            populate: [
+                { path: "requester", select: "name profilePic" },
+                { path: "recipient", select: "name profilePic" },
+            ],
+        })
+            .populate({
+            path: "groupId",
+            select: "name profilePic groupId",
+            model: "Group",
+        })
+            .lean()
+            .exec();
+    }
+    catch (error) {
+        throw new Error(`Error finding contacts by user ID: ${error.message}`);
     }
 };
 //# sourceMappingURL=contacts.repository.js.map

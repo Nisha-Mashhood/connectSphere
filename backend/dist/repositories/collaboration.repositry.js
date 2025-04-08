@@ -1,5 +1,6 @@
 import MentorRequest from "../models/mentorRequset.js";
 import Collaboration from "../models/collaboration.js";
+import Mentor from "../models/mentor.model.js";
 //create a temporary requset document
 export const createTemporaryRequest = async (data) => {
     try {
@@ -133,9 +134,20 @@ export const getCollabDataForUser = async (userId) => {
 //get collab data for mentor
 export const getCollabDataForMentor = async (mentorId) => {
     try {
-        const collabData = await Collaboration.find({ mentorId, isCancelled: false })
+        // Find the mentor document to get their userId
+        const mentor = await Mentor.findById(mentorId).select('userId');
+        if (!mentor)
+            throw new Error('Mentor not found');
+        const userId = mentor.userId;
+        // Fetch collaborations where they are the mentor OR the requester
+        const collabData = await Collaboration.find({
+            $or: [
+                { mentorId, isCancelled: false },
+                { userId, isCancelled: false },
+            ],
+        })
             .populate('mentorId')
-            .populate("userId", "name email profilePic");
+            .populate('userId', 'name email profilePic');
         return collabData;
     }
     catch (error) {

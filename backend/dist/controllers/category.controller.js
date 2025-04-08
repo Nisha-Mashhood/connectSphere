@@ -2,6 +2,7 @@ import * as CategoryService from "../services/category.service.js";
 export const createCategory = async (req, res) => {
     try {
         const imagePath = req.file?.path;
+        const fileSize = req.file?.size;
         // console.log(req.body);
         // console.log(imagePath);
         const isDuplicate = await CategoryService.isDuplicateCategoryName(req.body.name);
@@ -9,7 +10,7 @@ export const createCategory = async (req, res) => {
             res.status(400).json({ message: "Category name already exists" });
             return;
         }
-        const category = await CategoryService.createCategory(req.body, imagePath);
+        const category = await CategoryService.createCategory(req.body, imagePath, fileSize);
         res.status(201).json({ message: "Category created successfully", category });
     }
     catch (error) {
@@ -41,6 +42,7 @@ export const getCategoryById = async (req, res) => {
 export const updateCategory = async (req, res) => {
     try {
         const imagePath = req.file?.path;
+        const fileSize = req.file?.size;
         // console.log(req.body);
         // console.log(imagePath);
         const isDuplicate = await CategoryService.isDuplicateCategoryName(req.body.name, req.params.id);
@@ -48,7 +50,7 @@ export const updateCategory = async (req, res) => {
             res.status(400).json({ message: "Category name already exists" });
             return;
         }
-        const updatedCategory = await CategoryService.updateCategory(req.params.id, req.body, imagePath);
+        const updatedCategory = await CategoryService.updateCategory(req.params.id, req.body, imagePath, fileSize);
         if (!updatedCategory) {
             res.status(404).json({ message: "Category not found" });
             return;

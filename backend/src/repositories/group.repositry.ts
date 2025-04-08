@@ -1,5 +1,5 @@
 import GroupRequest from "../models/groupRequest.model.js";
-import Group from "../models/group.model.js";
+import Group, { GroupDocument } from "../models/group.model.js";
 import mongoose from "mongoose";
 
 
@@ -17,10 +17,8 @@ export interface GroupFormData {
   members?: string[];
 }
 
-export const createGroupRepository = async (groupData: GroupFormData) => {
-  // Create a new group
+export const createGroupRepository = async (groupData: GroupFormData):Promise<GroupDocument> => {
   const newGroup = new Group(groupData);
-
   return await newGroup.save();
 };
 
@@ -273,5 +271,18 @@ export const getGroupRequestById = async (requestId: string) => {
     return groupRequestDetails;
   } catch (error: any) {
     throw new Error(`Error fetching group request details: ${error.message}`);
+  }
+};
+
+// Check if a user is a member of a group
+export const isUserInGroup = async (groupId: string, userId: string): Promise<boolean> => {
+  try {
+    const group = await Group.findOne({
+      _id: groupId,
+      "members.userId": userId,
+    }).exec();
+    return !!group;
+  } catch (error: any) {
+    throw new Error(`Error checking group membership: ${error.message}`);
   }
 };

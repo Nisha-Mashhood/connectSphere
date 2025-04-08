@@ -1,10 +1,11 @@
 import * as SkillRepo from "../repositories/skills.repositry.js";
-import { uploadImage } from "../utils/cloudinary.utils.js";
-export const createSkill = async (data, imagePath) => {
+import { uploadMedia } from "../utils/cloudinary.utils.js";
+export const createSkill = async (data, imagePath, fileSize) => {
     let imageUrl = null;
     if (imagePath) {
         const folder = "skill";
-        imageUrl = await uploadImage(imagePath, folder);
+        const { url } = await uploadMedia(imagePath, folder, fileSize);
+        imageUrl = url;
     }
     return await SkillRepo.createSkill({ ...data, imageUrl });
 };
@@ -12,11 +13,12 @@ export const getAllSkills = async (subcategoryId) => {
     return await SkillRepo.getAllSkills(subcategoryId);
 };
 export const getSkillById = SkillRepo.getSkillById;
-export const updateSkill = async (id, data, imagePath) => {
+export const updateSkill = async (id, data, imagePath, fileSize) => {
     let imageUrl = null;
     if (imagePath) {
         const folder = "skill";
-        imageUrl = await uploadImage(imagePath, folder);
+        const { url } = await uploadMedia(imagePath, folder, fileSize);
+        imageUrl = url;
     }
     return await SkillRepo.updateSkill(id, { ...data, ...(imageUrl && { imageUrl }) });
 };
