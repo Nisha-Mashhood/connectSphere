@@ -6,6 +6,7 @@ interface FormattedContact {
     type: "user-mentor" | "user-user" | "group";
     targetName: string;
     targetProfilePic: string;
+<<<<<<< HEAD
     targetJobTitle?: string;
     collaborationId?: string;
     collaborationDetails?: {
@@ -44,6 +45,11 @@ interface FormattedContact {
             joinedAt: Date;
         }[];
     };
+=======
+    collaborationId?: string;
+    userConnectionId?: string;
+    groupId?: string;
+>>>>>>> 6dc4153e54462faf8ee2145cbaee39113d0c24cd
 }
 export declare const getUserContactsService: (userId: string) => Promise<FormattedContact[]>;
 export {};

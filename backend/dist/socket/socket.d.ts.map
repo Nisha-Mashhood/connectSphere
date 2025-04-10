@@ -1,1 +1,5 @@
+<<<<<<< HEAD
 {"version":3,"file":"socket.d.ts","sourceRoot":"","sources":["../../src/socket/socket.ts"],"names":[],"mappings":"AAAA,OAAO,EAAE,MAAM,EAAU,MAAM,WAAW,CAAC;AAM3C,QAAA,MAAM,gBAAgB,OAAQ,MAAM,SA+InC,CAAC;AAEF,eAAe,gBAAgB,CAAC"}
+=======
+{"version":3,"file":"socket.d.ts","sourceRoot":"","sources":["../../src/socket/socket.ts"],"names":[],"mappings":"AAAA,OAAO,EAAE,MAAM,EAAU,MAAM,WAAW,CAAC;AAM3C,QAAA,MAAM,gBAAgB,OAAQ,MAAM,SA0InC,CAAC;AAEF,eAAe,gBAAgB,CAAC"}
+>>>>>>> 6dc4153e54462faf8ee2145cbaee39113d0c24cd

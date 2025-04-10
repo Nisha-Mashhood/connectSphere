@@ -42,6 +42,7 @@ export const uploadAndSaveMessage = async (req, res) => {
             },
             timestamp: new Date(),
         });
+<<<<<<< HEAD
         console.log("Saved message:", message);
         res.status(200).json({ status: "success", data: { url, thumbnailUrl, messageId: message._id } });
     }
@@ -53,6 +54,13 @@ export const uploadAndSaveMessage = async (req, res) => {
         else {
             res.status(400).json({ message: error.message });
         }
+=======
+        res.status(200).json({ status: "success", data: { url, messageId: message._id } });
+    }
+    catch (error) {
+        console.error("Error uploading file and saving message:", error.message);
+        res.status(500).json({ status: "failure", message: error.message });
+>>>>>>> 6dc4153e54462faf8ee2145cbaee39113d0c24cd
     }
 };
 //# sourceMappingURL=chat.controller.js.map

@@ -12,12 +12,21 @@ const storage = multer.diskStorage({
 // File type validation
 const fileFilter = (_req, file, cb) => {
     const allowedFileTypes = [
+<<<<<<< HEAD
         "image/jpeg",
         "image/jpg",
         "image/png",
         "video/mp4",
         "application/pdf",
         "application/msword", // .doc
+=======
+        "image/jpeg", // JPEG
+        "image/jpg", // JPG
+        "image/png", // PNG
+        "video/mp4", // MP4
+        "application/pdf", // PDF
+        "application/msword", // DOC
+>>>>>>> 6dc4153e54462faf8ee2145cbaee39113d0c24cd
         "application/vnd.openxmlformats-officedocument.wordprocessingml.document", // DOCX
     ];
     const mimetype = allowedFileTypes.includes(file.mimetype);

@@ -1,4 +1,5 @@
 import multer from "multer";
+import multer from "multer";
 import path from "path";
 
 // Define storage for multer
@@ -7,6 +8,7 @@ const storage = multer.diskStorage({
     cb(null, "uploads/"); // Temporary storage folder
   },
   filename: (_req, file, cb) => {
+    cb(null, `${Date.now()}-${file.originalname}`); // Append timestamp to file name
     cb(null, `${Date.now()}-${file.originalname}`); // Append timestamp to file name
   },
 });
@@ -29,8 +31,10 @@ const fileFilter = (_req: any, file: any, cb: any) => {
   );
 
   if (mimetype && extname) {
+  if (mimetype && extname) {
     cb(null, true);
   } else {
+    cb(new Error("Invalid file type. Only JPEG, JPG, PNG, MP4, PDF, DOC, and DOCX are allowed."));
     cb(new Error("Invalid file type. Only JPEG, JPG, PNG, MP4, PDF, DOC, and DOCX are allowed."));
   }
 };
@@ -39,5 +43,6 @@ const fileFilter = (_req: any, file: any, cb: any) => {
 export const upload = multer({
   storage,
   fileFilter,
+  limits: { fileSize: 50 * 1024 * 1024 },
   limits: { fileSize: 50 * 1024 * 1024 },
 });

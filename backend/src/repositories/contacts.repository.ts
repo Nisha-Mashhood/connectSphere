@@ -165,5 +165,6 @@ export const findContactsByUserId = async (userId: string): Promise<PopulatedCon
       .exec() as unknown as PopulatedContact[]; 
   } catch (error: any) {
     throw new Error(`Error finding contacts by user ID: ${error.message}`);
+    throw new Error(`Error finding contacts by user ID: ${error.message}`);
   }
 };
