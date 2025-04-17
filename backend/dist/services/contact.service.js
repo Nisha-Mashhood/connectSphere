@@ -6,7 +6,6 @@ export const getUserContactsService = async (userId) => {
             let targetId = "";
             let targetName = "Unknown";
             let targetProfilePic = "";
-<<<<<<< HEAD
             let targetJobTitle;
             let collaborationId;
             let collaborationDetails;
@@ -44,27 +43,6 @@ export const getUserContactsService = async (userId) => {
                     userProfilePic: contact.collaborationId.userId.profilePic || "",
                     userJobTitle: contact.collaborationId.userId.jobTitle,
                 };
-=======
-            let collaborationId;
-            let userConnectionId;
-            let groupId;
-            const contactUserId = contact.userId._id.toString();
-            const contactTargetId = contact.targetUserId?._id.toString();
-            if (contact.type === "user-mentor" && contact.collaborationId) {
-                // Prioritize contacts where the current user is the userId
-                if (contactUserId === userId && contactTargetId) {
-                    targetId = contactTargetId;
-                    targetName = contact.targetUserId?.name || "Unknown";
-                    targetProfilePic = contact.targetUserId?.profilePic || "";
-                }
-                // Fallback to contacts where the current user is the targetUserId
-                else if (contactTargetId === userId && contactUserId) {
-                    targetId = contactUserId;
-                    targetName = contact.userId?.name || "Unknown";
-                    targetProfilePic = contact.userId?.profilePic || "";
-                }
-                collaborationId = contact.collaborationId._id.toString();
->>>>>>> 6dc4153e54462faf8ee2145cbaee39113d0c24cd
             }
             else if (contact.type === "user-user" && contact.userConnectionId) {
                 const connection = contact.userConnectionId;
@@ -72,7 +50,6 @@ export const getUserContactsService = async (userId) => {
                 targetId = otherUser._id.toString();
                 targetName = otherUser.name || "Unknown";
                 targetProfilePic = otherUser.profilePic || "";
-<<<<<<< HEAD
                 targetJobTitle = otherUser.jobTitle;
                 userConnectionId = connection._id.toString();
                 connectionDetails = {
@@ -84,9 +61,6 @@ export const getUserContactsService = async (userId) => {
                     recipientProfilePic: connection.recipient.profilePic || "",
                     recipientJobTitle: connection.recipient.jobTitle,
                 };
-=======
-                userConnectionId = connection._id.toString();
->>>>>>> 6dc4153e54462faf8ee2145cbaee39113d0c24cd
             }
             else if (contact.type === "group" && contact.groupId) {
                 const group = contact.groupId;
@@ -94,7 +68,6 @@ export const getUserContactsService = async (userId) => {
                 targetName = group.name || "Unknown";
                 targetProfilePic = group.profilePic || "";
                 groupId = group._id.toString();
-<<<<<<< HEAD
                 groupDetails = {
                     startDate: group.startDate,
                     adminName: group.adminId?.name || "Unknown",
@@ -105,8 +78,6 @@ export const getUserContactsService = async (userId) => {
                         joinedAt: member.joinedAt,
                     })),
                 };
-=======
->>>>>>> 6dc4153e54462faf8ee2145cbaee39113d0c24cd
             }
             return {
                 _id: contact._id.toString(),
@@ -116,7 +87,6 @@ export const getUserContactsService = async (userId) => {
                 type: contact.type,
                 targetName,
                 targetProfilePic,
-<<<<<<< HEAD
                 targetJobTitle,
                 collaborationId,
                 collaborationDetails,
@@ -130,17 +100,6 @@ export const getUserContactsService = async (userId) => {
             contact.userId !== contact.targetId &&
             contact.targetId !== "");
         console.log("Formatted contacts: ", formattedContacts);
-=======
-                collaborationId,
-                userConnectionId,
-                groupId,
-            };
-        });
-        const validContacts = formattedContacts.filter(contact => contact.userId === userId && // Ensure the current user is the userId
-            contact.userId !== contact.targetId &&
-            contact.targetId !== "");
-        console.log("Formatted contact: ", formattedContacts);
->>>>>>> 6dc4153e54462faf8ee2145cbaee39113d0c24cd
         console.log("Valid contacts: ", validContacts);
         return validContacts;
     }

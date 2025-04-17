@@ -35,7 +35,12 @@ export interface Contact {
     startDate: Date;
     adminName: string;
     adminProfilePic: string;
-    members: { name: string; profilePic: string; joinedAt: Date }[];
+    members: { 
+      _id: string; 
+      name: string; 
+      profilePic: string; 
+      joinedAt: Date 
+    }[];
   };
 }
 
@@ -51,27 +56,55 @@ export const formatContact = (contact: any): Contact => ({
   profilePic: contact.targetProfilePic || "",
   type: contact.type,
 });
+
+
+
+export interface IChatMessage {
+  _id: string; 
+  senderId: string;
+  content: string;
+  contentType: "text" | "image" | "file" | "audio" | "video";
+  thumbnailUrl?: string;
+  timestamp: string | Date;
+  caption?: string;
+  groupId?: string;
+  collaborationId?: string;
+  userConnectionId?: string;
+  fileMetadata?: {
+    fileName: string;
+    fileSize: number;
+    mimeType: string;
+  }; 
+}
+
+export interface Notification {
+  contactId: string;
+  type: "user-mentor" | "user-user" | "group";
+  message: string;
+  timestamp: string | Date;
+  senderId?: string; 
+}
   
-  export interface IChatMessage {
-    _id: string;
-    senderId: string;
-    content: string;
-    contentType: "text" | "image" | "file" | "video";
-    thumbnailUrl?: string;
-    timestamp: string;
-    collaborationId?: string;
-    userConnectionId?: string;
-    groupId?: string;
-    fileMetadata?: {
-      fileName: string;
-      fileSize: number;
-      mimeType: string;
-    };
-  }
+  // export interface IChatMessage {
+  //   _id: string;
+  //   senderId: string;
+  //   content: string;
+  //   contentType: "text" | "image" | "file" | "video";
+  //   thumbnailUrl?: string;
+  //   timestamp: string;
+  //   collaborationId?: string;
+  //   userConnectionId?: string;
+  //   groupId?: string;
+  //   fileMetadata?: {
+  //     fileName: string;
+  //     fileSize: number;
+  //     mimeType: string;
+  //   };
+  // }
   
-  export interface Notification {
-    contactId: string;
-    type: "user-mentor" | "user-user" | "group";
-    message: string;
-    timestamp: string;
-  }
+  // export interface Notification {
+  //   contactId: string;
+  //   type: "user-mentor" | "user-user" | "group";
+  //   message: string;
+  //   timestamp: string;
+  // }

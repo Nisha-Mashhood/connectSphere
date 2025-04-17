@@ -39,7 +39,6 @@ const initializeSocket = (io) => {
                 let room;
                 let savedMessage;
                 const senderObjectId = new mongoose.Types.ObjectId(senderId);
-<<<<<<< HEAD
                 if (contentType === "text") { // Only save text messages 
                     if (type === "group") {
                         const group = await getGroupsByGroupId(targetId);
@@ -55,39 +54,15 @@ const initializeSocket = (io) => {
                             return;
                         }
                         room = `group_${targetId}`;
-=======
-                const validContentType = contentType === "image" || contentType === "file" ? contentType : "text";
-                if (type === "group") {
-                    const group = await getGroupsByGroupId(targetId);
-                    console.log("Group fetched:", group);
-                    if (!group) {
-                        console.error("Invalid group ID:", targetId);
-                        socket.emit("error", { message: "Invalid group ID" });
-                        return;
-                    }
-                    const isMember = await isUserInGroup(targetId, senderId);
-                    if (!isMember) {
-                        console.error("Sender not in group:", senderId, targetId);
-                        socket.emit("error", { message: "Sender not in group" });
-                        return;
-                    }
-                    room = `group_${targetId}`;
-                    if (validContentType === "text") { // Save only text messages
->>>>>>> 6dc4153e54462faf8ee2145cbaee39113d0c24cd
                         savedMessage = await saveChatMessage({
                             senderId: senderObjectId,
                             groupId: new mongoose.Types.ObjectId(groupId || targetId),
                             content,
-<<<<<<< HEAD
                             contentType,
-=======
-                            contentType: validContentType,
->>>>>>> 6dc4153e54462faf8ee2145cbaee39113d0c24cd
                             timestamp,
                         });
                     }
                     else {
-<<<<<<< HEAD
                         const contact = await findContactByUsers(senderId, targetId);
                         if (!contact || !contact._id) {
                             console.error("Invalid contact for sender:", senderId, "target:", targetId);
@@ -96,28 +71,11 @@ const initializeSocket = (io) => {
                         }
                         const ids = [contact.userId.toString(), contact.targetUserId?.toString()].sort();
                         room = `chat_${ids[0]}_${ids[1]}`;
-=======
-                        savedMessage = { _id: _id || new mongoose.Types.ObjectId(), ...message, timestamp }; // Use existing _id for media
-                    }
-                }
-                else {
-                    const contact = await findContactByUsers(senderId, targetId);
-                    console.log("Contact fetched:", contact);
-                    if (!contact || !contact._id) {
-                        console.error("Invalid contact for sender:", senderId, "target:", targetId);
-                        socket.emit("error", { message: "Invalid contact" });
-                        return;
-                    }
-                    const ids = [contact.userId.toString(), contact.targetUserId?.toString()].sort();
-                    room = `chat_${ids[0]}_${ids[1]}`;
-                    if (validContentType === "text") { // Save only text messages
->>>>>>> 6dc4153e54462faf8ee2145cbaee39113d0c24cd
                         savedMessage = await saveChatMessage({
                             senderId: senderObjectId,
                             ...(type === "user-mentor" && { collaborationId: new mongoose.Types.ObjectId(collaborationId || contact.collaborationId?.toString()) }),
                             ...(type === "user-user" && { userConnectionId: new mongoose.Types.ObjectId(userConnectionId || contact.userConnectionId?.toString()) }),
                             content,
-<<<<<<< HEAD
                             contentType,
                             timestamp,
                         });
@@ -133,14 +91,6 @@ const initializeSocket = (io) => {
                         const contact = await findContactByUsers(senderId, targetId);
                         const ids = [contact?.userId.toString(), contact?.targetUserId?.toString()].sort();
                         room = `chat_${ids[0]}_${ids[1]}`;
-=======
-                            contentType: validContentType,
-                            timestamp,
-                        });
-                    }
-                    else {
-                        savedMessage = { _id: _id || new mongoose.Types.ObjectId(), ...message, timestamp }; // Use existing _id for media
->>>>>>> 6dc4153e54462faf8ee2145cbaee39113d0c24cd
                     }
                 }
                 if (!savedMessage) {
@@ -153,22 +103,14 @@ const initializeSocket = (io) => {
                     targetId,
                     type,
                     content,
-<<<<<<< HEAD
                     contentType,
                     thumbnailUrl: savedMessage.thumbnailUrl,
                     fileMetadata: savedMessage.fileMetadata,
-=======
-                    contentType: validContentType,
->>>>>>> 6dc4153e54462faf8ee2145cbaee39113d0c24cd
                     ...(type === "group" && { groupId: groupId || targetId }),
                     ...(type === "user-mentor" && { collaborationId: collaborationId || savedMessage?.collaborationId?.toString() }),
                     ...(type === "user-user" && { userConnectionId: userConnectionId || savedMessage?.userConnectionId?.toString() }),
                     timestamp: timestampString,
-<<<<<<< HEAD
                     _id: savedMessage._id,
-=======
-                    _id: savedMessage?._id,
->>>>>>> 6dc4153e54462faf8ee2145cbaee39113d0c24cd
                 };
                 socket.broadcast.to(room).emit("receiveMessage", messageData);
                 socket.emit("messageSaved", messageData);

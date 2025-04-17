@@ -1,56 +1,147 @@
 import React from "react";
-import { Button } from "@nextui-org/react";
-import { FaArrowLeft, FaPhone, FaVideo } from "react-icons/fa";
+import { Button, Tooltip, Avatar, Dropdown, DropdownTrigger, DropdownMenu, DropdownItem } from "@nextui-org/react";
+import { FaArrowLeft, FaPhone, FaVideo, FaBars, FaEllipsisV, FaUserFriends, FaInfoCircle } from "react-icons/fa";
 import { Contact } from "../../../../types";
 
 interface ChatHeaderProps {
-  type?: string; // Determines if the back button should be shown
-  selectedContact: Contact | null; // Currently selected contact for the chat
-  navigate: (path: string) => void; // Function to navigate to a different route
+  type?: string;
+  selectedContact: Contact | null;
+  navigate: (path: string) => void;
+  toggleSidebar?: () => void;
+  toggleDetailsSidebar?: () => void;
+  isMobileView?: boolean;
 }
 
-const ChatHeader: React.FC<ChatHeaderProps> = ({ type, selectedContact, navigate }) => (
-  <div className="flex items-center justify-between p-4 bg-gradient-to-r from-blue-500 to-purple-500 dark:from-blue-700 dark:to-purple-700 text-white rounded-t-xl shadow-md">
-    
-    {/* Left side: Back button (if applicable) + Contact name */}
-    <div className="flex items-center">
-      {type && (
-        <Button
-          isIconOnly
-          variant="light"
-          onPress={() => navigate("/chat")}
-          className="mr-3 text-white hover:bg-white/20"
-        >
-          <FaArrowLeft />
-        </Button>
-      )}
-      <h2 className="text-lg font-semibold">
-        {selectedContact ? selectedContact.name : "Select a contact to chat"}
-      </h2>
-    </div>
+const ChatHeader: React.FC<ChatHeaderProps> = ({
+  type,
+  selectedContact,
+  navigate,
+  toggleSidebar,
+  toggleDetailsSidebar,
+  isMobileView,
+}) => {
+  const getGradient = () => {
+    if (!selectedContact) return "from-violet-500 to-fuchsia-500";
+    switch (selectedContact.type) {
+      case "user-mentor":
+        return "from-blue-500 to-cyan-400";
+      case "user-user":
+        return "from-purple-500 to-pink-500";
+      case "group":
+        return "from-emerald-500 to-teal-400";
+      default:
+        return "from-violet-500 to-fuchsia-500";
+    }
+  };
 
-    {/* Right side: Call action buttons (only when a contact is selected) */}
-    {selectedContact && (
-      <div className="flex space-x-2">
-        <Button
-          isIconOnly
-          color="success"
-          onPress={() => alert("Audio call feature coming soon!")}
-          className="hover:scale-105 transition-transform"
-        >
-          <FaPhone />
-        </Button>
-        <Button
-          isIconOnly
-          color="primary"
-          onPress={() => alert("Video call feature coming soon!")}
-          className="hover:scale-105 transition-transform"
-        >
-          <FaVideo />
-        </Button>
+  return (
+    <div
+      className={`flex items-center justify-between px-3 sm:px-4 py-2 sm:py-3 bg-gradient-to-r ${getGradient()} text-white rounded-t-xl shadow-md`}
+    >
+      <div className="flex items-center gap-2 sm:gap-3">
+        {(isMobileView || type) && (
+          <Button
+            isIconOnly
+            variant="light"
+            onPress={type ? () => navigate("/chat") : toggleSidebar}
+            className="text-white hover:bg-white/20 w-8 h-8 sm:w-10 sm:h-10"
+            aria-label={type ? "Go back" : "Toggle sidebar"}
+          >
+            {type ? <FaArrowLeft size={16} /> : <FaBars size={16} />}
+          </Button>
+        )}
+
+        {selectedContact && (
+          <div className="flex items-center gap-2 sm:gap-3">
+            <Avatar
+              src={selectedContact.profilePic}
+              className="border-2 border-white w-8 h-8 sm:w-10 sm:h-10"
+              size="sm"
+              isBordered
+              color={
+                selectedContact.type === "user-mentor"
+                  ? "primary"
+                  : selectedContact.type === "group"
+                  ? "success"
+                  : "secondary"
+              }
+            />
+            <div>
+              <h2 className="text-base sm:text-lg font-bold truncate max-w-[150px] sm:max-w-[200px]">
+                {selectedContact.name}
+              </h2>
+              <p className="text-xs text-white/80 truncate max-w-[150px] sm:max-w-[200px]">
+                {selectedContact.type === "user-mentor"
+                  ? "Mentorship"
+                  : selectedContact.type === "group"
+                  ? `${selectedContact.groupDetails?.members.length || 0} members`
+                  : selectedContact.targetJobTitle || "Connection"}
+              </p>
+            </div>
+          </div>
+        )}
+
+        {!selectedContact && (
+          <h2 className="text-base sm:text-lg font-bold">Select a conversation</h2>
+        )}
       </div>
-    )}
-  </div>
-);
+
+      {selectedContact && (
+        <div className="flex items-center gap-1 sm:gap-2">
+          <Tooltip content="Voice call" placement="bottom">
+            <Button
+              isIconOnly
+              variant="flat"
+              className="bg-white/20 text-white hover:bg-white/30 transition-all w-8 h-8 sm:w-10 sm:h-10"
+              onPress={() => alert("Audio call feature coming soon!")}
+              aria-label="Voice call"
+            >
+              <FaPhone size={14} />
+            </Button>
+          </Tooltip>
+
+          <Tooltip content="Video call" placement="bottom">
+            <Button
+              isIconOnly
+              variant="flat"
+              className="bg-white/20 text-white hover:bg-white/30 transition-all w-8 h-8 sm:w-10 sm:h-10"
+              onPress={() => alert("Video call feature coming soon!")}
+              aria-label="Video call"
+            >
+              <FaVideo size={14} />
+            </Button>
+          </Tooltip>
+
+          <Dropdown>
+            <DropdownTrigger>
+              <Button
+                isIconOnly
+                variant="flat"
+                className="bg-white/20 text-white hover:bg-white/30 transition-all w-8 h-8 sm:w-10 sm:h-10"
+                aria-label="More options"
+              >
+                <FaEllipsisV size={14} />
+              </Button>
+            </DropdownTrigger>
+            <DropdownMenu aria-label="Chat options">
+              <DropdownItem
+                key="info"
+                startContent={<FaInfoCircle />}
+                onPress={toggleDetailsSidebar}
+              >
+                {isMobileView ? "Contact Info" : "Toggle Info Panel"}
+              </DropdownItem>
+              {selectedContact.type === "group" && (
+                <DropdownItem key="members" startContent={<FaUserFriends />}>
+                  View Members
+                </DropdownItem>
+              )}
+            </DropdownMenu>
+          </Dropdown>
+        </div>
+      )}
+    </div>
+  );
+};
 
 export default ChatHeader;

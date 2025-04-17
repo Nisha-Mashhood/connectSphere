@@ -30,7 +30,7 @@ export const getChatMessagesService = async (contactId, groupId, page = 1, limit
                 throw new Error("No valid connection ID found for contact");
             }
         }
-        return { messages: messages.reverse(), total }; // Reverse for oldest first
+        return { messages: messages.reverse(), total };
     }
     catch (error) {
         throw new Error(`Service error fetching chat messages: ${error.message}`);

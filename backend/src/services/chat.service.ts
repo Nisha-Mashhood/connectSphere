@@ -44,7 +44,7 @@ export const getChatMessagesService = async (
       }
     }
 
-    return { messages: messages.reverse(), total }; // Reverse for oldest first
+    return { messages: messages.reverse(), total }; 
   } catch (error: any) {
     throw new Error(`Service error fetching chat messages: ${error.message}`);
   }

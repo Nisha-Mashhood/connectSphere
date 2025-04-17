@@ -1,5 +1,1 @@
-<<<<<<< HEAD
 {"version":3,"file":"chat.controller.d.ts","sourceRoot":"","sources":["../../src/controllers/chat.controller.ts"],"names":[],"mappings":"AAAA,OAAO,EAAE,OAAO,EAAE,QAAQ,EAAE,MAAM,SAAS,CAAC;AAK5C,eAAO,MAAM,eAAe,QAAe,OAAO,OAAO,QAAQ,kBAchE,CAAC;AAEF,eAAO,MAAM,oBAAoB,QAAe,OAAO,OAAO,QAAQ,kBA2CrE,CAAC"}
-=======
-{"version":3,"file":"chat.controller.d.ts","sourceRoot":"","sources":["../../src/controllers/chat.controller.ts"],"names":[],"mappings":"AAAA,OAAO,EAAE,OAAO,EAAE,QAAQ,EAAE,MAAM,SAAS,CAAC;AAK5C,eAAO,MAAM,eAAe,QAAe,OAAO,OAAO,QAAQ,kBAchE,CAAC;AAEF,eAAO,MAAM,oBAAoB,QAAe,OAAO,OAAO,QAAQ,kBAsCrE,CAAC"}
->>>>>>> 6dc4153e54462faf8ee2145cbaee39113d0c24cd

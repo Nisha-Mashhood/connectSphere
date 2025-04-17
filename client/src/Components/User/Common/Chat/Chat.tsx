@@ -1,4 +1,3 @@
-// Imports
 import React, { useState, useEffect, useRef } from "react";
 import { useSelector } from "react-redux";
 import { RootState } from "../../../../redux/store";
@@ -8,27 +7,23 @@ import { getUserContacts } from "../../../../Service/Contact.Service";
 import ChatSidebar from "./ChatSidebar";
 import ChatHeader from "./ChatHeader";
 import ChatDetailsSidebar from "./ChatDetailsSidebar";
-import ChatMessages from "./ChatMessages";
+import ChatMessages from "./ChatMessages/ChatMessages";
 import ChatInput from "./ChatInput";
 import { Card } from "@nextui-org/react";
 import { Contact, IChatMessage, Notification } from "../../../../types";
 
 const Chat: React.FC = () => {
-  // Get route params 
   const { type, id } = useParams<{ type?: string; id?: string }>();
   const navigate = useNavigate();
-
-  // Get current logged-in user from Redux store
   const { currentUser } = useSelector((state: RootState) => state.user);
-
-  // Local state
   const [contacts, setContacts] = useState<Contact[]>([]);
   const [selectedContact, setSelectedContact] = useState<Contact | null>(null);
   const [allMessages, setAllMessages] = useState<Map<string, IChatMessage[]>>(new Map());
   const [notifications, setNotifications] = useState<Notification[]>([]);
+  const [isSidebarOpen, setIsSidebarOpen] = useState(false);
+  const [isDetailsSidebarOpen, setIsDetailsSidebarOpen] = useState(false);
   const messagesEndRef = useRef<HTMLDivElement>(null);
 
-  // Helper to generate chat key based on contact type
   const getChatKey = (contact: Contact) =>
     contact.type === "group"
       ? `group_${contact.groupId}`
@@ -36,32 +31,27 @@ const Chat: React.FC = () => {
       ? `user-mentor_${contact.collaborationId}`
       : `user-user_${contact.userConnectionId}`;
 
-  // Connect socket & listen to real-time messages
+  // const updateMessages = (chatKey: string, messages: IChatMessage[]) => {
+  //   setAllMessages((prev) => new Map(prev).set(chatKey, messages));
+  // };
+
   useEffect(() => {
     if (!currentUser?._id) return;
 
     const token = localStorage.getItem("authToken") || "";
-
-    // Connect to socket
     socketService.connect(currentUser._id, token);
 
-    // Handle incoming real-time message
     socketService.onReceiveMessage((message) => {
       const chatKey = getChatKeyFromMessage(message);
-
-      // Update messages
       setAllMessages((prev) => {
         const messages = prev.get(chatKey) || [];
-        if (messages.some((m) => m._id === message._id)) return prev; // Skip duplicates
+        if (messages.some((m) => m._id === message._id)) return prev;
         const uniqueMessages = deduplicateMessages([...messages, message]);
         return new Map(prev).set(chatKey, uniqueMessages);
       });
-
-      // Create notification if message is from another chat
       handleNotification(message);
     });
 
-    // Handle message that was saved to DB
     socketService.onMessageSaved((message) => {
       const chatKey = getChatKeyFromMessage(message);
       setAllMessages((prev) => {
@@ -72,14 +62,11 @@ const Chat: React.FC = () => {
       });
     });
 
-    // Fetch user’s chat contacts
     fetchContacts();
 
-    // Clean up socket on unmount
     return () => socketService.disconnect();
   }, [currentUser?._id]);
 
-  // Fetch contacts and format them
   const fetchContacts = async () => {
     try {
       const contactData = await getUserContacts();
@@ -91,7 +78,6 @@ const Chat: React.FC = () => {
     }
   };
 
-  // Set initial selected contact based on URL or first contact
   const setInitialContact = (contacts: Contact[]) => {
     if (type && id) {
       const contact = contacts.find((c) => c.id === id && c.type === type);
@@ -101,7 +87,6 @@ const Chat: React.FC = () => {
     }
   };
 
-  // Show notification if new message is not in current chat
   const handleNotification = (message: IChatMessage) => {
     const isRelevantChat = selectedContact && isMessageRelevant(message, selectedContact);
     if (!isRelevantChat) {
@@ -120,64 +105,88 @@ const Chat: React.FC = () => {
     }
   };
 
-  // Handle selecting a contact from sidebar
   const handleContactSelect = (contact: Contact) => {
     setSelectedContact(contact);
     navigate(`/chat/${contact.type}/${contact.id}`);
-    // Clear notifications for selected contact
     setNotifications((prev) =>
       prev.filter((n) => !(n.contactId === contact.id && n.type === contact.type))
     );
+    setIsSidebarOpen(false); // Close sidebar on mobile
   };
 
+  const toggleSidebar = () => setIsSidebarOpen((prev) => !prev);
+  const toggleDetailsSidebar = () => setIsDetailsSidebarOpen((prev) => !prev);
+
   return (
-    <div className="flex h-screen max-w-7xl mx-auto bg-gradient-to-br from-gray-100 to-blue-50 dark:from-gray-900 dark:to-gray-800">
-      {/* Left Sidebar for showing contacts */}
-      {!type && (
+    <div className="flex flex-col md:flex-row h-screen bg-gradient-to-br from-gray-100 to-blue-50 dark:from-gray-900 dark:to-gray-800">
+      {/* Sidebar: Hidden on mobile unless toggled */}
+      <div
+        className={`fixed inset-y-0 left-0 z-50 w-80 md:w-1/4 md:static transform transition-transform duration-300 ease-in-out bg-white dark:bg-gray-900 md:bg-transparent ${
+          isSidebarOpen ? "translate-x-0" : "-translate-x-full md:translate-x-0"
+        }`}
+      >
         <ChatSidebar
           contacts={contacts}
           selectedContact={selectedContact}
           onContactSelect={handleContactSelect}
           notifications={notifications}
         />
+      </div>
+
+      {/* Main Content */}
+      <div className="flex-1 flex flex-col min-w-0">
+        <Card className="flex-1 flex flex-col shadow-lg rounded-xl md:rounded-none bg-white dark:bg-gray-900 m-2 md:m-0">
+          <ChatHeader
+            type={type}
+            selectedContact={selectedContact}
+            navigate={navigate}
+            toggleSidebar={toggleSidebar}
+            toggleDetailsSidebar={toggleDetailsSidebar}
+            isMobileView={window.innerWidth < 768}
+          />
+          <ChatMessages
+            selectedContact={selectedContact}
+            allMessages={allMessages}
+            // setAllMessages={updateMessages}
+            getChatKey={getChatKey}
+            currentUserId={currentUser?._id}
+            notifications={notifications}
+            onNotificationClick={handleContactSelect}
+            messagesEndRef={messagesEndRef}
+            // contacts={contacts}
+          />
+          <ChatInput
+            selectedContact={selectedContact}
+            currentUserId={currentUser?._id}
+            onSendMessage={(message) => socketService.sendMessage(message)}
+          />
+        </Card>
+      </div>
+
+      {/* Details Sidebar: Hidden on mobile unless toggled */}
+      <div
+        className={`fixed inset-y-0 right-0 z-50 w-80 md:w-1/4 md:static transform transition-transform duration-300 ease-in-out bg-white dark:bg-gray-900 md:bg-transparent ${
+          isDetailsSidebarOpen ? "translate-x-0" : "translate-x-full md:translate-x-0"
+        }`}
+      >
+        <ChatDetailsSidebar selectedContact={selectedContact} currentUserId={currentUser?._id} />
+      </div>
+
+      {/* Overlay for mobile sidebar */}
+      {(isSidebarOpen || isDetailsSidebarOpen) && (
+        <div
+          className="fixed inset-0 bg-black/50 z-40 md:hidden"
+          onClick={() => {
+            setIsSidebarOpen(false);
+            setIsDetailsSidebarOpen(false);
+          }}
+        />
       )}
-
-      {/* Chat Box */}
-      <Card className="flex-1 shadow-lg rounded-xl bg-white dark:bg-gray-900 flex flex-col h-full">
-        <ChatHeader
-          type={type}
-          selectedContact={selectedContact}
-          navigate={navigate}
-        />
-        <ChatMessages
-          selectedContact={selectedContact}
-          allMessages={allMessages}
-          getChatKey={getChatKey}
-          currentUserId={currentUser?._id}
-          notifications={notifications}
-          onNotificationClick={handleContactSelect}
-          messagesEndRef={messagesEndRef}
-          contacts={contacts}
-        />
-        <ChatInput
-          selectedContact={selectedContact}
-          currentUserId={currentUser?._id}
-          onSendMessage={(message) => socketService.sendMessage(message)}
-        />
-      </Card>
-
-      {/* Right Sidebar with chat details */}
-      <ChatDetailsSidebar
-        selectedContact={selectedContact}
-        currentUserId={currentUser?._id}
-      />
     </div>
   );
 };
 
-// === Helper Functions ===
-
-// Format contact object from backend into frontend-friendly shape
+// Helper Functions (Unchanged)
 const formatContact = (contact: any): Contact => ({
   id: contact.targetId,
   contactId: contact._id,
@@ -191,7 +200,9 @@ const formatContact = (contact: any): Contact => ({
   collaborationDetails: contact.collaborationDetails
     ? {
         startDate: new Date(contact.collaborationDetails.startDate),
-        endDate: contact.collaborationDetails.endDate ? new Date(contact.collaborationDetails.endDate) : undefined,
+        endDate: contact.collaborationDetails.endDate
+          ? new Date(contact.collaborationDetails.endDate)
+          : undefined,
         price: contact.collaborationDetails.price,
         selectedSlot: contact.collaborationDetails.selectedSlot,
         mentorName: contact.collaborationDetails.mentorName,
@@ -223,6 +234,7 @@ const formatContact = (contact: any): Contact => ({
         adminName: contact.groupDetails.adminName,
         adminProfilePic: contact.groupDetails.adminProfilePic,
         members: contact.groupDetails.members.map((member: any) => ({
+          _id: member._id, // Added _id
           name: member.name,
           profilePic: member.profilePic,
           joinedAt: new Date(member.joinedAt),
@@ -231,7 +243,6 @@ const formatContact = (contact: any): Contact => ({
     : undefined,
 });
 
-// Generate unique chat key from incoming message
 const getChatKeyFromMessage = (message: IChatMessage) =>
   message.groupId
     ? `group_${message.groupId}`
@@ -239,11 +250,9 @@ const getChatKeyFromMessage = (message: IChatMessage) =>
     ? `user-mentor_${message.collaborationId}`
     : `user-user_${message.userConnectionId}`;
 
-// Remove duplicate messages by ID
 const deduplicateMessages = (messages: IChatMessage[]) =>
   Array.from(new Map(messages.map((msg) => [msg._id, msg])).values());
 
-// Check if message is for the given contact
 const isMessageRelevant = (message: IChatMessage, contact: Contact) =>
   (contact.type === "group" && contact.groupId === message.groupId) ||
   (contact.type === "user-mentor" && contact.collaborationId === message.collaborationId) ||

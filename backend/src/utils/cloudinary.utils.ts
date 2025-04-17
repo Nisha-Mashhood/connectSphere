@@ -69,6 +69,3 @@ export const uploadMedia = async (filePath: string,
     throw error;
   }
 };
-
-
-

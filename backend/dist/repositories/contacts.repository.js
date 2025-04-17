@@ -53,74 +53,46 @@ export const findContactsByUserId = async (userId) => {
         })
             .populate({
             path: "userId",
-<<<<<<< HEAD
             select: "name profilePic userId jobTitle",
-=======
-            select: "name profilePic userId",
->>>>>>> 6dc4153e54462faf8ee2145cbaee39113d0c24cd
             model: "User",
         })
             .populate({
             path: "targetUserId",
-<<<<<<< HEAD
             select: "name profilePic userId jobTitle",
-=======
-            select: "name profilePic userId",
->>>>>>> 6dc4153e54462faf8ee2145cbaee39113d0c24cd
             model: "User",
         })
             .populate({
             path: "collaborationId",
-<<<<<<< HEAD
             select: "mentorId userId startDate endDate price selectedSlot",
             model: "Collaboration",
             populate: [
                 { path: "mentorId", select: "userId", populate: { path: "userId", select: "name profilePic jobTitle" } },
                 { path: "userId", select: "name profilePic jobTitle" },
-=======
-            select: "mentorId userId",
-            model: "Collaboration",
-            populate: [
-                { path: "mentorId", select: "userId", populate: { path: "userId", select: "name profilePic" } },
-                { path: "userId", select: "name profilePic" },
->>>>>>> 6dc4153e54462faf8ee2145cbaee39113d0c24cd
             ],
         })
             .populate({
             path: "userConnectionId",
-<<<<<<< HEAD
             select: "requester recipient requestAcceptedAt",
             model: "UserConnection",
             populate: [
                 { path: "requester", select: "name profilePic jobTitle" },
                 { path: "recipient", select: "name profilePic jobTitle" },
-=======
-            select: "requester recipient",
-            model: "UserConnection",
-            populate: [
-                { path: "requester", select: "name profilePic" },
-                { path: "recipient", select: "name profilePic" },
->>>>>>> 6dc4153e54462faf8ee2145cbaee39113d0c24cd
             ],
         })
             .populate({
             path: "groupId",
-<<<<<<< HEAD
             select: "name profilePic startDate adminId members",
             model: "Group",
             populate: [
                 { path: "adminId", select: "name profilePic" },
                 { path: "members.userId", select: "name profilePic" },
             ],
-=======
-            select: "name profilePic groupId",
-            model: "Group",
->>>>>>> 6dc4153e54462faf8ee2145cbaee39113d0c24cd
         })
             .lean()
             .exec();
     }
     catch (error) {
+        throw new Error(`Error finding contacts by user ID: ${error.message}`);
         throw new Error(`Error finding contacts by user ID: ${error.message}`);
     }
 };
