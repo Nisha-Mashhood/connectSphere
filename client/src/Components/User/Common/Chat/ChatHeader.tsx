@@ -10,6 +10,8 @@ interface ChatHeaderProps {
   toggleSidebar?: () => void;
   toggleDetailsSidebar?: () => void;
   isMobileView?: boolean;
+  typingUsers: { [key: string]: string[] };
+  getChatKey: (contact: Contact) => string;
 }
 
 const ChatHeader: React.FC<ChatHeaderProps> = ({
@@ -19,6 +21,8 @@ const ChatHeader: React.FC<ChatHeaderProps> = ({
   toggleSidebar,
   toggleDetailsSidebar,
   isMobileView,
+  typingUsers,
+  getChatKey,
 }) => {
   const getGradient = () => {
     if (!selectedContact) return "from-violet-500 to-fuchsia-500";
@@ -33,6 +37,29 @@ const ChatHeader: React.FC<ChatHeaderProps> = ({
         return "from-violet-500 to-fuchsia-500";
     }
   };
+
+  const getTypingIndicator = () => {
+    if (!selectedContact) return null;
+    const chatKey = getChatKey(selectedContact);
+    const typingUserIds = typingUsers[chatKey] || [];
+    if (typingUserIds.length === 0) return null;
+
+    const typingUsersNames = typingUserIds
+      .map((userId) => {
+        const member = selectedContact.groupDetails?.members.find(
+          (m) => m._id === userId || m.userId === userId
+        );
+        return member?.name || "Someone";
+      })
+      .join(", ");
+
+    return (
+      <p className="text-xs text-green-200 animate-pulse">
+        {typingUsersNames} {typingUsersNames.includes(",") ? "are" : "is"} typing...
+      </p>
+    );
+  };
+
 
   return (
     <div
@@ -70,13 +97,15 @@ const ChatHeader: React.FC<ChatHeaderProps> = ({
               <h2 className="text-base sm:text-lg font-bold truncate max-w-[150px] sm:max-w-[200px]">
                 {selectedContact.name}
               </h2>
-              <p className="text-xs text-white/80 truncate max-w-[150px] sm:max-w-[200px]">
-                {selectedContact.type === "user-mentor"
-                  ? "Mentorship"
-                  : selectedContact.type === "group"
-                  ? `${selectedContact.groupDetails?.members.length || 0} members`
-                  : selectedContact.targetJobTitle || "Connection"}
-              </p>
+                {getTypingIndicator() || (
+                <p className="text-xs text-white/80 truncate max-w-[150px] sm:max-w-[200px]">
+                  {selectedContact.type === "user-mentor"
+                    ? "Mentorship"
+                    : selectedContact.type === "group"
+                    ? `${selectedContact.groupDetails?.members.length || 0} members`
+                    : selectedContact.targetJobTitle || "Connection"}
+                </p>
+              )}
             </div>
           </div>
         )}

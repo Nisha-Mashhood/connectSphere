@@ -1,18 +1,7 @@
 import { axiosInstance } from "../lib/axios";
 import { AxiosProgressEvent } from "axios";
+import { IChatMessage } from "../types";
 
-export interface IChatMessage {
-  _id: string;
-  senderId: string;
-  content: string;
-  contentType: "text" | "image" | "video" | "file";
-  timestamp: string;
-  collaborationId?: string;
-  userConnectionId?: string;
-  groupId?: string;
-  thumbnailUrl?: string;
-  fileMetadata?: { fileName: string; fileSize: number; mimeType: string };
-}
 
 export const fetchChatMessages = async (
   contactId?: string,
@@ -60,3 +49,15 @@ export const uploadMedia = async (
     throw error;
   }
 };
+
+export const getUnreadMessages = async(userId: string) =>{
+  try {
+    const response = await axiosInstance.get("/chat/unread", {
+      params: { userId },
+    });
+    return response.data.data;
+  } catch (error: any) {
+    console.error("Error fetching chat messages:", error.message);
+    throw error;
+  }
+}

@@ -1,5 +1,5 @@
-import { findChatMessagesByCollaborationId, findChatMessagesByUserConnectionId, findChatMessagesByGroupId, countMessagesByCollaborationId, countMessagesByUserConnectionId, countMessagesByGroupId, } from "../repositories/chat.repository.js";
-import { findContactById } from "../repositories/contacts.repository.js";
+import { findChatMessagesByCollaborationId, findChatMessagesByUserConnectionId, findChatMessagesByGroupId, countMessagesByCollaborationId, countMessagesByUserConnectionId, countMessagesByGroupId, countUnreadMessagesByGroupId, countUnreadMessagesByCollaborationId, countUnreadMessagesByUserConnectionId, } from "../repositories/chat.repository.js";
+import { findContactById, findContactsByUserId } from "../repositories/contacts.repository.js";
 export const getChatMessagesService = async (contactId, groupId, page = 1, limit = 10) => {
     try {
         if (!contactId && !groupId) {
@@ -34,6 +34,31 @@ export const getChatMessagesService = async (contactId, groupId, page = 1, limit
     }
     catch (error) {
         throw new Error(`Service error fetching chat messages: ${error.message}`);
+    }
+};
+export const getUnreadMessageCountsService = async (userId) => {
+    try {
+        const contacts = await findContactsByUserId(userId);
+        const unreadCounts = {};
+        for (const contact of contacts) {
+            let count = 0;
+            if (contact.type === "group" && contact.groupId) {
+                count = await countUnreadMessagesByGroupId(contact.groupId.toString(), userId);
+                unreadCounts[`group_${contact.groupId}`] = count;
+            }
+            else if (contact.type === "user-mentor" && contact.collaborationId) {
+                count = await countUnreadMessagesByCollaborationId(contact.collaborationId.toString(), userId);
+                unreadCounts[`user-mentor_${contact.collaborationId}`] = count;
+            }
+            else if (contact.type === "user-user" && contact.userConnectionId) {
+                count = await countUnreadMessagesByUserConnectionId(contact.userConnectionId.toString(), userId);
+                unreadCounts[`user-user_${contact.userConnectionId}`] = count;
+            }
+        }
+        return unreadCounts;
+    }
+    catch (error) {
+        throw new Error(`Service error fetching unread message counts: ${error.message}`);
     }
 };
 //# sourceMappingURL=chat.service.js.map

@@ -45,6 +45,11 @@ const chatSchema = new mongoose.Schema({
         type: Boolean,
         default: false,
     },
+    status: {
+        type: String,
+        enum: ["pending", "sent", "read"],
+        default: "pending",
+    },
     timestamp: {
         type: Date,
         default: Date.now,

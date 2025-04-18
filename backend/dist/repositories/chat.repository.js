@@ -63,4 +63,38 @@ export const countMessagesByUserConnectionId = async (userConnectionId) => {
 export const countMessagesByGroupId = async (groupId) => {
     return await ChatMessage.countDocuments({ groupId: toObjectId(groupId) });
 };
+export const countUnreadMessagesByCollaborationId = async (collaborationId, userId) => {
+    return await ChatMessage.countDocuments({
+        collaborationId: toObjectId(collaborationId),
+        isRead: false,
+        senderId: { $ne: toObjectId(userId) },
+    });
+};
+export const countUnreadMessagesByUserConnectionId = async (userConnectionId, userId) => {
+    return await ChatMessage.countDocuments({
+        userConnectionId: toObjectId(userConnectionId),
+        isRead: false,
+        senderId: { $ne: toObjectId(userId) },
+    });
+};
+export const countUnreadMessagesByGroupId = async (groupId, userId) => {
+    return await ChatMessage.countDocuments({
+        groupId: toObjectId(groupId),
+        isRead: false,
+        senderId: { $ne: toObjectId(userId) },
+    });
+};
+export const markMessagesAsRead = async (chatKey, userId, type) => {
+    const filter = { isRead: false, senderId: { $ne: toObjectId(userId) } };
+    if (type === "group") {
+        filter.groupId = toObjectId(chatKey.replace("group_", ""));
+    }
+    else if (type === "user-mentor") {
+        filter.collaborationId = toObjectId(chatKey.replace("user-mentor_", ""));
+    }
+    else {
+        filter.userConnectionId = toObjectId(chatKey.replace("user-user_", ""));
+    }
+    await ChatMessage.updateMany(filter, { $set: { isRead: true, status: "read" } });
+};
 //# sourceMappingURL=chat.repository.js.map

@@ -36,9 +36,10 @@ export interface Contact {
     adminName: string;
     adminProfilePic: string;
     members: { 
-      _id: string; 
+      userId: string; 
       name: string; 
       profilePic: string; 
+      _id?: string
       joinedAt: Date 
     }[];
   };
@@ -57,25 +58,44 @@ export const formatContact = (contact: any): Contact => ({
   type: contact.type,
 });
 
-
-
 export interface IChatMessage {
-  _id: string; 
+  _id: string;
   senderId: string;
   content: string;
-  contentType: "text" | "image" | "file" | "audio" | "video";
   thumbnailUrl?: string;
-  timestamp: string | Date;
-  caption?: string;
-  groupId?: string;
   collaborationId?: string;
   userConnectionId?: string;
+  groupId?: string;
+  contentType: "text" | "image" | "video" | "file";
   fileMetadata?: {
     fileName: string;
     fileSize: number;
     mimeType: string;
-  }; 
+  };
+  isRead: boolean;
+  status: "pending" | "sent" | "read";
+  timestamp: string;
+  caption?: string;
 }
+
+// export interface IChatMessage {
+//   _id: string; 
+//   senderId: string;
+//   content: string;
+//   contentType: "text" | "image" | "file" | "audio" | "video";
+//   thumbnailUrl?: string;
+//   timestamp: string | Date;
+//   caption?: string;
+//   groupId?: string;
+//   status: "pending" | "sent" | "read";
+//   collaborationId?: string;
+//   userConnectionId?: string;
+//   fileMetadata?: {
+//     fileName: string;
+//     fileSize: number;
+//     mimeType: string;
+//   }; 
+// }
 
 export interface Notification {
   contactId: string;

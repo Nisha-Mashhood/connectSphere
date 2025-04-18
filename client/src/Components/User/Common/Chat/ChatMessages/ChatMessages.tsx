@@ -5,7 +5,7 @@ import { fetchChatMessages } from "../../../../../Service/Chat.Service";
 import { Avatar, Spinner, Tooltip } from "@nextui-org/react";
 import { useSelector } from "react-redux";
 import { RootState } from "../../../../../redux/store";
-import { MessageSquare, FileText, Video, AlertTriangle, ChevronDown } from "lucide-react";
+import { MessageSquare, FileText, Video, AlertTriangle, ChevronDown, Clock, Check, CheckCheck } from "lucide-react";
 import "./ChatMessages.css";
 
 interface ChatMessagesProps {
@@ -75,10 +75,18 @@ const ChatMessages: React.FC<ChatMessagesProps> = ({
     [selectedContact, page, isFetching, hasMore, allMessages, getChatKey, isContainerScrollable]
   );
 
+  // Reset state when selectedContact changes
   useEffect(() => {
-    if (selectedContact && !initialLoadDone) {
+    if (selectedContact) {
+      setInitialLoadDone(false);
       setPage(1);
       setHasMore(true);
+    }
+  }, [selectedContact?.id]);
+
+  // Load messages when selectedContact changes or initial load is not done
+  useEffect(() => {
+    if (selectedContact && !initialLoadDone) {
       loadMessages(true);
     }
   }, [selectedContact?.id, initialLoadDone, loadMessages]);
@@ -118,7 +126,6 @@ const ChatMessages: React.FC<ChatMessagesProps> = ({
       // const target = event.target as HTMLElement;
 
       if (isContainerScrollable && container) {
-        // Handle scroll within the messages container (larger windows)
         const { scrollTop, scrollHeight, clientHeight } = container;
         const isNearTop = scrollTop < 50;
         const isNearBottom = scrollHeight - scrollTop - clientHeight < 100;
@@ -138,7 +145,6 @@ const ChatMessages: React.FC<ChatMessagesProps> = ({
 
         setShowScrollDown(!isNearBottom);
       } else {
-        // Handle window scroll (smaller windows)
         const scrollTop = window.scrollY || document.documentElement.scrollTop;
         const scrollHeight = document.documentElement.scrollHeight;
         const clientHeight = window.innerHeight;
@@ -267,7 +273,7 @@ const ChatMessages: React.FC<ChatMessagesProps> = ({
     }
 
     if (selectedContact?.type === "group" && selectedContact.groupDetails?.members) {
-      const member = selectedContact.groupDetails.members.find((m) => m._id === msg.senderId);
+      const member = selectedContact.groupDetails.members.find((m) => m._id === msg.senderId || m.userId === msg.senderId);
       if (member) {
         return {
           name: member.name,
@@ -292,11 +298,23 @@ const ChatMessages: React.FC<ChatMessagesProps> = ({
       ? "bg-gradient-to-r from-blue-500 to-indigo-600 text-white rounded-2xl rounded-tr-none"
       : "bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 text-gray-800 dark:text-gray-200 rounded-2xl rounded-tl-none";
 
+      const renderStatusIcon = () => {
+        if (!isSent) return null;
+        if (msg.status === "pending") {
+          return <Clock size={12} className="text-blue-200 ml-1" />;
+        } else if (msg.status === "sent") {
+          return <Check size={12} className="text-blue-200 ml-1" />;
+        } else {
+          return <CheckCheck size={12} className="text-blue-100 ml-1" />;
+        }
+      };
+
     const timeBadge = (
       <span
         className={`text-xs ${isSent ? "text-blue-100" : "text-gray-500 dark:text-gray-400"} opacity-80`}
       >
         {formatTime(msg.timestamp)}
+        {renderStatusIcon()}
       </span>
     );
 
@@ -351,6 +369,9 @@ const ChatMessages: React.FC<ChatMessagesProps> = ({
                     className="w-full h-auto max-w-[12rem] sm:max-w-[16rem] object-cover"
                   />
                 </div>
+                {msg.caption && (
+                  <span className="break-words text-sm sm:text-base mt-1">{msg.caption}</span>
+                )}
                 <div
                   className={`text-right ${isSent ? "text-blue-100" : "text-gray-500"} opacity-80 text-xs`}
                 >
@@ -377,6 +398,9 @@ const ChatMessages: React.FC<ChatMessagesProps> = ({
                     </button>
                   </div>
                 </div>
+                {msg.caption && (
+                  <span className="break-words text-sm sm:text-base mt-1">{msg.caption}</span>
+                )}
                 <div
                   className={`text-right ${isSent ? "text-blue-100" : "text-gray-500"} opacity-80 text-xs`}
                 >
@@ -422,6 +446,9 @@ const ChatMessages: React.FC<ChatMessagesProps> = ({
                     <FileText size={16} />
                     <span className="truncate text-sm">{msg.fileMetadata?.fileName || "File"}</span>
                   </a>
+                )}
+                {msg.caption && (
+                  <span className="break-words text-sm sm:text-base mt-1">{msg.caption}</span>
                 )}
                 <div
                   className={`text-right ${isSent ? "text-blue-100" : "text-gray-500"} opacity-80 text-xs`}

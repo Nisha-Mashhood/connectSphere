@@ -13,6 +13,7 @@ export interface IChatMessage extends Document {
         mimeType: string;
     };
     isRead: boolean;
+    status: "pending" | "sent" | "read";
     timestamp: Date;
 }
 declare const _default: mongoose.Model<IChatMessage, {}, {}, {}, mongoose.Document<unknown, {}, IChatMessage> & IChatMessage & Required<{

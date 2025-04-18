@@ -6,11 +6,14 @@ import { socketService } from "../../../../Service/SocketService";
 import { getUserContacts } from "../../../../Service/Contact.Service";
 import ChatSidebar from "./ChatSidebar";
 import ChatHeader from "./ChatHeader";
-import ChatDetailsSidebar from "./ChatDetailsSidebar";
+import ChatDetailsSidebar from "./ChatDetailsSideBar/ChatDetailsSidebar";
 import ChatMessages from "./ChatMessages/ChatMessages";
-import ChatInput from "./ChatInput";
+import ChatInput from "./ChatInput/ChatInput";
 import { Card } from "@nextui-org/react";
 import { Contact, IChatMessage, Notification } from "../../../../types";
+import { deduplicateMessages, formatContact, getChatKeyFromMessage, isMessageRelevant } from "./utils/contactUtils";
+import { getUnreadMessages } from "../../../../Service/Chat.Service";
+import toast from "react-hot-toast";
 
 const Chat: React.FC = () => {
   const { type, id } = useParams<{ type?: string; id?: string }>();
@@ -20,6 +23,8 @@ const Chat: React.FC = () => {
   const [selectedContact, setSelectedContact] = useState<Contact | null>(null);
   const [allMessages, setAllMessages] = useState<Map<string, IChatMessage[]>>(new Map());
   const [notifications, setNotifications] = useState<Notification[]>([]);
+  const [unreadCounts, setUnreadCounts] = useState<{ [key: string]: number }>({});
+  const [typingUsers, setTypingUsers] = useState<{ [key: string]: string[] }>({});
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
   const [isDetailsSidebarOpen, setIsDetailsSidebarOpen] = useState(false);
   const messagesEndRef = useRef<HTMLDivElement>(null);
@@ -31,9 +36,17 @@ const Chat: React.FC = () => {
       ? `user-mentor_${contact.collaborationId}`
       : `user-user_${contact.userConnectionId}`;
 
-  // const updateMessages = (chatKey: string, messages: IChatMessage[]) => {
-  //   setAllMessages((prev) => new Map(prev).set(chatKey, messages));
-  // };
+
+      const fetchUnreadCounts = async () => {
+        if (!currentUser?._id) return;
+        try {
+          const data = await getUnreadMessages(currentUser?._id) 
+          setUnreadCounts(data);
+        } catch (error) {
+          toast.error(`Error fetching unread counts: ${error.message}`);
+        }
+      };
+
 
   useEffect(() => {
     if (!currentUser?._id) return;
@@ -56,13 +69,43 @@ const Chat: React.FC = () => {
       const chatKey = getChatKeyFromMessage(message);
       setAllMessages((prev) => {
         const messages = prev.get(chatKey) || [];
-        if (messages.some((m) => m._id === message._id)) return prev;
-        const uniqueMessages = deduplicateMessages([...messages, message]);
-        return new Map(prev).set(chatKey, uniqueMessages);
+        const updatedMessages = messages.map((m) =>
+          m._id === message._id ? { ...m, ...message } : m
+        );
+        if (!updatedMessages.some((m) => m._id === message._id)) {
+          updatedMessages.push(message);
+        }
+        return new Map(prev).set(chatKey, deduplicateMessages(updatedMessages));
       });
     });
 
+    socketService.onTyping(({ userId, chatKey }) => {
+      setTypingUsers((prev) => ({
+        ...prev,
+        [chatKey]: [...(prev[chatKey] || []).filter((id) => id !== userId), userId],
+      }));
+    });
+
+    socketService.onStopTyping(({ userId, chatKey }) => {
+      setTypingUsers((prev) => ({
+        ...prev,
+        [chatKey]: (prev[chatKey] || []).filter((id) => id !== userId),
+      }));
+    });
+
+    socketService.onMessagesRead(({ chatKey }) => {
+      setAllMessages((prev) => {
+        const messages = prev.get(chatKey) || [];
+        const updatedMessages = messages.map((m) =>
+          !m.isRead ? { ...m, isRead: true, status: "read" as const } : m
+        );
+        return new Map(prev).set(chatKey, updatedMessages);
+      });
+      setUnreadCounts((prev) => ({ ...prev, [chatKey]: 0 }));
+    });
+
     fetchContacts();
+    fetchUnreadCounts();
 
     return () => socketService.disconnect();
   }, [currentUser?._id]);
@@ -108,6 +151,8 @@ const Chat: React.FC = () => {
   const handleContactSelect = (contact: Contact) => {
     setSelectedContact(contact);
     navigate(`/chat/${contact.type}/${contact.id}`);
+    const chatKey = getChatKey(contact);
+    socketService.markAsRead(chatKey, currentUser?._id || "", contact.type);
     setNotifications((prev) =>
       prev.filter((n) => !(n.contactId === contact.id && n.type === contact.type))
     );
@@ -130,6 +175,7 @@ const Chat: React.FC = () => {
           selectedContact={selectedContact}
           onContactSelect={handleContactSelect}
           notifications={notifications}
+          unreadCounts={unreadCounts}
         />
       </div>
 
@@ -143,11 +189,13 @@ const Chat: React.FC = () => {
             toggleSidebar={toggleSidebar}
             toggleDetailsSidebar={toggleDetailsSidebar}
             isMobileView={window.innerWidth < 768}
+            typingUsers={typingUsers}
+            getChatKey={getChatKey}
           />
           <ChatMessages
             selectedContact={selectedContact}
             allMessages={allMessages}
-            // setAllMessages={updateMessages}
+            // setAllMessages={setAllMessages}
             getChatKey={getChatKey}
             currentUserId={currentUser?._id}
             notifications={notifications}
@@ -159,6 +207,7 @@ const Chat: React.FC = () => {
             selectedContact={selectedContact}
             currentUserId={currentUser?._id}
             onSendMessage={(message) => socketService.sendMessage(message)}
+            getChatKey={getChatKey}
           />
         </Card>
       </div>
@@ -185,77 +234,5 @@ const Chat: React.FC = () => {
     </div>
   );
 };
-
-// Helper Functions (Unchanged)
-const formatContact = (contact: any): Contact => ({
-  id: contact.targetId,
-  contactId: contact._id,
-  userId: contact.userId,
-  targetId: contact.targetId,
-  type: contact.type,
-  name: contact.targetName || "Unknown",
-  profilePic: contact.targetProfilePic || "",
-  targetJobTitle: contact.targetJobTitle,
-  collaborationId: contact.collaborationId,
-  collaborationDetails: contact.collaborationDetails
-    ? {
-        startDate: new Date(contact.collaborationDetails.startDate),
-        endDate: contact.collaborationDetails.endDate
-          ? new Date(contact.collaborationDetails.endDate)
-          : undefined,
-        price: contact.collaborationDetails.price,
-        selectedSlot: contact.collaborationDetails.selectedSlot,
-        mentorName: contact.collaborationDetails.mentorName,
-        mentorProfilePic: contact.collaborationDetails.mentorProfilePic,
-        mentorJobTitle: contact.collaborationDetails.mentorJobTitle,
-        userName: contact.collaborationDetails.userName,
-        userProfilePic: contact.collaborationDetails.userProfilePic,
-        userJobTitle: contact.collaborationDetails.userJobTitle,
-      }
-    : undefined,
-  userConnectionId: contact.userConnectionId,
-  connectionDetails: contact.connectionDetails
-    ? {
-        requestAcceptedAt: contact.connectionDetails.requestAcceptedAt
-          ? new Date(contact.connectionDetails.requestAcceptedAt)
-          : undefined,
-        requesterName: contact.connectionDetails.requesterName,
-        requesterProfilePic: contact.connectionDetails.requesterProfilePic,
-        requesterJobTitle: contact.connectionDetails.requesterJobTitle,
-        recipientName: contact.connectionDetails.recipientName,
-        recipientProfilePic: contact.connectionDetails.recipientProfilePic,
-        recipientJobTitle: contact.connectionDetails.recipientJobTitle,
-      }
-    : undefined,
-  groupId: contact.groupId,
-  groupDetails: contact.groupDetails
-    ? {
-        startDate: new Date(contact.groupDetails.startDate),
-        adminName: contact.groupDetails.adminName,
-        adminProfilePic: contact.groupDetails.adminProfilePic,
-        members: contact.groupDetails.members.map((member: any) => ({
-          _id: member._id, // Added _id
-          name: member.name,
-          profilePic: member.profilePic,
-          joinedAt: new Date(member.joinedAt),
-        })),
-      }
-    : undefined,
-});
-
-const getChatKeyFromMessage = (message: IChatMessage) =>
-  message.groupId
-    ? `group_${message.groupId}`
-    : message.collaborationId
-    ? `user-mentor_${message.collaborationId}`
-    : `user-user_${message.userConnectionId}`;
-
-const deduplicateMessages = (messages: IChatMessage[]) =>
-  Array.from(new Map(messages.map((msg) => [msg._id, msg])).values());
-
-const isMessageRelevant = (message: IChatMessage, contact: Contact) =>
-  (contact.type === "group" && contact.groupId === message.groupId) ||
-  (contact.type === "user-mentor" && contact.collaborationId === message.collaborationId) ||
-  (contact.type === "user-user" && contact.userConnectionId === message.userConnectionId);
 
 export default Chat;

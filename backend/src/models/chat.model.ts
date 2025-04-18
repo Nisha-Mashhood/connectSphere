@@ -14,6 +14,7 @@ export interface IChatMessage extends Document {
     mimeType: string;
   };
   isRead: boolean;
+  status: "pending" | "sent" | "read" ;
   timestamp: Date;
 }
 
@@ -63,6 +64,11 @@ const chatSchema: Schema<IChatMessage> = new mongoose.Schema(
     isRead: {
       type: Boolean,
       default: false,
+    },
+    status:{
+      type: String,
+      enum: [ "pending" , "sent" , "read" ],
+      default: "pending",
     },
     timestamp: {
       type: Date,

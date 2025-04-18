@@ -28,6 +28,7 @@ export class SocketService {
     return this.socket;
   }
 
+  //listen to the particular event
   onReceiveMessage(callback: (message: IChatMessage) => void) {
     this.socket?.on("receiveMessage", callback);
   }
@@ -36,8 +37,33 @@ export class SocketService {
     this.socket?.on("messageSaved", callback);
   }
 
+  onTyping(callback: (data: { userId: string; chatKey: string }) => void) {
+    this.socket?.on("typing", callback);
+  }
+
+  onStopTyping(callback: (data: { userId: string; chatKey: string }) => void) {
+    this.socket?.on("stopTyping", callback);
+  }
+
+  onMessagesRead(callback: (data: { chatKey: string; userId: string }) => void) {
+    this.socket?.on("messagesRead", callback);
+  }
+
+  //emit this particular events
   sendMessage(message: IChatMessage & { targetId: string; type: string }) {
     this.socket?.emit("sendMessage", message);
+  }
+
+  sendTyping(userId: string, targetId: string, type: string, chatKey: string) {
+    this.socket?.emit("typing", { userId, targetId, type, chatKey });
+  }
+
+  sendStopTyping(userId: string, targetId: string, type: string, chatKey: string) {
+    this.socket?.emit("stopTyping", { userId, targetId, type, chatKey });
+  }
+
+  markAsRead(chatKey: string, userId: string, type: string) {
+    this.socket?.emit("markAsRead", { chatKey, userId, type });
   }
 
   disconnect() {

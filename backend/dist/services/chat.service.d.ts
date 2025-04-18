@@ -3,4 +3,7 @@ export declare const getChatMessagesService: (contactId?: string, groupId?: stri
     messages: IChatMessage[];
     total: number;
 }>;
+export declare const getUnreadMessageCountsService: (userId: string) => Promise<{
+    [key: string]: number;
+}>;
 //# sourceMappingURL=chat.service.d.ts.map

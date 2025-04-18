@@ -1,6 +1,6 @@
 import { findContactByUsers, findContactsByUserId } from "../repositories/contacts.repository.js";
 import { getGroupsByGroupId, isUserInGroup } from "../repositories/group.repositry.js";
-import { saveChatMessage } from "../repositories/chat.repository.js";
+import { markMessagesAsRead, saveChatMessage } from "../repositories/chat.repository.js";
 import mongoose from "mongoose";
 const initializeSocket = (io) => {
     console.log("Socket.IO server initialized");
@@ -119,6 +119,50 @@ const initializeSocket = (io) => {
             catch (error) {
                 console.error("Error sending message:", error.message);
                 socket.emit("error", { message: "Failed to send message" });
+            }
+        });
+        socket.on("typing", (data) => {
+            const { userId, targetId, type, chatKey } = data;
+            let room;
+            if (type === "group") {
+                room = `group_${targetId}`;
+            }
+            else {
+                const ids = [userId, targetId].sort();
+                room = `chat_${ids[0]}_${ids[1]}`;
+            }
+            socket.broadcast.to(room).emit("typing", { userId, chatKey });
+        });
+        socket.on("stopTyping", (data) => {
+            const { userId, targetId, type, chatKey } = data;
+            let room;
+            if (type === "group") {
+                room = `group_${targetId}`;
+            }
+            else {
+                const ids = [userId, targetId].sort();
+                room = `chat_${ids[0]}_${ids[1]}`;
+            }
+            socket.broadcast.to(room).emit("stopTyping", { userId, chatKey });
+        });
+        socket.on("markAsRead", async (data) => {
+            try {
+                const { chatKey, userId, type } = data;
+                await markMessagesAsRead(chatKey, userId, type);
+                let room;
+                if (type === "group") {
+                    room = `group_${chatKey.replace("group_", "")}`;
+                }
+                else {
+                    const contact = await findContactByUsers(userId, chatKey.replace(/^(user-mentor_|user-user_)/, ""));
+                    const ids = [contact?.userId.toString(), contact?.targetUserId?.toString()].sort();
+                    room = `chat_${ids[0]}_${ids[1]}`;
+                }
+                io.to(room).emit("messagesRead", { chatKey, userId });
+            }
+            catch (error) {
+                console.error("Error marking messages as read:", error.message);
+                socket.emit("error", { message: "Failed to mark messages as read" });
             }
         });
         socket.on("disconnect", () => {

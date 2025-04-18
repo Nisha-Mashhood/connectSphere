@@ -1,13 +1,15 @@
 import React, { useState } from "react";
-import { Card, CardBody, Avatar, Input, Chip, Tabs, Tab } from "@nextui-org/react";
+import { Card, CardBody, Avatar, Input, Chip, Tabs, Tab, Badge } from "@nextui-org/react";
 import { Contact, Notification } from "../../../../types";
 import { FaSearch, FaUserFriends, FaUsers, FaGraduationCap, FaRegDotCircle } from "react-icons/fa";
+import { getChatKey } from "./utils/contactUtils";
 
 interface ChatSidebarProps {
   contacts: Contact[];
   selectedContact: Contact | null;
   onContactSelect: (contact: Contact) => void;
   notifications: Notification[];
+  unreadCounts: { [key: string]: number };
 }
 
 const ChatSidebar: React.FC<ChatSidebarProps> = ({
@@ -15,6 +17,7 @@ const ChatSidebar: React.FC<ChatSidebarProps> = ({
   selectedContact,
   onContactSelect,
   notifications,
+  unreadCounts,
 }) => {
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedType, setSelectedType] = useState<string>("all");
@@ -149,6 +152,8 @@ const ChatSidebar: React.FC<ChatSidebarProps> = ({
           ) : (
             filteredContacts.map((contact) => {
               const hasNotification = notifications.some((n) => n.contactId === contact.id);
+              const chatKey = getChatKey(contact);
+              const unreadCount = unreadCounts[chatKey] || 0;
 
               return (
                 <div
@@ -159,6 +164,7 @@ const ChatSidebar: React.FC<ChatSidebarProps> = ({
                   onClick={() => onContactSelect(contact)}
                 >
                   <div className="relative">
+                  <Badge content={unreadCount > 0 ? unreadCount : null} color="primary">
                     <Avatar
                       src={contact.profilePic}
                       size="md"
@@ -172,6 +178,7 @@ const ChatSidebar: React.FC<ChatSidebarProps> = ({
                           : "secondary"
                       }
                     />
+                    </Badge>
                     {hasNotification && (
                       <div className="absolute -top-1 -right-1 w-3 h-3 sm:w-4 sm:h-4 bg-red-500 rounded-full animate-pulse" />
                     )}

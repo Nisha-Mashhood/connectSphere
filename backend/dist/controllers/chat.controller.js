@@ -1,4 +1,4 @@
-import { getChatMessagesService } from "../services/chat.service.js";
+import { getChatMessagesService, getUnreadMessageCountsService } from "../services/chat.service.js";
 import { saveChatMessage } from "../repositories/chat.repository.js";
 import { uploadMedia } from "../utils/cloudinary.utils.js";
 export const getChatMessages = async (req, res) => {
@@ -53,6 +53,21 @@ export const uploadAndSaveMessage = async (req, res) => {
         else {
             res.status(400).json({ message: error.message });
         }
+    }
+};
+export const getUnreadMessageCounts = async (req, res) => {
+    try {
+        const { userId } = req.query;
+        if (!userId) {
+            res.status(400).json({ status: "failure", message: "User ID is required" });
+            return;
+        }
+        const unreadCounts = await getUnreadMessageCountsService(userId);
+        res.status(200).json({ status: "success", data: unreadCounts });
+    }
+    catch (error) {
+        console.error("Error fetching unread message counts:", error.message);
+        res.status(500).json({ status: "failure", message: error.message });
     }
 };
 //# sourceMappingURL=chat.controller.js.map
