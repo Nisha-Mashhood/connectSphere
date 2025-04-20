@@ -15,7 +15,6 @@ import { deduplicateMessages, formatContact, getChatKeyFromMessage, isMessageRel
 import { getUnreadMessages } from "../../../../Service/Chat.Service";
 import toast from "react-hot-toast";
 import { debounce } from "lodash";
-import { WebRTCService } from "../../../../Service/WebRTCService";
 
 const Chat: React.FC = () => {
   const { type, id } = useParams<{ type?: string; id?: string }>();
@@ -29,14 +28,8 @@ const Chat: React.FC = () => {
   const [typingUsers, setTypingUsers] = useState<{ [key: string]: string[] }>({});
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
   const [isDetailsSidebarOpen, setIsDetailsSidebarOpen] = useState(false);
+  const [isVideoCallActive, setIsVideoCallActive] = useState(false);
   const messagesEndRef = useRef<HTMLDivElement>(null);
-
-
-  //FOR TESTING REMOVE AFTER TESTING
-  useEffect(() => {
-    console.log("Exposing WebRTCService to window for testing");
-    (window as any).WebRTCService = WebRTCService;
-  }, []);
 
   const getChatKey = (contact: Contact) =>
     contact.type === "group"
@@ -183,9 +176,9 @@ const Chat: React.FC = () => {
   const toggleDetailsSidebar = () => setIsDetailsSidebarOpen((prev) => !prev);
 
   return (
-    <div className="flex flex-col md:flex-row h-screen bg-gradient-to-br from-gray-100 to-blue-50 dark:from-gray-900 dark:to-gray-800">
+    <div className="flex flex-col md:flex-row h-screen bg-gradient-to-br from-gray-100 to-blue-50 dark:from-gray-900 dark:to-gray-800 pt-16">
       <div
-        className={`fixed inset-y-0 left-0 z-50 w-80 md:w-1/4 md:static transform transition-transform duration-300 ease-in-out bg-white dark:bg-gray-900 md:bg-transparent ${
+        className={`fixed inset-y-0 left-0 z-[100] w-80 md:w-1/4 md:static transform transition-transform duration-300 ease-in-out bg-white dark:bg-gray-900 md:bg-transparent ${
           isSidebarOpen ? "translate-x-0" : "-translate-x-full md:translate-x-0"
         }`}
       >
@@ -208,6 +201,8 @@ const Chat: React.FC = () => {
             isMobileView={window.innerWidth < 768}
             typingUsers={typingUsers}
             getChatKey={getChatKey}
+            isVideoCallActive={isVideoCallActive}
+            setIsVideoCallActive={setIsVideoCallActive}
           />
           <ChatMessages
             selectedContact={selectedContact}
@@ -227,16 +222,19 @@ const Chat: React.FC = () => {
           />
         </Card>
       </div>
-      <div
-        className={`fixed inset-y-0 right-0 z-50 w-80 md:w-1/4 md:static transform transition-transform duration-300 ease-in-out bg-white dark:bg-gray-900 md:bg-transparent ${
-          isDetailsSidebarOpen ? "translate-x-0" : "translate-x-full md:translate-x-0"
-        }`}
-      >
-        <ChatDetailsSidebar selectedContact={selectedContact} currentUserId={currentUser?._id} />
-      </div>
+      
+      {!isVideoCallActive && (
+        <div
+          className={`fixed inset-y-0 right-0 z-[100] w-80 md:w-1/4 md:static transform transition-transform duration-300 ease-in-out bg-white dark:bg-gray-900 md:bg-transparent ${
+            isDetailsSidebarOpen ? "translate-x-0" : "translate-x-full md:translate-x-0"
+          }`}
+        >
+          <ChatDetailsSidebar selectedContact={selectedContact} currentUserId={currentUser?._id} />
+        </div>
+      )}
       {(isSidebarOpen || isDetailsSidebarOpen) && (
         <div
-          className="fixed inset-0 bg-black/50 z-40 md:hidden"
+          className="fixed inset-0 bg-black/50 z-[90] md:hidden"
           onClick={() => {
             setIsSidebarOpen(false);
             setIsDetailsSidebarOpen(false);

@@ -93,7 +93,7 @@ const Header = () => {
 
   return (
     <Navbar
-      className="bg-white shadow-md"
+      className="bg-white shadow-md z-[200]"
       maxWidth="xl"
       height="4rem"
       isBordered
