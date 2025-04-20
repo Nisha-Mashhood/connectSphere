@@ -1,6 +1,9 @@
 import ChatMessage from "../models/chat.model.js";
 import mongoose from "mongoose";
 const toObjectId = (id) => {
+    if (!mongoose.Types.ObjectId.isValid(id)) {
+        throw new Error("Invalid ID: must be a 24 character hex string");
+    }
     return id ? new mongoose.Types.ObjectId(id) : undefined;
 };
 export const saveChatMessage = async (messageData) => {
@@ -63,26 +66,47 @@ export const countMessagesByUserConnectionId = async (userConnectionId) => {
 export const countMessagesByGroupId = async (groupId) => {
     return await ChatMessage.countDocuments({ groupId: toObjectId(groupId) });
 };
-export const countUnreadMessagesByCollaborationId = async (collaborationId, userId) => {
-    return await ChatMessage.countDocuments({
-        collaborationId: toObjectId(collaborationId),
-        isRead: false,
-        senderId: { $ne: toObjectId(userId) },
-    });
-};
-export const countUnreadMessagesByUserConnectionId = async (userConnectionId, userId) => {
-    return await ChatMessage.countDocuments({
-        userConnectionId: toObjectId(userConnectionId),
-        isRead: false,
-        senderId: { $ne: toObjectId(userId) },
-    });
-};
 export const countUnreadMessagesByGroupId = async (groupId, userId) => {
-    return await ChatMessage.countDocuments({
+    console.log(`Counting unread messages for groupId: ${groupId}, userId: ${userId}`);
+    if (!mongoose.Types.ObjectId.isValid(groupId) || !mongoose.Types.ObjectId.isValid(userId)) {
+        console.error(`Invalid groupId: ${groupId} or userId: ${userId}`);
+        return 0;
+    }
+    const count = await ChatMessage.countDocuments({
         groupId: toObjectId(groupId),
         isRead: false,
         senderId: { $ne: toObjectId(userId) },
     });
+    console.log(`Unread count for groupId ${groupId}: ${count}`);
+    return count;
+};
+export const countUnreadMessagesByCollaborationId = async (collaborationId, userId) => {
+    console.log(`Counting unread messages for collaborationId: ${collaborationId}, userId: ${userId}`);
+    if (!mongoose.Types.ObjectId.isValid(collaborationId) || !mongoose.Types.ObjectId.isValid(userId)) {
+        console.error(`Invalid collaborationId: ${collaborationId} or userId: ${userId}`);
+        return 0;
+    }
+    const count = await ChatMessage.countDocuments({
+        collaborationId: toObjectId(collaborationId),
+        isRead: false,
+        senderId: { $ne: toObjectId(userId) },
+    });
+    console.log(`Unread count for collaborationId ${collaborationId}: ${count}`);
+    return count;
+};
+export const countUnreadMessagesByUserConnectionId = async (userConnectionId, userId) => {
+    console.log(`Counting unread messages for userConnectionId: ${userConnectionId}, userId: ${userId}`);
+    if (!mongoose.Types.ObjectId.isValid(userConnectionId) || !mongoose.Types.ObjectId.isValid(userId)) {
+        console.error(`Invalid userConnectionId: ${userConnectionId} or userId: ${userId}`);
+        return 0;
+    }
+    const count = await ChatMessage.countDocuments({
+        userConnectionId: toObjectId(userConnectionId),
+        isRead: false,
+        senderId: { $ne: toObjectId(userId) },
+    });
+    console.log(`Unread count for userConnectionId ${userConnectionId}: ${count}`);
+    return count;
 };
 export const markMessagesAsRead = async (chatKey, userId, type) => {
     const filter = { isRead: false, senderId: { $ne: toObjectId(userId) } };

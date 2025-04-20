@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef } from "react";
+import React, { useState, useEffect, useRef, useCallback } from "react";
 import { useSelector } from "react-redux";
 import { RootState } from "../../../../redux/store";
 import { useNavigate, useParams } from "react-router-dom";
@@ -14,6 +14,8 @@ import { Contact, IChatMessage, Notification } from "../../../../types";
 import { deduplicateMessages, formatContact, getChatKeyFromMessage, isMessageRelevant } from "./utils/contactUtils";
 import { getUnreadMessages } from "../../../../Service/Chat.Service";
 import toast from "react-hot-toast";
+import { debounce } from "lodash";
+import { WebRTCService } from "../../../../Service/WebRTCService";
 
 const Chat: React.FC = () => {
   const { type, id } = useParams<{ type?: string; id?: string }>();
@@ -29,6 +31,13 @@ const Chat: React.FC = () => {
   const [isDetailsSidebarOpen, setIsDetailsSidebarOpen] = useState(false);
   const messagesEndRef = useRef<HTMLDivElement>(null);
 
+
+  //FOR TESTING REMOVE AFTER TESTING
+  useEffect(() => {
+    console.log("Exposing WebRTCService to window for testing");
+    (window as any).WebRTCService = WebRTCService;
+  }, []);
+
   const getChatKey = (contact: Contact) =>
     contact.type === "group"
       ? `group_${contact.groupId}`
@@ -36,17 +45,30 @@ const Chat: React.FC = () => {
       ? `user-mentor_${contact.collaborationId}`
       : `user-user_${contact.userConnectionId}`;
 
+  const fetchUnreadCounts = useCallback(
+    debounce(async () => {
+      if (!currentUser?._id) return;
+      try {
+        const data = await getUnreadMessages(currentUser._id);
+        console.log("Unread Messages:", data);
+        setUnreadCounts(data);
+      } catch (error: any) {
+        toast.error(`Error fetching unread counts: ${error.message}`);
+      }
+    }, 500),
+    [currentUser?._id]
+  );
 
-      const fetchUnreadCounts = async () => {
-        if (!currentUser?._id) return;
-        try {
-          const data = await getUnreadMessages(currentUser?._id) 
-          setUnreadCounts(data);
-        } catch (error) {
-          toast.error(`Error fetching unread counts: ${error.message}`);
-        }
-      };
-
+  const updateMessages = useCallback(
+    debounce((chatKey: string, newMessages: IChatMessage[]) => {
+      setAllMessages((prev) => {
+        const messages = prev.get(chatKey) || [];
+        const uniqueMessages = deduplicateMessages([...messages, ...newMessages]);
+        return new Map(prev).set(chatKey, uniqueMessages);
+      });
+    }, 200),
+    []
+  );
 
   useEffect(() => {
     if (!currentUser?._id) return;
@@ -56,13 +78,9 @@ const Chat: React.FC = () => {
 
     socketService.onReceiveMessage((message) => {
       const chatKey = getChatKeyFromMessage(message);
-      setAllMessages((prev) => {
-        const messages = prev.get(chatKey) || [];
-        if (messages.some((m) => m._id === message._id)) return prev;
-        const uniqueMessages = deduplicateMessages([...messages, message]);
-        return new Map(prev).set(chatKey, uniqueMessages);
-      });
+      updateMessages(chatKey, [message]);
       handleNotification(message);
+      fetchUnreadCounts();
     });
 
     socketService.onMessageSaved((message) => {
@@ -102,13 +120,14 @@ const Chat: React.FC = () => {
         return new Map(prev).set(chatKey, updatedMessages);
       });
       setUnreadCounts((prev) => ({ ...prev, [chatKey]: 0 }));
+      fetchUnreadCounts();
     });
 
     fetchContacts();
     fetchUnreadCounts();
 
     return () => socketService.disconnect();
-  }, [currentUser?._id]);
+  }, [currentUser?._id, fetchUnreadCounts, updateMessages]);
 
   const fetchContacts = async () => {
     try {
@@ -156,7 +175,8 @@ const Chat: React.FC = () => {
     setNotifications((prev) =>
       prev.filter((n) => !(n.contactId === contact.id && n.type === contact.type))
     );
-    setIsSidebarOpen(false); // Close sidebar on mobile
+    fetchUnreadCounts();
+    setIsSidebarOpen(false);
   };
 
   const toggleSidebar = () => setIsSidebarOpen((prev) => !prev);
@@ -164,7 +184,6 @@ const Chat: React.FC = () => {
 
   return (
     <div className="flex flex-col md:flex-row h-screen bg-gradient-to-br from-gray-100 to-blue-50 dark:from-gray-900 dark:to-gray-800">
-      {/* Sidebar: Hidden on mobile unless toggled */}
       <div
         className={`fixed inset-y-0 left-0 z-50 w-80 md:w-1/4 md:static transform transition-transform duration-300 ease-in-out bg-white dark:bg-gray-900 md:bg-transparent ${
           isSidebarOpen ? "translate-x-0" : "-translate-x-full md:translate-x-0"
@@ -178,8 +197,6 @@ const Chat: React.FC = () => {
           unreadCounts={unreadCounts}
         />
       </div>
-
-      {/* Main Content */}
       <div className="flex-1 flex flex-col min-w-0">
         <Card className="flex-1 flex flex-col shadow-lg rounded-xl md:rounded-none bg-white dark:bg-gray-900 m-2 md:m-0">
           <ChatHeader
@@ -195,13 +212,12 @@ const Chat: React.FC = () => {
           <ChatMessages
             selectedContact={selectedContact}
             allMessages={allMessages}
-            // setAllMessages={setAllMessages}
+            setAllMessages={setAllMessages}
             getChatKey={getChatKey}
             currentUserId={currentUser?._id}
             notifications={notifications}
             onNotificationClick={handleContactSelect}
             messagesEndRef={messagesEndRef}
-            // contacts={contacts}
           />
           <ChatInput
             selectedContact={selectedContact}
@@ -211,8 +227,6 @@ const Chat: React.FC = () => {
           />
         </Card>
       </div>
-
-      {/* Details Sidebar: Hidden on mobile unless toggled */}
       <div
         className={`fixed inset-y-0 right-0 z-50 w-80 md:w-1/4 md:static transform transition-transform duration-300 ease-in-out bg-white dark:bg-gray-900 md:bg-transparent ${
           isDetailsSidebarOpen ? "translate-x-0" : "translate-x-full md:translate-x-0"
@@ -220,8 +234,6 @@ const Chat: React.FC = () => {
       >
         <ChatDetailsSidebar selectedContact={selectedContact} currentUserId={currentUser?._id} />
       </div>
-
-      {/* Overlay for mobile sidebar */}
       {(isSidebarOpen || isDetailsSidebarOpen) && (
         <div
           className="fixed inset-0 bg-black/50 z-40 md:hidden"

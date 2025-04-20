@@ -126,45 +126,44 @@ export const findContactsByUserId = async (userId: string): Promise<PopulatedCon
     })
       .populate({
         path: "userId",
-        select: "name profilePic userId jobTitle",
+        select: "_id name profilePic userId jobTitle",
         model: "User",
       })
       .populate({
         path: "targetUserId",
-        select: "name profilePic userId jobTitle",
+        select: "_id name profilePic userId jobTitle",
         model: "User",
       })
       .populate({
         path: "collaborationId",
-        select: "mentorId userId startDate endDate price selectedSlot",
+        select: "_id mentorId userId startDate endDate price selectedSlot",
         model: "Collaboration",
         populate: [
-          {path: "mentorId", select: "userId", populate: { path: "userId", select: "name profilePic jobTitle" } },
-          { path: "userId", select: "name profilePic jobTitle" },
+          {path: "mentorId", select: "userId", populate: { path: "userId", select: "_id name profilePic jobTitle" } },
+          { path: "userId", select: "_id name profilePic jobTitle" },
         ],
       })
       .populate({
         path: "userConnectionId",
-        select: "requester recipient requestAcceptedAt",
+        select: "_id requester recipient requestAcceptedAt",
         model: "UserConnection",
         populate: [
-          { path: "requester", select: "name profilePic jobTitle" },
-          { path: "recipient", select: "name profilePic jobTitle" },
+          { path: "requester", select: "_id name profilePic jobTitle" },
+          { path: "recipient", select: "_id name profilePic jobTitle" },
         ],
       })
       .populate({
         path: "groupId",
-        select: "name profilePic startDate adminId members",
+        select: "_id name profilePic startDate adminId members",
         model: "Group",
         populate: [
-          { path: "adminId", select: "name profilePic" },
-          { path: "members.userId", select: "name profilePic" },
+          { path: "adminId", select: "_id name profilePic" },
+          { path: "members.userId", select: "_id name profilePic" },
         ],
       })
       .lean()
       .exec() as unknown as PopulatedContact[]; 
   } catch (error: any) {
-    throw new Error(`Error finding contacts by user ID: ${error.message}`);
     throw new Error(`Error finding contacts by user ID: ${error.message}`);
   }
 };

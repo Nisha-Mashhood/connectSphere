@@ -1,5 +1,6 @@
 import { findChatMessagesByCollaborationId, findChatMessagesByUserConnectionId, findChatMessagesByGroupId, countMessagesByCollaborationId, countMessagesByUserConnectionId, countMessagesByGroupId, countUnreadMessagesByGroupId, countUnreadMessagesByCollaborationId, countUnreadMessagesByUserConnectionId, } from "../repositories/chat.repository.js";
 import { findContactById, findContactsByUserId } from "../repositories/contacts.repository.js";
+import mongoose from "mongoose";
 export const getChatMessagesService = async (contactId, groupId, page = 1, limit = 10) => {
     try {
         if (!contactId && !groupId) {
@@ -37,27 +38,49 @@ export const getChatMessagesService = async (contactId, groupId, page = 1, limit
     }
 };
 export const getUnreadMessageCountsService = async (userId) => {
+    if (!mongoose.Types.ObjectId.isValid(userId)) {
+        throw new Error("Invalid user ID: must be a 24 character hex string");
+    }
     try {
         const contacts = await findContactsByUserId(userId);
+        console.log("contacts from service : ", contacts);
         const unreadCounts = {};
         for (const contact of contacts) {
             let count = 0;
-            if (contact.type === "group" && contact.groupId) {
-                count = await countUnreadMessagesByGroupId(contact.groupId.toString(), userId);
-                unreadCounts[`group_${contact.groupId}`] = count;
+            try {
+                if (contact.type === "group" && contact.groupId) {
+                    const groupIdStr = contact.groupId._id.toString();
+                    count = await countUnreadMessagesByGroupId(groupIdStr, userId);
+                    console.log(`Count of unread messages for group ${groupIdStr}: ${count}`);
+                    unreadCounts[`group_${groupIdStr}`] = count;
+                }
+                else if (contact.type === "user-mentor" && contact.collaborationId) {
+                    const collabIdStr = contact.collaborationId._id.toString();
+                    count = await countUnreadMessagesByCollaborationId(collabIdStr, userId);
+                    console.log(`Count of unread messages for collaboration ${collabIdStr}: ${count}`);
+                    unreadCounts[`user-mentor_${collabIdStr}`] = count;
+                }
+                else if (contact.type === "user-user" && contact.userConnectionId) {
+                    const userConnIdStr = contact.userConnectionId._id.toString();
+                    count = await countUnreadMessagesByUserConnectionId(userConnIdStr, userId);
+                    console.log(`Count of unread messages for user-user ${userConnIdStr}: ${count}`);
+                    unreadCounts[`user-user_${userConnIdStr}`] = count;
+                }
+                else {
+                    console.warn(`Skipping contact with invalid ID or type: ${JSON.stringify(contact)}`);
+                }
             }
-            else if (contact.type === "user-mentor" && contact.collaborationId) {
-                count = await countUnreadMessagesByCollaborationId(contact.collaborationId.toString(), userId);
-                unreadCounts[`user-mentor_${contact.collaborationId}`] = count;
-            }
-            else if (contact.type === "user-user" && contact.userConnectionId) {
-                count = await countUnreadMessagesByUserConnectionId(contact.userConnectionId.toString(), userId);
-                unreadCounts[`user-user_${contact.userConnectionId}`] = count;
+            catch (error) {
+                console.error(`Error processing contact ${contact._id}: ${error.message}`);
+                const id = contact.groupId?.toString() || contact.collaborationId?.toString() || contact.userConnectionId?.toString();
+                unreadCounts[`${contact.type}_${id || "unknown"}`] = 0;
             }
         }
+        console.log("Unread message count from service:", unreadCounts);
         return unreadCounts;
     }
     catch (error) {
+        console.error("Service error:", error.message);
         throw new Error(`Service error fetching unread message counts: ${error.message}`);
     }
 };

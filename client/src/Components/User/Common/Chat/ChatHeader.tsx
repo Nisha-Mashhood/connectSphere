@@ -44,14 +44,42 @@ const ChatHeader: React.FC<ChatHeaderProps> = ({
     const typingUserIds = typingUsers[chatKey] || [];
     if (typingUserIds.length === 0) return null;
 
+    console.log("selected contact in chat header :",selectedContact)
+
     const typingUsersNames = typingUserIds
       .map((userId) => {
-        const member = selectedContact.groupDetails?.members.find(
-          (m) => m._id === userId || m.userId === userId
-        );
-        return member?.name || "Someone";
+        let memberName: string | undefined;
+
+        if (selectedContact.type === "group" && selectedContact.groupDetails?.members) {
+          const member = selectedContact.groupDetails.members.find(
+            (m) => m._id === userId // Match on userId
+          );
+          console.log("Group member lookup:", { userId, member });
+          memberName = member?.name;
+        } else if (selectedContact.type === "user-mentor" && selectedContact.collaborationDetails) {
+          // For user-mentor, check collaborationDetails
+          if (selectedContact.userId === userId) {
+            memberName = selectedContact.name; // Current user
+          } else if (selectedContact.contactId === userId) {
+            memberName = selectedContact.collaborationDetails.mentorName || selectedContact.name;
+          }
+          console.log("Mentor lookup:", { userId, memberName });
+        } else if (selectedContact.type === "user-user") {
+          // For user-user, check contactId or userId
+          if (selectedContact.userId === userId) {
+            memberName = selectedContact.name;
+          } else if (selectedContact.contactId === userId) {
+            memberName = selectedContact.connectionDetails?.requesterName || "Unknown";
+          }
+          console.log("User-user lookup:", { userId, memberName });
+        }
+
+        return memberName || "Unknown User";
       })
+      .filter(Boolean)
       .join(", ");
+
+    if (!typingUsersNames) return null;
 
     return (
       <p className="text-xs text-green-200 animate-pulse">

@@ -11,6 +11,7 @@ import "./ChatMessages.css";
 interface ChatMessagesProps {
   selectedContact: Contact | null;
   allMessages: Map<string, IChatMessage[]>;
+  setAllMessages: React.Dispatch<React.SetStateAction<Map<string, IChatMessage[]>>>;
   getChatKey: (contact: Contact) => string;
   currentUserId?: string;
   notifications: Notification[];
@@ -21,6 +22,7 @@ interface ChatMessagesProps {
 const ChatMessages: React.FC<ChatMessagesProps> = ({
   selectedContact,
   allMessages,
+  setAllMessages,
   getChatKey,
   currentUserId,
   notifications,
@@ -35,6 +37,7 @@ const ChatMessages: React.FC<ChatMessagesProps> = ({
   const [initialLoadDone, setInitialLoadDone] = useState(false);
   const [showScrollDown, setShowScrollDown] = useState(false);
   const [isContainerScrollable, setIsContainerScrollable] = useState(false);
+  const isUserScrolling = useRef(false);
 
   const loadMessages = useCallback(
     async (resetPage = false) => {
@@ -52,10 +55,13 @@ const ChatMessages: React.FC<ChatMessagesProps> = ({
           selectedContact.type === "group" ? selectedContact.groupId : undefined,
           currentPage
         );
-        const updatedMessages = resetPage
-          ? newMessages
-          : [...newMessages, ...(allMessages.get(chatKey) || [])];
-        allMessages.set(chatKey, updatedMessages);
+        setAllMessages((prev) => {
+          const currentMessages = prev.get(chatKey) || [];
+          const updatedMessages = resetPage
+            ? newMessages
+            : [...newMessages, ...currentMessages];
+          return new Map(prev).set(chatKey, updatedMessages);
+        });
         setHasMore(currentPage * 10 < total && newMessages.length > 0);
         setPage(currentPage + 1);
         if (resetPage) setInitialLoadDone(true);
@@ -72,10 +78,23 @@ const ChatMessages: React.FC<ChatMessagesProps> = ({
         setTimeout(() => setIsFetching(false), 100);
       }
     },
-    [selectedContact, page, isFetching, hasMore, allMessages, getChatKey, isContainerScrollable]
+    [selectedContact, page, isFetching, hasMore, getChatKey, setAllMessages, isContainerScrollable]
   );
 
-  // Reset state when selectedContact changes
+  const scrollToBottom = useCallback(
+    debounce(() => {
+      if (messagesContainerRef.current && messagesEndRef.current && !isUserScrolling.current) {
+        const { scrollTop, scrollHeight, clientHeight } = messagesContainerRef.current;
+        const isNearBottom = scrollHeight - scrollTop - clientHeight < 200;
+        console.log("Scroll check:", { scrollTop, scrollHeight, clientHeight, isNearBottom });
+        if (isNearBottom) {
+          messagesEndRef.current.scrollIntoView({ behavior: "smooth" });
+        }
+      }
+    }, 200),
+    []
+  );
+
   useEffect(() => {
     if (selectedContact) {
       setInitialLoadDone(false);
@@ -84,7 +103,6 @@ const ChatMessages: React.FC<ChatMessagesProps> = ({
     }
   }, [selectedContact?.id]);
 
-  // Load messages when selectedContact changes or initial load is not done
   useEffect(() => {
     if (selectedContact && !initialLoadDone) {
       loadMessages(true);
@@ -95,13 +113,13 @@ const ChatMessages: React.FC<ChatMessagesProps> = ({
     if (
       selectedContact &&
       allMessages.get(getChatKey(selectedContact))?.length &&
-      initialLoadDone
+      initialLoadDone &&
+      !isUserScrolling.current
     ) {
-      messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
+      scrollToBottom();
     }
-  }, [allMessages, selectedContact, getChatKey, messagesEndRef, initialLoadDone]);
+  }, [allMessages, selectedContact, getChatKey, initialLoadDone, scrollToBottom]);
 
-  // Check if the messages container is scrollable
   useEffect(() => {
     const checkScrollable = () => {
       const container = messagesContainerRef.current;
@@ -123,12 +141,11 @@ const ChatMessages: React.FC<ChatMessagesProps> = ({
   const handleScroll = useCallback(
     debounce(() => {
       const container = messagesContainerRef.current;
-      // const target = event.target as HTMLElement;
-
       if (isContainerScrollable && container) {
         const { scrollTop, scrollHeight, clientHeight } = container;
         const isNearTop = scrollTop < 50;
-        const isNearBottom = scrollHeight - scrollTop - clientHeight < 100;
+        const isNearBottom = scrollHeight - scrollTop - clientHeight < 200;
+        isUserScrolling.current = scrollTop > 0 && !isNearBottom;
 
         console.log("Container scroll:", {
           scrollTop,
@@ -137,27 +154,7 @@ const ChatMessages: React.FC<ChatMessagesProps> = ({
           isNearTop,
           isFetching,
           hasMore,
-        });
-
-        if (isNearTop && hasMore && !isFetching) {
-          loadMessages(false);
-        }
-
-        setShowScrollDown(!isNearBottom);
-      } else {
-        const scrollTop = window.scrollY || document.documentElement.scrollTop;
-        const scrollHeight = document.documentElement.scrollHeight;
-        const clientHeight = window.innerHeight;
-        const isNearTop = scrollTop < 50;
-        const isNearBottom = scrollHeight - scrollTop - clientHeight < 100;
-
-        console.log("Window scroll:", {
-          scrollTop,
-          scrollHeight,
-          clientHeight,
-          isNearTop,
-          isFetching,
-          hasMore,
+          isUserScrolling: isUserScrolling.current,
         });
 
         if (isNearTop && hasMore && !isFetching) {
@@ -166,48 +163,22 @@ const ChatMessages: React.FC<ChatMessagesProps> = ({
 
         setShowScrollDown(!isNearBottom);
       }
-    }, 100),
+    }, 200),
     [hasMore, isFetching, loadMessages, isContainerScrollable]
   );
 
   useEffect(() => {
     const container = messagesContainerRef.current;
-    const addListeners = (target: Window | HTMLElement, isWindow: boolean) => {
-      if (isWindow) {
-        window.addEventListener("scroll", handleScroll);
-        window.addEventListener("touchmove", handleScroll);
-      } else if (target instanceof HTMLElement) {
-        target.addEventListener("scroll", handleScroll);
-        target.addEventListener("touchmove", handleScroll);
-      }
-    };
-
-    const removeListeners = (target: Window | HTMLElement, isWindow: boolean) => {
-      if (isWindow) {
-        window.removeEventListener("scroll", handleScroll);
-        window.removeEventListener("touchmove", handleScroll);
-      } else if (target instanceof HTMLElement) {
-        target.removeEventListener("scroll", handleScroll);
-        target.removeEventListener("touchmove", handleScroll);
-      }
-    };
-
     if (isContainerScrollable && container) {
-      addListeners(container, false);
-      return () => removeListeners(container, false);
-    } else {
-      addListeners(window, true);
-      return () => removeListeners(window, true);
+      container.addEventListener("scroll", handleScroll);
+      container.addEventListener("touchmove", handleScroll);
+      return () => {
+        container.removeEventListener("scroll", handleScroll);
+        container.removeEventListener("touchmove", handleScroll);
+      };
     }
+    return () => {};
   }, [handleScroll, isContainerScrollable]);
-
-  const scrollToBottom = () => {
-    if (isContainerScrollable && messagesContainerRef.current) {
-      messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
-    } else {
-      window.scrollTo({ top: document.documentElement.scrollHeight, behavior: "smooth" });
-    }
-  };
 
   const formatTime = (timestamp: string | Date) => {
     const date = typeof timestamp === "string" ? new Date(timestamp) : timestamp;
@@ -298,16 +269,16 @@ const ChatMessages: React.FC<ChatMessagesProps> = ({
       ? "bg-gradient-to-r from-blue-500 to-indigo-600 text-white rounded-2xl rounded-tr-none"
       : "bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 text-gray-800 dark:text-gray-200 rounded-2xl rounded-tl-none";
 
-      const renderStatusIcon = () => {
-        if (!isSent) return null;
-        if (msg.status === "pending") {
-          return <Clock size={12} className="text-blue-200 ml-1" />;
-        } else if (msg.status === "sent") {
-          return <Check size={12} className="text-blue-200 ml-1" />;
-        } else {
-          return <CheckCheck size={12} className="text-blue-100 ml-1" />;
-        }
-      };
+    const renderStatusIcon = () => {
+      if (!isSent) return null;
+      if (msg.status === "pending") {
+        return <Clock size={12} className="text-blue-200 ml-1" />;
+      } else if (msg.status === "sent") {
+        return <Check size={12} className="text-blue-200 ml-1" />;
+      } else {
+        return <CheckCheck size={12} className="text-blue-100 ml-1" />;
+      }
+    };
 
     const timeBadge = (
       <span
@@ -479,7 +450,7 @@ const ChatMessages: React.FC<ChatMessagesProps> = ({
         onClick={() => onNotificationClick(selectedContact)}
       >
         <div className="flex items-center gap-2">
-          <AlertTriangle size={14} className="text-amber-600 dark:text-amber-400" />
+          <AlertTriangle size= {14} className="text-amber-600 dark:text-amber-400" />
           <div className="flex-1">
             <div className="font-medium text-sm sm:text-base">{notification.message}</div>
             <div className="text-xs text-amber-700 dark:text-amber-300">
@@ -561,7 +532,10 @@ const ChatMessages: React.FC<ChatMessagesProps> = ({
       {showScrollDown && (
         <button
           className="absolute bottom-4 right-4 p-2 bg-gray-100 dark:bg-gray-800 rounded-full shadow-md hover:bg-gray-200 dark:hover:bg-gray-700 transition-all transform hover:scale-105"
-          onClick={scrollToBottom}
+          onClick={() => {
+            isUserScrolling.current = false;
+            scrollToBottom();
+          }}
           aria-label="Scroll to bottom"
         >
           <ChevronDown size={16} className="text-gray-600 dark:text-gray-300" />

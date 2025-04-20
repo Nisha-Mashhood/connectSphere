@@ -67,11 +67,14 @@ export const uploadAndSaveMessage = async (req: Request, res: Response) => {
 export const getUnreadMessageCounts = async (req: Request, res: Response) => {
   try {
     const { userId } = req.query;
+
+    console.log("userId from front end :",userId)
     if (!userId) {
       res.status(400).json({ status: "failure", message: "User ID is required" });
       return 
     }
     const unreadCounts = await getUnreadMessageCountsService(userId as string);
+    console.log("Unread message count from controller :",unreadCounts);
     res.status(200).json({ status: "success", data: unreadCounts });
   } catch (error: any) {
     console.error("Error fetching unread message counts:", error.message);
