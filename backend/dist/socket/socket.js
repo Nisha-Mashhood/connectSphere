@@ -168,8 +168,8 @@ const initializeSocket = (io) => {
         // WebRTC signaling handlers
         socket.on("offer", async (data) => {
             try {
-                const { userId, targetId, type, chatKey, offer } = data;
-                console.log(`Received offer from ${userId} for chatKey: ${chatKey}`);
+                const { userId, targetId, type, chatKey, offer, callType } = data;
+                console.log(`Received ${callType} offer from ${userId} for chatKey: ${chatKey}`);
                 let room;
                 if (type === "group") {
                     room = `group_${targetId}`;
@@ -184,7 +184,7 @@ const initializeSocket = (io) => {
                     const ids = [contact.userId.toString(), contact.targetUserId?.toString()].sort();
                     room = `chat_${ids[0]}_${ids[1]}`;
                 }
-                socket.broadcast.to(room).emit("offer", { userId, targetId, type, chatKey, offer });
+                socket.broadcast.to(room).emit("offer", { userId, targetId, type, chatKey, offer, callType });
             }
             catch (error) {
                 console.error("Error broadcasting offer:", error.message);
@@ -193,8 +193,8 @@ const initializeSocket = (io) => {
         });
         socket.on("answer", async (data) => {
             try {
-                const { userId, targetId, type, chatKey, answer } = data;
-                console.log(`Received answer from ${userId} for chatKey: ${chatKey}`);
+                const { userId, targetId, type, chatKey, answer, callType } = data;
+                console.log(`Received ${callType} answer from ${userId} for chatKey: ${chatKey}`);
                 let room;
                 if (type === "group") {
                     room = `group_${targetId}`;
@@ -209,7 +209,7 @@ const initializeSocket = (io) => {
                     const ids = [contact.userId.toString(), contact.targetUserId?.toString()].sort();
                     room = `chat_${ids[0]}_${ids[1]}`;
                 }
-                socket.broadcast.to(room).emit("answer", { userId, targetId, type, chatKey, answer });
+                socket.broadcast.to(room).emit("answer", { userId, targetId, type, chatKey, answer, callType });
             }
             catch (error) {
                 console.error("Error broadcasting answer:", error.message);
@@ -218,8 +218,8 @@ const initializeSocket = (io) => {
         });
         socket.on("ice-candidate", async (data) => {
             try {
-                const { userId, targetId, type, chatKey, candidate } = data;
-                console.log(`Received ICE candidate from ${userId} for chatKey: ${chatKey}`);
+                const { userId, targetId, type, chatKey, candidate, callType } = data;
+                console.log(`Received ${callType} ICE candidate from ${userId} for chatKey: ${chatKey}`);
                 let room;
                 if (type === "group") {
                     room = `group_${targetId}`;
@@ -234,7 +234,7 @@ const initializeSocket = (io) => {
                     const ids = [contact.userId.toString(), contact.targetUserId?.toString()].sort();
                     room = `chat_${ids[0]}_${ids[1]}`;
                 }
-                socket.broadcast.to(room).emit("ice-candidate", { userId, targetId, type, chatKey, candidate });
+                socket.broadcast.to(room).emit("ice-candidate", { userId, targetId, type, chatKey, candidate, callType });
             }
             catch (error) {
                 console.error("Error broadcasting ICE candidate:", error.message);
