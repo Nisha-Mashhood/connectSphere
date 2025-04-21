@@ -65,18 +65,18 @@ const Chat: React.FC = () => {
 
   useEffect(() => {
     if (!currentUser?._id) return;
-
+  
     const token = localStorage.getItem("authToken") || "";
     socketService.connect(currentUser._id, token);
-
-    socketService.onReceiveMessage((message) => {
+  
+    const handleReceiveMessage = (message: IChatMessage) => {
       const chatKey = getChatKeyFromMessage(message);
       updateMessages(chatKey, [message]);
       handleNotification(message);
       fetchUnreadCounts();
-    });
-
-    socketService.onMessageSaved((message) => {
+    };
+  
+    const handleMessageSaved = (message: IChatMessage) => {
       const chatKey = getChatKeyFromMessage(message);
       setAllMessages((prev) => {
         const messages = prev.get(chatKey) || [];
@@ -88,23 +88,24 @@ const Chat: React.FC = () => {
         }
         return new Map(prev).set(chatKey, deduplicateMessages(updatedMessages));
       });
-    });
-
-    socketService.onTyping(({ userId, chatKey }) => {
+    };
+  
+    const handleTyping = ({ userId, chatKey }: { userId: string; chatKey: string }) => {
       setTypingUsers((prev) => ({
         ...prev,
         [chatKey]: [...(prev[chatKey] || []).filter((id) => id !== userId), userId],
       }));
-    });
-
-    socketService.onStopTyping(({ userId, chatKey }) => {
+    };
+  
+    const handleStopTyping = ({ userId, chatKey }: { userId: string; chatKey: string }) => {
+      console.log("Received stopTyping event:", { userId, chatKey });
       setTypingUsers((prev) => ({
         ...prev,
         [chatKey]: (prev[chatKey] || []).filter((id) => id !== userId),
       }));
-    });
-
-    socketService.onMessagesRead(({ chatKey }) => {
+    };
+  
+    const handleMessagesRead = ({ chatKey }: { chatKey: string }) => {
       setAllMessages((prev) => {
         const messages = prev.get(chatKey) || [];
         const updatedMessages = messages.map((m) =>
@@ -114,18 +115,33 @@ const Chat: React.FC = () => {
       });
       setUnreadCounts((prev) => ({ ...prev, [chatKey]: 0 }));
       fetchUnreadCounts();
-    });
+    };
+  
+    socketService.onReceiveMessage(handleReceiveMessage);
+    socketService.onMessageSaved(handleMessageSaved);
+    socketService.onTyping(handleTyping);
+    socketService.onStopTyping(handleStopTyping);
+    socketService.onMessagesRead(handleMessagesRead);
 
     fetchContacts();
     fetchUnreadCounts();
-
-    return () => socketService.disconnect();
+  
+    return () => {
+      console.log("Cleaning up socket listeners in Chat.tsx");
+      socketService.socket?.off("receiveMessage", handleReceiveMessage);
+      socketService.socket?.off("messageSaved", handleMessageSaved);
+      socketService.socket?.off("typing", handleTyping);
+      socketService.socket?.off("stopTyping", handleStopTyping);
+      socketService.socket?.off("messagesRead", handleMessagesRead);
+      socketService.disconnect();
+    };
   }, [currentUser?._id, fetchUnreadCounts, updateMessages]);
 
   const fetchContacts = async () => {
     try {
       const contactData = await getUserContacts();
       const formattedContacts = contactData.map(formatContact);
+      console.log("Received contacts :",formattedContacts);
       setContacts(formattedContacts);
       setInitialContact(formattedContacts);
     } catch (error) {

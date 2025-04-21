@@ -1,4 +1,5 @@
-import React, { useEffect } from "react";
+// ChatInput.tsx
+import React, { useEffect, useRef } from "react";
 import { useChatInput } from "./useChatInput";
 import TextInput from "./TextInput";
 import FileSelector from "./FileSelector";
@@ -7,6 +8,7 @@ import ErrorDisplay from "./ErrorDisplay";
 import SendButton from "./SendButton";
 import { ChatInputProps } from "./types";
 import { socketService } from "../../../../../Service/SocketService";
+import { debounce } from "lodash";
 
 const ChatInput: React.FC<ChatInputProps> = ({ selectedContact, currentUserId, onSendMessage, getChatKey }) => {
   const {
@@ -28,7 +30,19 @@ const ChatInput: React.FC<ChatInputProps> = ({ selectedContact, currentUserId, o
     emojiPickerRef,
   } = useChatInput({ selectedContact, currentUserId, onSendMessage });
 
-  //For typing and stop typing
+  const typingTimeoutRef = useRef(null);
+  const lastMessageInput = useRef<string>("");
+
+  const emitTyping = debounce((chatKey: string, targetId: string, type: string) => {
+    console.log("Emitting typing event:", { userId: currentUserId, targetId, type, chatKey });
+    socketService.sendTyping(currentUserId!, targetId, type, chatKey);
+  }, 500);
+
+  const emitStopTyping = debounce((chatKey: string, targetId: string, type: string) => {
+    console.log("Emitting stopTyping event:", { userId: currentUserId, targetId, type, chatKey });
+    socketService.sendStopTyping(currentUserId!, targetId, type, chatKey);
+  }, 1000);
+
   useEffect(() => {
     if (!selectedContact || !currentUserId) return;
 
@@ -38,17 +52,22 @@ const ChatInput: React.FC<ChatInputProps> = ({ selectedContact, currentUserId, o
         ? selectedContact.groupId
         : selectedContact.targetId || selectedContact.id;
 
-    if (messageInput.trim()) {
-      socketService.sendTyping(currentUserId, targetId || "", selectedContact.type, chatKey);
-    } else {
-      socketService.sendStopTyping(currentUserId, targetId || "", selectedContact.type, chatKey);
+    if (messageInput.trim() && !lastMessageInput.current.trim()) {
+      emitTyping(chatKey, targetId || "", selectedContact.type);
+      if (typingTimeoutRef.current) clearTimeout(typingTimeoutRef.current);
+      typingTimeoutRef.current = setTimeout(() => {
+        emitStopTyping(chatKey, targetId || "", selectedContact.type);
+      }, 1500);
+    } else if (!messageInput.trim() && lastMessageInput.current.trim()) {
+      emitStopTyping(chatKey, targetId || "", selectedContact.type);
     }
 
+    lastMessageInput.current = messageInput;
+
     return () => {
-      socketService.sendStopTyping(currentUserId, targetId || "", selectedContact.type, chatKey);
+      if (typingTimeoutRef.current) clearTimeout(typingTimeoutRef.current);
     };
   }, [messageInput, selectedContact, currentUserId, getChatKey]);
-  
 
   return (
     <div className="flex flex-col p-2 sm:p-3 bg-white dark:bg-gray-900 border-t border-purple-200 dark:border-gray-800">

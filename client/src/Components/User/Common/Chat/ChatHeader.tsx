@@ -1,8 +1,9 @@
 import React, { useState, useRef, useEffect } from "react";
-import { Button, Tooltip, Avatar, Dropdown, DropdownTrigger, DropdownMenu, DropdownItem } from "@nextui-org/react";
+import { Button, Tooltip, Avatar, Dropdown, DropdownTrigger, DropdownMenu, DropdownItem, Modal, ModalContent, ModalHeader, ModalBody, ModalFooter } from "@nextui-org/react";
 import { FaArrowLeft, FaPhone, FaVideo, FaBars, FaEllipsisV, FaUserFriends, FaInfoCircle } from "react-icons/fa";
 import { Contact } from "../../../../types";
 import { WebRTCService } from "../../../../Service/WebRTCService";
+import { socketService } from "../../../../Service/SocketService";
 
 interface ChatHeaderProps {
   type?: string;
@@ -33,6 +34,104 @@ const ChatHeader: React.FC<ChatHeaderProps> = ({
   const localVideoRef = useRef<HTMLVideoElement>(null);
   const remoteVideoRef = useRef<HTMLVideoElement>(null);
   const [localStream, setLocalStream] = useState<MediaStream | null>(null);
+  const [remoteStream, setRemoteStream] = useState<MediaStream | null>(null);
+  const [isIncomingCall, setIsIncomingCall] = useState(false);
+  const [incomingCallData, setIncomingCallData] = useState<{ userId: string; targetId: string; type: string; chatKey: string; offer: RTCSessionDescriptionInit } | null>(null);
+  const iceCandidateQueue = useRef<RTCIceCandidate[]>([]);
+
+  const initializeWebRTC = async () => {
+    if (!webrtcService.current) {
+      console.log("Initializing WebRTCService");
+      webrtcService.current = new WebRTCService();
+      await webrtcService.current.initPeerConnection();
+      console.log("Peer connection initialized");
+    }
+  };
+
+  // Set up WebRTC and persistent listeners
+  useEffect(() => {
+    initializeWebRTC().then(() => {
+      const peerConnection = webrtcService.current!.getPeerConnection();
+      if (peerConnection) {
+        peerConnection.ontrack = (event) => {
+          const remoteStream = event.streams[0];
+          console.log("Received remote stream, track details:");
+          remoteStream.getTracks().forEach((track, index) => {
+            console.log(`Track ${index}: kind=${track.kind}, id=${track.id}, enabled=${track.enabled}, readyState=${track.readyState}`);
+          });
+          setRemoteStream(remoteStream);
+        };
+        peerConnection.onicecandidate = (event) => {
+          if (event.candidate && selectedContact) {
+            const chatKey = getChatKey(selectedContact);
+            const targetId = selectedContact.targetId || selectedContact.groupId || "";
+            console.log("Sending ICE candidate:", event.candidate);
+            socketService.sendIceCandidate(targetId, selectedContact.type, chatKey, event.candidate);
+          }
+        };
+      }
+    }).catch((err) => {
+      console.error("Error initializing WebRTC:", err);
+    });
+
+    const handleOffer = async (data: { userId: string; targetId: string; type: string; chatKey: string; offer: RTCSessionDescriptionInit }) => {
+      if (selectedContact && data.chatKey === getChatKey(selectedContact) && !isVideoCallActive) {
+        console.log("Incoming call offer:", data);
+        await initializeWebRTC();
+        setIncomingCallData(data);
+        setIsIncomingCall(true);
+      }
+    };
+
+    const handleAnswer = (data: { userId: string; targetId: string; type: string; chatKey: string; answer: RTCSessionDescriptionInit }) => {
+      if (selectedContact && data.chatKey === getChatKey(selectedContact) && webrtcService.current) {
+        console.log("Received answer:", data);
+        webrtcService.current.setRemoteDescription(data.answer).then(() => {
+          while (iceCandidateQueue.current.length > 0) {
+            const candidate = iceCandidateQueue.current.shift();
+            if (candidate) {
+              console.log("Applying queued ICE candidate after answer:", candidate);
+              webrtcService.current!.addIceCandidate(candidate).catch((error) => {
+                console.error("Error applying queued ICE candidate:", error);
+              });
+            }
+          }
+        }).catch((error) => {
+          console.error("Error setting remote description for answer:", error);
+        });
+      }
+    };
+
+    const handleIceCandidate = (data: { userId: string; targetId: string; type: string; chatKey: string; candidate: RTCIceCandidateInit }) => {
+      if (selectedContact && data.chatKey === getChatKey(selectedContact)) {
+        console.log("Received ICE candidate:", data);
+        if (!webrtcService.current || !webrtcService.current.getPeerConnection()) {
+          console.log("Queuing ICE candidate: peer connection not initialized");
+          iceCandidateQueue.current.push(new RTCIceCandidate(data.candidate));
+          return;
+        }
+        if (!webrtcService.current.hasRemoteDescription()) {
+          console.log("Queuing ICE candidate: remote description not set");
+          iceCandidateQueue.current.push(new RTCIceCandidate(data.candidate));
+          return;
+        }
+        webrtcService.current.addIceCandidate(new RTCIceCandidate(data.candidate)).catch((error) => {
+          console.error("Error adding ICE candidate:", error);
+        });
+      }
+    };
+
+    socketService.onOffer(handleOffer);
+    socketService.onAnswer(handleAnswer);
+    socketService.onIceCandidate(handleIceCandidate);
+
+    return () => {
+      console.log("Cleaning up socket listeners");
+      socketService.socket?.off("offer", handleOffer);
+      socketService.socket?.off("answer", handleAnswer);
+      socketService.socket?.off("ice-candidate", handleIceCandidate);
+    };
+  }, [selectedContact, getChatKey, isVideoCallActive]);
 
   const getGradient = () => {
     if (!selectedContact) return "from-violet-500 to-fuchsia-500";
@@ -104,16 +203,19 @@ const ChatHeader: React.FC<ChatHeaderProps> = ({
 
     try {
       console.log("Starting video call for contact:", selectedContact.id);
-      webrtcService.current = new WebRTCService();
-      await webrtcService.current.initPeerConnection();
-      const stream = await webrtcService.current.getLocalStream();
+      await initializeWebRTC();
+      const stream = await webrtcService.current!.getLocalStream();
       setLocalStream(stream);
 
-      // Close details sidebar
       if (toggleDetailsSidebar) {
         console.log("Closing details sidebar for video call");
         toggleDetailsSidebar();
       }
+
+      const chatKey = getChatKey(selectedContact);
+      const targetId = selectedContact.targetId || selectedContact.groupId || "";
+      const offer = await webrtcService.current!.createOffer();
+      socketService.sendOffer(targetId, selectedContact.type, chatKey, offer);
 
       setIsVideoCallActive(true);
       console.log("Video call started successfully");
@@ -124,35 +226,44 @@ const ChatHeader: React.FC<ChatHeaderProps> = ({
     }
   };
 
-  // Assign streams to video elements after modal is rendered
-  useEffect(() => {
-    if (isVideoCallActive && localStream) {
-      console.log("useEffect: Checking video refs for stream assignment");
-      if (localVideoRef.current) {
-        console.log("Assigning local stream to local video element:", localStream);
-        localVideoRef.current.srcObject = localStream;
-        localVideoRef.current.play().then(() => {
-          console.log("Local video playing successfully");
-        }).catch((err) => {
-          console.error("Error playing local video:", err);
-        });
-      } else {
-        console.error("Local video ref still missing after render");
+  const acceptCall = async () => {
+    if (!selectedContact || !incomingCallData || !webrtcService.current) {
+      console.log("Cannot accept call: Missing contact or call data");
+      return;
+    }
+
+    try {
+      console.log("Accepting call from:", incomingCallData.userId);
+      await webrtcService.current.setRemoteDescription(incomingCallData.offer);
+      const stream = await webrtcService.current.getLocalStream();
+      setLocalStream(stream);
+      const answer = await webrtcService.current.createAnswer();
+      socketService.sendAnswer(incomingCallData.userId, selectedContact.type, incomingCallData.chatKey, answer);
+
+      while (iceCandidateQueue.current.length > 0) {
+        const candidate = iceCandidateQueue.current.shift();
+        if (candidate) {
+          console.log("Applying queued ICE candidate after accepting call:", candidate);
+          await webrtcService.current!.addIceCandidate(candidate);
+        }
       }
 
-      if (remoteVideoRef.current) {
-        console.log("Assigning local stream to remote video element (simulated):", localStream);
-        remoteVideoRef.current.srcObject = localStream; // Simulated remote stream
-        remoteVideoRef.current.play().then(() => {
-          console.log("Remote video playing successfully");
-        }).catch((err) => {
-          console.error("Error playing remote video:", err);
-        });
-      } else {
-        console.error("Remote video ref still missing after render");
-      }
+      setIsIncomingCall(false);
+      setIncomingCallData(null);
+      setIsVideoCallActive(true);
+      console.log("Call accepted successfully");
+    } catch (error) {
+      console.error("Error accepting call:", error);
+      setIsIncomingCall(false);
+      setIncomingCallData(null);
     }
-  }, [isVideoCallActive, localStream]);
+  };
+
+  const declineCall = () => {
+    console.log("Declining call from:", incomingCallData?.userId);
+    setIsIncomingCall(false);
+    setIncomingCallData(null);
+  };
 
   const endVideoCall = () => {
     console.log("Ending video call");
@@ -167,13 +278,36 @@ const ChatHeader: React.FC<ChatHeaderProps> = ({
       remoteVideoRef.current.srcObject = null;
     }
     setLocalStream(null);
+    setRemoteStream(null);
     setIsVideoCallActive(false);
     console.log("Video call ended");
   };
 
+  // Assign streams to video elements
+  useEffect(() => {
+    if (isVideoCallActive && localStream && localVideoRef.current) {
+      console.log("useEffect: Assigning local stream, tracks:", localStream.getTracks());
+      localVideoRef.current.srcObject = localStream;
+      localVideoRef.current.play().then(() => {
+        console.log("Local video playing successfully");
+      }).catch((err) => {
+        console.error("Error playing local video:", err);
+      });
+    }
+    if (isVideoCallActive && remoteStream && remoteVideoRef.current) {
+      console.log("useEffect: Assigning remote stream, tracks:", remoteStream.getTracks());
+      remoteVideoRef.current.srcObject = remoteStream;
+      remoteVideoRef.current.play().then(() => {
+        console.log("Remote video playing successfully");
+      }).catch((err) => {
+        console.error("Error playing remote video:", err);
+      });
+    }
+  }, [isVideoCallActive, localStream, remoteStream]);
+
+  // Cleanup WebRTC on unmount
   useEffect(() => {
     return () => {
-      // Cleanup on component unmount
       if (webrtcService.current) {
         console.log("Cleaning up WebRTC service on unmount");
         webrtcService.current.stop();
@@ -324,6 +458,23 @@ const ChatHeader: React.FC<ChatHeaderProps> = ({
           </Button>
         </div>
       )}
+
+      <Modal isOpen={isIncomingCall} onClose={declineCall}>
+        <ModalContent>
+          <ModalHeader>Incoming Video Call</ModalHeader>
+          <ModalBody>
+            <p>Call from {selectedContact?.name || "Unknown"}</p>
+          </ModalBody>
+          <ModalFooter>
+            <Button color="danger" variant="light" onPress={declineCall}>
+              Decline
+            </Button>
+            <Button color="primary" onPress={acceptCall}>
+              Accept
+            </Button>
+          </ModalFooter>
+        </ModalContent>
+      </Modal>
     </div>
   );
 };

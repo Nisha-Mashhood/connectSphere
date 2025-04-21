@@ -78,25 +78,6 @@ export interface IChatMessage {
   caption?: string;
 }
 
-// export interface IChatMessage {
-//   _id: string; 
-//   senderId: string;
-//   content: string;
-//   contentType: "text" | "image" | "file" | "audio" | "video";
-//   thumbnailUrl?: string;
-//   timestamp: string | Date;
-//   caption?: string;
-//   groupId?: string;
-//   status: "pending" | "sent" | "read";
-//   collaborationId?: string;
-//   userConnectionId?: string;
-//   fileMetadata?: {
-//     fileName: string;
-//     fileSize: number;
-//     mimeType: string;
-//   }; 
-// }
-
 export interface Notification {
   contactId: string;
   type: "user-mentor" | "user-user" | "group";
@@ -105,26 +86,3 @@ export interface Notification {
   senderId?: string; 
 }
   
-  // export interface IChatMessage {
-  //   _id: string;
-  //   senderId: string;
-  //   content: string;
-  //   contentType: "text" | "image" | "file" | "video";
-  //   thumbnailUrl?: string;
-  //   timestamp: string;
-  //   collaborationId?: string;
-  //   userConnectionId?: string;
-  //   groupId?: string;
-  //   fileMetadata?: {
-  //     fileName: string;
-  //     fileSize: number;
-  //     mimeType: string;
-  //   };
-  // }
-  
-  // export interface Notification {
-  //   contactId: string;
-  //   type: "user-mentor" | "user-user" | "group";
-  //   message: string;
-  //   timestamp: string;
-  // }

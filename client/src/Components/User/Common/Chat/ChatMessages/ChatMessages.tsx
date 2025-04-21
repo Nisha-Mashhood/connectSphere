@@ -116,9 +116,10 @@ const ChatMessages: React.FC<ChatMessagesProps> = ({
       initialLoadDone &&
       !isUserScrolling.current
     ) {
+      console.log("Triggering scrollToBottom for chatKey:", getChatKey(selectedContact));
       scrollToBottom();
     }
-  }, [allMessages, selectedContact, getChatKey, initialLoadDone, scrollToBottom]);
+  }, [selectedContact, getChatKey, initialLoadDone, scrollToBottom]);
 
   useEffect(() => {
     const checkScrollable = () => {

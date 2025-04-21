@@ -61,7 +61,7 @@ const initializeSocket = (io: Server) => {
 
         const senderObjectId = new mongoose.Types.ObjectId(senderId);
 
-        if (contentType === "text") { // Only save text messages 
+        if (contentType === "text") {
           if (type === "group") {
             const group = await getGroupsByGroupId(targetId);
             if (!group) {
@@ -102,7 +102,6 @@ const initializeSocket = (io: Server) => {
             });
           }
         } else {
-          // For media, use the existing message from upload
           savedMessage = { _id: _id || new mongoose.Types.ObjectId(), ...message, timestamp };
           if (type === "group") {
             room = `group_${targetId}`;
@@ -157,14 +156,15 @@ const initializeSocket = (io: Server) => {
 
     socket.on("stopTyping", (data: { userId: string; targetId: string; type: "group" | "user-mentor" | "user-user"; chatKey: string }) => {
       const { userId, targetId, type, chatKey } = data;
-      let room: string;
-      if (type === "group") {
-        room = `group_${targetId}`;
-      } else {
-        const ids = [userId, targetId].sort();
-        room = `chat_${ids[0]}_${ids[1]}`;
-      }
-      socket.broadcast.to(room).emit("stopTyping", { userId, chatKey });
+  let room: string;
+  if (type === "group") {
+    room = `group_${targetId}`;
+  } else {
+    const ids = [userId, targetId].sort();
+    room = `chat_${ids[0]}_${ids[1]}`;
+  }
+  console.log(`Broadcasting stopTyping to room ${room} (excluding sender ${socket.id}):`, { userId, chatKey });
+  socket.to(room).emit("stopTyping", { userId, chatKey });
     });
 
     socket.on("markAsRead", async (data: { chatKey: string; userId: string; type: "group" | "user-mentor" | "user-user" }) => {
@@ -183,6 +183,79 @@ const initializeSocket = (io: Server) => {
       } catch (error: any) {
         console.error("Error marking messages as read:", error.message);
         socket.emit("error", { message: "Failed to mark messages as read" });
+      }
+    });
+
+    // WebRTC signaling handlers
+    socket.on("offer", async (data: { userId: string; targetId: string; type: string; chatKey: string; offer: RTCSessionDescriptionInit }) => {
+      try {
+        const { userId, targetId, type, chatKey, offer } = data;
+        console.log(`Received offer from ${userId} for chatKey: ${chatKey}`);
+        let room: string;
+        if (type === "group") {
+          room = `group_${targetId}`;
+        } else {
+          const contact = await findContactByUsers(userId, targetId);
+          if (!contact) {
+            console.error("Invalid contact for offer:", userId, targetId);
+            socket.emit("error", { message: "Invalid contact" });
+            return;
+          }
+          const ids = [contact.userId.toString(), contact.targetUserId?.toString()].sort();
+          room = `chat_${ids[0]}_${ids[1]}`;
+        }
+        socket.broadcast.to(room).emit("offer", { userId, targetId, type, chatKey, offer });
+      } catch (error: any) {
+        console.error("Error broadcasting offer:", error.message);
+        socket.emit("error", { message: "Failed to send offer" });
+      }
+    });
+
+    socket.on("answer", async (data: { userId: string; targetId: string; type: string; chatKey: string; answer: RTCSessionDescriptionInit }) => {
+      try {
+        const { userId, targetId, type, chatKey, answer } = data;
+        console.log(`Received answer from ${userId} for chatKey: ${chatKey}`);
+        let room: string;
+        if (type === "group") {
+          room = `group_${targetId}`;
+        } else {
+          const contact = await findContactByUsers(userId, targetId);
+          if (!contact) {
+            console.error("Invalid contact for answer:", userId, targetId);
+            socket.emit("error", { message: "Invalid contact" });
+            return;
+          }
+          const ids = [contact.userId.toString(), contact.targetUserId?.toString()].sort();
+          room = `chat_${ids[0]}_${ids[1]}`;
+        }
+        socket.broadcast.to(room).emit("answer", { userId, targetId, type, chatKey, answer });
+      } catch (error: any) {
+        console.error("Error broadcasting answer:", error.message);
+        socket.emit("error", { message: "Failed to send answer" });
+      }
+    });
+
+    socket.on("ice-candidate", async (data: { userId: string; targetId: string; type: string; chatKey: string; candidate: RTCIceCandidateInit }) => {
+      try {
+        const { userId, targetId, type, chatKey, candidate } = data;
+        console.log(`Received ICE candidate from ${userId} for chatKey: ${chatKey}`);
+        let room: string;
+        if (type === "group") {
+          room = `group_${targetId}`;
+        } else {
+          const contact = await findContactByUsers(userId, targetId);
+          if (!contact) {
+            console.error("Invalid contact for ICE candidate:", userId, targetId);
+            socket.emit("error", { message: "Invalid contact" });
+            return;
+          }
+          const ids = [contact.userId.toString(), contact.targetUserId?.toString()].sort();
+          room = `chat_${ids[0]}_${ids[1]}`;
+        }
+        socket.broadcast.to(room).emit("ice-candidate", { userId, targetId, type, chatKey, candidate });
+      } catch (error: any) {
+        console.error("Error broadcasting ICE candidate:", error.message);
+        socket.emit("error", { message: "Failed to send ICE candidate" });
       }
     });
 
