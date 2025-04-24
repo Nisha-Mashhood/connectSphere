@@ -1,9 +1,10 @@
 import { io, Socket } from "socket.io-client";
-import { IChatMessage } from "../types";
+import { IChatMessage, Notification } from "../types";
 
 export class SocketService {
   public socket: Socket | null = null;
   private userId: string | null = null;
+  private callEndedSent = new Set<string>();
 
   connect(userId: string, token: string) {
     this.userId = userId;
@@ -18,6 +19,8 @@ export class SocketService {
     this.socket.on("connect", () => {
       console.log("Connected to Socket.IO server:", this.socket?.id);
       this.socket?.emit("joinChats", userId);
+      this.socket?.emit("joinUserRoom", userId);
+      this.callEndedSent.clear();
     });
 
     this.socket.on("error", (error) => {
@@ -29,114 +32,171 @@ export class SocketService {
 
   disconnect() {
     this.socket?.disconnect();
+    this.socket = null;
+    this.callEndedSent.clear();
+    console.log("Socket disconnected");
   }
 
   isConnected() {
     return this.socket?.connected || false;
   }
 
-  sendMessage(message: IChatMessage & { targetId: string; type: string }) {
+  public emitActiveChat(userId: string, chatKey: string) {
+    console.log("Sending activeChat event:", { userId, chatKey });
+    this.socket?.emit("activeChat", { userId, chatKey });
+  }
+
+  public sendMessage(message: IChatMessage & { targetId: string; type: string }) {
     console.log("Sending message:", message);
     this.socket?.emit("sendMessage", message);
   }
 
-  sendTyping(userId: string, targetId: string, type: string, chatKey: string) {
+  public sendTyping(userId: string, targetId: string, type: string, chatKey: string) {
     console.log("Sending typing event:", { userId, targetId, type, chatKey });
     this.socket?.emit("typing", { userId, targetId, type, chatKey });
   }
 
-  sendStopTyping(userId: string, targetId: string, type: string, chatKey: string) {
+  public sendStopTyping(userId: string, targetId: string, type: string, chatKey: string) {
     console.log("Sending stopTyping event:", { userId, targetId, type, chatKey });
     this.socket?.emit("stopTyping", { userId, targetId, type, chatKey });
   }
 
-  markAsRead(chatKey: string, userId: string, type: string) {
+  public markAsRead(chatKey: string, userId: string, type: string) {
     console.log("Sending markAsRead event:", { chatKey, userId, type });
     this.socket?.emit("markAsRead", { chatKey, userId, type });
   }
 
   // WebRTC signaling methods
-  sendOffer(targetId: string, type: string, chatKey: string, offer: RTCSessionDescriptionInit) {
+  public sendOffer(targetId: string, type: string, chatKey: string, offer: RTCSessionDescriptionInit, callType: "audio" | "video") {
     if (this.socket && this.userId) {
-      console.log("Sending offer:", { userId: this.userId, targetId, type, chatKey, offer });
-      this.socket.emit("offer", { userId: this.userId, targetId, type, chatKey, offer });
+      console.log(`Sending ${callType} offer to ${targetId} for chatKey: ${chatKey}`);
+      this.socket.emit("offer", { userId: this.userId, targetId, type, chatKey, offer, callType });
     } else {
       console.error("Cannot send offer: Socket or userId missing");
     }
   }
 
-  sendAnswer(targetId: string, type: string, chatKey: string, answer: RTCSessionDescriptionInit) {
+  public sendAnswer(targetId: string, type: string, chatKey: string, answer: RTCSessionDescriptionInit, callType: "audio" | "video") {
     if (this.socket && this.userId) {
-      console.log("Sending answer:", { userId: this.userId, targetId, type, chatKey, answer });
-      this.socket.emit("answer", { userId: this.userId, targetId, type, chatKey, answer });
+      console.log(`Sending ${callType} answer to ${targetId} for chatKey: ${chatKey}`);
+      this.socket.emit("answer", { userId: this.userId, targetId, type, chatKey, answer, callType });
     } else {
       console.error("Cannot send answer: Socket or userId missing");
     }
   }
 
-  sendIceCandidate(targetId: string, type: string, chatKey: string, candidate: RTCIceCandidateInit) {
+  public sendIceCandidate(targetId: string, type: string, chatKey: string, candidate: RTCIceCandidateInit, callType: "audio" | "video") {
     if (this.socket && this.userId) {
-      console.log("Sending ICE candidate:", { userId: this.userId, targetId, type, chatKey, candidate });
-      this.socket.emit("ice-candidate", { userId: this.userId, targetId, type, chatKey, candidate });
+      console.log(`Sending ${callType} ICE candidate to ${targetId} for chatKey: ${chatKey}`);
+      this.socket.emit("ice-candidate", { userId: this.userId, targetId, type, chatKey, candidate, callType });
     } else {
       console.error("Cannot send ICE candidate: Socket or userId missing");
     }
   }
 
-  onReceiveMessage(callback: (message: IChatMessage) => void) {
+  public emitCallEnded(targetId: string, type: string, chatKey: string, callType: "audio" | "video") {
+    if (this.socket && this.userId) {
+      const eventKey = `${chatKey}_${callType}`;
+      if (this.callEndedSent.has(eventKey)) {
+        console.log(`Skipping duplicate callEnded for ${eventKey}`);
+        return;
+      }
+      this.callEndedSent.add(eventKey);
+      console.log(`Sending callEnded to ${targetId} for chatKey: ${chatKey}, callType: ${callType}`);
+      this.socket.emit("callEnded", { userId: this.userId, targetId, type, chatKey, callType });
+      setTimeout(() => this.callEndedSent.delete(eventKey), 60000); // Clear after 60s
+    } else {
+      console.error("Cannot send callEnded: Socket or userId missing");
+    }
+  }
+
+  public onReceiveMessage(callback: (message: IChatMessage) => void) {
     this.socket?.on("receiveMessage", (message) => {
       console.log("Received message:", message);
       callback(message);
     });
   }
 
-  onMessageSaved(callback: (message: IChatMessage) => void) {
+  public onMessageSaved(callback: (message: IChatMessage) => void) {
     this.socket?.on("messageSaved", (message) => {
       console.log("Message saved:", message);
       callback(message);
     });
   }
 
-  onTyping(callback: (data: { userId: string; chatKey: string }) => void) {
+  public onTyping(callback: (data: { userId: string; chatKey: string }) => void) {
     this.socket?.on("typing", (data) => {
       console.log("Received typing event:", data);
       callback(data);
     });
   }
 
-  onStopTyping(callback: (data: { userId: string; chatKey: string }) => void) {
+  public onStopTyping(callback: (data: { userId: string; chatKey: string }) => void) {
     this.socket?.on("stopTyping", (data) => {
       console.log("Received stopTyping event:", data);
       callback(data);
     });
   }
 
-  onMessagesRead(callback: (data: { chatKey: string; userId: string }) => void) {
+  public onMessagesRead(callback: (data: { chatKey: string; userId: string }) => void) {
     this.socket?.on("messagesRead", (data) => {
       console.log("Received messagesRead event:", data);
       callback(data);
     });
   }
 
-  onOffer(callback: (data: { userId: string; targetId: string; type: string; chatKey: string; offer: RTCSessionDescriptionInit }) => void) {
+  public onOffer(callback: (data: { userId: string; targetId: string; type: string; chatKey: string; offer: RTCSessionDescriptionInit, callType: "audio" | "video" }) => void) {
     this.socket?.on("offer", (data) => {
       console.log("Received offer:", data);
       callback(data);
     });
   }
 
-  onAnswer(callback: (data: { userId: string; targetId: string; type: string; chatKey: string; answer: RTCSessionDescriptionInit }) => void) {
+  public onAnswer(callback: (data: { userId: string; targetId: string; type: string; chatKey: string; answer: RTCSessionDescriptionInit, callType: "audio" | "video" }) => void) {
     this.socket?.on("answer", (data) => {
       console.log("Received answer:", data);
       callback(data);
     });
   }
 
-  onIceCandidate(callback: (data: { userId: string; targetId: string; type: string; chatKey: string; candidate: RTCIceCandidateInit }) => void) {
+  public onIceCandidate(callback: (data: { userId: string; targetId: string; type: string; chatKey: string; candidate: RTCIceCandidateInit, callType: "audio" | "video" }) => void) {
     this.socket?.on("ice-candidate", (data) => {
       console.log("Received ICE candidate:", data);
       callback(data);
     });
+  }
+
+  public onCallEnded(callback: (data: { userId: string; targetId: string; type: string; chatKey: string; callType: "audio" | "video" }) => void) {
+    this.socket?.on("callEnded", (data) => {
+      console.log("Received callEnded:", data);
+      callback(data);
+    });
+  }
+
+  public onNotificationNew(callback: (notification: Notification) => void) {
+    this.socket?.on("notification.new", (notification) => {
+      console.log("Received notification:", notification);
+      callback(notification);
+    });
+  }
+
+  public onNotificationRead(callback: (data: { notificationId: string }) => void) {
+    this.socket?.on("notification.read", (data) => {
+      console.log("Received notification.read:", data);
+      callback(data);
+    });
+  }
+
+  public onNotificationUpdated(callback: (notification: Notification) => void) {
+    this.socket?.on("notification.updated", (notification) => {
+      console.log("Received notification.updated:", notification);
+      callback(notification);
+    });
+  }
+
+  public markNotificationAsRead(notificationId: string, userId: string) {
+    console.log("Sending notification.read event:", { notificationId, userId });
+    this.socket?.emit("notification.read", { notificationId, userId });
   }
 }
 

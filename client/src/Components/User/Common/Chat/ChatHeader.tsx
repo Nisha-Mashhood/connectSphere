@@ -4,6 +4,7 @@ import { FaArrowLeft, FaPhone, FaVideo, FaBars, FaEllipsisV, FaUserFriends, FaIn
 import { Contact } from "../../../../types";
 import { WebRTCService } from "../../../../Service/WebRTCService";
 import { socketService } from "../../../../Service/SocketService";
+import toast from "react-hot-toast";
 
 // Singleton WebRTCService instance
 const webrtcService = new WebRTCService();
@@ -19,6 +20,7 @@ interface ChatHeaderProps {
   getChatKey: (contact: Contact) => string;
   isVideoCallActive: boolean;
   setIsVideoCallActive: React.Dispatch<React.SetStateAction<boolean>>;
+  incomingCallDetails: { userId: string; chatKey: string; callType: "audio" | "video"; callerName: string } | null;
 }
 
 const ChatHeader: React.FC<ChatHeaderProps> = ({
@@ -32,21 +34,32 @@ const ChatHeader: React.FC<ChatHeaderProps> = ({
   getChatKey,
   isVideoCallActive,
   setIsVideoCallActive,
+  incomingCallDetails
 }) => {
   const localVideoRef = useRef<HTMLVideoElement>(null);
   const remoteVideoRef = useRef<HTMLVideoElement>(null);
+  const localAudioRef = useRef<HTMLAudioElement>(null);
+  const remoteAudioRef = useRef<HTMLAudioElement>(null);
   const [localStream, setLocalStream] = useState<MediaStream | null>(null);
   const [remoteStream, setRemoteStream] = useState<MediaStream | null>(null);
+  const [isAudioCallActive, setIsAudioCallActive] = useState(false);
   const [isIncomingCall, setIsIncomingCall] = useState(false);
-  const [incomingCallData, setIncomingCallData] = useState<{ userId: string; targetId: string; type: string; chatKey: string; offer: RTCSessionDescriptionInit } | null>(null);
+  const [incomingCallData, setIncomingCallData] = useState<{
+    userId: string;
+    targetId: string;
+    type: string;
+    chatKey: string;
+    offer: RTCSessionDescriptionInit;
+    callType: "audio" | "video";
+  } | null>(null);
   const iceCandidateQueue = useRef<RTCIceCandidate[]>([]);
   const [isAudioMuted, setIsAudioMuted] = useState(false);
   const [isVideoOff, setIsVideoOff] = useState(false);
   const [isScreenSharing, setIsScreenSharing] = useState(false);
   const [hasProcessedAnswer, setHasProcessedAnswer] = useState(false);
-  const [hasCreatedOffer, setHasCreatedOffer] = useState(false);
+  // const [hasCreatedOffer, setHasCreatedOffer] = useState(false);
 
-  // Initialize WebRTC listeners
+  // Initialize WebRTC and socket listeners
   useEffect(() => {
     if (!selectedContact) return;
 
@@ -70,7 +83,8 @@ const ChatHeader: React.FC<ChatHeaderProps> = ({
           if (event.candidate) {
             console.log("Sending ICE candidate:", event.candidate);
             const targetId = selectedContact.targetId || selectedContact.groupId || "";
-            socketService.sendIceCandidate(targetId, selectedContact.type, getChatKey(selectedContact), event.candidate);
+            const callType = isAudioCallActive ? "audio" : "video";
+            socketService.sendIceCandidate(targetId, selectedContact.type, getChatKey(selectedContact), event.candidate, callType);
           }
         };
         newPeerConnection.onicecandidateerror = (event) => {
@@ -90,17 +104,31 @@ const ChatHeader: React.FC<ChatHeaderProps> = ({
 
     const chatKey = getChatKey(selectedContact);
 
-    const handleOffer = (data: { userId: string; targetId: string; type: string; chatKey: string; offer: RTCSessionDescriptionInit }) => {
-      if (data.chatKey === chatKey && !isVideoCallActive) {
-        console.log("Incoming call offer:", data);
+    const handleOffer = (data: {
+      userId: string;
+      targetId: string;
+      type: string;
+      chatKey: string;
+      offer: RTCSessionDescriptionInit;
+      callType: "audio" | "video";
+    }) => {
+      if (data.chatKey === chatKey && !isVideoCallActive && !isAudioCallActive) {
+        console.log(`Incoming ${data.callType} call offer:`, data);
         setIncomingCallData(data);
         setIsIncomingCall(true);
       }
     };
 
-    const handleAnswer = (data: { userId: string; targetId: string; type: string; chatKey: string; answer: RTCSessionDescriptionInit }) => {
+    const handleAnswer = (data: {
+      userId: string;
+      targetId: string;
+      type: string;
+      chatKey: string;
+      answer: RTCSessionDescriptionInit;
+      callType: "audio" | "video";
+    }) => {
       if (data.chatKey === chatKey && webrtcService && !hasProcessedAnswer) {
-        console.log("Received answer:", data);
+        console.log(`Received ${data.callType} answer:`, data);
         const peerConnection = webrtcService.getPeerConnection();
         if (peerConnection && peerConnection.signalingState !== "have-local-offer") {
           console.warn(`Cannot set remote answer: Invalid signaling state (${peerConnection.signalingState})`);
@@ -126,9 +154,16 @@ const ChatHeader: React.FC<ChatHeaderProps> = ({
       }
     };
 
-    const handleIceCandidate = (data: { userId: string; targetId: string; type: string; chatKey: string; candidate: RTCIceCandidateInit }) => {
+    const handleIceCandidate = (data: {
+      userId: string;
+      targetId: string;
+      type: string;
+      chatKey: string;
+      candidate: RTCIceCandidateInit;
+      callType: "audio" | "video";
+    }) => {
       if (data.chatKey === chatKey && webrtcService) {
-        console.log("Received ICE candidate:", data);
+        console.log(`Received ${data.callType} ICE candidate:`, data);
         if (!webrtcService.getPeerConnection()) {
           console.log("Queuing ICE candidate: peer connection not initialized");
           iceCandidateQueue.current.push(new RTCIceCandidate(data.candidate));
@@ -145,17 +180,69 @@ const ChatHeader: React.FC<ChatHeaderProps> = ({
       }
     };
 
+    const handleCallEnded = (data: {
+      userId: string;
+      targetId: string;
+      type: string;
+      chatKey: string;
+      callType: "audio" | "video";
+    }) => {
+      if (data.chatKey === chatKey) {
+        console.log(`Received callEnded for ${data.callType} call:`, data);
+        if (data.callType === "video") {
+          endVideoCall();
+        } else {
+          endAudioCall();
+        }
+        setIsIncomingCall(false);
+        setIncomingCallData(null);
+      }
+    };
+
+    const handleNotificationNew = (notification: {
+      _id: string;
+      userId: string;
+      type: "message" | "incoming_call" | "missed_call";
+      content: string;
+      relatedId: string;
+      status: "unread" | "read";
+      senderId: string;
+      createdAt: string;
+      updatedAt: string;
+    }) => {
+      if (notification.relatedId === chatKey && notification.type === "missed_call") {
+        console.log("Received missed call notification:", notification);
+        toast.error(notification.content, { duration: 5000 });
+      }
+    };
+
     socketService.onOffer(handleOffer);
     socketService.onAnswer(handleAnswer);
     socketService.onIceCandidate(handleIceCandidate);
+    socketService.onCallEnded(handleCallEnded);
+    socketService.onNotificationNew(handleNotificationNew);
 
     return () => {
       console.log("Cleaning up socket listeners for chatKey:", chatKey);
       socketService.socket?.off("offer", handleOffer);
       socketService.socket?.off("answer", handleAnswer);
       socketService.socket?.off("ice-candidate", handleIceCandidate);
+      socketService.socket?.off("callEnded", handleCallEnded);
+      socketService.socket?.off("notification.new", handleNotificationNew);
     };
-  }, [selectedContact, getChatKey]); // Removed isVideoCallActive
+  }, [selectedContact, getChatKey, isVideoCallActive, isAudioCallActive]);
+
+  // Auto-decline incoming call after 30 seconds
+  useEffect(() => {
+    let timeout: number;
+    if (isIncomingCall && incomingCallData && selectedContact) {
+      timeout = setTimeout(() => {
+        console.log(`Auto-declining ${incomingCallData.callType} call after 30 seconds`);
+        declineCall();
+      }, 30000);
+    }
+    return () => clearTimeout(timeout);
+  }, [isIncomingCall, incomingCallData, selectedContact]);
 
   // Cleanup WebRTC on component unmount
   useEffect(() => {
@@ -165,14 +252,19 @@ const ChatHeader: React.FC<ChatHeaderProps> = ({
       setLocalStream(null);
       setRemoteStream(null);
       setHasProcessedAnswer(false);
-      setHasCreatedOffer(false);
+      // setHasCreatedOffer(false);
+      setIsAudioCallActive(false);
+      setIsVideoCallActive(false);
+      setIsAudioMuted(false);
+      setIsVideoOff(false);
+      setIsScreenSharing(false);
     };
   }, []);
 
-  // Assign streams to video elements and debug
+  // Assign streams to audio/video elements
   useEffect(() => {
     if (isVideoCallActive && localStream && localVideoRef.current) {
-      console.log("useEffect: Assigning local stream, tracks:", localStream.getTracks());
+      console.log("useEffect: Assigning local video stream, tracks:", localStream.getTracks());
       localVideoRef.current.srcObject = localStream;
       localVideoRef.current.play().then(() => {
         console.log("Local video playing successfully");
@@ -181,7 +273,7 @@ const ChatHeader: React.FC<ChatHeaderProps> = ({
       });
     }
     if (isVideoCallActive && remoteStream && remoteVideoRef.current) {
-      console.log("useEffect: Assigning remote stream, tracks:", remoteStream.getTracks());
+      console.log("useEffect: Assigning remote video stream, tracks:", remoteStream.getTracks());
       remoteVideoRef.current.srcObject = remoteStream;
       remoteVideoRef.current.play().then(() => {
         console.log("Remote video playing successfully");
@@ -189,7 +281,25 @@ const ChatHeader: React.FC<ChatHeaderProps> = ({
         console.error("Error playing remote video:", err);
       });
     }
-  }, [isVideoCallActive, localStream, remoteStream]);
+    if (isAudioCallActive && localStream && localAudioRef.current) {
+      console.log("useEffect: Assigning local audio stream, tracks:", localStream.getTracks());
+      localAudioRef.current.srcObject = localStream;
+      localAudioRef.current.play().then(() => {
+        console.log("Local audio playing successfully");
+      }).catch((err) => {
+        console.error("Error playing local audio:", err);
+      });
+    }
+    if (isAudioCallActive && remoteStream && remoteAudioRef.current) {
+      console.log("useEffect: Assigning remote audio stream, tracks:", remoteStream.getTracks());
+      remoteAudioRef.current.srcObject = remoteStream;
+      remoteAudioRef.current.play().then(() => {
+        console.log("Remote audio playing successfully");
+      }).catch((err) => {
+        console.error("Error playing remote audio:", err);
+      });
+    }
+  }, [isVideoCallActive, isAudioCallActive, localStream, remoteStream]);
 
   // Toggle audio mute
   const toggleAudio = () => {
@@ -300,25 +410,25 @@ const ChatHeader: React.FC<ChatHeaderProps> = ({
           const member = selectedContact.groupDetails.members.find(
             (m) => m.userId === userId
           );
-          console.log("Group member lookup:", { userId, member });
+          console.log("Group member lookup:", { userId, member, memberName });
           memberName = member?.name;
         } else if (selectedContact.type === "user-mentor" && selectedContact.collaborationDetails) {
           if (selectedContact.userId === userId) {
-            memberName = selectedContact.name;
+            memberName = selectedContact.collaborationDetails.userName;
           } else if (selectedContact.contactId === userId) {
-            memberName = selectedContact.collaborationDetails.mentorName || selectedContact.name;
+            memberName = selectedContact.collaborationDetails.mentorName;
           }
           console.log("Mentor lookup:", { userId, memberName });
         } else if (selectedContact.type === "user-user") {
           if (selectedContact.userId === userId) {
-            memberName = selectedContact.name;
+            memberName = selectedContact.connectionDetails.requesterName;
           } else if (selectedContact.contactId === userId) {
-            memberName = selectedContact.connectionDetails?.requesterName || "Unknown";
+            memberName = selectedContact.connectionDetails.recipientName;
           }
           console.log("User-user lookup:", { userId, memberName });
         }
 
-        return memberName || "Unknown User";
+        return memberName || " ";
       })
       .filter(Boolean)
       .join(", ");
@@ -327,7 +437,7 @@ const ChatHeader: React.FC<ChatHeaderProps> = ({
 
     return (
       <p className="text-xs text-green-200 animate-pulse">
-        {typingUsersNames} {typingUsersNames.includes(",") ? "are" : "is"} typing...
+        {typingUsersNames} {typingUsersNames.includes(",") ? "..." : "..."} typing
       </p>
     );
   };
@@ -355,15 +465,51 @@ const ChatHeader: React.FC<ChatHeaderProps> = ({
       const chatKey = getChatKey(selectedContact);
       const targetId = selectedContact.targetId || selectedContact.groupId || "";
       const offer = await webrtcService.createOffer();
-      socketService.sendOffer(targetId, selectedContact.type, chatKey, offer);
+      socketService.sendOffer(targetId, selectedContact.type, chatKey, offer, "video");
 
       setIsVideoCallActive(true);
-      setHasCreatedOffer(true);
+      // setHasCreatedOffer(true);
       console.log("Video call started successfully");
     } catch (error) {
       console.error("Error starting video call:", error);
       alert("Failed to start video call. Check camera/microphone permissions.");
       setIsVideoCallActive(false);
+      setLocalStream(null);
+    }
+  };
+
+  const startAudioCall = async () => {
+    if (!selectedContact) {
+      console.log("No contact selected for audio call");
+      return;
+    }
+
+    try {
+      console.log("Starting audio call for contact:", selectedContact.id);
+      const peerConnection = webrtcService.getPeerConnection();
+      if (!peerConnection || peerConnection.connectionState === "closed") {
+        await webrtcService.initPeerConnection();
+      }
+      const stream = await webrtcService.getLocalAudioStream();
+      setLocalStream(stream);
+
+      if (toggleDetailsSidebar) {
+        console.log("Closing details sidebar for audio call");
+        toggleDetailsSidebar();
+      }
+
+      const chatKey = getChatKey(selectedContact);
+      const targetId = selectedContact.targetId || selectedContact.groupId || "";
+      const offer = await webrtcService.createOffer();
+      socketService.sendOffer(targetId, selectedContact.type, chatKey, offer, "audio");
+
+      setIsAudioCallActive(true);
+      // setHasCreatedOffer(true);
+      console.log("Audio call started successfully");
+    } catch (error) {
+      console.error("Error starting audio call:", error);
+      alert("Failed to start audio call. Check microphone permissions.");
+      setIsAudioCallActive(false);
       setLocalStream(null);
     }
   };
@@ -375,12 +521,14 @@ const ChatHeader: React.FC<ChatHeaderProps> = ({
     }
 
     try {
-      console.log("Accepting call from:", incomingCallData.userId);
+      console.log(`Accepting ${incomingCallData.callType} call from:`, incomingCallData.userId);
       await webrtcService.setRemoteDescription(incomingCallData.offer);
-      const stream = await webrtcService.getLocalStream();
+      const stream = incomingCallData.callType === "audio"
+        ? await webrtcService.getLocalAudioStream()
+        : await webrtcService.getLocalStream();
       setLocalStream(stream);
       const answer = await webrtcService.createAnswer();
-      socketService.sendAnswer(incomingCallData.userId, selectedContact.type, incomingCallData.chatKey, answer);
+      socketService.sendAnswer(incomingCallData.userId, selectedContact.type, incomingCallData.chatKey, answer, incomingCallData.callType);
 
       while (iceCandidateQueue.current.length > 0) {
         const candidate = iceCandidateQueue.current.shift();
@@ -392,23 +540,38 @@ const ChatHeader: React.FC<ChatHeaderProps> = ({
 
       setIsIncomingCall(false);
       setIncomingCallData(null);
-      setIsVideoCallActive(true);
-      console.log("Call accepted successfully");
+      if (incomingCallData.callType === "audio") {
+        setIsAudioCallActive(true);
+      } else {
+        setIsVideoCallActive(true);
+      }
+      console.log(`${incomingCallData.callType} call accepted successfully`);
     } catch (error) {
-      console.error("Error accepting call:", error);
-      alert("Failed to accept call. Check camera/microphone permissions.");
+      console.error(`Error accepting ${incomingCallData?.callType} call:`, error);
+      alert(`Failed to accept ${incomingCallData?.callType} call. Check permissions.`);
       setIsIncomingCall(false);
       setIncomingCallData(null);
     }
   };
 
   const declineCall = () => {
-    console.log("Declining call from:", incomingCallData?.userId);
+    if (!selectedContact || !incomingCallData) return;
+    console.log(`Declining ${incomingCallData.callType} call from:`, incomingCallData.userId);
+    socketService.emitCallEnded(
+      incomingCallData.userId,
+      selectedContact.type,
+      incomingCallData.chatKey,
+      incomingCallData.callType
+    );
     setIsIncomingCall(false);
     setIncomingCallData(null);
+    webrtcService.stop();
+    setLocalStream(null);
+    setRemoteStream(null);
   };
 
   const endVideoCall = () => {
+    if (!selectedContact) return;
     console.log("Ending video call");
     webrtcService.stop();
     if (localVideoRef.current) {
@@ -424,8 +587,35 @@ const ChatHeader: React.FC<ChatHeaderProps> = ({
     setIsVideoOff(false);
     setIsScreenSharing(false);
     setHasProcessedAnswer(false);
-    setHasCreatedOffer(false);
+    // setHasCreatedOffer(false);
+
+    const chatKey = getChatKey(selectedContact);
+    const targetId = selectedContact.targetId || selectedContact.groupId || "";
+    socketService.emitCallEnded(targetId, selectedContact.type, chatKey, "video");
     console.log("Video call ended");
+  };
+
+  const endAudioCall = () => {
+    if (!selectedContact) return;
+    console.log("Ending audio call");
+    webrtcService.stop();
+    if (localAudioRef.current) {
+      localAudioRef.current.srcObject = null;
+    }
+    if (remoteAudioRef.current) {
+      remoteAudioRef.current.srcObject = null;
+    }
+    setLocalStream(null);
+    setRemoteStream(null);
+    setIsAudioCallActive(false);
+    setIsAudioMuted(false);
+    setHasProcessedAnswer(false);
+    // setHasCreatedOffer(false);
+
+    const chatKey = getChatKey(selectedContact);
+    const targetId = selectedContact.targetId || selectedContact.groupId || "";
+    socketService.emitCallEnded(targetId, selectedContact.type, chatKey, "audio");
+    console.log("Audio call ended");
   };
 
   return (
@@ -484,13 +674,13 @@ const ChatHeader: React.FC<ChatHeaderProps> = ({
 
       {selectedContact && (
         <div className="flex items-center gap-1 sm:gap-2">
-          <Tooltip content="Voice call" placement="bottom">
+          <Tooltip content={isAudioCallActive ? "End audio call" : "Voice call"} placement="bottom">
             <Button
               isIconOnly
               variant="flat"
               className="bg-white/20 text-white hover:bg-white/30 transition-all w-8 h-8 sm:w-10 sm:h-10"
-              onPress={() => alert("Audio call feature coming soon!")}
-              aria-label="Voice call"
+              onPress={isAudioCallActive ? endAudioCall : startAudioCall}
+              aria-label={isAudioCallActive ? "End audio call" : "Start audio call"}
             >
               <FaPhone size={14} />
             </Button>
@@ -537,7 +727,7 @@ const ChatHeader: React.FC<ChatHeaderProps> = ({
         </div>
       )}
 
-      {isVideoCallActive && (
+{isVideoCallActive && (
         <div className="fixed inset-0 bg-black z-[1000] flex flex-col items-center justify-center p-4">
           <div className="flex flex-col sm:flex-row gap-4 w-full max-w-4xl">
             <div className="flex-1 bg-gray-900 rounded-lg overflow-hidden">
@@ -602,11 +792,42 @@ const ChatHeader: React.FC<ChatHeaderProps> = ({
         </div>
       )}
 
+      {isAudioCallActive && (
+        <div className="fixed inset-0 bg-black z-[1000] flex flex-col items-center justify-center p-4">
+          <div className="flex flex-col items-center gap-4 w-full max-w-md">
+            <div className="bg-gray-900 rounded-lg p-4 w-full text-center">
+              <p className="text-white text-lg font-semibold">Audio Call with {selectedContact?.name}</p>
+              <audio ref={localAudioRef} autoPlay muted />
+              <audio ref={remoteAudioRef} autoPlay />
+            </div>
+            <div className="flex gap-2">
+              <Tooltip content={isAudioMuted ? "Unmute" : "Mute"} placement="top">
+                <Button
+                  isIconOnly
+                  color={isAudioMuted ? "danger" : "primary"}
+                  onPress={toggleAudio}
+                  aria-label={isAudioMuted ? "Unmute" : "Mute"}
+                >
+                  {isAudioMuted ? <FaMicrophoneSlash size={16} /> : <FaMicrophone size={16} />}
+                </Button>
+              </Tooltip>
+              <Button
+                color="danger"
+                onPress={endAudioCall}
+                aria-label="End call"
+              >
+                End Call
+              </Button>
+            </div>
+          </div>
+        </div>
+      )}
+
       <Modal isOpen={isIncomingCall} onClose={declineCall}>
         <ModalContent>
-          <ModalHeader>Incoming Video Call</ModalHeader>
+          <ModalHeader>Incoming {incomingCallDetails?.callType === "audio" ? "Audio" : "Video"} Call</ModalHeader>
           <ModalBody>
-            <p>Call from {selectedContact?.name || "Unknown"}</p>
+            <p>Call from {incomingCallDetails?.callerName || "Unknown"}</p>
           </ModalBody>
           <ModalFooter>
             <Button color="danger" variant="light" onPress={declineCall}>

@@ -1,3 +1,4 @@
+import User from "../models/user.model.js";
 import * as notificationRepository from "../repositories/notification.repositry.js";
 import webPush from "../utils/webPushUtil.js";
 //Store subscription details in DB
@@ -62,5 +63,48 @@ export const sendPushNotification = async (taskId, message, specificUserId) => {
         console.error("Error in sendPushNotification:", error);
         throw error;
     }
+};
+//Socket.io notifications
+// Create a notification for a user
+export const sendNotification = async (userId, notificationType, senderId, relatedId, contentType, // For messages, "text", "image", "video"
+callId) => {
+    const sender = await User.findById(senderId).select('name');
+    let content;
+    if (notificationType === 'message') {
+        content = `New ${contentType || 'text'} message from ${sender?.name || senderId}`;
+    }
+    else if (notificationType === 'incoming_call') {
+        const callType = contentType || 'call'; // contentType might be "audio" or "video"
+        content = `Incoming ${callType} call from ${sender?.name || senderId}`;
+    }
+    else {
+        content = `Missed ${contentType} call from ${sender?.name}`;
+    }
+    const notification = await notificationRepository.createNotification({
+        userId,
+        type: notificationType,
+        content,
+        relatedId,
+        senderId,
+        status: 'unread',
+        callId,
+        createdAt: new Date(),
+        updatedAt: new Date(),
+    });
+    console.log("Created Notification from service file :", notification);
+    return notification;
+};
+export const updateCallNotificationToMissed = async (userId, callId, content) => {
+    const notification = await notificationRepository.updateNotificationToMissed(userId, callId, content);
+    return notification;
+};
+export const getNotifications = async (userId) => {
+    return notificationRepository.findNotificationByUserId(userId);
+};
+export const markNotificationAsRead = async (notificationId) => {
+    return notificationRepository.markNotificationAsRead(notificationId);
+};
+export const getUnreadCount = async (userId) => {
+    return notificationRepository.getNotificationUnreadCount(userId);
 };
 //# sourceMappingURL=notification.service.js.map

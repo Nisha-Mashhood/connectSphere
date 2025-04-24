@@ -21,6 +21,14 @@ export const saveChatMessage = async (messageData) => {
         throw new Error(`Error saving chat message: ${error.message}`);
     }
 };
+export const findChatMessageById = async (messageId) => {
+    try {
+        return await ChatMessage.findById(toObjectId(messageId)).exec();
+    }
+    catch (error) {
+        throw new Error(`Error finding chat message by ID: ${error.message}`);
+    }
+};
 export const findChatMessagesByCollaborationId = async (collaborationId, page, limit) => {
     try {
         return await ChatMessage.find({ collaborationId: toObjectId(collaborationId) })
@@ -119,6 +127,7 @@ export const markMessagesAsRead = async (chatKey, userId, type) => {
     else {
         filter.userConnectionId = toObjectId(chatKey.replace("user-user_", ""));
     }
-    await ChatMessage.updateMany(filter, { $set: { isRead: true, status: "read" } });
+    // await ChatMessage.updateMany(filter, { $set: { isRead: true, status: "read" } });
+    await ChatMessage.updateMany({ ...filter, senderId: { $ne: userId } }, { $set: { isRead: true, status: "read" } }, { new: true });
 };
 //# sourceMappingURL=chat.repository.js.map

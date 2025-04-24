@@ -4,6 +4,7 @@ import collaboration from "../models/collaboration.js";
 import Group from "../models/group.model.js";
 import { IMentor } from "../models/mentor.model.js";
 import { ObjectId } from "mongoose";
+import { AppNotification, AppNotificationModel } from "../models/notification.modal.js";
 
 interface CollaborationData {
   userId: ObjectId;
@@ -91,3 +92,40 @@ export const getUserSubscription = async (userId:string) => {
 };
 
 
+
+
+//Notification with socket.io
+
+  export const createNotification = async (notification: Omit<AppNotification, '_id'>): Promise<AppNotification> => {
+    return AppNotificationModel.create(notification);
+  }
+
+  export const findNotificationByUserId = async(userId: string): Promise<AppNotification[]> => {
+    return AppNotificationModel.find({ userId, status: 'unread' })
+      .sort({ createdAt: -1 })
+      .limit(50);
+  }
+
+  export const findNotificationByCallId = async (userId: string, callId: string) => {
+    return AppNotificationModel.findOne({ userId, callId, type: "incoming_call", status: "unread" });
+  };
+  
+  export const updateNotificationToMissed = async (userId: string, callId: string, content: string) => {
+    return AppNotificationModel.findOneAndUpdate(
+      { userId, callId, type: "incoming_call", status: "unread" },
+      { type: "missed_call", content, updatedAt: new Date() },
+      { new: true }
+    );
+  };
+
+  export const markNotificationAsRead = async (notificationId: string): Promise<AppNotification | null> =>{
+    return AppNotificationModel.findByIdAndUpdate(
+      notificationId,
+      { status: 'read', updatedAt: new Date() },
+      { new: true }
+    );
+  }
+
+  export const getNotificationUnreadCount = async(userId: string): Promise<number> =>{
+    return AppNotificationModel.countDocuments({ userId, status: 'unread' });
+  }

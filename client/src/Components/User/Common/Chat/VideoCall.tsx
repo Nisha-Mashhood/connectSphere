@@ -64,7 +64,7 @@ const VideoCall: React.FC<VideoCallProps> = ({
           if (event.candidate) {
             console.log("Sending ICE candidate:", event.candidate);
             const targetId = selectedContact.targetId || selectedContact.groupId || "";
-            socketService.sendIceCandidate(targetId, selectedContact.type, getChatKey(selectedContact), event.candidate);
+            socketService.sendIceCandidate(targetId, selectedContact.type, getChatKey(selectedContact), event.candidate, "video");
           }
         };
         newPeerConnection.onicecandidateerror = (event) => {
@@ -275,7 +275,7 @@ const VideoCall: React.FC<VideoCallProps> = ({
       const chatKey = getChatKey(selectedContact);
       const targetId = selectedContact.targetId || selectedContact.groupId || "";
       const offer = await webrtcService.createOffer();
-      socketService.sendOffer(targetId, selectedContact.type, chatKey, offer);
+      socketService.sendOffer(targetId, selectedContact.type, chatKey, offer, "video");
 
       setIsVideoCallActive(true);
       setHasCreatedOffer(true);
@@ -301,7 +301,7 @@ const VideoCall: React.FC<VideoCallProps> = ({
       const stream = await webrtcService.getLocalStream();
       setLocalStream(stream);
       const answer = await webrtcService.createAnswer();
-      socketService.sendAnswer(incomingCallData.userId, selectedContact.type, incomingCallData.chatKey, answer);
+      socketService.sendAnswer(incomingCallData.userId, selectedContact.type, incomingCallData.chatKey, answer, "video");
 
       while (iceCandidateQueue.current.length > 0) {
         const candidate = iceCandidateQueue.current.shift();

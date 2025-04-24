@@ -1,12 +1,14 @@
 import { combineReducers, configureStore } from '@reduxjs/toolkit';
 import userReducer, { signOut } from '../redux/Slice/userSlice';
 import profileReducer from '../redux/Slice/profileSlice';
+import  notificationReducer from '../redux/Slice/notificationSlice';
 import storage from 'redux-persist/lib/storage';
 import { persistReducer, persistStore } from 'redux-persist';
 
 const appReducer = combineReducers({
     user: userReducer,
     profile: profileReducer,
+    notification: notificationReducer,
 });
 
 const rootReducer = (state: ReturnType<typeof appReducer>, action: any) => {
@@ -15,6 +17,7 @@ const rootReducer = (state: ReturnType<typeof appReducer>, action: any) => {
         state = {
             user: undefined, // Clears the user slice
             profile: undefined, // Clears the profile slice
+            notification: undefined,
         };
     }
     return appReducer(state, action);
@@ -24,6 +27,7 @@ const persistConfig = {
     key: 'root',
     version: 1,
     storage,
+    whitelist: ["user"], // Only persist user slice
 };
 
 const persistedReducer = persistReducer(persistConfig, rootReducer);

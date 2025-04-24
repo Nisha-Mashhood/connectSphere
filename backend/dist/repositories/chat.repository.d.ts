@@ -1,6 +1,7 @@
 import { IChatMessage } from "../models/chat.model.js";
 import mongoose from "mongoose";
 export declare const saveChatMessage: (messageData: Partial<IChatMessage>) => Promise<IChatMessage>;
+export declare const findChatMessageById: (messageId: string) => Promise<IChatMessage | null>;
 export declare const findChatMessagesByCollaborationId: (collaborationId: string, page: number, limit: number) => Promise<(mongoose.Document<unknown, {}, IChatMessage> & IChatMessage & Required<{
     _id: unknown;
 }> & {

@@ -2,7 +2,7 @@ export class WebRTCService {
   private peerConnection: RTCPeerConnection | null = null;
   private localStream: MediaStream | null = null;
   private hasCreatedOffer: boolean = false;
-  private addedTrackIds: Set<string> = new Set(); // Track added tracks
+  private addedTrackIds: Set<string> = new Set(); 
 
   constructor() {
     console.log("WebRTCService initialized");
@@ -18,9 +18,9 @@ export class WebRTCService {
       iceServers: [
         { urls: "stun:stun.l.google.com:19302" },
         {
-          urls: "turn:numb.viagenie.ca:3478",
-          username: "webrtc@live.com",
-          credential: "muazkh",
+          urls: "turn:openrelay.metered.ca:80",
+          username: "openrelayproject",
+          credential: "openrelayproject",
         },
       ],
     };
@@ -102,6 +102,41 @@ export class WebRTCService {
       return this.localStream;
     } catch (error) {
       console.error("Error getting local stream:", error);
+      throw error;
+    }
+  }
+
+  async getLocalAudioStream(): Promise<MediaStream> {
+    console.log("Requesting audio-only user media");
+    try {
+      const stream = await navigator.mediaDevices.getUserMedia({
+        audio: true,
+        video: false,
+      });
+      const tracks = stream.getTracks();
+      console.log("Local audio stream acquired, track details:");
+      tracks.forEach((track, index) => {
+        console.log(`Track ${index}: kind=${track.kind}, id=${track.id}, enabled=${track.enabled}, readyState=${track.readyState}`);
+      });
+      if (tracks.length === 0) {
+        console.error("No tracks found in local audio stream");
+      }
+
+      if (this.peerConnection) {
+        tracks.forEach((track) => {
+          if (!this.addedTrackIds.has(track.id)) {
+            console.log("Adding local audio track to peer connection:", track);
+            this.peerConnection!.addTrack(track, stream);
+            this.addedTrackIds.add(track.id);
+          } else {
+            console.log("Skipping already added audio track:", track.id);
+          }
+        });
+      }
+
+      return stream;
+    } catch (error) {
+      console.error("Error getting local audio stream:", error);
       throw error;
     }
   }

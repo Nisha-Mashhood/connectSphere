@@ -9,6 +9,7 @@ const initialState = {
   resetEmail: null,
   currentAdmin:null,
   isLoggingOutAdmin:false,
+  selectedContact: null,
 };
 
 const userSlice = createSlice({
@@ -41,6 +42,7 @@ const userSlice = createSlice({
       state.isLoggingOutAdmin = false;
       state.loading = false;
       state.error = false;
+      state.selectedContact = null;
     },
     setIsAdmin: (state, action) => {
       state.isAdmin = true;
@@ -56,6 +58,10 @@ const userSlice = createSlice({
     state.currentAdmin = null;
     state.isAdmin = false;
     state.isLoggingOutAdmin = true; 
+  },
+
+  setSelectedContact(state, action) {
+    state.selectedContact = action.payload;
   },
 
   //update the user profile
@@ -81,7 +87,8 @@ export const {
   setIsAdmin,
   unsetIsAdmin,
   AdminLogout,
-  updateUserProfile
+  updateUserProfile,
+  setSelectedContact,
 } = userSlice.actions;
 export default userSlice.reducer;
 

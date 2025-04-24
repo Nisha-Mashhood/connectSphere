@@ -1,6 +1,7 @@
 import { Task } from "../models/task.modal.js";
 import collaboration from "../models/collaboration.js";
 import Group from "../models/group.model.js";
+import { AppNotificationModel } from "../models/notification.modal.js";
 //Save subscription to a task
 export const saveSubscription = async (taskId, subscription, metadata) => {
     try {
@@ -64,5 +65,26 @@ export const getMentorIdAndUserId = async (collaborationId) => {
 };
 export const getUserSubscription = async (userId) => {
     return await Task.findOne({ "notificationSubscription.userId": userId });
+};
+//Notification with socket.io
+export const createNotification = async (notification) => {
+    return AppNotificationModel.create(notification);
+};
+export const findNotificationByUserId = async (userId) => {
+    return AppNotificationModel.find({ userId, status: 'unread' })
+        .sort({ createdAt: -1 })
+        .limit(50);
+};
+export const findNotificationByCallId = async (userId, callId) => {
+    return AppNotificationModel.findOne({ userId, callId, type: "incoming_call", status: "unread" });
+};
+export const updateNotificationToMissed = async (userId, callId, content) => {
+    return AppNotificationModel.findOneAndUpdate({ userId, callId, type: "incoming_call", status: "unread" }, { type: "missed_call", content, updatedAt: new Date() }, { new: true });
+};
+export const markNotificationAsRead = async (notificationId) => {
+    return AppNotificationModel.findByIdAndUpdate(notificationId, { status: 'read', updatedAt: new Date() }, { new: true });
+};
+export const getNotificationUnreadCount = async (userId) => {
+    return AppNotificationModel.countDocuments({ userId, status: 'unread' });
 };
 //# sourceMappingURL=notification.repositry.js.map

@@ -78,11 +78,16 @@ export interface IChatMessage {
   caption?: string;
 }
 
-export interface Notification {
-  contactId: string;
-  type: "user-mentor" | "user-user" | "group";
-  message: string;
-  timestamp: string | Date;
-  senderId?: string; 
-}
   
+export interface Notification {
+  _id: string;
+  userId: string;
+  type: "message" | "incoming_call" | "missed_call";
+  content: string;
+  relatedId: string;
+  status: "unread" | "read";
+  callId?: string;
+  senderId: string;
+  createdAt: string;
+  updatedAt: string;
+}

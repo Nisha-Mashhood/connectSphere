@@ -10,6 +10,7 @@ import {
   DropdownItem,
   Avatar,
   Button,
+  Badge,
 } from "@nextui-org/react";
 import { useDispatch, useSelector } from "react-redux";
 import { useNavigate } from "react-router-dom";
@@ -19,6 +20,9 @@ import { RootState } from "../../../redux/store";
 import { checkProfile, logout } from "../../../Service/Auth.service";
 import { checkMentorProfile } from "../../../Service/Mentor.Service";
 import Logo from "../../../assets/logoMain.jpg";
+import { markNotificationAsRead } from "../../../redux/Slice/notificationSlice";
+import { markNotificationAsRead as markNotificationService } from "../../../Service/NotificationService";
+import { Notification } from "../../../types";
 
 export const ConnectSphereLogo = () => {
   return (
@@ -32,6 +36,7 @@ const Header = () => {
   const dispatch = useDispatch();
   const navigate = useNavigate();
   const { currentUser } = useSelector((state: RootState) => state.user);
+  const { notifications, unreadCount } = useSelector((state: RootState) => state.notification);
 
   const handleLogout = async () => {
     const email = currentUser?.email;
@@ -91,6 +96,21 @@ const Header = () => {
     }
   };
 
+  const handleNotificationClick = async (notification: Notification) => {
+    try {
+      console.log("clicked on notification");
+      const [type] = notification.relatedId.split("_");
+      const id = notification.senderId;
+      const contactType = type === "group" ? "group" : type === "user-mentor" ? "user-mentor" : "user-user";
+      await markNotificationService(notification._id, currentUser?._id || "");
+      dispatch(markNotificationAsRead(notification._id));
+      navigate(`/chat/${contactType}/${id}`);
+    } catch (error) {
+      console.error("Error handling notification click:", error);
+      toast.error("Failed to open chat.");
+    }
+  };
+
   return (
     <Navbar
       className="bg-white shadow-md z-[200]"
@@ -145,35 +165,92 @@ const Header = () => {
 
       {/* User Actions */}
       <NavbarContent justify="end">
-        {currentUser ? (
-          <Dropdown placement="bottom-end">
-            <DropdownTrigger>
-              <Avatar
-                isBordered
-                as="button"
-                color="primary"
-                size="sm"
-                src={currentUser.profilePic}
-                className="transition-transform hover:scale-105"
-              />
-            </DropdownTrigger>
-            <DropdownMenu aria-label="User Actions" variant="flat">
-              <DropdownItem key="profile" onPress={handleProfileClick}>
-                Profile
-              </DropdownItem>
-              <DropdownItem key="become-mentor" onPress={handleBecomeMentor}>
-                Become a Mentor
-              </DropdownItem>
-              <DropdownItem
-                key="logout"
-                color="danger"
-                onPress={handleLogout}
-              >
-                Log Out
-              </DropdownItem>
-            </DropdownMenu>
-          </Dropdown>
-        ) : (
+        {currentUser && (
+          <>
+            <NavbarItem>
+              <Dropdown placement="bottom-end">
+                <DropdownTrigger>
+                  <Badge
+                    content={unreadCount}
+                    color="danger"
+                    isInvisible={unreadCount === 0}
+                    placement="top-right"
+                  >
+                    <Button
+                      isIconOnly
+                      variant="light"
+                      aria-label="Notifications"
+                      className="text-gray-600 hover:text-primary"
+                    >
+                      <svg
+                        xmlns="http://www.w3.org/2000/svg"
+                        className="h-6 w-6"
+                        fill="none"
+                        viewBox="0 0 24 24"
+                        stroke="currentColor"
+                      >
+                        <path
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                          strokeWidth={2}
+                          d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9"
+                        />
+                      </svg>
+                    </Button>
+                  </Badge>
+                </DropdownTrigger>
+                <DropdownMenu aria-label="Notifications" variant="flat" closeOnSelect={false}>
+                  {notifications.length === 0 ? (
+                    <DropdownItem key="no-notifications" isReadOnly>
+                      No new notifications
+                    </DropdownItem>
+                  ) : (
+                    notifications
+                      .filter((n) => n.status === "unread")
+                      .map((notification) => (
+                        <DropdownItem
+                          key={notification._id}
+                          onPress={() => handleNotificationClick(notification)}
+                          description={new Date(notification.createdAt).toLocaleTimeString()}
+                          className="max-w-xs truncate"
+                        >
+                          {notification.content}
+                        </DropdownItem>
+                      ))
+                  )}
+                </DropdownMenu>
+              </Dropdown>
+            </NavbarItem>
+            <Dropdown placement="bottom-end">
+              <DropdownTrigger>
+                <Avatar
+                  isBordered
+                  as="button"
+                  color="primary"
+                  size="sm"
+                  src={currentUser.profilePic}
+                  className="transition-transform hover:scale-105"
+                />
+              </DropdownTrigger>
+              <DropdownMenu aria-label="User Actions" variant="flat">
+                <DropdownItem key="profile" onPress={handleProfileClick}>
+                  Profile
+                </DropdownItem>
+                <DropdownItem key="become-mentor" onPress={handleBecomeMentor}>
+                  Become a Mentor
+                </DropdownItem>
+                <DropdownItem
+                  key="logout"
+                  color="danger"
+                  onPress={handleLogout}
+                >
+                  Log Out
+                </DropdownItem>
+              </DropdownMenu>
+            </Dropdown>
+          </>
+        )}
+        {!currentUser && (
           <Button
             color="primary"
             variant="solid"

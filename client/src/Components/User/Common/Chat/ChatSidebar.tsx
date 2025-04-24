@@ -1,7 +1,7 @@
 import React, { useState } from "react";
 import { Card, CardBody, Avatar, Input, Chip, Tabs, Tab, Badge } from "@nextui-org/react";
 import { Contact, Notification } from "../../../../types";
-import { FaSearch, FaUserFriends, FaUsers, FaGraduationCap, FaRegDotCircle } from "react-icons/fa";
+import { FaSearch, FaUserFriends, FaUsers, FaGraduationCap } from "react-icons/fa";
 import { getChatKey } from "./utils/contactUtils";
 
 interface ChatSidebarProps {
@@ -16,7 +16,7 @@ const ChatSidebar: React.FC<ChatSidebarProps> = ({
   contacts,
   selectedContact,
   onContactSelect,
-  notifications,
+  // notifications,
   unreadCounts,
 }) => {
   const [searchQuery, setSearchQuery] = useState("");
@@ -151,7 +151,7 @@ const ChatSidebar: React.FC<ChatSidebarProps> = ({
             </div>
           ) : (
             filteredContacts.map((contact) => {
-              const hasNotification = notifications.some((n) => n.contactId === contact.id);
+              // const hasNotification = notifications.some((n) => n.contactId === contact.id);
               const chatKey = getChatKey(contact);
               const unreadCount = unreadCounts[chatKey] || 0;
 
@@ -179,9 +179,9 @@ const ChatSidebar: React.FC<ChatSidebarProps> = ({
                       }
                     />
                     </Badge>
-                    {hasNotification && (
+                    {/* {hasNotification && (
                       <div className="absolute -top-1 -right-1 w-3 h-3 sm:w-4 sm:h-4 bg-red-500 rounded-full animate-pulse" />
-                    )}
+                    )} */}
                   </div>
 
                   <div className="flex-1 min-w-0">
@@ -200,9 +200,9 @@ const ChatSidebar: React.FC<ChatSidebarProps> = ({
                     </p>
                   </div>
 
-                  {hasNotification && (
+                  {/* {hasNotification && (
                     <FaRegDotCircle className="text-red-500 ml-2 animate-pulse" size={12} />
-                  )}
+                  )} */}
                 </div>
               );
             })

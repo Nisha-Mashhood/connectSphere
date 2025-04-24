@@ -24,6 +24,16 @@ export const saveChatMessage = async (messageData: Partial<IChatMessage>): Promi
   }
 };
 
+
+export const findChatMessageById = async (messageId: string): Promise<IChatMessage | null> => {
+  try {
+    return await ChatMessage.findById(toObjectId(messageId)).exec();
+  } catch (error: any) {
+    throw new Error(`Error finding chat message by ID: ${error.message}`);
+  }
+};
+
+
 export const findChatMessagesByCollaborationId = async (collaborationId: string, page: number, limit: number) => {
   try {
     return await ChatMessage.find({ collaborationId: toObjectId(collaborationId) })
@@ -131,5 +141,10 @@ export const markMessagesAsRead = async (
     filter.userConnectionId = toObjectId(chatKey.replace("user-user_", ""));
   }
 
-  await ChatMessage.updateMany(filter, { $set: { isRead: true, status: "read" } });
+  // await ChatMessage.updateMany(filter, { $set: { isRead: true, status: "read" } });
+  await ChatMessage.updateMany(
+    { ...filter, senderId: { $ne: userId } },
+    { $set: { isRead: true, status: "read" } },
+    { new: true }
+  )
 };

@@ -1,3 +1,5 @@
+import User from "../models/user.model.js";
+import { AppNotification } from "../models/notification.modal.js";
 import * as notificationRepository from "../repositories/notification.repositry.js";
 import webPush from "../utils/webPushUtil.js";
 
@@ -84,5 +86,67 @@ export const sendPushNotification = async (
     throw error;
   }
 };
+
+
+//Socket.io notifications
+
+// Create a notification for a user
+export const sendNotification = async (
+  userId: string,
+  notificationType: AppNotification['type'],
+  senderId: string,
+  relatedId: string,
+  contentType?: string ,// For messages, "text", "image", "video"
+  callId?: string
+): Promise<AppNotification> => {
+  const sender = await User.findById(senderId).select('name');
+  let content: string;
+
+  if (notificationType === 'message') {
+    content = `New ${contentType || 'text'} message from ${sender?.name || senderId}`;
+  } else if (notificationType === 'incoming_call') {
+    const callType = contentType || 'call'; // contentType might be "audio" or "video"
+    content = `Incoming ${callType} call from ${sender?.name || senderId}`;
+  } else {
+    content = `Missed ${contentType} call from ${sender?.name}`;
+  }
+
+  const notification = await notificationRepository.createNotification({
+    userId,
+    type: notificationType,
+    content,
+    relatedId,
+    senderId,
+    status: 'unread',
+    callId,
+    createdAt: new Date(),
+    updatedAt: new Date(),
+  });
+
+  console.log("Created Notification from service file :", notification);
+  return notification;
+};
+
+export const updateCallNotificationToMissed = async (
+  userId: string,
+  callId: string,
+  content: string
+): Promise<AppNotification | null> => {
+  const notification = await notificationRepository.updateNotificationToMissed(userId, callId, content);
+  return notification;
+};
+
+  export const getNotifications = async (userId: string): Promise<AppNotification[]> =>{
+    return notificationRepository.findNotificationByUserId(userId);
+  }
+
+ export const  markNotificationAsRead =  async(notificationId: string): Promise<AppNotification | null> =>{
+  return notificationRepository.markNotificationAsRead(notificationId);
+  }
+
+  export const getUnreadCount = async(userId: string): Promise<number> => {
+    return notificationRepository.getNotificationUnreadCount(userId);
+  }
+
 
 

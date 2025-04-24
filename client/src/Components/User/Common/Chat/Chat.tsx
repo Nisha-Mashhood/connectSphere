@@ -10,26 +10,38 @@ import ChatDetailsSidebar from "./ChatDetailsSideBar/ChatDetailsSidebar";
 import ChatMessages from "./ChatMessages/ChatMessages";
 import ChatInput from "./ChatInput/ChatInput";
 import { Card } from "@nextui-org/react";
-import { Contact, IChatMessage, Notification } from "../../../../types";
-import { deduplicateMessages, formatContact, getChatKeyFromMessage, isMessageRelevant } from "./utils/contactUtils";
+import { Contact, IChatMessage } from "../../../../types";
+import { deduplicateMessages, formatContact, getChatKeyFromMessage } from "./utils/contactUtils";
 import { getUnreadMessages } from "../../../../Service/Chat.Service";
 import toast from "react-hot-toast";
 import { debounce } from "lodash";
+import { markNotificationAsRead as markNotificationService} from "../../../../Service/NotificationService";
+import { markNotificationAsRead } from "../../../../redux/Slice/notificationSlice";
+import { setSelectedContact as setSelectedContactRedux} from "../../../../redux/Slice/userSlice";
+import { useDispatch } from "react-redux";
+import { fetchUserDetails } from "../../../../Service/Auth.service";
 
 const Chat: React.FC = () => {
   const { type, id } = useParams<{ type?: string; id?: string }>();
   const navigate = useNavigate();
+  const dispatch = useDispatch();
   const { currentUser } = useSelector((state: RootState) => state.user);
   const [contacts, setContacts] = useState<Contact[]>([]);
   const [selectedContact, setSelectedContact] = useState<Contact | null>(null);
   const [allMessages, setAllMessages] = useState<Map<string, IChatMessage[]>>(new Map());
-  const [notifications, setNotifications] = useState<Notification[]>([]);
+  const { notifications } = useSelector((state: RootState) => state.notification);
   const [unreadCounts, setUnreadCounts] = useState<{ [key: string]: number }>({});
   const [typingUsers, setTypingUsers] = useState<{ [key: string]: string[] }>({});
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
   const [isDetailsSidebarOpen, setIsDetailsSidebarOpen] = useState(false);
   const [isVideoCallActive, setIsVideoCallActive] = useState(false);
   const messagesEndRef = useRef<HTMLDivElement>(null);
+  const [incomingCall, setIncomingCall] = useState<{
+    userId: string;
+    chatKey: string;
+    callType: "audio" | "video";
+    callerName: string;
+  } | null>(null);
 
   const getChatKey = (contact: Contact) =>
     contact.type === "group"
@@ -72,7 +84,6 @@ const Chat: React.FC = () => {
     const handleReceiveMessage = (message: IChatMessage) => {
       const chatKey = getChatKeyFromMessage(message);
       updateMessages(chatKey, [message]);
-      handleNotification(message);
       fetchUnreadCounts();
     };
   
@@ -116,12 +127,38 @@ const Chat: React.FC = () => {
       setUnreadCounts((prev) => ({ ...prev, [chatKey]: 0 }));
       fetchUnreadCounts();
     };
+
+    const handleOffer = async (data: { userId: string; targetId: string; type: string; chatKey: string; offer: RTCSessionDescriptionInit; callType: "audio" | "video" }) => {
+      console.log("Received offer:", data);
+      try {
+        const caller = await fetchUserDetails(data.userId); // Fetch caller details
+        setIncomingCall({
+          userId: data.userId,
+          chatKey: data.chatKey,
+          callType: data.callType,
+          callerName: caller?.name || "Unknown Caller",
+        });
+      } catch (error) {
+        console.error("Error fetching caller details:", error);
+        toast.error("Failed to load caller details.");
+      }
+    };
+
+    const handleCallEnded = ({ chatKey, callType }: { chatKey: string; callType: "audio" | "video" }) => {
+      console.log("Handling callEnded:", { chatKey, callType });
+      if (selectedContact && getChatKey(selectedContact) === chatKey) {
+        setIsVideoCallActive(false);
+        toast.success(`${callType.charAt(0).toUpperCase() + callType.slice(1)} call ended`, { duration: 3000 });
+      }
+    };
   
     socketService.onReceiveMessage(handleReceiveMessage);
     socketService.onMessageSaved(handleMessageSaved);
     socketService.onTyping(handleTyping);
     socketService.onStopTyping(handleStopTyping);
     socketService.onMessagesRead(handleMessagesRead);
+    socketService.onOffer(handleOffer);
+    socketService.onCallEnded(handleCallEnded);
 
     fetchContacts();
     fetchUnreadCounts();
@@ -133,6 +170,8 @@ const Chat: React.FC = () => {
       socketService.socket?.off("typing", handleTyping);
       socketService.socket?.off("stopTyping", handleStopTyping);
       socketService.socket?.off("messagesRead", handleMessagesRead);
+      socketService.socket?.off("offer", handleOffer);
+      socketService.socket?.off("callEnded", handleCallEnded);
       socketService.disconnect();
     };
   }, [currentUser?._id, fetchUnreadCounts, updateMessages]);
@@ -158,35 +197,34 @@ const Chat: React.FC = () => {
     }
   };
 
-  const handleNotification = (message: IChatMessage) => {
-    const isRelevantChat = selectedContact && isMessageRelevant(message, selectedContact);
-    if (!isRelevantChat) {
-      const contact = contacts.find((c) => isMessageRelevant(message, c));
-      if (contact) {
-        setNotifications((prev) => [
-          ...prev,
-          {
-            contactId: contact.id,
-            type: contact.type,
-            message: `New message from ${contact.name}: ${message.content.substring(0, 20)}...`,
-            timestamp: message.timestamp,
-          },
-        ]);
+  const handleContactSelect = useCallback(
+    async (contact: Contact) => {
+      setSelectedContact(contact);
+      const chatKey = getChatKey(contact);
+      socketService.markAsRead(chatKey, currentUser?._id || "", contact.type);
+      dispatch(setSelectedContactRedux(contact));
+       // Mark relevant notifications as read
+       try {
+        const relevantNotifications = notifications.filter(
+          (n) =>
+            n.relatedId === chatKey &&
+            n.status === "unread" &&
+            (n.type === "message" || n.type === "missed_call" || n.type === 'incoming_call')
+        );
+        for (const notification of relevantNotifications) {
+          await markNotificationService(notification._id, currentUser?._id || "");
+          dispatch(markNotificationAsRead(notification._id));
+          socketService.markNotificationAsRead(notification._id, currentUser?._id || "");
+        }
+      navigate(`/chat/${contact.type}/${contact.id}`);
+      } catch (error) {
+        console.error("Error marking notifications as read:", error);
       }
-    }
-  };
-
-  const handleContactSelect = (contact: Contact) => {
-    setSelectedContact(contact);
-    navigate(`/chat/${contact.type}/${contact.id}`);
-    const chatKey = getChatKey(contact);
-    socketService.markAsRead(chatKey, currentUser?._id || "", contact.type);
-    setNotifications((prev) =>
-      prev.filter((n) => !(n.contactId === contact.id && n.type === contact.type))
-    );
-    fetchUnreadCounts();
-    setIsSidebarOpen(false);
-  };
+      fetchUnreadCounts();
+      setIsSidebarOpen(false);
+    },
+    [currentUser?._id, notifications, dispatch, navigate, fetchUnreadCounts]
+  );
 
   const toggleSidebar = () => setIsSidebarOpen((prev) => !prev);
   const toggleDetailsSidebar = () => setIsDetailsSidebarOpen((prev) => !prev);
@@ -219,6 +257,7 @@ const Chat: React.FC = () => {
             getChatKey={getChatKey}
             isVideoCallActive={isVideoCallActive}
             setIsVideoCallActive={setIsVideoCallActive}
+            incomingCallDetails = {incomingCall}
           />
           <ChatMessages
             selectedContact={selectedContact}
