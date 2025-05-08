@@ -19,7 +19,6 @@ import chatRoutes from "./routes/chat.routes.js";
 import contactsRoutes from "./routes/contact.routes.js";
 import cors from "cors";
 import cookieParser from "cookie-parser";
-import { scheduleNotifications } from "./utils/node-cron.utils.js";
 import http from "http";
 import { Server } from "socket.io";
 import initializeSocket from "./socket/socket.js";
@@ -69,8 +68,6 @@ const io = new Server(server, {
     },
 });
 initializeSocket(io); // Set up socket events
-// Start Cron Jobs 
-scheduleNotifications();
 // Start server
 server.listen(config.port, () => {
     console.log(`Server is running on http://localhost:${config.port}`);

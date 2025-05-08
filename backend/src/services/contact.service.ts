@@ -34,6 +34,7 @@ interface FormattedContact {
   };
   groupId?: string;
   groupDetails?: {
+    groupName: string;
     startDate: Date;
     adminName: string;
     adminProfilePic: string;
@@ -112,6 +113,7 @@ export const getUserContactsService = async (userId: string): Promise<FormattedC
         targetProfilePic = group.profilePic || "";
         groupId = group._id.toString();
         groupDetails = {
+          groupName: group.name || "Unknown Group",
           startDate: group.startDate,
           adminName: group.adminId?.name || "Unknown",
           adminProfilePic: group.adminId?.profilePic || "",

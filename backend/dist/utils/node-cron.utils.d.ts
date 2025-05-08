@@ -1,2 +1,2 @@
-export declare const scheduleNotifications: () => void;
+export {};
 //# sourceMappingURL=node-cron.utils.d.ts.map

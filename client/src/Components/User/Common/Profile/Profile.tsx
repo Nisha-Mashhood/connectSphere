@@ -371,10 +371,6 @@ const Profile = () => {
                       <RequestsSection handleProfileClick={(id) => navigate(`/profileDispaly/${id}`)} />
                     </AccordionItem>
                     <AccordionItem key="collaborations" title="Active Collaborations">
-                      {/* here check why new collaboartions are not showing  check fro new user and check for existing user
-                      check for the contact created
-                      according to that check for chats
-                      */}
                       <ActiveCollaborations handleProfileClick={(id) => navigate(`/profileDispaly/${id}`)} />
                     </AccordionItem>
                     <AccordionItem key="network" title="My Network">

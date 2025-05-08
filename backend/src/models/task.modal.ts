@@ -2,6 +2,7 @@ import mongoose, { Schema, Document, Model } from "mongoose";
 import { generateCustomId } from '../utils/idGenerator.utils.js';
 
 export interface ITask extends Document {
+  _id: mongoose.Types.ObjectId;
     taskId:string;
     name: string;
     description?: string;
@@ -12,16 +13,8 @@ export interface ITask extends Document {
     dueDate: Date;
     notificationDate?: Date;
     notificationTime?: string;
-    notificationSubscription?: {
-      endpoint: string;
-      keys: {
-        auth: string;
-        p256dh: string;
-      };
-      userId?: string;
-    };
     privacy: "private" | "public";
-    contextType: "profile" | "group" | "collaboration";
+    contextType: "profile" | "group" | "collaboration" | "userconnection";
     contextId: mongoose.Types.ObjectId;
     assignedUsers: mongoose.Types.ObjectId[];
     assignedCollaborations: mongoose.Types.ObjectId[];
@@ -70,17 +63,6 @@ const taskSchema: Schema<ITask> = new mongoose.Schema({
   notificationTime: {
     type: String,
   },
-  notificationSubscription: {
-    type: {
-      endpoint: String,
-      keys: {
-        auth: String,
-        p256dh: String
-      },
-      userId: String
-    },
-    default: null 
-  },
   privacy: {
     type: String,
     enum: ["private", "public"],
@@ -89,7 +71,7 @@ const taskSchema: Schema<ITask> = new mongoose.Schema({
   // Contextual fields
   contextType: {
     type: String,
-    enum: ["profile", "group", "collaboration"],
+    enum: ["profile", "group", "collaboration", "userconnection"],
     required: true,
   },
   contextId: {

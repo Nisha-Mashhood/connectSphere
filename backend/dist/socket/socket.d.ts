@@ -1,4 +1,6 @@
 import { Server } from "socket.io";
-declare const initializeSocket: (io: Server) => void;
+import { EventEmitter } from "events";
+export declare const notificationEmitter: EventEmitter<[never]>;
+declare const initializeSocket: (_io: Server) => void;
 export default initializeSocket;
 //# sourceMappingURL=socket.d.ts.map

@@ -1,10 +1,10 @@
 import{ Task }from "../models/task.modal.js";
-import{ PushSubscription } from "../services/notification.service.js";
 import collaboration from "../models/collaboration.js";
 import Group from "../models/group.model.js";
 import { IMentor } from "../models/mentor.model.js";
 import { ObjectId } from "mongoose";
 import { AppNotification, AppNotificationModel } from "../models/notification.modal.js";
+import userConnectionModal from "../models/userConnection.modal.js";
 
 interface CollaborationData {
   userId: ObjectId;
@@ -17,29 +17,6 @@ interface UserIds {
 }
 
 
-//Save subscription to a task
-export const saveSubscription = async (taskId:string, subscription:PushSubscription, metadata?: { userId?: string }) => {
-  try {
-    const task = await Task.findById(taskId);
-    if (!task) {
-      throw new Error("Task not found");
-    }
-    
-    // Create a new object that combines subscription and userId
-    const subscriptionWithUserId = {
-      ...subscription,
-      userId: metadata?.userId
-    };
-
-    task.notificationSubscription = subscriptionWithUserId;
-
-    await task.save();
-    return task;
-  } catch (error) {
-    console.error("Error saving subscription:", error);
-    throw error;
-  }
-};
 
 //Get task details for notifications
 export const getTasksForNotification = async (taskId: string) => {
@@ -49,7 +26,6 @@ export const getTasksForNotification = async (taskId: string) => {
     status: { $ne: "completed" }, // Task should not be completed
     dueDate: { $gte: now }, // Due date is not passed
     notificationDate: { $lte: now }, // Notification date has arrived
-    notificationSubscription: { $ne: null }, // Has subscription
   });
 };
 
@@ -60,7 +36,7 @@ export const getAllTasksForNotification = async () => {
     status: { $ne: "completed" }, // Task should not be completed
     dueDate: { $gte: now }, // Due date is not passed
     notificationDate: { $lte: now }, // Notification date has arrived
-    notificationSubscription: { $ne: null }, // Has subscription
+    notificationTime: { $exists: true } // Ensure notificationTime is set
   });
 };
 
@@ -87,10 +63,38 @@ export const getMentorIdAndUserId = async (collaborationId: string): Promise<Use
   };
 };
 
-export const getUserSubscription = async (userId:string) => {
-  return await Task.findOne({ "notificationSubscription.userId": userId });
+export const getConnectionUserIds = async (connectionId: string): Promise<{ requester: string; recipient: string } | null> => {
+  try {
+    const connection = await userConnectionModal.findById(connectionId).select("requester recipient");
+    if (!connection) {
+      console.log(`No connection found for ID ${connectionId}`);
+      return null;
+    }
+    return {
+      requester: connection.requester.toString(),
+      recipient: connection.recipient.toString(),
+    };
+  } catch (error) {
+    console.error(`Error fetching connection ${connectionId}:`, error);
+    return null;
+  }
 };
 
+// Check for existing task notification to avoid duplicates
+export const findTaskNotification = async (
+  userId: string,
+  taskId: string,
+  notificationDate?: string,
+  notificationTime?: string
+): Promise<AppNotification | null> => {
+  return await AppNotificationModel.findOne({
+    userId,
+    type: "task_reminder",
+    relatedId: taskId,
+    notificationDate: notificationDate ? new Date(notificationDate) : undefined,
+    notificationTime,
+  });
+};
 
 
 

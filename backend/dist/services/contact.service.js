@@ -69,6 +69,7 @@ export const getUserContactsService = async (userId) => {
                 targetProfilePic = group.profilePic || "";
                 groupId = group._id.toString();
                 groupDetails = {
+                    groupName: group.name || "Unknown Group",
                     startDate: group.startDate,
                     adminName: group.adminId?.name || "Unknown",
                     adminProfilePic: group.adminId?.profilePic || "",

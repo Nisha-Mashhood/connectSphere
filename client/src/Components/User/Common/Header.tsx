@@ -11,6 +11,7 @@ import {
   Avatar,
   Button,
   Badge,
+  Spinner,
 } from "@nextui-org/react";
 import { useDispatch, useSelector } from "react-redux";
 import { useNavigate } from "react-router-dom";
@@ -21,8 +22,9 @@ import { checkProfile, logout } from "../../../Service/Auth.service";
 import { checkMentorProfile } from "../../../Service/Mentor.Service";
 import Logo from "../../../assets/logoMain.jpg";
 import { markNotificationAsRead } from "../../../redux/Slice/notificationSlice";
-import { markNotificationAsRead as markNotificationService } from "../../../Service/NotificationService";
+import { markNotificationAsRead as markNotificationService } from "../../../Service/Notification.Service";
 import { Notification } from "../../../types";
+import { socketService } from "../../../Service/SocketService";
 
 export const ConnectSphereLogo = () => {
   return (
@@ -37,6 +39,8 @@ const Header = () => {
   const navigate = useNavigate();
   const { currentUser } = useSelector((state: RootState) => state.user);
   const { notifications, unreadCount } = useSelector((state: RootState) => state.notification);
+
+  console.log("Unread Notifications :",notifications);
 
   const handleLogout = async () => {
     const email = currentUser?.email;
@@ -96,18 +100,53 @@ const Header = () => {
     }
   };
 
+  // const handleNotificationClick = async (notification: Notification) => {
+  //   try {
+  //     console.log("clicked on notification");
+  //     const [type] = notification.relatedId.split("_");
+  //     const id = notification.senderId;
+  //     const contactType = type === "group" ? "group" : type === "user-mentor" ? "user-mentor" : "user-user";
+  //     await markNotificationService(notification._id, currentUser?._id || "");
+  //     dispatch(markNotificationAsRead(notification._id));
+  //     navigate(`/chat/${contactType}/${id}`);
+  //   } catch (error) {
+  //     console.error("Error handling notification click:", error);
+  //     toast.error("Failed to open chat.");
+  //   }
+  // };
+
   const handleNotificationClick = async (notification: Notification) => {
     try {
-      console.log("clicked on notification");
-      const [type] = notification.relatedId.split("_");
-      const id = notification.senderId;
-      const contactType = type === "group" ? "group" : type === "user-mentor" ? "user-mentor" : "user-user";
+      console.log("Clicked on notification:", notification);
       await markNotificationService(notification._id, currentUser?._id || "");
       dispatch(markNotificationAsRead(notification._id));
-      navigate(`/chat/${contactType}/${id}`);
+      socketService.markNotificationAsRead(notification._id, currentUser?._id || "");
+
+      if (notification.type === "task_reminder") {
+        if (!notification.taskContext) {
+          toast.error("Task context not found.");
+          return;
+        }
+        const { contextType, contextId } = notification.taskContext;
+        if (contextType === "collaboration") {
+          navigate(`/collaboration/${contextId}`);
+        } else if (contextType === "group") {
+          navigate(`/groupDetails/${contextId}`);
+        } else if (contextType === "userconnection" || contextType === "profile") {
+          // Navigate to a general tasks page or show a message
+          toast.error("Task management for this context is not yet supported.");
+          navigate("/profile"); 
+        }
+      } else {
+        // Handle message, incoming_call, missed_call
+        const [type] = notification.relatedId.split("_");
+        const id = notification.senderId;
+        const contactType = type === "group" ? "group" : type === "user-mentor" ? "user-mentor" : "user-user";
+        navigate(`/chat/${contactType}/${id}`);
+      }
     } catch (error) {
       console.error("Error handling notification click:", error);
-      toast.error("Failed to open chat.");
+      toast.error("Failed to process notification.");
     }
   };
 
@@ -168,7 +207,7 @@ const Header = () => {
         {currentUser && (
           <>
             <NavbarItem>
-              <Dropdown placement="bottom-end">
+              <Dropdown placement="bottom-end" closeOnSelect={false}>
                 <DropdownTrigger>
                   <Badge
                     content={unreadCount}
@@ -199,8 +238,14 @@ const Header = () => {
                     </Button>
                   </Badge>
                 </DropdownTrigger>
-                <DropdownMenu aria-label="Notifications" variant="flat" closeOnSelect={false}>
-                  {notifications.length === 0 ? (
+                <DropdownMenu aria-label="Notifications" variant="flat">
+                  {notifications === null ? (
+                    <DropdownItem key="loading" isReadOnly>
+                      <div className="flex justify-center items-center py-2">
+                        <Spinner size="sm" />
+                      </div>
+                    </DropdownItem>
+                  ) : notifications.length === 0 ? (
                     <DropdownItem key="no-notifications" isReadOnly>
                       No new notifications
                     </DropdownItem>

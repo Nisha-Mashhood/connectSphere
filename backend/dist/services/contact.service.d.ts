@@ -35,6 +35,7 @@ interface FormattedContact {
     };
     groupId?: string;
     groupDetails?: {
+        groupName: string;
         startDate: Date;
         adminName: string;
         adminProfilePic: string;

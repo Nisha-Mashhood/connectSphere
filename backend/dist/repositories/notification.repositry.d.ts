@@ -1,23 +1,15 @@
-import { PushSubscription } from "../services/notification.service.js";
 import { AppNotification } from "../models/notification.modal.js";
 interface UserIds {
     userId: string;
     mentorUserId: string | null;
 }
-export declare const saveSubscription: (taskId: string, subscription: PushSubscription, metadata?: {
-    userId?: string;
-}) => Promise<import("mongoose").Document<unknown, {}, import("../models/task.modal.js").ITask> & import("../models/task.modal.js").ITask & Required<{
-    _id: unknown;
-}> & {
-    __v: number;
-}>;
 export declare const getTasksForNotification: (taskId: string) => Promise<(import("mongoose").Document<unknown, {}, import("../models/task.modal.js").ITask> & import("../models/task.modal.js").ITask & Required<{
-    _id: unknown;
+    _id: import("mongoose").Types.ObjectId;
 }> & {
     __v: number;
 }) | null>;
 export declare const getAllTasksForNotification: () => Promise<(import("mongoose").Document<unknown, {}, import("../models/task.modal.js").ITask> & import("../models/task.modal.js").ITask & Required<{
-    _id: unknown;
+    _id: import("mongoose").Types.ObjectId;
 }> & {
     __v: number;
 })[]>;
@@ -26,11 +18,10 @@ export declare const getGroupMembers: (groupId: string) => Promise<{
     joinedAt: Date;
 }[]>;
 export declare const getMentorIdAndUserId: (collaborationId: string) => Promise<UserIds | null>;
-export declare const getUserSubscription: (userId: string) => Promise<(import("mongoose").Document<unknown, {}, import("../models/task.modal.js").ITask> & import("../models/task.modal.js").ITask & Required<{
-    _id: unknown;
-}> & {
-    __v: number;
-}) | null>;
+export declare const getConnectionUserIds: (connectionId: string) => Promise<{
+    requester: string;
+    recipient: string;
+} | null>;
 export declare const createNotification: (notification: Omit<AppNotification, "_id">) => Promise<AppNotification>;
 export declare const findNotificationByUserId: (userId: string) => Promise<AppNotification[]>;
 export declare const findNotificationByCallId: (userId: string, callId: string) => Promise<(import("mongoose").Document<unknown, {}, AppNotification> & AppNotification & Required<{

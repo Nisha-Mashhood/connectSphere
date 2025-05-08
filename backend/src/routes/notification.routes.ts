@@ -5,7 +5,6 @@ import { checkBlockedStatus, verifyToken } from "../middlewares/auth.middleware.
 
 const router = express.Router();
 
-router.post("/subscribe/:currentUserId", notificationController.subscribeToNotifications);
 // GET /notifications?userId=:userId
 router.get("/getNotification", [apiLimiter, verifyToken, checkBlockedStatus], notificationController.getNotifications);
 

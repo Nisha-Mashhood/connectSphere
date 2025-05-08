@@ -4,7 +4,7 @@ import { RootState } from "../../../redux/store";
 import { socketService } from "../../../Service/SocketService";
 import { Notification } from "../../../types";
 import { setNotifications, addNotification, updateNotification, markNotificationAsRead } from "../../../redux/Slice/notificationSlice";
-import { fetchNotificationService } from "../../../Service/NotificationService";
+import { fetchNotificationService } from "../../../Service/Notification.Service";
 
 const NotificationHandler: React.FC = () => {
   const dispatch = useDispatch();

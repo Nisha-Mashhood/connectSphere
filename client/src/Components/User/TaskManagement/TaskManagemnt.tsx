@@ -12,7 +12,6 @@ import {
   update_task_priority,
   update_task_status,
 } from "../../../Service/Task.Service";
-import { registerSW, sendSubscriptionToServer, subcribeTOSW } from "../../../Service/NotificationService";
 import TaskList from "./TaskList";
 import TaskForm from "../../Forms/TaskForm";
 import TaskViewModal from "./TaskViewModal";
@@ -150,6 +149,8 @@ const TaskManagement = ({ context, currentUser, contextData }) => {
     fetchTasks();
   }, [context, currentUser, contextData]);
 
+
+  //handle create task
   const handleTaskCreate = async () => {
     const validationErrors = validateForm();
     setErrors(validationErrors);
@@ -185,7 +186,7 @@ const TaskManagement = ({ context, currentUser, contextData }) => {
       if (taskData.taskImage) formData.append("image", taskData.taskImage);
 
       const response = await create_task(currentUser._id, formData);
-      const newTaskData = response.task;
+      // const newTaskData = response.task;
 
       if (response) {
         toast.success("Task created successfully!");
@@ -193,9 +194,9 @@ const TaskManagement = ({ context, currentUser, contextData }) => {
         resetForm();
         fetchTasks();
 
-        const subscriptionResult = await handleSubscribe(newTaskData);
-        if (subscriptionResult?.success) toast.success("Notification subscribed successfully");
-        else toast.error("Failed to subscribe to notification");
+        // const subscriptionResult = await handleSubscribe(newTaskData);
+        // if (subscriptionResult?.success) toast.success("Notification subscribed successfully");
+        // else toast.error("Failed to subscribe to notification");
       }
     } catch (error) {
       toast.error("Failed to create task");
@@ -213,33 +214,33 @@ const TaskManagement = ({ context, currentUser, contextData }) => {
     return `${hoursInt.toString().padStart(2, "0")}:${minutes}`;
   };
 
-  const handleSubscribe = async (taskData: any) => {
-    try {
-      await registerSW();
-      if (!taskData?.notificationDate || !taskData?.notificationTime) return { success: false };
-      const notificationTime24 = convertTo24HourFormat(taskData.notificationTime);
-      if (!notificationTime24) return { success: false };
-      const dateTimeString = `${taskData.notificationDate}T${notificationTime24}:00`;
-      const notificationDateTime = new Date(dateTimeString);
-      if (isNaN(notificationDateTime.getTime())) return { success: false };
+  // const handleSubscribe = async (taskData: any) => {
+  //   try {
+  //     await registerSW();
+  //     if (!taskData?.notificationDate || !taskData?.notificationTime) return { success: false };
+  //     const notificationTime24 = convertTo24HourFormat(taskData.notificationTime);
+  //     if (!notificationTime24) return { success: false };
+  //     const dateTimeString = `${taskData.notificationDate}T${notificationTime24}:00`;
+  //     const notificationDateTime = new Date(dateTimeString);
+  //     if (isNaN(notificationDateTime.getTime())) return { success: false };
 
-      const notifPermission = await Notification.requestPermission();
-      if (notifPermission !== "granted") {
-        toast.error("Please allow notification permission");
-        return { success: false };
-      }
+  //     const notifPermission = await Notification.requestPermission();
+  //     if (notifPermission !== "granted") {
+  //       toast.error("Please allow notification permission");
+  //       return { success: false };
+  //     }
 
-      const subscription = await subcribeTOSW();
-      if (subscription) {
-        await sendSubscriptionToServer(subscription, { notificationDateTime: notificationDateTime.toISOString() }, taskData, currentUser._id);
-        return { success: true, message: "Notification set" };
-      }
-      return { success: false };
-    } catch (error) {
-      console.error("Subscription failed:", error);
-      return { success: false };
-    }
-  };
+  //     const subscription = await subcribeTOSW();
+  //     if (subscription) {
+  //       await sendSubscriptionToServer(subscription, { notificationDateTime: notificationDateTime.toISOString() }, taskData, currentUser._id);
+  //       return { success: true, message: "Notification set" };
+  //     }
+  //     return { success: false };
+  //   } catch (error) {
+  //     console.error("Subscription failed:", error);
+  //     return { success: false };
+  //   }
+  // };
 
   const handleTaskUpdate = async () => {
     const validationErrors = validateForm();

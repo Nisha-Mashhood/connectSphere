@@ -1,3 +1,4 @@
+import { EventEmitter } from "events";
 import { findContactByUsers, findContactsByUserId } from "../repositories/contacts.repository.js";
 import { getGroupsByGroupId, isUserInGroup } from "../repositories/group.repositry.js";
 import { findChatMessageById, markMessagesAsRead, saveChatMessage } from "../repositories/chat.repository.js";
@@ -7,12 +8,19 @@ import collaboration from "../models/collaboration.js";
 import userConnectionModal from "../models/userConnection.modal.js";
 import { getNotifications, markNotificationAsRead, sendNotification, updateCallNotificationToMissed } from "../services/notification.service.js";
 import { findUserById } from "../repositories/user.repositry.js";
-const initializeSocket = (io) => {
+let io;
+export const notificationEmitter = new EventEmitter();
+const initializeSocket = (_io) => {
+    io = _io;
     console.log("Socket.IO server initialized");
     // Store active call offers with timeouts
     const activeOffers = new Map();
     const endedCalls = new Set();
     const activeChats = new Map(); // userId -> chatKey
+    // Subscribe to task notifications
+    notificationEmitter.on("notification", (notification) => {
+        emitTaskNotification(notification);
+    });
     io.on("connection", (socket) => {
         socket.data.userId = socket.handshake.auth.userId;
         socket.on("joinChats", async (userId) => {
@@ -475,6 +483,14 @@ const initializeSocket = (io) => {
             console.log(`User disconnected: ${socket.id}`);
         });
     });
+};
+const emitTaskNotification = (notification) => {
+    if (!io) {
+        console.error("[DEBUG] Socket.IO server not initialized");
+        return;
+    }
+    io.to(`user_${notification.userId}`).emit("notification.new", notification);
+    console.log(`[DEBUG] Emitted notification.new to user_${notification.userId}:`, notification);
 };
 export default initializeSocket;
 //# sourceMappingURL=socket.js.map

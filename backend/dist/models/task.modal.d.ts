@@ -1,5 +1,6 @@
 import mongoose, { Document, Model } from "mongoose";
 export interface ITask extends Document {
+    _id: mongoose.Types.ObjectId;
     taskId: string;
     name: string;
     description?: string;
@@ -19,7 +20,7 @@ export interface ITask extends Document {
         userId?: string;
     };
     privacy: "private" | "public";
-    contextType: "profile" | "group" | "collaboration";
+    contextType: "profile" | "group" | "collaboration" | "userconnection";
     contextId: mongoose.Types.ObjectId;
     assignedUsers: mongoose.Types.ObjectId[];
     assignedCollaborations: mongoose.Types.ObjectId[];

@@ -1,19 +1,21 @@
 export class WebRTCService {
-  private peerConnection: RTCPeerConnection | null = null;
-  private localStream: MediaStream | null = null;
-  private hasCreatedOffer: boolean = false;
-  private addedTrackIds: Set<string> = new Set(); 
+  private peerConnection: RTCPeerConnection | null = null;//  Peer connection instance
+  private localStream: MediaStream | null = null;// Local media stream (video/audio)
+  private hasCreatedOffer: boolean = false;// Flag to ensure offer is created only once
+  private addedTrackIds: Set<string> = new Set(); // Set to track added track IDs and avoid duplicates
 
   constructor() {
     console.log("WebRTCService initialized");
   }
-
+ // Initialize the peer connection with ICE servers
   async initPeerConnection(): Promise<void> {
+    // Skip if already initialized and not closed
     if (this.peerConnection && this.peerConnection.connectionState !== "closed") {
       console.log("Peer connection already initialized, skipping");
       return;
     }
 
+    // STUN and TURN server configuration
     const config: RTCConfiguration = {
       iceServers: [
         { urls: "stun:stun.l.google.com:19302" },
@@ -28,16 +30,21 @@ export class WebRTCService {
 
     try {
       this.peerConnection = new RTCPeerConnection(config);
+
+      // Detects ICE failures and can trigger reconnection.
       this.peerConnection.oniceconnectionstatechange = () => {
         console.log("ICE connection state:", this.peerConnection!.iceConnectionState);
         if (this.peerConnection!.iceConnectionState === "failed") {
           console.error("ICE connection failed, restarting ICE");
-          this.peerConnection!.restartIce();
+          this.peerConnection!.restartIce();// Try to reconnect ICE
         }
       };
+      // Logs connection state (e.g., connected, failed).
       this.peerConnection.onconnectionstatechange = () => {
         console.log("Connection state:", this.peerConnection!.connectionState);
       };
+
+      // When a new media track is added, it creates an offer (if not already done).
       this.peerConnection.onnegotiationneeded = async () => {
         if (this.hasCreatedOffer) {
           console.log("Ignoring onnegotiationneeded: Initial offer already created");
@@ -59,6 +66,7 @@ export class WebRTCService {
     }
   }
 
+   // Checks if the remote offer/answer is already set
   hasRemoteDescription(): boolean {
     if (!this.peerConnection) {
       console.log("No peer connection exists");
@@ -69,9 +77,11 @@ export class WebRTCService {
     return hasRemoteDesc;
   }
 
+  // Accesses the user’s camera and microphone
   async getLocalStream(): Promise<MediaStream> {
     console.log("Requesting user media (video and audio)");
     try {
+      // If not already fetched, request stream
       if (!this.localStream) {
         this.localStream = await navigator.mediaDevices.getUserMedia({
           video: { facingMode: "user", width: 640, height: 480 },
@@ -80,13 +90,14 @@ export class WebRTCService {
       }
       const tracks = this.localStream.getTracks();
       console.log("Local stream acquired, track details:");
-      tracks.forEach((track, index) => {
+      tracks.forEach((track, index) => {  //Logs each track.
         console.log(`Track ${index}: kind=${track.kind}, id=${track.id}, enabled=${track.enabled}, readyState=${track.readyState}`);
       });
       if (tracks.length === 0) {
         console.error("No tracks found in local stream");
       }
 
+       // Adds tracks to the peer connection if they aren’t already added.
       if (this.peerConnection) {
         tracks.forEach((track) => {
           if (!this.addedTrackIds.has(track.id)) {
@@ -106,6 +117,7 @@ export class WebRTCService {
     }
   }
 
+  // Get audio-only stream and attach it to peer connection
   async getLocalAudioStream(): Promise<MediaStream> {
     console.log("Requesting audio-only user media");
     try {
@@ -141,6 +153,7 @@ export class WebRTCService {
     }
   }
 
+  // Creates a WebRTC offer to start a connection
   async createOffer(): Promise<RTCSessionDescriptionInit> {
     if (!this.peerConnection) throw new Error("Peer connection not initialized");
     if (this.hasCreatedOffer) {
@@ -148,10 +161,10 @@ export class WebRTCService {
       return this.peerConnection.localDescription!;
     }
     try {
-      const offer = await this.peerConnection.createOffer();
+      const offer = await this.peerConnection.createOffer();  //generate an SDP.
       await this.peerConnection.setLocalDescription(offer);
       console.log("Offer created and local description set:", offer);
-      this.hasCreatedOffer = true;
+      this.hasCreatedOffer = true;  //prevent duplicates.
       return offer;
     } catch (error) {
       console.error("Error creating offer:", error);
@@ -159,6 +172,7 @@ export class WebRTCService {
     }
   }
 
+  // Responds to an offer from a remote peer
   async createAnswer(): Promise<RTCSessionDescriptionInit> {
     if (!this.peerConnection) {
       throw new Error("Peer connection not initialized");
@@ -175,6 +189,8 @@ export class WebRTCService {
     }
   }
 
+  // Applies an offer or answer received from the remote peer
+  //Used after receiving the other peer's SDP via a signaling server.
   async setRemoteDescription(description: RTCSessionDescriptionInit): Promise<void> {
     if (!this.peerConnection) {
       throw new Error("Peer connection not initialized");
@@ -189,6 +205,9 @@ export class WebRTCService {
     }
   }
 
+   // Adds a discovered ICE candidate received from the signaling server
+   //ICE candidates = IP + port combinations used to connect peers.
+  //These are exchanged to help devices find the best network path to each other.
   async addIceCandidate(candidate: RTCIceCandidate): Promise<void> {
     if (!this.peerConnection) {
       throw new Error("Peer connection not initialized");
@@ -203,6 +222,7 @@ export class WebRTCService {
     }
   }
 
+   // Stop and cleanup everything: media streams and peer connection
   stop(): void {
     console.log("Stopping WebRTC service");
     if (this.localStream) {
@@ -222,6 +242,7 @@ export class WebRTCService {
     console.log("WebRTC service stopped");
   }
 
+  // Get current peer connection instance
   getPeerConnection(): RTCPeerConnection | null {
     return this.peerConnection;
   }

@@ -1,5 +1,6 @@
 import { Request, Response } from "express";
 import { changeTaskPriorityService, changeTaskStatusService,  createTaskService,  deleteTaskService, editTaskService, getTasksByContextService } from "../services/task.service.js";
+import { sendTaskNotification } from "../services/notification.service.js";
 
 
 export const createTask = async (req: Request, res: Response): Promise<void> => {
@@ -10,6 +11,16 @@ export const createTask = async (req: Request, res: Response): Promise<void> => 
       const taskData = JSON.parse(req.body.taskData);
       taskData.createdBy = id;
       const newTask = await createTaskService(taskData, imagePath, fileSize);
+
+      // Create notifications with scheduling
+    const notifications = await sendTaskNotification(
+      newTask._id.toString(),
+      undefined,
+      taskData.notificationDate,
+      taskData.notificationTime
+    );
+    console.log(`Created ${notifications.length} notifications for task ${newTask._id}`);
+
       res.status(201).json({ message: "Task created successfully", task: newTask });
     } catch (error: any) {
       console.error("Error:", error);

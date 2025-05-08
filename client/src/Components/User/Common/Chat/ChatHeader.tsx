@@ -1,6 +1,6 @@
 import React, { useState, useRef, useEffect } from "react";
 import { Button, Tooltip, Avatar, Dropdown, DropdownTrigger, DropdownMenu, DropdownItem, Modal, ModalContent, ModalHeader, ModalBody, ModalFooter } from "@nextui-org/react";
-import { FaArrowLeft, FaPhone, FaVideo, FaBars, FaEllipsisV, FaUserFriends, FaInfoCircle, FaMicrophone, FaMicrophoneSlash, FaVideoSlash, FaDesktop } from "react-icons/fa";
+import { FaArrowLeft, FaPhone, FaVideo, FaBars, FaEllipsisV, FaUserFriends, FaInfoCircle, FaMicrophone, FaMicrophoneSlash, FaVideoSlash, FaDesktop, FaVolumeUp } from "react-icons/fa";
 import { Contact } from "../../../../types";
 import { WebRTCService } from "../../../../Service/WebRTCService";
 import { socketService } from "../../../../Service/SocketService";
@@ -21,6 +21,9 @@ interface ChatHeaderProps {
   isVideoCallActive: boolean;
   setIsVideoCallActive: React.Dispatch<React.SetStateAction<boolean>>;
   incomingCallDetails: { userId: string; chatKey: string; callType: "audio" | "video"; callerName: string } | null;
+  ringtone: React.MutableRefObject<HTMLAudioElement>;
+  playRingtone: () => Promise<void>;
+  isRingtonePlaying: React.MutableRefObject<boolean>;
 }
 
 const ChatHeader: React.FC<ChatHeaderProps> = ({
@@ -34,7 +37,10 @@ const ChatHeader: React.FC<ChatHeaderProps> = ({
   getChatKey,
   isVideoCallActive,
   setIsVideoCallActive,
-  incomingCallDetails
+  incomingCallDetails,
+  ringtone,
+  playRingtone,
+  isRingtonePlaying,
 }) => {
   const localVideoRef = useRef<HTMLVideoElement>(null);
   const remoteVideoRef = useRef<HTMLVideoElement>(null);
@@ -57,7 +63,30 @@ const ChatHeader: React.FC<ChatHeaderProps> = ({
   const [isVideoOff, setIsVideoOff] = useState(false);
   const [isScreenSharing, setIsScreenSharing] = useState(false);
   const [hasProcessedAnswer, setHasProcessedAnswer] = useState(false);
-  // const [hasCreatedOffer, setHasCreatedOffer] = useState(false);
+  const [isCallTerminated, setIsCallTerminated] = useState(false);
+
+  // Stop ringtone when modal closes
+  useEffect(() => {
+    if (!isIncomingCall && ringtone.current && ringtone.current.currentTime > 0) {
+      console.log("Modal closed, stopping ringtone");
+      ringtone.current.pause();
+      ringtone.current.currentTime = 0;
+      isRingtonePlaying.current = false;
+    }
+  }, [isIncomingCall, ringtone]);
+
+  // Attempt to play ringtone when incoming call is received
+  useEffect(() => {
+    if (isIncomingCall && incomingCallData) {
+      console.log("Incoming call detected, attempting to play ringtone");
+      playRingtone().catch((error) => {
+        console.error("Auto-play ringtone failed:", error);
+        if (error.name === "NotAllowedError") {
+          toast.error("Please click the 'Enable Audio' button to hear the ringtone.", { duration: 5000 });
+        }
+      });
+    }
+  }, [isIncomingCall, incomingCallData, playRingtone]);
 
   // Initialize WebRTC and socket listeners
   useEffect(() => {
@@ -116,6 +145,7 @@ const ChatHeader: React.FC<ChatHeaderProps> = ({
         console.log(`Incoming ${data.callType} call offer:`, data);
         setIncomingCallData(data);
         setIsIncomingCall(true);
+        setIsCallTerminated(false);
       }
     };
 
@@ -537,7 +567,6 @@ const ChatHeader: React.FC<ChatHeaderProps> = ({
           await webrtcService.addIceCandidate(candidate);
         }
       }
-
       setIsIncomingCall(false);
       setIncomingCallData(null);
       if (incomingCallData.callType === "audio") {
@@ -545,6 +574,7 @@ const ChatHeader: React.FC<ChatHeaderProps> = ({
       } else {
         setIsVideoCallActive(true);
       }
+      setIsCallTerminated(false);
       console.log(`${incomingCallData.callType} call accepted successfully`);
     } catch (error) {
       console.error(`Error accepting ${incomingCallData?.callType} call:`, error);
@@ -555,8 +585,20 @@ const ChatHeader: React.FC<ChatHeaderProps> = ({
   };
 
   const declineCall = () => {
-    if (!selectedContact || !incomingCallData) return;
+    if (!selectedContact || !incomingCallData || isCallTerminated || !isIncomingCall) {
+      console.log("Cannot decline call: Missing data or already terminated");
+      return;
+    }
+
     console.log(`Declining ${incomingCallData.callType} call from:`, incomingCallData.userId);
+
+    // Stop ringtone when call is accepted
+    if (ringtone.current) {
+      ringtone.current.pause();
+      ringtone.current.currentTime = 0;
+      isRingtonePlaying.current = false;
+    }
+
     socketService.emitCallEnded(
       incomingCallData.userId,
       selectedContact.type,
@@ -565,6 +607,7 @@ const ChatHeader: React.FC<ChatHeaderProps> = ({
     );
     setIsIncomingCall(false);
     setIncomingCallData(null);
+    setIsCallTerminated(true);
     webrtcService.stop();
     setLocalStream(null);
     setRemoteStream(null);
@@ -587,7 +630,7 @@ const ChatHeader: React.FC<ChatHeaderProps> = ({
     setIsVideoOff(false);
     setIsScreenSharing(false);
     setHasProcessedAnswer(false);
-    // setHasCreatedOffer(false);
+    setIsCallTerminated(true);
 
     const chatKey = getChatKey(selectedContact);
     const targetId = selectedContact.targetId || selectedContact.groupId || "";
@@ -610,7 +653,7 @@ const ChatHeader: React.FC<ChatHeaderProps> = ({
     setIsAudioCallActive(false);
     setIsAudioMuted(false);
     setHasProcessedAnswer(false);
-    // setHasCreatedOffer(false);
+    setIsCallTerminated(true);
 
     const chatKey = getChatKey(selectedContact);
     const targetId = selectedContact.targetId || selectedContact.groupId || "";
@@ -830,6 +873,26 @@ const ChatHeader: React.FC<ChatHeaderProps> = ({
             <p>Call from {incomingCallDetails?.callerName || "Unknown"}</p>
           </ModalBody>
           <ModalFooter>
+          <Button
+              isIconOnly
+              color="warning"
+              variant="light"
+              onPress={playRingtone}
+              aria-label="Enable audio"
+            >
+              <FaVolumeUp size={16} />
+              </Button>
+              <Button
+        color="warning"
+        variant="light"
+        onPress={() => {
+          console.log("Debug: Manually triggering playRingtone");
+          playRingtone();
+        }}
+        aria-label="Test ringtone"
+      >
+        Test Ringtone
+      </Button>
             <Button color="danger" variant="light" onPress={declineCall}>
               Decline
             </Button>

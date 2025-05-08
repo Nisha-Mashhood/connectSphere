@@ -15,12 +15,12 @@ import { deduplicateMessages, formatContact, getChatKeyFromMessage } from "./uti
 import { getUnreadMessages } from "../../../../Service/Chat.Service";
 import toast from "react-hot-toast";
 import { debounce } from "lodash";
-import { markNotificationAsRead as markNotificationService} from "../../../../Service/NotificationService";
+import { markNotificationAsRead as markNotificationService} from "../../../../Service/Notification.Service";
 import { markNotificationAsRead } from "../../../../redux/Slice/notificationSlice";
 import { setSelectedContact as setSelectedContactRedux} from "../../../../redux/Slice/userSlice";
 import { useDispatch } from "react-redux";
 import { fetchUserDetails } from "../../../../Service/Auth.service";
-
+import ringTone from "../../../../assets/ringTone.mp3";
 const Chat: React.FC = () => {
   const { type, id } = useParams<{ type?: string; id?: string }>();
   const navigate = useNavigate();
@@ -42,6 +42,8 @@ const Chat: React.FC = () => {
     callType: "audio" | "video";
     callerName: string;
   } | null>(null);
+  const ringtone = useRef<HTMLAudioElement | null>(null);
+  const isRingtonePlaying = useRef(false);
 
   const getChatKey = (contact: Contact) =>
     contact.type === "group"
@@ -74,6 +76,107 @@ const Chat: React.FC = () => {
     }, 200),
     []
   );
+
+  useEffect(() => {
+    if (ringtone.current) {
+      console.log("Preloading audio element");
+      ringtone.current.src = ringTone; // Set src to imported file
+      ringtone.current.load(); // Force preload
+      ringtone.current.onloadeddata = () => {
+        console.log("Audio element loaded, readyState:", ringtone.current!.readyState);
+        console.log("Audio element src after load:", ringtone.current!.src);
+      };
+      ringtone.current.onerror = (e) => {
+        console.error("Audio element error:", e);
+        toast.error("Failed to load ringtone audio. Check file path.");
+      };
+    }
+  }, []);
+
+
+  // Callback to play ringtone
+  const playRingtone = useCallback(async () => {
+    console.log("playRingtone: Starting execution");
+    if (ringtone.current && !isRingtonePlaying.current) {
+      console.log("playRingtone: Audio element exists, readyState:", ringtone.current.readyState);
+      console.log("playRingtone: Current src:", ringtone.current.src);
+      isRingtonePlaying.current = true;
+      try {
+        // Check audio support
+        const canPlayMp3 = ringtone.current.canPlayType("audio/mpeg");
+        console.log("playRingtone: Audio support:", { canPlayMp3 });
+
+        // Wait for audio to be ready
+        if (ringtone.current.readyState < 4) {
+          console.log("playRingtone: Audio not ready, waiting for load");
+          await new Promise<void>((resolve, reject) => {
+            ringtone.current!.onloadeddata = () => {
+              console.log("playRingtone: Audio loaded, readyState:", ringtone.current!.readyState);
+              resolve();
+            };
+            ringtone.current!.onerror = (e) => {
+              console.error("playRingtone: Error loading audio:", e);
+              reject(new Error("Failed to load audio"));
+            };
+            ringtone.current!.load();
+          });
+        }
+
+
+        // Resume AudioContext if suspended
+        const audioContext = new (window.AudioContext)();
+        if (audioContext.state === "suspended") {
+          console.log("playRingtone: AudioContext suspended, resuming");
+          await audioContext.resume();
+          console.log("playRingtone: AudioContext state:", audioContext.state);
+        }
+
+        // Play audio
+        ringtone.current.currentTime = 0;
+        ringtone.current.muted = false;
+        console.log("playRingtone: Attempting to play audio");
+        await ringtone.current.play();
+        console.log("playRingtone: Ringtone playing successfully");
+      } catch (error: any) {
+        isRingtonePlaying.current = false;
+        console.error("playRingtone: Ringtone playback error:", error);
+        if (error.name === "NotAllowedError") {
+          console.log("playRingtone: Blocked by autoplay policy:", error);
+          toast.error("Please click the 'Enable Audio' button to hear the ringtone.", { duration: 5000 });
+        } else if (error.name === "AbortError") {
+          console.log("playRingtone: Play interrupted by pause, ignoring");
+        } else {
+          console.error("playRingtone: Unexpected error playing ringtone:", error);
+          toast.error("Failed to play ringtone. Please check if the audio file exists.");
+        }
+      }
+    } else if (!ringtone.current) {
+      console.error("playRingtone: Ringtone audio element not initialized");
+      toast.error("Ringtone not available. Audio element not initialized.");
+    } else {
+      console.log("playRingtone: Ringtone already playing, skipping");
+    }
+  }, []);
+
+  const stopRingtone = useCallback(() => {
+    console.log("stopRingtone: Stopping ringtone");
+    if (ringtone.current && isRingtonePlaying.current) {
+      try {
+        ringtone.current.pause();
+        ringtone.current.currentTime = 0;
+        console.log("stopRingtone: Ringtone paused successfully");
+      } catch (error) {
+        console.error("stopRingtone: Error pausing ringtone:", error);
+      } finally {
+        isRingtonePlaying.current = false;
+        console.log("stopRingtone: isRingtonePlaying reset to false");
+      }
+    } else {
+      console.log("stopRingtone: No ringtone playing or audio element not initialized");
+      isRingtonePlaying.current = false;
+    }
+  }, []);
+  
 
   useEffect(() => {
     if (!currentUser?._id) return;
@@ -131,23 +234,55 @@ const Chat: React.FC = () => {
     const handleOffer = async (data: { userId: string; targetId: string; type: string; chatKey: string; offer: RTCSessionDescriptionInit; callType: "audio" | "video" }) => {
       console.log("Received offer:", data);
       try {
-        const caller = await fetchUserDetails(data.userId); // Fetch caller details
+        let callerName = "Unknown Caller";
+        if (data.type === "group") {
+          // For group calls, use the group name from contacts
+          const groupContact = contacts.find(
+            (c) => c.type === "group" && c.groupId === data.targetId
+          );
+          callerName = groupContact?.groupDetails?.groupName || "Group Call";
+        } else {
+          // For user or mentor calls, fetch user details
+          const caller = await fetchUserDetails(data.userId);
+          callerName = caller?.userDetails?.name || "Unknown Caller";
+        }
+
         setIncomingCall({
           userId: data.userId,
           chatKey: data.chatKey,
           callType: data.callType,
-          callerName: caller?.name || "Unknown Caller",
+          callerName,
         });
+
+        
       } catch (error) {
-        console.error("Error fetching caller details:", error);
-        toast.error("Failed to load caller details.");
+        console.error("Error handling offer:", error);
+        toast.error("Failed to process incoming call.");
       }
+    };
+
+    const handleAnswer = () => {
+      // Stop ringtone when call is answered
+      if (ringtone.current && isRingtonePlaying.current) {
+        ringtone.current.pause();
+        ringtone.current.currentTime = 0;
+        isRingtonePlaying.current = false;
+      }
+      setIsVideoCallActive(true);
+      setIncomingCall(null);
     };
 
     const handleCallEnded = ({ chatKey, callType }: { chatKey: string; callType: "audio" | "video" }) => {
       console.log("Handling callEnded:", { chatKey, callType });
       if (selectedContact && getChatKey(selectedContact) === chatKey) {
         setIsVideoCallActive(false);
+        setIncomingCall(null);
+        // Stop ringtone when call ends
+        if (ringtone.current && isRingtonePlaying.current) {
+          ringtone.current.pause();
+          ringtone.current.currentTime = 0;
+          isRingtonePlaying.current = false;
+        }
         toast.success(`${callType.charAt(0).toUpperCase() + callType.slice(1)} call ended`, { duration: 3000 });
       }
     };
@@ -158,6 +293,7 @@ const Chat: React.FC = () => {
     socketService.onStopTyping(handleStopTyping);
     socketService.onMessagesRead(handleMessagesRead);
     socketService.onOffer(handleOffer);
+    socketService.onAnswer(handleAnswer);
     socketService.onCallEnded(handleCallEnded);
 
     fetchContacts();
@@ -171,8 +307,15 @@ const Chat: React.FC = () => {
       socketService.socket?.off("stopTyping", handleStopTyping);
       socketService.socket?.off("messagesRead", handleMessagesRead);
       socketService.socket?.off("offer", handleOffer);
+      socketService.socket?.off("answer", handleAnswer);
       socketService.socket?.off("callEnded", handleCallEnded);
       socketService.disconnect();
+
+      if (ringtone.current && isRingtonePlaying.current) {
+        ringtone.current.pause();
+        ringtone.current.currentTime = 0;
+        isRingtonePlaying.current = false;
+      }
     };
   }, [currentUser?._id, fetchUnreadCounts, updateMessages]);
 
@@ -258,6 +401,9 @@ const Chat: React.FC = () => {
             isVideoCallActive={isVideoCallActive}
             setIsVideoCallActive={setIsVideoCallActive}
             incomingCallDetails = {incomingCall}
+            ringtone={ringtone}
+            playRingtone={playRingtone}
+            isRingtonePlaying={isRingtonePlaying}
           />
           <ChatMessages
             selectedContact={selectedContact}
@@ -296,6 +442,8 @@ const Chat: React.FC = () => {
           }}
         />
       )}
+
+<audio ref={ringtone} loop preload="auto" hidden />
     </div>
   );
 };

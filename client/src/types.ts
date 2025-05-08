@@ -32,6 +32,7 @@ export interface Contact {
   };
   groupId?: string;
   groupDetails?: {
+    groupName: string;
     startDate: Date;
     adminName: string;
     adminProfilePic: string;
@@ -82,7 +83,7 @@ export interface IChatMessage {
 export interface Notification {
   _id: string;
   userId: string;
-  type: "message" | "incoming_call" | "missed_call";
+  type: "message" | "incoming_call" | "missed_call"| "task_reminder";
   content: string;
   relatedId: string;
   status: "unread" | "read";
@@ -90,4 +91,8 @@ export interface Notification {
   senderId: string;
   createdAt: string;
   updatedAt: string;
+  taskContext?: {
+    contextType: "profile" | "group" | "collaboration" | "userconnection";
+    contextId: string;
+  };
 }

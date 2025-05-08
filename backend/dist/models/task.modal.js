@@ -58,7 +58,7 @@ const taskSchema = new mongoose.Schema({
     // Contextual fields
     contextType: {
         type: String,
-        enum: ["profile", "group", "collaboration"],
+        enum: ["profile", "group", "collaboration", "userconnection"],
         required: true,
     },
     contextId: {

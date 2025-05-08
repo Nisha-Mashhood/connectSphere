@@ -27,7 +27,7 @@ const persistConfig = {
     key: 'root',
     version: 1,
     storage,
-    whitelist: ["user"], // Only persist user slice
+    //whitelist: ["user"], // Only persist user slice
 };
 
 const persistedReducer = persistReducer(persistConfig, rootReducer);

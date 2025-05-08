@@ -1,4 +1,5 @@
 import { Server, Socket } from "socket.io";
+import { EventEmitter } from "events";
 import { findContactByUsers, findContactsByUserId } from "../repositories/contacts.repository.js";
 import { getGroupsByGroupId, isUserInGroup } from "../repositories/group.repositry.js";
 import { findChatMessageById, markMessagesAsRead, saveChatMessage } from "../repositories/chat.repository.js";
@@ -6,10 +7,14 @@ import mongoose from "mongoose";
 import Group from "../models/group.model.js";
 import collaboration from "../models/collaboration.js";
 import userConnectionModal from "../models/userConnection.modal.js";
-import { getNotifications, markNotificationAsRead, sendNotification, updateCallNotificationToMissed } from "../services/notification.service.js";
+import { getNotifications, markNotificationAsRead, sendNotification, TaskNotificationPayload, updateCallNotificationToMissed } from "../services/notification.service.js";
 import { findUserById } from "../repositories/user.repositry.js";
 
-const initializeSocket = (io: Server) => {
+let io: Server;
+export const notificationEmitter = new EventEmitter();
+
+const initializeSocket = (_io: Server) => {
+  io = _io;
   console.log("Socket.IO server initialized");
 
   // Store active call offers with timeouts
@@ -27,6 +32,11 @@ const initializeSocket = (io: Server) => {
   >();
   const endedCalls = new Set<string>();
   const activeChats = new Map<string, string>(); // userId -> chatKey
+
+  // Subscribe to task notifications
+  notificationEmitter.on("notification", (notification: TaskNotificationPayload) => {
+    emitTaskNotification(notification);
+  });
 
   io.on("connection", (socket: Socket) => {
     socket.data.userId = socket.handshake.auth.userId;
@@ -551,6 +561,15 @@ const initializeSocket = (io: Server) => {
       console.log(`User disconnected: ${socket.id}`);
     });
   });
+};
+
+const emitTaskNotification = (notification: TaskNotificationPayload) => {
+  if (!io) {
+    console.error("[DEBUG] Socket.IO server not initialized");
+    return;
+  }
+  io.to(`user_${notification.userId}`).emit("notification.new", notification);
+  console.log(`Emitted notification.new to user_${notification.userId}:`, notification);
 };
 
 export default initializeSocket;

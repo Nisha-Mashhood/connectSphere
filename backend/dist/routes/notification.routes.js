@@ -3,7 +3,6 @@ import * as notificationController from "../controllers/notification.controller.
 import { apiLimiter } from "../middlewares/ratelimit.middleware.js";
 import { checkBlockedStatus, verifyToken } from "../middlewares/auth.middleware.js";
 const router = express.Router();
-router.post("/subscribe/:currentUserId", notificationController.subscribeToNotifications);
 // GET /notifications?userId=:userId
 router.get("/getNotification", [apiLimiter, verifyToken, checkBlockedStatus], notificationController.getNotifications);
 // PATCH /notifications/:notificationId/read
