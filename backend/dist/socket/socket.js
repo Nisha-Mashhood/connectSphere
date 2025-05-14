@@ -6,12 +6,14 @@ import mongoose from "mongoose";
 import Group from "../models/group.model.js";
 import collaboration from "../models/collaboration.js";
 import userConnectionModal from "../models/userConnection.modal.js";
-import { getNotifications, markNotificationAsRead, sendNotification, updateCallNotificationToMissed } from "../services/notification.service.js";
+import { getNotifications, initializeNotificationService, markNotificationAsRead, sendNotification, updateCallNotificationToMissed } from "../services/notification.service.js";
 import { findUserById } from "../repositories/user.repositry.js";
 let io;
 export const notificationEmitter = new EventEmitter();
 const initializeSocket = (_io) => {
     io = _io;
+    // Initialize notification service
+    initializeNotificationService(io);
     console.log("Socket.IO server initialized");
     // Store active call offers with timeouts
     const activeOffers = new Map();
@@ -484,13 +486,16 @@ const initializeSocket = (_io) => {
         });
     });
 };
+//emit task notifications
 const emitTaskNotification = (notification) => {
     if (!io) {
-        console.error("[DEBUG] Socket.IO server not initialized");
+        console.error("Socket.IO server not initialized");
         return;
     }
-    io.to(`user_${notification.userId}`).emit("notification.new", notification);
-    console.log(`[DEBUG] Emitted notification.new to user_${notification.userId}:`, notification);
+    console.log(`Received notification event for user ${notification.userId}:`, notification);
+    const room = `user_${notification.userId}`;
+    io.to(room).emit("notification.new", notification);
+    console.log(`Emitted notification.new to user_${notification.userId}:`, notification);
 };
 export default initializeSocket;
 //# sourceMappingURL=socket.js.map

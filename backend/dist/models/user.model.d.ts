@@ -17,6 +17,8 @@ export interface UserInterface extends Document {
     coverPic?: string;
     accessToken?: string;
     refreshToken?: string | null;
+    loginCount: number;
+    hasReviewed: boolean;
     createdAt: Date;
     updatedAt: Date;
     _id: mongoose.Types.ObjectId;

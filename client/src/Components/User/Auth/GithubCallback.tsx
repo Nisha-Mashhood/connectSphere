@@ -24,7 +24,7 @@ const GithubCallback = () => {
       const code = query.get("code");
       const state = query.get("state");
 
-      console.log("Callback received - Code:", code, "State:", state); // Debug log
+      console.log("[GithubCallback] Callback received - Code:", code, "State:", state);
 
       if (!code) {
         toast.error("Authorization code is missing!");
@@ -58,8 +58,10 @@ const GithubCallback = () => {
     try {
       dispatch(signinStart());
       const result = await githubLogin(code);
-      dispatch(signinSuccess(result.user));
+      console.log("[GithubCallback] Login response:", result);
+      dispatch(signinSuccess({ user: result.user, needsReviewPrompt: result.needsReviewPrompt }));
       toast.success("Login successful!");
+
 
       const profileResponse = await checkProfile(result.user._id);
       if (!profileResponse.isProfileComplete) {

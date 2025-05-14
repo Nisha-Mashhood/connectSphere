@@ -1,7 +1,7 @@
 import { Call, CallModel } from "../models/call.modal.js";
 
 
-  export const create = async(call: Omit<Call, '_id'>): Promise<Call >=> {
+  export const create = async(call: Omit<Call, "_id" | "CallId">): Promise<Call >=> {
     return CallModel.create(call);
 }
 

@@ -2,6 +2,7 @@ import { combineReducers, configureStore } from '@reduxjs/toolkit';
 import userReducer, { signOut } from '../redux/Slice/userSlice';
 import profileReducer from '../redux/Slice/profileSlice';
 import  notificationReducer from '../redux/Slice/notificationSlice';
+import reviewReducer from '../redux/Slice/reviewSlice';
 import storage from 'redux-persist/lib/storage';
 import { persistReducer, persistStore } from 'redux-persist';
 
@@ -9,6 +10,7 @@ const appReducer = combineReducers({
     user: userReducer,
     profile: profileReducer,
     notification: notificationReducer,
+    review: reviewReducer,
 });
 
 const rootReducer = (state: ReturnType<typeof appReducer>, action: any) => {
@@ -18,6 +20,7 @@ const rootReducer = (state: ReturnType<typeof appReducer>, action: any) => {
             user: undefined, // Clears the user slice
             profile: undefined, // Clears the profile slice
             notification: undefined,
+            review:undefined,
         };
     }
     return appReducer(state, action);

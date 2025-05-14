@@ -43,3 +43,23 @@ export const getUserFeedbacks = async (req: Request, res: Response) => {
     res.status(400).json({ success: false, message: error.message });
   }
 };
+
+
+export const getFeedbackForProfile = async (req: Request, res: Response) => {
+  try {
+    const { profileId, profileType } = req.params;
+    console.log('profile Id :',profileId);
+    console.log('Profile Type : ',profileType);
+    if (!["mentor", "user"].includes(profileType)) {
+       res.status(400).json({ success: false, message: "Invalid profile type" });
+       return
+    }
+    const feedbackData = await FeedbackService.getFeedbackForProfile(
+      profileId,
+      profileType as "mentor" | "user"
+    );
+    res.status(200).json({ success: true, data: feedbackData });
+  } catch (error: any) {
+    res.status(400).json({ success: false, message: error.message });
+  }
+};

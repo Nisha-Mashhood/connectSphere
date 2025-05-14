@@ -39,4 +39,21 @@ export const getMentorAverageRating = async (mentorId) => {
     ]);
     return result[0]?.averageRating || 0;
 };
+export const getFeedbackForProfile = async (profileId, profileType) => {
+    const query = profileType === "mentor"
+        ? { mentorId: new mongoose.Types.ObjectId(profileId) }
+        : { userId: new mongoose.Types.ObjectId(profileId) };
+    const feedBack = await Feedback.find(query)
+        .populate("userId", "name profilePic") // Populate user details
+        .populate({
+        path: 'mentorId',
+        populate: {
+            path: 'userId',
+            select: 'name email profilePic'
+        }
+    })
+        .sort({ createdAt: -1 });
+    console.log(`feedback from repositry : ${feedBack}`);
+    return feedBack;
+};
 //# sourceMappingURL=feeback.repositry.js.map

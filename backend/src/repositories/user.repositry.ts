@@ -49,6 +49,16 @@ export const updateUser = async (
 export const updatePassword = async (id: string, password: string) =>
   User.findByIdAndUpdate(id, { password }, { new: true });
 
+
+// Increment login count
+export const incrementLoginCount = async (userId: string) => {
+  return await User.findByIdAndUpdate(
+    userId,
+    { $inc: { loginCount: 1 } },
+    { new: true }
+  );
+};
+
 // Update the refresh token for a user
 export const updateRefreshToken = async (userId: string, refreshToken: string) => {
   return await User.findByIdAndUpdate(userId, { refreshToken }, { new: true });

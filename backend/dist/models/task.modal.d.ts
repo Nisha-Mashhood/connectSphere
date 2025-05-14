@@ -11,14 +11,6 @@ export interface ITask extends Document {
     dueDate: Date;
     notificationDate?: Date;
     notificationTime?: string;
-    notificationSubscription?: {
-        endpoint: string;
-        keys: {
-            auth: string;
-            p256dh: string;
-        };
-        userId?: string;
-    };
     privacy: "private" | "public";
     contextType: "profile" | "group" | "collaboration" | "userconnection";
     contextId: mongoose.Types.ObjectId;

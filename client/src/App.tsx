@@ -4,24 +4,36 @@ import { Toaster } from "react-hot-toast";
 import { setupInterceptors } from "./lib/axios";
 import { useEffect } from "react";
 import NotificationHandler from "./Components/User/Common/NotificationHandler";
+import { useReviewModalTimer } from "./Service/useReviewModalTimer";
+import { useSelector } from "react-redux";
+import { RootState } from "./redux/store";
+import ReviewModal from "./Components/Forms/ReviewModal";
 
 
 function App() {
   const navigate = useNavigate();
   const location = useLocation();
+  const { currentUser, needsReviewPrompt } = useSelector((state: RootState) => state.user);
+  const isAdminRoute = location.pathname.startsWith("/admin");
+  const { isModalOpen, setIsModalOpen } = useReviewModalTimer(needsReviewPrompt, isAdminRoute);
 
 
   useEffect(() => {
     setupInterceptors(navigate);
   }, [navigate]);
 
-  // Check if current path is an admin route
-  const isAdminRoute = location.pathname.startsWith("/admin");
 
   return (
     <>
     <NotificationHandler />
       {isAdminRoute ? <AdminRoutes /> : <UserRoutes />}
+      {currentUser && !isAdminRoute && (
+        <ReviewModal
+          isOpen={isModalOpen}
+          userId={currentUser._id}
+          onClose={() => setIsModalOpen(false)}
+        />
+      )}
       <Toaster />
     </>
   );

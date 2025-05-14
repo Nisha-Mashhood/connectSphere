@@ -22,7 +22,14 @@ export declare const getConnectionUserIds: (connectionId: string) => Promise<{
     requester: string;
     recipient: string;
 } | null>;
-export declare const createNotification: (notification: Omit<AppNotification, "_id">) => Promise<AppNotification>;
+export declare const findTaskNotification: (userId: string, taskId: string, notificationDate?: string, notificationTime?: string) => Promise<AppNotification | null>;
+export declare const updateNotificationStatus: (notificationId: string, status: string) => Promise<(import("mongoose").Document<unknown, {}, AppNotification> & AppNotification & Required<{
+    _id: string;
+}> & {
+    __v: number;
+}) | null>;
+export declare const updateTaskNotifications: (relatedId: string, notificationDate?: Date, notificationTime?: string) => Promise<import("mongoose").UpdateWriteOpResult | null>;
+export declare const createNotification: (notification: Omit<AppNotification, "_id" | "AppNotificationId">) => Promise<AppNotification>;
 export declare const findNotificationByUserId: (userId: string) => Promise<AppNotification[]>;
 export declare const findNotificationByCallId: (userId: string, callId: string) => Promise<(import("mongoose").Document<unknown, {}, AppNotification> & AppNotification & Required<{
     _id: string;

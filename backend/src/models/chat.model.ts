@@ -1,6 +1,8 @@
 import mongoose, { Schema, Document } from "mongoose";
+import { generateCustomId } from "../utils/idGenerator.utils.js";
 
 export interface IChatMessage extends Document {
+  ChatId: string;
   senderId: mongoose.Types.ObjectId;
   content: string;
   thumbnailUrl?: string;
@@ -20,6 +22,10 @@ export interface IChatMessage extends Document {
 
 const chatSchema: Schema<IChatMessage> = new mongoose.Schema(
   {
+    ChatId:{
+      type: String,
+      required: true,
+    },
     senderId: {
       type: Schema.Types.ObjectId,
       ref: "User",
@@ -77,5 +83,13 @@ const chatSchema: Schema<IChatMessage> = new mongoose.Schema(
   },
   { timestamps: true }
 );
+
+// Pre-save hook to generate ChatId
+chatSchema.pre("save", async function (next) {
+  if (!this.ChatId) {
+    this.ChatId = await generateCustomId("chatMessage", "CMG");
+  }
+  next();
+});
 
 export default mongoose.model<IChatMessage>("ChatMessage", chatSchema);

@@ -45,8 +45,8 @@ const Login = () => {
   }) => {
     try {
       dispatch(signinStart());
-      const { user } = await login(values);
-      console.log(user);
+      const { user, needsReviewPrompt } = await login(values);
+      console.log("[Login] Login response:", { user, needsReviewPrompt });
 
       // Check user role
       if (user.role === "admin") {
@@ -60,7 +60,8 @@ const Login = () => {
         return;
       }
 
-      dispatch(signinSuccess(user));
+      dispatch(signinSuccess({ user, needsReviewPrompt }));
+
       dispatch(unsetIsAdmin());
 
       let mentorDetails = null;

@@ -39,17 +39,6 @@ const taskSchema = new mongoose.Schema({
     notificationTime: {
         type: String,
     },
-    notificationSubscription: {
-        type: {
-            endpoint: String,
-            keys: {
-                auth: String,
-                p256dh: String
-            },
-            userId: String
-        },
-        default: null
-    },
     privacy: {
         type: String,
         enum: ["private", "public"],

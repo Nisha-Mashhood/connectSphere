@@ -1,5 +1,6 @@
 import mongoose, { Document } from "mongoose";
 export interface IChatMessage extends Document {
+    ChatId: string;
     senderId: mongoose.Types.ObjectId;
     content: string;
     thumbnailUrl?: string;

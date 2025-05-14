@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { ReactNode, useState } from 'react';
 import { FaUser, FaTasks, FaSignOutAlt, FaLayerGroup, FaChalkboardTeacher, 
          FaUserFriends, FaTachometerAlt, FaBars, FaTimes } from 'react-icons/fa';
 import { Button, Avatar, Tooltip } from "@nextui-org/react";
@@ -18,7 +18,11 @@ export const ConnectSphereLogo = () => {
   );
 };
 
-const AdminSidebar = ({ children }) => {
+interface AdminSidebarProps {
+  children: ReactNode;
+}
+
+const AdminSidebar = ({ children }: AdminSidebarProps) => {
   const [collapsed, setCollapsed] = useState(false);
   const dispatch = useDispatch();
   const navigate = useNavigate();
@@ -37,7 +41,7 @@ const AdminSidebar = ({ children }) => {
     }
   };
 
-  const isActive = (path) => {
+  const isActive = (path: string) => {
     return location.pathname === path;
   };
 
@@ -164,19 +168,6 @@ const AdminSidebar = ({ children }) => {
 
       {/* Main Content */}
       <div className="flex-1 overflow-auto">
-        {/* Top Header for mobile menu trigger and breadcrumbs could go here */}
-        <div className="p-4 md:hidden">
-          <Button
-            isIconOnly
-            color="default"
-            variant="flat"
-            onPress={() => setCollapsed(!collapsed)}
-          >
-            <FaBars />
-          </Button>
-        </div>
-        
-        {/* Page Content */}
         <main className="flex-1">
           {children}
         </main>

@@ -10,6 +10,7 @@ const initialState = {
   currentAdmin:null,
   isLoggingOutAdmin:false,
   selectedContact: null,
+  needsReviewPrompt: false,
 };
 
 const userSlice = createSlice({
@@ -27,7 +28,8 @@ const userSlice = createSlice({
       state.error = false;
     },
     signinSuccess: (state, action) => {
-      state.currentUser = action.payload;
+      state.currentUser = action.payload.user;
+      state.needsReviewPrompt = action.payload.needsReviewPrompt;
       state.loading = false;
       state.error = false;
     },

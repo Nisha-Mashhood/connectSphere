@@ -194,9 +194,6 @@ const TaskManagement = ({ context, currentUser, contextData }) => {
         resetForm();
         fetchTasks();
 
-        // const subscriptionResult = await handleSubscribe(newTaskData);
-        // if (subscriptionResult?.success) toast.success("Notification subscribed successfully");
-        // else toast.error("Failed to subscribe to notification");
       }
     } catch (error) {
       toast.error("Failed to create task");
@@ -204,43 +201,6 @@ const TaskManagement = ({ context, currentUser, contextData }) => {
     }
   };
 
-  const convertTo24HourFormat = (timeStr: string) => {
-    const match = timeStr.match(/^(\d{1,2}):(\d{2})\s?(AM|PM)?$/i);
-    if (!match) return null;
-    let [_, hours, minutes, period] = match;
-    let hoursInt = parseInt(hours, 10);
-    if (period?.toUpperCase() === "PM" && hoursInt !== 12) hoursInt += 12;
-    else if (period?.toUpperCase() === "AM" && hoursInt === 12) hoursInt = 0;
-    return `${hoursInt.toString().padStart(2, "0")}:${minutes}`;
-  };
-
-  // const handleSubscribe = async (taskData: any) => {
-  //   try {
-  //     await registerSW();
-  //     if (!taskData?.notificationDate || !taskData?.notificationTime) return { success: false };
-  //     const notificationTime24 = convertTo24HourFormat(taskData.notificationTime);
-  //     if (!notificationTime24) return { success: false };
-  //     const dateTimeString = `${taskData.notificationDate}T${notificationTime24}:00`;
-  //     const notificationDateTime = new Date(dateTimeString);
-  //     if (isNaN(notificationDateTime.getTime())) return { success: false };
-
-  //     const notifPermission = await Notification.requestPermission();
-  //     if (notifPermission !== "granted") {
-  //       toast.error("Please allow notification permission");
-  //       return { success: false };
-  //     }
-
-  //     const subscription = await subcribeTOSW();
-  //     if (subscription) {
-  //       await sendSubscriptionToServer(subscription, { notificationDateTime: notificationDateTime.toISOString() }, taskData, currentUser._id);
-  //       return { success: true, message: "Notification set" };
-  //     }
-  //     return { success: false };
-  //   } catch (error) {
-  //     console.error("Subscription failed:", error);
-  //     return { success: false };
-  //   }
-  // };
 
   const handleTaskUpdate = async () => {
     const validationErrors = validateForm();

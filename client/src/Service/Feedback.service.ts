@@ -19,3 +19,16 @@ export const sendFeedBack = async (feedbackData: any) => {
       handleError(error);
     }
   };
+
+  export const getFeedbackForProfile = async (
+    profileId: string,
+    profileType: "mentor" | "user"
+  ) => {
+    try {
+      const response = await axiosInstance.get(`/feedback/profile/${profileId}/${profileType}`);
+      return response.data.data;
+    } catch (error) {
+      console.error(`Error fetching feedback for ${profileType}:`, error);
+      throw error;
+    }
+  };

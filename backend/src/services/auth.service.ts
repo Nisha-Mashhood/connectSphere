@@ -6,6 +6,7 @@ import {
   findUserById,
   isProfileComplete,
   updateUser,
+  incrementLoginCount,
 } from "../repositories/user.repositry.js";
 import bcrypt from "bcryptjs";
 import {
@@ -56,11 +57,14 @@ export const loginUser = async (email: string, password: string) => {
     );
   }
 
-  // Check if password matches
   const isMatch = await bcrypt.compare(password, user.password);
   if (!isMatch) throw new Error("Invalid credentials");
 
-  // Generate JWT token
+  await incrementLoginCount(user._id.toString());
+  const updatedUser = await findUserById(user._id.toString());
+  if (!updatedUser) throw new Error("User not found after login count update");
+  console.log(`[AuthService] User ${email} logged in. loginCount: ${updatedUser.loginCount}`);
+
   const accessToken = generateAccessToken({
     userId: user._id,
     userRole: user.role,
@@ -70,9 +74,12 @@ export const loginUser = async (email: string, password: string) => {
     userRole: user.role,
   });
 
-  // Save the refresh token in the database
   await updateRefreshToken(user._id.toString(), refreshToken);
-  return { user, accessToken, refreshToken };
+
+  const needsReviewPrompt = updatedUser.loginCount >= 5 && !updatedUser.hasReviewed;
+  console.log(`[AuthService] Needs review prompt for ${email}: ${needsReviewPrompt}`);
+
+  return { user: updatedUser, accessToken, refreshToken, needsReviewPrompt };
 };
 
 // Handle refresh token logic
@@ -121,52 +128,46 @@ export const googleSignupService = async (code: string) => {
   return newUser;
 };
 
-//Handles login with google
+// Handle Google login
 export const googleLoginService = async (code: string) => {
-  //Exchange code for access token
-  const tokenResponse = await axios.post(
-    `https://github.com/login/oauth/access_token`,
-    {
-      client_id: gitclientId,
-      client_secret: gitclientSecret,
-      code,
-    },
-    {
-      headers: {
-        Accept: "application/json",
-      },
+  try {
+    const { tokens } = await OAuth2Client.getToken(code);
+    OAuth2Client.setCredentials(tokens);
+
+    const userRes = await axios.get(
+      `https://www.googleapis.com/oauth2/v1/userinfo?alt=json&access_token=${tokens.access_token}`
+    );
+    const { email } = userRes.data;
+
+    const existingUser = await findUserByEmail(email);
+    if (!existingUser) {
+      throw new Error("Email not registered");
     }
-  );
-  const { access_token } = tokenResponse.data;
 
-  //Fetch user details from GitHub
-  const userResponse = await axios.get("https://api.github.com/user", {
-    headers: {
-      Authorization: `Bearer ${access_token}`,
-    },
-  });
-  const { email } = userResponse.data;
+    await incrementLoginCount(existingUser._id.toString());
+    const updatedUser = await findUserById(existingUser._id.toString());
+    if (!updatedUser) throw new Error("User not found after login count update");
+    console.log(`[AuthService] Google login for ${email}. loginCount: ${updatedUser.loginCount}`);
 
-  // Check if the email exists in the database
-  const existingUser = await findUserByEmail(email);
-  if (!existingUser) {
-    throw new Error("Email not registered");
+    const accessToken = generateAccessToken({
+      userId: existingUser._id,
+      userRole: existingUser.role,
+    });
+    const refreshToken = generateRefreshToken({
+      userId: existingUser._id,
+      userRole: existingUser.role,
+    });
+
+    await updateRefreshToken(existingUser._id.toString(), refreshToken);
+
+    const needsReviewPrompt = updatedUser.loginCount >= 5 && !updatedUser.hasReviewed;
+    console.log(`[AuthService] Needs review prompt for ${email}: ${needsReviewPrompt}`);
+
+    return { user: updatedUser, accessToken, refreshToken, needsReviewPrompt };
+  } catch (error: any) {
+    console.error("[AuthService] Google login error:", error.message);
+    throw new Error(error.message || "Google login failed.");
   }
-
-  // Generate JWT tokens
-  const accessToken = generateAccessToken({
-    userId: existingUser._id,
-    userRole: existingUser.role,
-  });
-  const refreshToken = generateRefreshToken({
-    userId: existingUser._id,
-    userRole: existingUser.role,
-  });
-
-  // Save refresh token to the database
-  await updateRefreshToken(existingUser._id.toString(), refreshToken);
-
-  return { user: existingUser, accessToken, refreshToken };
 };
 
 //Handles github signup
@@ -248,10 +249,9 @@ export const githubSignupService = async (code: string) => {
   }
 };
 
-// Handles GitHub login
+// Handle GitHub login
 export const githubLoginService = async (code: string) => {
   try {
-    //Exchange code for access token
     const tokenResponse = await axios.post(
       `https://github.com/login/oauth/access_token`,
       {
@@ -265,29 +265,22 @@ export const githubLoginService = async (code: string) => {
         },
       }
     );
-    const { access_token } = tokenResponse.data; // Extract the access token
+    const { access_token } = tokenResponse.data;
 
-    // Fetch user details from GitHub
     const userResponse = await axios.get("https://api.github.com/user", {
       headers: {
         Authorization: `Bearer ${access_token}`,
       },
     });
 
-    const { email: initialEmail } = userResponse.data;
-    let email = initialEmail;
-
-    //Fetch emails explicitly if email is not provided in the user object
+    let email = userResponse.data.email;
     if (!email) {
       const emailsResponse = await axios.get("https://api.github.com/user/emails", {
         headers: {
           Authorization: `Bearer ${access_token}`,
         },
       });
-
-      // Find the primary email from the list of emails
       const primaryEmail = emailsResponse.data.find((e: any) => e.primary);
-
       if (primaryEmail) {
         email = primaryEmail.email;
       } else {
@@ -295,13 +288,16 @@ export const githubLoginService = async (code: string) => {
       }
     }
 
-    // Check if the email exists in the database
     const existingUser = await findUserByEmail(email);
     if (!existingUser) {
       throw new Error("Email not registered.");
     }
 
-    //Generate JWT tokens
+    await incrementLoginCount(existingUser._id.toString());
+    const updatedUser = await findUserById(existingUser._id.toString());
+    if (!updatedUser) throw new Error("User not found after login count update");
+    console.log(`[AuthService] GitHub login for ${email}. loginCount: ${updatedUser.loginCount}`);
+
     const accessToken = generateAccessToken({
       userId: existingUser._id,
       userRole: existingUser.role,
@@ -311,11 +307,12 @@ export const githubLoginService = async (code: string) => {
       userRole: existingUser.role,
     });
 
-    //Save the refresh token to the database
     await updateRefreshToken(existingUser._id.toString(), refreshToken);
 
-    //Return the user data and tokens
-    return { user: existingUser, accessToken, refreshToken };
+    const needsReviewPrompt = updatedUser.loginCount >= 5 && !updatedUser.hasReviewed;
+    console.log(`[AuthService] Needs review prompt for ${email}: ${needsReviewPrompt}`);
+
+    return { user: updatedUser, accessToken, refreshToken, needsReviewPrompt };
   } catch (error: any) {
     console.error("GitHub Login Error:", error.message);
     throw new Error(error.message || "GitHub login failed.");

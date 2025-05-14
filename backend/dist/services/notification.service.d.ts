@@ -1,4 +1,6 @@
 import { AppNotification } from "../models/notification.modal.js";
+import { Server } from "socket.io";
+export declare const initializeNotificationService: (_io: Server) => void;
 export interface TaskNotificationPayload {
     _id: string;
     userId: string;
@@ -7,14 +9,16 @@ export interface TaskNotificationPayload {
     relatedId: string;
     senderId: string;
     status: "unread" | "read";
+    notificationDate?: string;
+    notificationTime?: string;
     createdAt: Date;
     updatedAt: Date;
-    taskContext: {
+    taskContext?: {
         contextType: "profile" | "group" | "collaboration" | "userconnection";
         contextId: string;
     };
 }
-export declare const sendTaskNotification: (taskId: string, specificUserId?: string) => Promise<TaskNotificationPayload[]>;
+export declare const sendTaskNotification: (taskId: string, specificUserId?: string, notificationDate?: string, notificationTime?: string) => Promise<TaskNotificationPayload[]>;
 export declare const checkAndSendNotifications: () => Promise<TaskNotificationPayload[]>;
 export declare const sendNotification: (userId: string, notificationType: AppNotification["type"], senderId: string, relatedId: string, contentType?: string, callId?: string) => Promise<AppNotification>;
 export declare const updateCallNotificationToMissed: (userId: string, callId: string, content: string) => Promise<AppNotification | null>;

@@ -57,3 +57,21 @@ export const getUserFeedbacks = async (userId: string) => {
     throw error;
   }
 };
+
+export const getFeedbackForProfile = async (
+  profileId: string,
+  profileType: "mentor" | "user"
+) => {
+  try {
+    const feedbacks = await FeedbackRepository.getFeedbackForProfile(
+      profileId,
+      profileType
+    );
+    return {
+      feedbacks,
+      totalFeedbacks: feedbacks.length,
+    };
+  } catch (error) {
+    throw error;
+  }
+};

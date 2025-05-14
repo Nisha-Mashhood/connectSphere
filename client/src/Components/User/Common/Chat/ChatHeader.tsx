@@ -1,6 +1,6 @@
 import React, { useState, useRef, useEffect } from "react";
 import { Button, Tooltip, Avatar, Dropdown, DropdownTrigger, DropdownMenu, DropdownItem, Modal, ModalContent, ModalHeader, ModalBody, ModalFooter } from "@nextui-org/react";
-import { FaArrowLeft, FaPhone, FaVideo, FaBars, FaEllipsisV, FaUserFriends, FaInfoCircle, FaMicrophone, FaMicrophoneSlash, FaVideoSlash, FaDesktop, FaVolumeUp } from "react-icons/fa";
+import { FaArrowLeft, FaPhone, FaVideo, FaBars, FaEllipsisV, FaUserFriends, FaInfoCircle, FaMicrophone, FaMicrophoneSlash, FaVideoSlash, FaDesktop } from "react-icons/fa";
 import { Contact } from "../../../../types";
 import { WebRTCService } from "../../../../Service/WebRTCService";
 import { socketService } from "../../../../Service/SocketService";
@@ -873,7 +873,7 @@ const ChatHeader: React.FC<ChatHeaderProps> = ({
             <p>Call from {incomingCallDetails?.callerName || "Unknown"}</p>
           </ModalBody>
           <ModalFooter>
-          <Button
+          {/* <Button
               isIconOnly
               color="warning"
               variant="light"
@@ -892,7 +892,7 @@ const ChatHeader: React.FC<ChatHeaderProps> = ({
         aria-label="Test ringtone"
       >
         Test Ringtone
-      </Button>
+      </Button> */}
             <Button color="danger" variant="light" onPress={declineCall}>
               Decline
             </Button>

@@ -11,6 +11,9 @@ import {
   FaMoneyBillWave,
   FaCheckCircle,
   FaTimesCircle,
+  FaThumbsUp,
+  FaCalendarAlt,
+  FaUser,
 } from "react-icons/fa";
 import { useDispatch, useSelector } from "react-redux";
 import { AppDispatch, RootState } from "../../../redux/store";
@@ -27,6 +30,7 @@ import {
   sendUser_UserRequset,
 } from "../../../Service/User-User.Service";
 import { fetchUserConnections } from "../../../redux/Slice/profileSlice";
+import { getFeedbackForProfile } from "../../../Service/Feedback.service";
 
 const ProfileDisplay = () => {
   const { currentUser } = useSelector((state: RootState) => state.user);
@@ -42,6 +46,8 @@ const ProfileDisplay = () => {
     useState(false);
   const [existingRequest, setExistingRequest] = useState<any>(null);
   const [isCurrentUserMentor, setIsCurrentUserMentor] = useState(false);
+  const [expandedFeedback, setExpandedFeedback] = useState(null);
+  const [feedbacks, setFeedbacks] = useState<any[]>([]);
   const navigate = useNavigate();
   const dispatch = useDispatch<AppDispatch>();
 
@@ -98,6 +104,28 @@ const ProfileDisplay = () => {
     });
   };
 
+  const toggleExpandedFeedback = (feedbackId) => {
+    if (expandedFeedback === feedbackId) {
+      setExpandedFeedback(null);
+    } else {
+      setExpandedFeedback(feedbackId);
+    }
+  };
+
+  // Fetch feedback for the profile
+  const fetchFeedback = async () => {
+    try {
+      console.log("fetching feed back data");
+      const profileType = isMentor ? "mentor" : "user";
+      const feedbackData = await getFeedbackForProfile(Id, profileType);
+      console.log(feedbackData);
+      setFeedbacks(feedbackData.feedbacks);
+    } catch (error) {
+      console.error("Error fetching feedback:", error);
+      toast.error("Failed to load feedback");
+    }
+  };
+
   useEffect(() => {
     const fetchdata = async () => {
       if (!currentUser?._id) return;
@@ -142,6 +170,7 @@ const ProfileDisplay = () => {
 
         // Fetch existing requests
         fetchExistingRequest();
+        fetchFeedback();
       } catch (error) {
         console.error("Error fetching details:", error);
       }
@@ -222,6 +251,25 @@ const ProfileDisplay = () => {
   // Navigate to user profile page
   const handleUserProfileClick = (Id: string) => {
     navigate(`/profileDispaly/${Id}`);
+  };
+
+  // Render stars for rating
+  const renderStars = (rating) => {
+    return (
+      <div className="flex space-x-1">
+        {[1, 2, 3, 4, 5].map((star) => (
+          <FaStar
+            key={star}
+            className={`w-4 h-4 ${
+              star <= rating ? "text-yellow-400" : "text-gray-200"
+            }`}
+          />
+        ))}
+        <span className="text-sm font-medium text-gray-700 ml-1">
+          {rating}/5
+        </span>
+      </div>
+    );
   };
 
   return (
@@ -489,6 +537,152 @@ const ProfileDisplay = () => {
                   </div>
                 ) : (
                   <p className="text-gray-600">No collaboration yet.</p>
+                )}
+              </div>
+
+              {/* Feedback Section */}
+              <div className="bg-white rounded-lg shadow p-6">
+                <div className="flex items-center justify-between mb-6">
+                  <h2 className="text-xl font-semibold">Feedback & Reviews</h2>
+                  <FaStar className="text-yellow-500 text-xl" />
+                </div>
+
+                {feedbacks.length > 0 ? (
+                  <div className="space-y-6">
+                    {feedbacks.map((feedback) => (
+                      <div
+                        key={feedback._id}
+                        className="bg-gray-50 rounded-lg p-5 hover:shadow-md transition duration-300"
+                      >
+                        <div className="flex flex-col md:flex-row md:items-start gap-4">
+                          {/* Avatar and user info */}
+                          <div className="flex-shrink-0">
+                            <img
+                              src={
+                                feedback.givenBy === "user"
+                                  ? feedback.userId?.profilePic ||
+                                    "/api/placeholder/150/150"
+                                  : feedback.mentorId?.userId?.profilePic ||
+                                    "/api/placeholder/150/150"
+                              }
+                              alt={
+                                feedback.givenBy === "user"
+                                  ? feedback.userId?.name
+                                  : feedback.mentorId?.userId?.name
+                              }
+                              className="h-14 w-14 rounded-full border-2 border-white shadow-sm"
+                            />
+                          </div>
+
+                          {/* Feedback content */}
+                          <div className="flex-1">
+                            <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-2">
+                              <div>
+                                <p
+                                  className="font-medium text-gray-900 hover:text-blue-600 cursor-pointer"
+                                  onClick={() =>
+                                    handleUserProfileClick(
+                                      feedback.givenBy === "user"
+                                        ? feedback.userId._id
+                                        : feedback.mentorId.userId._id
+                                    )
+                                  }
+                                >
+                                  {feedback.givenBy === "user"
+                                    ? feedback.userId?.name
+                                    : feedback.mentorId?.userId?.name}
+                                  <span className="inline-flex items-center ml-2 px-2 py-0.5 rounded text-xs font-medium bg-blue-100 text-blue-800">
+                                    {feedback.givenBy === "user" ? (
+                                      <FaUser className="mr-1 text-xs" />
+                                    ) : (
+                                      <FaGraduationCap className="mr-1 text-xs" />
+                                    )}
+                                    {feedback.givenBy}
+                                  </span>
+                                </p>
+                              </div>
+
+                              <div className="flex items-center space-x-2">
+                                <div className="hidden md:flex">
+                                  {renderStars(feedback.rating)}
+                                </div>
+                                <div className="flex items-center text-sm text-gray-500">
+                                  <FaCalendarAlt className="mr-1" />
+                                  {new Date(
+                                    feedback.createdAt
+                                  ).toLocaleDateString()}
+                                </div>
+                              </div>
+                            </div>
+
+                            <div className="md:hidden mt-2">
+                              {renderStars(feedback.rating)}
+                            </div>
+
+                            <p className="mt-3 text-gray-700">
+                              {feedback.comments}
+                            </p>
+
+                            {/* Rating details */}
+                            <div
+                              className="mt-4 pt-3 border-t border-gray-200 cursor-pointer"
+                              onClick={() => toggleExpandedFeedback(feedback._id)}
+                            >
+                              <div className="flex items-center justify-between">
+                                <p className="text-sm font-medium text-blue-600">
+                                  {expandedFeedback === feedback._id
+                                    ? "Hide details"
+                                    : "Show rating details"}
+                                </p>
+                                <div className="flex items-center">
+                                  <span className="text-sm text-gray-500 mr-2">
+                                    {feedback.wouldRecommend ? (
+                                      <span className="text-green-600 flex items-center">
+                                        <FaThumbsUp className="mr-1" /> Would
+                                        recommend
+                                      </span>
+                                    ) : (
+                                      <span className="text-red-600">
+                                        Would not recommend
+                                      </span>
+                                    )}
+                                  </span>
+                                </div>
+                              </div>
+
+                              {expandedFeedback === feedback._id && (
+                                <div className="mt-4 grid grid-cols-1 md:grid-cols-3 gap-4">
+                                  <div className="bg-white p-3 rounded-lg shadow-sm">
+                                    <p className="text-sm text-gray-500 mb-1">
+                                      Communication
+                                    </p>
+                                    {renderStars(feedback.communication)}
+                                  </div>
+                                  <div className="bg-white p-3 rounded-lg shadow-sm">
+                                    <p className="text-sm text-gray-500 mb-1">
+                                      {isMentor ? "Expertise" : "Engagement"}
+                                    </p>
+                                    {renderStars(feedback.expertise)}
+                                  </div>
+                                  <div className="bg-white p-3 rounded-lg shadow-sm">
+                                    <p className="text-sm text-gray-500 mb-1">
+                                      Punctuality
+                                    </p>
+                                    {renderStars(feedback.punctuality)}
+                                  </div>
+                                </div>
+                              )}
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                ) : (
+                  <div className="text-center py-10 bg-gray-50 rounded-lg">
+                    <FaStar className="mx-auto text-gray-300 text-4xl mb-3" />
+                    <p className="text-gray-600">No feedback available yet.</p>
+                  </div>
                 )}
               </div>
             </div>

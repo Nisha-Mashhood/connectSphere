@@ -47,4 +47,16 @@ export const getUserFeedbacks = async (userId) => {
         throw error;
     }
 };
+export const getFeedbackForProfile = async (profileId, profileType) => {
+    try {
+        const feedbacks = await FeedbackRepository.getFeedbackForProfile(profileId, profileType);
+        return {
+            feedbacks,
+            totalFeedbacks: feedbacks.length,
+        };
+    }
+    catch (error) {
+        throw error;
+    }
+};
 //# sourceMappingURL=feedback.service.js.map

@@ -38,13 +38,13 @@ export const login = async (req: Request, res: Response) => {
   try {
     const { email, password } = req.body;
     //console.log(req.body);
-    const { user, accessToken, refreshToken } = await loginUser(
+    const { user, accessToken, refreshToken, needsReviewPrompt } = await loginUser(
       email,
       password
     );
     // Store tokens in cookies
     setTokensInCookies(res, accessToken, refreshToken);
-    res.json({ message: "Login successful", user });
+    res.json({ message: "Login successful", user, needsReviewPrompt });
   } catch (error: any) {
     if (error.message === "User not found") {
       res.status(404).json({ message: error.message });
@@ -84,7 +84,7 @@ export const googleLogin = async (req: Request, res: Response) => {
   try {
     const { code } = req.body;
 
-    const { user, accessToken, refreshToken } = await googleLoginService(code);
+    const { user, accessToken, refreshToken, needsReviewPrompt } = await googleLoginService(code);
 
     // Store tokens in cookies
     setTokensInCookies(res, accessToken, refreshToken);
@@ -94,6 +94,7 @@ export const googleLogin = async (req: Request, res: Response) => {
       user,
       accessToken,
       refreshToken,
+      needsReviewPrompt,
     });
 
   } catch (error: any) {
@@ -126,7 +127,7 @@ export const githubSignup = async (req: Request, res: Response) =>{
 export const githubLogin = async (req: Request, res: Response) =>{
   try {
     const { code } = req.body;
-    const { user, accessToken, refreshToken } = await githubLoginService(code);
+    const { user, accessToken, refreshToken, needsReviewPrompt } = await githubLoginService(code);
 
     // Store tokens in cookies
     setTokensInCookies(res, accessToken, refreshToken);
@@ -136,6 +137,7 @@ export const githubLogin = async (req: Request, res: Response) =>{
       user,
       accessToken,
       refreshToken,
+      needsReviewPrompt,
     });
 
   } catch (error:any) {

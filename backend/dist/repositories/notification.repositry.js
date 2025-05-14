@@ -8,9 +8,9 @@ export const getTasksForNotification = async (taskId) => {
     const now = new Date();
     return await Task.findOne({
         _id: taskId,
-        status: { $ne: "completed" }, // Task should not be completed
-        dueDate: { $gte: now }, // Due date is not passed
-        notificationDate: { $lte: now }, // Notification date has arrived
+        status: { $ne: "completed" },
+        dueDate: { $gte: now },
+        notificationDate: { $lte: now },
     });
 };
 //Get tasks that need notifications
@@ -20,6 +20,7 @@ export const getAllTasksForNotification = async () => {
         status: { $ne: "completed" }, // Task should not be completed
         dueDate: { $gte: now }, // Due date is not passed
         notificationDate: { $lte: now }, // Notification date has arrived
+        notificationTime: { $exists: true } // Ensure notificationTime is set
     });
 };
 export const getGroupMembers = async (groupId) => {
@@ -55,6 +56,43 @@ export const getConnectionUserIds = async (connectionId) => {
     }
     catch (error) {
         console.error(`Error fetching connection ${connectionId}:`, error);
+        return null;
+    }
+};
+// Check for existing task notification to avoid duplicates
+export const findTaskNotification = async (userId, taskId, notificationDate, notificationTime) => {
+    return await AppNotificationModel.findOne({
+        userId,
+        type: "task_reminder",
+        relatedId: taskId,
+        notificationDate: notificationDate ? new Date(notificationDate) : undefined,
+        notificationTime,
+    });
+};
+export const updateNotificationStatus = async (notificationId, status) => {
+    try {
+        const notification = await AppNotificationModel.findByIdAndUpdate(notificationId, { status, updatedAt: new Date() }, { new: true });
+        console.log(`Updated notification ${notificationId} status to ${status}`);
+        return notification;
+    }
+    catch (error) {
+        console.error("[DEBUG] Error updating notification status:", error);
+        return null;
+    }
+};
+export const updateTaskNotifications = async (relatedId, notificationDate, notificationTime) => {
+    try {
+        const updateData = {
+            ...(notificationDate && { notificationDate: new Date(notificationDate) }),
+            ...(notificationTime && { notificationTime }),
+            updatedAt: new Date(),
+        };
+        const notifications = await AppNotificationModel.updateMany({ relatedId, type: "task_reminder" }, { $set: updateData });
+        console.log(`Updated ${notifications.modifiedCount} notifications for task ${relatedId}`);
+        return notifications;
+    }
+    catch (error) {
+        console.error("[DEBUG] Error updating task notifications:", error);
         return null;
     }
 };

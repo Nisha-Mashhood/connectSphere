@@ -15,6 +15,7 @@ export declare const loginUser: (email: string, password: string) => Promise<{
     };
     accessToken: string;
     refreshToken: string;
+    needsReviewPrompt: boolean;
 }>;
 export declare const refreshToken: (refreshToken: string) => Promise<{
     newAccessToken: string;
@@ -32,6 +33,7 @@ export declare const googleLoginService: (code: string) => Promise<{
     };
     accessToken: string;
     refreshToken: string;
+    needsReviewPrompt: boolean;
 }>;
 export declare const githubSignupService: (code: string) => Promise<import("mongoose").Document<unknown, {}, import("../models/user.model.js").UserInterface> & import("../models/user.model.js").UserInterface & Required<{
     _id: import("mongoose").Types.ObjectId;
@@ -46,6 +48,7 @@ export declare const githubLoginService: (code: string) => Promise<{
     };
     accessToken: string;
     refreshToken: string;
+    needsReviewPrompt: boolean;
 }>;
 export declare const forgotPassword: (email: string) => Promise<string>;
 export declare const verifyOTP: (email: string, otp: string) => Promise<string>;

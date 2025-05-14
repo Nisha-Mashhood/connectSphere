@@ -1,5 +1,10 @@
 import mongoose, { Schema } from "mongoose";
+import { generateCustomId } from "../utils/idGenerator.utils.js";
 const chatSchema = new mongoose.Schema({
+    ChatId: {
+        type: String,
+        required: true,
+    },
     senderId: {
         type: Schema.Types.ObjectId,
         ref: "User",
@@ -55,5 +60,12 @@ const chatSchema = new mongoose.Schema({
         default: Date.now,
     },
 }, { timestamps: true });
+// Pre-save hook to generate ChatId
+chatSchema.pre("save", async function (next) {
+    if (!this.ChatId) {
+        this.ChatId = await generateCustomId("chatMessage", "CMG");
+    }
+    next();
+});
 export default mongoose.model("ChatMessage", chatSchema);
 //# sourceMappingURL=chat.model.js.map

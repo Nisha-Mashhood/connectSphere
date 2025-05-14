@@ -172,64 +172,75 @@ const FeedbackModal = ({ isOpen, onClose, collaborationData, onComplete }) => {
     <Modal 
       isOpen={isOpen} 
       onClose={onClose}
-      size="2xl"
+      size="3xl"
+      scrollBehavior="inside"
     >
-      <ModalContent>
+      <ModalContent className="max-h-[90vh]">
         <ModalHeader>
           <h2 className="text-xl">{recipientType} Feedback</h2>
         </ModalHeader>
         <ModalBody>
-          <div className="space-y-6">
-            <div>
-              <label className="block text-sm font-medium mb-2">Overall Rating</label>
-              {renderStars('rating', feedback.rating)}
-              {errors.rating && <span className="text-red-500 text-sm mt-1 block">{errors.rating}</span>}
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            {/* Left Column - Star Ratings */}
+            <div className="space-y-4">
+              <div>
+                <label className="block text-sm font-medium mb-1">Overall Rating</label>
+                {renderStars('rating', feedback.rating)}
+                {errors.rating && <span className="text-red-500 text-xs">{errors.rating}</span>}
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium mb-1">Communication</label>
+                {renderStars('communication', feedback.communication)}
+                {errors.communication && <span className="text-red-500 text-xs">{errors.communication}</span>}
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium mb-1">
+                  {recipientType === 'Mentor' ? 'Expertise' : 'Engagement'}
+                </label>
+                {renderStars('expertise', feedback.expertise)}
+                {errors.expertise && <span className="text-red-500 text-xs">{errors.expertise}</span>}
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium mb-1">Punctuality</label>
+                {renderStars('punctuality', feedback.punctuality)}
+                {errors.punctuality && <span className="text-red-500 text-xs">{errors.punctuality}</span>}
+              </div>
+              
+              <div>
+                <label className="block text-sm font-medium mb-1">
+                  Would you recommend this {recipientType.toLowerCase()}?
+                </label>
+                <RadioGroup
+                  orientation="horizontal"
+                  value={feedback.wouldRecommend?.toString()}
+                  onValueChange={(value) => handleInputChange('wouldRecommend', value === 'true')}
+                  className="mt-1"
+                >
+                  <Radio value="true">Yes</Radio>
+                  <Radio value="false">No</Radio>
+                </RadioGroup>
+                {errors.wouldRecommend && <span className="text-red-500 text-xs">{errors.wouldRecommend}</span>}
+              </div>
             </div>
 
+            {/* Right Column - Comments */}
             <div>
-              <label className="block text-sm font-medium mb-2">Communication</label>
-              {renderStars('communication', feedback.communication)}
-              {errors.communication && <span className="text-red-500 text-sm mt-1 block">{errors.communication}</span>}
-            </div>
-
-            <div>
-              <label className="block text-sm font-medium mb-2">
-                {recipientType === 'Mentor' ? 'Expertise' : 'Engagement'}
-              </label>
-              {renderStars('expertise', feedback.expertise)}
-              {errors.expertise && <span className="text-red-500 text-sm mt-1 block">{errors.expertise}</span>}
-            </div>
-
-            <div>
-              <label className="block text-sm font-medium mb-2">Punctuality</label>
-              {renderStars('punctuality', feedback.punctuality)}
-              {errors.punctuality && <span className="text-red-500 text-sm mt-1 block">{errors.punctuality}</span>}
-            </div>
-
-            <div>
-              <label className="block text-sm font-medium mb-2">Comments (min length 10 characters)</label>
+              <label className="block text-sm font-medium mb-1">Comments (min length 10 characters)</label>
               <Textarea
                 placeholder={`Share your experience with this ${recipientType.toLowerCase()}...`}
                 value={feedback.comments}
                 onChange={(e) => handleInputChange('comments', e.target.value)}
-                minRows={3}
+                minRows={12}
+                maxRows={12}
+                className="h-full"
               />
-              {errors.comments && <span className="text-red-500 text-sm mt-1 block">{errors.comments}</span>}
-            </div>
-
-            <div>
-              <label className="block text-sm font-medium mb-2">
-                Would you recommend this {recipientType.toLowerCase()}?
-              </label>
-              <RadioGroup
-                orientation="horizontal"
-                value={feedback.wouldRecommend?.toString()}
-                onValueChange={(value) => handleInputChange('wouldRecommend', value === 'true')}
-              >
-                <Radio value="true">Yes</Radio>
-                <Radio value="false">No</Radio>
-              </RadioGroup>
-              {errors.wouldRecommend && <span className="text-red-500 text-sm mt-1 block">{errors.wouldRecommend}</span>}
+              {errors.comments && <span className="text-red-500 text-xs mt-1 block">{errors.comments}</span>}
+              <div className="text-xs text-gray-500 mt-1">
+                {feedback.comments.length}/500 characters
+              </div>
             </div>
           </div>
         </ModalBody>

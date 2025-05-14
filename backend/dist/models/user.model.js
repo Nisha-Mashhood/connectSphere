@@ -73,6 +73,14 @@ const userSchema = new mongoose.Schema({
         default: null,
         required: false
     },
+    loginCount: {
+        type: Number,
+        default: 0,
+    },
+    hasReviewed: {
+        type: Boolean,
+        default: false,
+    },
 }, { timestamps: true });
 // Pre-save hook to generate userId
 userSchema.pre("save", async function (next) {

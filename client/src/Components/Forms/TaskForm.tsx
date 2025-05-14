@@ -1,6 +1,8 @@
 import React from "react";
 import { Input, Textarea, Select, SelectItem, Chip, Button } from "@nextui-org/react";
 import { FaCalendar, FaBell, FaImage } from "react-icons/fa";
+import { useSelector } from "react-redux";
+import { RootState } from "../../redux/store";
 
 interface ITaskData {
   name: string;
@@ -62,6 +64,8 @@ const TaskForm: React.FC<TaskFormProps> = ({
   onSubmit,
   onCancel,
 }) => {
+  const { currentUser } = useSelector((state: RootState) => state.user);
+  
   const generateTimeOptions = () => {
     const options = [];
     for (let hour = 0; hour < 24; hour++) {
@@ -85,8 +89,16 @@ const TaskForm: React.FC<TaskFormProps> = ({
     }
   };
 
-  const renderCollaborationName = (collab: any) =>
-    collab.userId?.name || collab.mentorId?.userId?.name || "Unnamed";
+  const renderCollaborationName = (collab: any) => {
+    if (!collab || !collab.userId || !collab.mentorId) return "Unnamed";
+    // If current user is the userId, show mentorId's name otherwise, show userId's name
+    if (currentUser._id === collab.userId._id) {
+      return collab.mentorId.userId.name || "Unnamed Mentor";
+    } else if (currentUser._id === collab.mentorId._id) {
+      return collab.userId.name || "Unnamed User";
+    }
+    return "Unnamed";
+  };
 
   const renderSelectedItems = (items: Set<string>, itemType: "group" | "collab") => {
     const itemList = itemType === "group" ? groups : collaborations;
@@ -101,18 +113,20 @@ const TaskForm: React.FC<TaskFormProps> = ({
   };
 
   return (
-    <div className="space-y-4">
-      <div className="flex gap-4 items-start">
+    <div className="space-y-3">
+      {/* Header section with name and image */}
+      <div className="flex gap-3 items-start">
         <div className="flex-1">
           <Input
             label="Task Name"
             placeholder="Enter task name"
             value={taskData.name}
             onChange={(e) => onInputChange("name", e.target.value)}
+            size="sm"
           />
-          {errors.name && <span className="text-red-500 text-sm mt-1 block">{errors.name}</span>}
+          {errors.name && <span className="text-red-500 text-xs">{errors.name}</span>}
         </div>
-        <div className="w-32">
+        <div className="w-24">
           <input
             type="file"
             accept="image/*"
@@ -122,161 +136,189 @@ const TaskForm: React.FC<TaskFormProps> = ({
           />
           <label
             htmlFor={`task-image-${isEditMode ? "edit" : "create"}`}
-            className="cursor-pointer flex flex-col items-center justify-center w-32 h-32 border-2 border-dashed rounded-lg hover:bg-gray-50"
+            className="cursor-pointer flex flex-col items-center justify-center w-24 h-24 border-2 border-dashed rounded-lg hover:bg-gray-50"
           >
             {taskData.taskImagePreview ? (
               <img src={taskData.taskImagePreview} alt="Task Preview" className="w-full h-full object-cover rounded-lg" />
             ) : (
               <>
-                <FaImage className="text-2xl text-gray-400" />
-                <span className="mt-2 text-sm text-gray-500">Add Image</span>
+                <FaImage className="text-xl text-gray-400" />
+                <span className="mt-1 text-xs text-gray-500">Add Image</span>
               </>
             )}
           </label>
-          {errors.taskImage && <span className="text-red-500 text-sm mt-1 block">{errors.taskImage}</span>}
+          {errors.taskImage && <span className="text-red-500 text-xs">{errors.taskImage}</span>}
         </div>
       </div>
 
-      <Textarea
-        label="Description"
-        placeholder="Enter task description"
-        value={taskData.description}
-        onChange={(e) => onInputChange("description", e.target.value)}
-      />
-      {errors.description && <span className="text-red-500 text-sm mt-1 block">{errors.description}</span>}
-
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-        <div>
+      {/* Multi-column layout for form */}
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
+        {/* First column - Dates and times */}
+        <div className="space-y-2">
           <Input
             type="date"
             label="Start Date"
             placeholder="Select start date"
             value={taskData.startDate}
             onChange={(e) => onInputChange("startDate", e.target.value)}
-            startContent={<FaCalendar className="text-default-400" />}
+            startContent={<FaCalendar className="text-default-400 text-sm" />}
+            size="sm"
           />
-          {errors.startDate && <span className="text-red-500 text-sm mt-1 block">{errors.startDate}</span>}
-        </div>
+          {errors.startDate && <span className="text-red-500 text-xs">{errors.startDate}</span>}
 
-        <div>
           <Input
             type="date"
             label="Due Date"
             placeholder="Select due date"
             value={taskData.dueDate}
             onChange={(e) => onInputChange("dueDate", e.target.value)}
-            startContent={<FaCalendar className="text-default-400" />}
+            startContent={<FaCalendar className="text-default-400 text-sm" />}
+            size="sm"
           />
-          {errors.dueDate && <span className="text-red-500 text-sm mt-1 block">{errors.dueDate}</span>}
-        </div>
+          {errors.dueDate && <span className="text-red-500 text-xs">{errors.dueDate}</span>}
 
-        <div>
           <Input
             type="date"
             label="Notification Date"
             placeholder="Select notification date"
             value={taskData.notificationDate}
             onChange={(e) => onInputChange("notificationDate", e.target.value)}
-            startContent={<FaBell className="text-default-400" />}
+            startContent={<FaBell className="text-default-400 text-sm" />}
+            size="sm"
           />
-          {errors.notificationDate && <span className="text-red-500 text-sm mt-1 block">{errors.notificationDate}</span>}
-        </div>
+          {errors.notificationDate && <span className="text-red-500 text-xs">{errors.notificationDate}</span>}
 
-        <div>
           <Select
             label="Notification Time"
-            placeholder="Select notification time"
+            placeholder="Select time"
             value={taskData.notificationTime}
             onChange={(e) => onInputChange("notificationTime", e.target.value)}
-            startContent={<FaBell className="text-default-400" />}
+            startContent={<FaBell className="text-default-400 text-sm" />}
+            size="sm"
           >
             {generateTimeOptions().map((time) => (
               <SelectItem key={time} value={time}>{time}</SelectItem>
             ))}
           </Select>
-          {errors.notificationTime && <span className="text-red-500 text-sm mt-1 block">{errors.notificationTime}</span>}
+          {errors.notificationTime && <span className="text-red-500 text-xs">{errors.notificationTime}</span>}
+        </div>
+
+        {/* Second column - Description and selections */}
+        <div className="space-y-2 md:col-span-2">
+          <Textarea
+            label="Description"
+            placeholder="Enter task description"
+            value={taskData.description}
+            onChange={(e) => onInputChange("description", e.target.value)}
+            size="sm"
+            minRows={2}
+            maxRows={4}
+          />
+          {errors.description && <span className="text-red-500 text-xs">{errors.description}</span>}
+
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+            <div>
+              <Select
+                label="Priority"
+                selectedKeys={[taskData.priority]}
+                onChange={(e) => onInputChange("priority", e.target.value as "low" | "medium" | "high")}
+                size="sm"
+              >
+                <SelectItem key="low" value="low"><Chip color="success" size="sm">Low Priority</Chip></SelectItem>
+                <SelectItem key="medium" value="medium"><Chip color="warning" size="sm">Medium Priority</Chip></SelectItem>
+                <SelectItem key="high" value="high"><Chip color="danger" size="sm">High Priority</Chip></SelectItem>
+              </Select>
+              {errors.priority && <span className="text-red-500 text-xs">{errors.priority}</span>}
+              <div className="mt-1">
+                <Chip color={getPriorityColor(taskData.priority)} size="sm">Selected: {taskData.priority}</Chip>
+              </div>
+            </div>
+
+            {isEditMode && (
+              <div>
+                <Select
+                  label="Status"
+                  selectedKeys={[taskData.status]}
+                  onChange={(e) => onInputChange("status", e.target.value as "pending" | "in-progress" | "completed" | "not-completed")}
+                  size="sm"
+                >
+                  <SelectItem key="pending" value="pending"><Chip color="warning" size="sm">Pending</Chip></SelectItem>
+                  <SelectItem key="in-progress" value="in-progress"><Chip color="primary" size="sm">In Progress</Chip></SelectItem>
+                  <SelectItem key="completed" value="completed"><Chip color="success" size="sm">Completed</Chip></SelectItem>
+                  <SelectItem key="not-completed" value="not-completed"><Chip color="danger" size="sm">Not Completed</Chip></SelectItem>
+                </Select>
+              </div>
+            )}
+          </div>
         </div>
       </div>
 
-      {isEditMode && (
-        <Select
-          label="Status"
-          selectedKeys={[taskData.status]}
-          onChange={(e) => onInputChange("status", e.target.value as "pending" | "in-progress" | "completed" | "not-completed")}
-        >
-          <SelectItem key="pending" value="pending"><Chip color="warning" size="sm">Pending</Chip></SelectItem>
-          <SelectItem key="in-progress" value="in-progress"><Chip color="primary" size="sm">In Progress</Chip></SelectItem>
-          <SelectItem key="completed" value="completed"><Chip color="success" size="sm">Completed</Chip></SelectItem>
-          <SelectItem key="not-completed" value="not-completed"><Chip color="danger" size="sm">Not Completed</Chip></SelectItem>
-        </Select>
-      )}
-
-      <Select
-        label="Priority"
-        selectedKeys={[taskData.priority]}
-        onChange={(e) => onInputChange("priority", e.target.value as "low" | "medium" | "high")}
-      >
-        <SelectItem key="low" value="low"><Chip color="success" size="sm">Low Priority</Chip></SelectItem>
-        <SelectItem key="medium" value="medium"><Chip color="warning" size="sm">Medium Priority</Chip></SelectItem>
-        <SelectItem key="high" value="high"><Chip color="danger" size="sm">High Priority</Chip></SelectItem>
-      </Select>
-      {errors.priority && <span className="text-red-500 text-sm mt-1 block">{errors.priority}</span>}
-      <div className="mt-2">
-        <Chip color={getPriorityColor(taskData.priority)} size="sm">Selected Priority: {taskData.priority}</Chip>
-      </div>
-
+      {/* Assignment section - shown only in profile context */}
       {context === "profile" && (
-        <div className="space-y-4">
+        <div className="space-y-2 border-t pt-2">
           <div className="flex items-center gap-4">
-            <label className="flex items-center gap-2 cursor-pointer">
+            <label className="flex items-center gap-2 cursor-pointer text-sm">
               <input type="checkbox" checked={showGroupSelect} onChange={(e) => setShowGroupSelect(e.target.checked)} className="rounded" />
               Assign to Groups
             </label>
-            <label className="flex items-center gap-2 cursor-pointer">
+            <label className="flex items-center gap-2 cursor-pointer text-sm">
               <input type="checkbox" checked={showCollabSelect} onChange={(e) => setShowCollabSelect(e.target.checked)} className="rounded" />
               Assign to Collaborations
             </label>
           </div>
 
-          {showGroupSelect && groups.length > 0 && (
-            <>
-              <Select
-                label="Select Groups"
-                selectionMode="multiple"
-                placeholder="Choose groups to assign"
-                selectedKeys={taskData.assignedGroups}
-                onChange={(e) => onInputChange("assignedGroups", new Set(e.target.value.split(",")))}
-              >
-                {groups.map((group) => (
-                  <SelectItem key={group._id} value={group._id}>{group.name}</SelectItem>
-                ))}
-              </Select>
-              <div className="flex flex-wrap gap-1 mt-2">{renderSelectedItems(taskData.assignedGroups, "group")}</div>
-            </>
-          )}
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+            {showGroupSelect && groups.length > 0 && (
+              <div>
+                <Select
+                  label="Select Groups"
+                  selectionMode="multiple"
+                  placeholder="Choose groups"
+                  selectedKeys={taskData.assignedGroups}
+                  onChange={(e) => onInputChange("assignedGroups", new Set(e.target.value.split(",")))}
+                  size="sm"
+                >
+                  {groups.map((group) => (
+                    <SelectItem key={group._id} value={group._id}>{group.name}</SelectItem>
+                  ))}
+                </Select>
+                <div className="flex flex-wrap gap-1 mt-1">
+                  {renderSelectedItems(taskData.assignedGroups, "group")}
+                </div>
+              </div>
+            )}
 
-          {showCollabSelect && collaborations.length > 0 && (
-            <>
-              <Select
-                label="Select Collaborations"
-                selectionMode="multiple"
-                placeholder="Choose collaborations to assign"
-                selectedKeys={taskData.assignedCollaborations}
-                onChange={(e) => onInputChange("assignedCollaborations", new Set(e.target.value.split(",")))}
-              >
-                {collaborations.map((collab) => (
-                  <SelectItem key={collab._id} value={collab._id}>{renderCollaborationName(collab)}</SelectItem>
-                ))}
-              </Select>
-              <div className="flex flex-wrap gap-1 mt-2">{renderSelectedItems(taskData.assignedCollaborations, "collab")}</div>
-            </>
-          )}
+            {showCollabSelect && collaborations.length > 0 && (
+              <div>
+                <Select
+                  label="Select Collaborations"
+                  selectionMode="multiple"
+                  placeholder="Choose collaborations"
+                  selectedKeys={taskData.assignedCollaborations}
+                  onChange={(e) => onInputChange("assignedCollaborations", new Set(e.target.value.split(",")))}
+                  size="sm"
+                >
+                  {collaborations.map((collab) => (
+                    <SelectItem key={collab._id} value={collab._id}>
+                      {renderCollaborationName(collab)}
+                    </SelectItem>
+                  ))}
+                </Select>
+                <div className="flex flex-wrap gap-1 mt-1">
+                  {renderSelectedItems(taskData.assignedCollaborations, "collab")}
+                </div>
+              </div>
+            )}
+          </div>
         </div>
       )}
 
-      <div className="flex justify-end gap-4">
-        <Button variant="flat" onPress={onCancel}>Cancel</Button>
-        <Button color="primary" onPress={onSubmit}>{isEditMode ? "Update Task" : "Create Task"}</Button>
+      {/* Actions */}
+      <div className="flex justify-end gap-3 pt-2">
+        <Button variant="flat" onPress={onCancel} size="sm">Cancel</Button>
+        <Button color="primary" onPress={onSubmit} size="sm">
+          {isEditMode ? "Update Task" : "Create Task"}
+        </Button>
       </div>
     </div>
   );

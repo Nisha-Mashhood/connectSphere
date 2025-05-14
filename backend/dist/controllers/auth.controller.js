@@ -18,10 +18,10 @@ export const login = async (req, res) => {
     try {
         const { email, password } = req.body;
         //console.log(req.body);
-        const { user, accessToken, refreshToken } = await loginUser(email, password);
+        const { user, accessToken, refreshToken, needsReviewPrompt } = await loginUser(email, password);
         // Store tokens in cookies
         setTokensInCookies(res, accessToken, refreshToken);
-        res.json({ message: "Login successful", user });
+        res.json({ message: "Login successful", user, needsReviewPrompt });
     }
     catch (error) {
         if (error.message === "User not found") {
@@ -59,7 +59,7 @@ export const googleSignup = async (req, res) => {
 export const googleLogin = async (req, res) => {
     try {
         const { code } = req.body;
-        const { user, accessToken, refreshToken } = await googleLoginService(code);
+        const { user, accessToken, refreshToken, needsReviewPrompt } = await googleLoginService(code);
         // Store tokens in cookies
         setTokensInCookies(res, accessToken, refreshToken);
         res.status(200).json({
@@ -67,6 +67,7 @@ export const googleLogin = async (req, res) => {
             user,
             accessToken,
             refreshToken,
+            needsReviewPrompt,
         });
     }
     catch (error) {
@@ -97,7 +98,7 @@ export const githubSignup = async (req, res) => {
 export const githubLogin = async (req, res) => {
     try {
         const { code } = req.body;
-        const { user, accessToken, refreshToken } = await githubLoginService(code);
+        const { user, accessToken, refreshToken, needsReviewPrompt } = await githubLoginService(code);
         // Store tokens in cookies
         setTokensInCookies(res, accessToken, refreshToken);
         res.status(200).json({
@@ -105,6 +106,7 @@ export const githubLogin = async (req, res) => {
             user,
             accessToken,
             refreshToken,
+            needsReviewPrompt,
         });
     }
     catch (error) {

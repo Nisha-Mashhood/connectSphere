@@ -18,12 +18,13 @@ const GoogleLogin = () => {
         
         // Call the Google Login API
         const result = await googleLogin(response.code);
-        console.log(result);
+        console.log("[GoogleLogin] Login response:", result);
         
         if (result.user) {
           // Dispatch user data to Redux store
-          dispatch(signinSuccess(result.user));
+          dispatch(signinSuccess({ user: result.user, needsReviewPrompt: result.needsReviewPrompt }));
           toast.success('Login successful!');
+
 
           // Check if profile is complete
           const profileResponse = await checkProfile(result.user._id);

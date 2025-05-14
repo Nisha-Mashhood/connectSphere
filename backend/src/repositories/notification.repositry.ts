@@ -17,15 +17,14 @@ interface UserIds {
 }
 
 
-
 //Get task details for notifications
 export const getTasksForNotification = async (taskId: string) => {
   const now = new Date();
   return await Task.findOne({ 
     _id: taskId,
-    status: { $ne: "completed" }, // Task should not be completed
-    dueDate: { $gte: now }, // Due date is not passed
-    notificationDate: { $lte: now }, // Notification date has arrived
+    status: { $ne: "completed" }, 
+    dueDate: { $gte: now },
+    notificationDate: { $lte: now }, 
   });
 };
 
@@ -96,11 +95,45 @@ export const findTaskNotification = async (
   });
 };
 
+export const updateNotificationStatus = async (notificationId:string, status:string) => {
+  try {
+    const notification = await AppNotificationModel.findByIdAndUpdate(
+      notificationId,
+      { status, updatedAt: new Date() },
+      { new: true }
+    );
+    console.log(`Updated notification ${notificationId} status to ${status}`);
+    return notification;
+  } catch (error) {
+    console.error("[DEBUG] Error updating notification status:", error);
+    return null;
+  }
+};
+
+export const updateTaskNotifications = async (relatedId:string, notificationDate?:Date, notificationTime?:string) => {
+  try {
+    const updateData = {
+      ...(notificationDate && { notificationDate: new Date(notificationDate) }),
+      ...(notificationTime && { notificationTime }),
+      updatedAt: new Date(),
+    };
+    const notifications = await AppNotificationModel.updateMany(
+      { relatedId, type: "task_reminder" },
+      { $set: updateData }
+    );
+    console.log(`Updated ${notifications.modifiedCount} notifications for task ${relatedId}`);
+    return notifications;
+  } catch (error) {
+    console.error("Error updating task notifications:", error);
+    return null;
+  }
+};
+
 
 
 //Notification with socket.io
 
-  export const createNotification = async (notification: Omit<AppNotification, '_id'>): Promise<AppNotification> => {
+  export const createNotification = async (notification: Omit<AppNotification, '_id' | "AppNotificationId">): Promise<AppNotification> => {
     return AppNotificationModel.create(notification);
   }
 

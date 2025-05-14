@@ -1,9 +1,11 @@
 import mongoose from "mongoose";
 import { ObjectId } from "mongoose";
 import { Schema, model } from "mongoose";
+import { generateCustomId } from "../utils/idGenerator.utils.js";
 
 export interface AppNotification {
   _id: string;
+  AppNotificationId: string;
   userId: string | ObjectId;
   type: "message" | "incoming_call" | "missed_call" | "task_reminder";
   content: string;
@@ -15,9 +17,17 @@ export interface AppNotification {
   notificationTime?: string;
   createdAt: Date;
   updatedAt: Date;
+  taskContext?: {
+    contextType: "profile" | "group" | "collaboration" | "userconnection";
+    contextId: string;
+  };
 }
 
 const AppNotificationSchema = new Schema<AppNotification>({
+  AppNotificationId:{
+    type: String,
+    required: true,
+  },
   userId: {
     type: mongoose.Schema.Types.ObjectId,
     ref: "User",
@@ -67,9 +77,28 @@ const AppNotificationSchema = new Schema<AppNotification>({
     type: Date,
     default: Date.now,
   },
+  taskContext: {
+    contextType:{
+      type:String,
+      enum:["profile","group", "collaboration", "userconnection"],
+      required:false,
+    },
+    contextId:{
+      type:String,
+      required:false,
+    },
+  },
 });
 
 AppNotificationSchema.index({ userId: 1, createdAt: -1 });
+
+// Pre-save hook to generate AppNotificationId
+AppNotificationSchema.pre("save", async function (next) {
+  if (!this.AppNotificationId) {
+    this.AppNotificationId = await generateCustomId("appNotification", "ANF");
+  }
+  next();
+});
 
 export const AppNotificationModel = model<AppNotification>(
   "AppNotification",

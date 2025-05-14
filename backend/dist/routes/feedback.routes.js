@@ -4,6 +4,6 @@ import { checkBlockedStatus, verifyToken } from "../middlewares/auth.middleware.
 import * as feedbackController from '../controllers/feeback.controller.js';
 const router = express.Router();
 router.post("/send-feedback", [apiLimiter, verifyToken, checkBlockedStatus], feedbackController.createFeedback);
-// router.get("/get-feedback", [apiLimiter, verifyToken, checkBlockedStatus], feedbackController.getFeedbackOnRoles);
+router.get("/profile/:profileId/:profileType", [apiLimiter, verifyToken, checkBlockedStatus], feedbackController.getFeedbackForProfile);
 export default router;
 //# sourceMappingURL=feedback.routes.js.map

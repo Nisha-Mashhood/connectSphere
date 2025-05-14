@@ -9,4 +9,5 @@ export declare const getFeedbackByCollaborationId: (collaborationId: string) => 
     __v: number;
 })[]>;
 export declare const getMentorAverageRating: (mentorId: string) => Promise<number>;
+export declare const getFeedbackForProfile: (profileId: string, profileType: "mentor" | "user") => Promise<IFeedback[]>;
 //# sourceMappingURL=feeback.repositry.d.ts.map

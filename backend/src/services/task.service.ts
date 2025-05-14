@@ -1,6 +1,7 @@
 import { uploadMedia } from '../utils/cloudinary.utils.js';
 import { ITask } from '../models/task.modal.js';
 import { createTaskRepo, deleteTask, editTask, findTasksByContext, updateTaskPriority, updateTaskStatus } from '../repositories/task.repositry.js';
+import { updateTaskNotifications } from '../repositories/notification.repositry.js';
 
 
  export const createTaskService = async(taskData: Partial<ITask>, imagePath?: string, fileSize?:number): Promise<ITask> => {
@@ -24,8 +25,27 @@ import { createTaskRepo, deleteTask, editTask, findTasksByContext, updateTaskPri
   };
   
   export const editTaskService = async (taskId: string, updates: Partial<ITask>): Promise<ITask | null> => {
-    return await editTask(taskId, updates);
-  };
+    // notificationDate and notificationTime is updated
+  if (updates.notificationDate || updates.notificationTime) {
+    const task = await editTask(taskId, updates);
+    if (!task) {
+      throw new Error('Task not found');
+    }
+
+    console.log(`notificationDate : ${updates.notificationDate} notification time : ${updates.notificationTime}`)
+    // Update all notifications for this task
+    await updateTaskNotifications(
+      taskId,
+      updates.notificationDate,
+      updates.notificationTime
+    );
+    console.log(`Updated notifications for task ${taskId}`);
+
+    return task;
+  }
+
+  return await editTask(taskId, updates);
+};
 
   export const deleteTaskService = async (taskId: string): Promise<void> => {
     await deleteTask(taskId);

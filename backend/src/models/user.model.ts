@@ -20,6 +20,8 @@ export interface UserInterface extends Document {
   coverPic?: string;
   accessToken?: string;
   refreshToken?:string | null;
+  loginCount: number; 
+  hasReviewed: boolean;
   createdAt: Date;
   updatedAt: Date;
   _id: mongoose.Types.ObjectId;
@@ -98,6 +100,14 @@ const userSchema: Schema<UserInterface> = new mongoose.Schema(
         default: null,  
         required: false
     },
+    loginCount: {
+        type: Number,
+        default: 0, 
+      },
+      hasReviewed: {
+        type: Boolean,
+        default: false, 
+      },
   },
   { timestamps: true }
 );

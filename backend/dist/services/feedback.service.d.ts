@@ -6,4 +6,8 @@ export declare const getMentorFeedbacks: (mentorId: string) => Promise<{
     totalFeedbacks: number;
 }>;
 export declare const getUserFeedbacks: (userId: string) => Promise<IFeedback[]>;
+export declare const getFeedbackForProfile: (profileId: string, profileType: "mentor" | "user") => Promise<{
+    feedbacks: IFeedback[];
+    totalFeedbacks: number;
+}>;
 //# sourceMappingURL=feedback.service.d.ts.map

@@ -25,6 +25,11 @@ export declare const updatePassword: (id: string, password: string) => Promise<(
 }> & {
     __v: number;
 }) | null>;
+export declare const incrementLoginCount: (userId: string) => Promise<(import("mongoose").Document<unknown, {}, UserInterface> & UserInterface & Required<{
+    _id: import("mongoose").Types.ObjectId;
+}> & {
+    __v: number;
+}) | null>;
 export declare const updateRefreshToken: (userId: string, refreshToken: string) => Promise<(import("mongoose").Document<unknown, {}, UserInterface> & UserInterface & Required<{
     _id: import("mongoose").Types.ObjectId;
 }> & {
