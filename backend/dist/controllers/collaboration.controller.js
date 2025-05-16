@@ -1,4 +1,4 @@
-import { acceptRequest, fetchCollabById, fetchRequsetById, getCollabDataForMentorService, getCollabDataForUserService, getCollabsService, getMentorRequests, getMentorRequestsService, getRequsetForUser, markUnavailableDaysService, processPaymentService, processTimeSlotRequest, rejectRequest, removecollab, TemporaryRequestService, updateTemporarySlotChangesService, } from "../services/collaboration.service.js";
+import { acceptRequest, fetchCollabById, fetchRequsetById, getCollabDataForMentorService, getCollabDataForUserService, getCollabsService, getMentorLockedSlots, getMentorRequests, getMentorRequestsService, getRequsetForUser, markUnavailableDaysService, processPaymentService, processTimeSlotRequest, rejectRequest, removecollab, TemporaryRequestService, updateTemporarySlotChangesService, } from "../services/collaboration.service.js";
 import mentorRequset from "../models/mentorRequset.js";
 export const TemporaryRequestController = async (req, res) => {
     try {
@@ -303,6 +303,26 @@ export const approveTimeSlotRequest = async (req, res) => {
     }
     catch (error) {
         console.error("Error processing time slot request:", error);
+        res.status(500).json({ message: error.message });
+    }
+};
+//Get the locked slot for mentor
+export const getMentorLockedSlotsController = async (req, res) => {
+    try {
+        const { mentorId } = req.params;
+        if (!mentorId) {
+            console.log("Mentor ID not provided in request");
+            res.status(400).json({ message: "Mentor ID is required" });
+            return;
+        }
+        const lockedSlots = await getMentorLockedSlots(mentorId);
+        res.status(200).json({
+            message: "Locked slots retrieved successfully",
+            lockedSlots,
+        });
+    }
+    catch (error) {
+        console.log(`Error in controller for mentorId ${req.params.mentorId}: ${error.message}`);
         res.status(500).json({ message: error.message });
     }
 };

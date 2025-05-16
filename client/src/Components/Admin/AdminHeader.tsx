@@ -1,6 +1,7 @@
 import { ReactNode, useState } from 'react';
 import { FaUser, FaTasks, FaSignOutAlt, FaLayerGroup, FaChalkboardTeacher, 
-         FaUserFriends, FaTachometerAlt, FaBars, FaTimes } from 'react-icons/fa';
+         FaUserFriends, FaTachometerAlt, FaBars, FaTimes, 
+         FaStar, FaEnvelope } from 'react-icons/fa';
 import { Button, Avatar, Tooltip } from "@nextui-org/react";
 import { useDispatch, useSelector } from "react-redux";
 import { useNavigate, useLocation } from "react-router-dom";
@@ -46,48 +47,22 @@ const AdminSidebar = ({ children }: AdminSidebarProps) => {
   };
 
   const navigationItems = [
-    {
-      name: "Dashboard",
-      path: "/admin/dashboard",
-      icon: <FaTachometerAlt />,
-    },
-    {
-      name: "User Management",
-      path: "/admin/user",
-      icon: <FaUser />,
-    },
-    {
-      name: "Mentor Management",
-      path: "/admin/mentormange",
-      icon: <FaUser />,
-    },
-    {
-      name: "Skill Management",
-      path: "/admin/categories",
-      icon: <FaTasks />,
-    },
-    {
-      name: "User-Mentor Management",
-      path: "/admin/userMentorManagemnt",
-      icon: <FaChalkboardTeacher />,
-    },
-    {
-      name: "User-User Management",
-      path: "/admin/userUserMangemnt",
-      icon: <FaUserFriends />,
-    },
-    {
-      name: "Group Management",
-      path: "/admin/groupManagemnt",
-      icon: <FaLayerGroup />,
-    },
+    { name: "Dashboard", path: "/admin/dashboard", icon: <FaTachometerAlt /> },
+    { name: "User Management", path: "/admin/user", icon: <FaUser /> },
+    { name: "Mentor Management", path: "/admin/mentormange", icon: <FaUser /> },
+    { name: "Skill Management", path: "/admin/categories", icon: <FaTasks /> },
+    { name: "User-Mentor Management", path: "/admin/userMentorManagemnt", icon: <FaChalkboardTeacher /> },
+    { name: "User-User Management", path: "/admin/userUserMangemnt", icon: <FaUserFriends /> },
+    { name: "Group Management", path: "/admin/groupManagemnt", icon: <FaLayerGroup /> },
+    { name: "Review Management", path: "/admin/reviews", icon: <FaStar /> },
+    { name: "Messages", path: "/admin/messages", icon: <FaEnvelope /> },
   ];
 
   return (
-    <div className="flex h-screen bg-gray-100">
+    <div className="flex min-h-screen w-full">
       {/* Sidebar */}
       <div 
-        className={`sidebar bg-purple-100 text-white h-screen transition-all duration-300 flex flex-col justify-between ${
+        className={`bg-purple-100 text-white transition-all duration-300 flex flex-col justify-between ${
           collapsed ? 'w-20' : 'w-64'
         }`}
       >
@@ -167,8 +142,8 @@ const AdminSidebar = ({ children }: AdminSidebarProps) => {
       </div>
 
       {/* Main Content */}
-      <div className="flex-1 overflow-auto">
-        <main className="flex-1">
+      <div className="flex-1 w-full overflow-auto">
+        <main className="min-h-screen w-full p-6">
           {children}
         </main>
       </div>

@@ -1,9 +1,10 @@
 import mongoose, { Document } from "mongoose";
-interface IContactMessage extends Document {
+export interface IContactMessage extends Document {
     contactMessageId: string;
     name: string;
     email: string;
     message: string;
+    givenReply: boolean;
     createdAt: Date;
 }
 declare const _default: mongoose.Model<IContactMessage, {}, {}, {}, mongoose.Document<unknown, {}, IContactMessage> & IContactMessage & Required<{

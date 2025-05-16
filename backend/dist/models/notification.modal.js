@@ -4,7 +4,7 @@ import { generateCustomId } from "../utils/idGenerator.utils.js";
 const AppNotificationSchema = new Schema({
     AppNotificationId: {
         type: String,
-        required: true,
+        unique: true,
     },
     userId: {
         type: mongoose.Schema.Types.ObjectId,

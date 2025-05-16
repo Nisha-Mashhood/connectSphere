@@ -64,3 +64,23 @@ import * as  ReviewService  from '../services/review.service.js';
       res.status(error.status || 500).json({ success: false, message: error.message });
     }
   }
+
+  export const cancelApproval = async (req: Request, res: Response) => {
+  try {
+    const { reviewId } = req.params;
+    const review = await ReviewService.cancelApproval(reviewId);
+    res.status(200).json({ success: true, data: review });
+  } catch (error: any) {
+    res.status(error.status || 500).json({ success: false, message: error.message });
+  }
+};
+
+export const deselectReview = async (req: Request, res: Response) => {
+  try {
+    const { reviewId } = req.params;
+    const review = await ReviewService.deselectReview(reviewId);
+    res.status(200).json({ success: true, data: review });
+  } catch (error: any) {
+    res.status(error.status || 500).json({ success: false, message: error.message });
+  }
+};

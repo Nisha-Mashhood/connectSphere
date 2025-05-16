@@ -11,6 +11,7 @@ export interface IFeedback extends Document {
     punctuality: number;
     comments: string;
     wouldRecommend: boolean;
+    isHidden: boolean;
     createdAt: Date;
 }
 declare const _default: mongoose.Model<IFeedback, {}, {}, {}, mongoose.Document<unknown, {}, IFeedback> & IFeedback & Required<{

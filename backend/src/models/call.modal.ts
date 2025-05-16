@@ -15,7 +15,7 @@ export interface Call {
 const CallSchema = new Schema<Call>({
   CallId: { 
     type: String, 
-    required: true 
+    unique: true 
   },
   chatKey: { 
     type: String, 

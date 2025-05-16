@@ -3,7 +3,7 @@ import { generateCustomId } from "../utils/idGenerator.utils.js";
 const ContactMessageSchema = new Schema({
     contactMessageId: {
         type: String,
-        required: true
+        unique: true,
     },
     name: {
         type: String,
@@ -21,7 +21,11 @@ const ContactMessageSchema = new Schema({
         type: Date,
         default: Date.now
     },
-});
+    givenReply: {
+        type: Boolean,
+        default: false
+    },
+}, { timestamps: true });
 // Pre-save hook to generate contact messageId
 ContactMessageSchema.pre("save", async function (next) {
     if (!this.contactMessageId) {

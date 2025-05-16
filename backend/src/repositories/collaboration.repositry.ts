@@ -2,6 +2,11 @@ import MentorRequest from "../models/mentorRequset.js";
 import Collaboration, { ICollaboration } from "../models/collaboration.js";
 import Mentor from "../models/mentor.model.js";
 
+export interface LockedSlot {
+  day: string;
+  timeSlots: string[];
+}
+
 //create a temporary requset document
 export const createTemporaryRequest = async (data: any) => {
     try {
@@ -413,5 +418,75 @@ export const updateRequestStatus = async (
   } catch (error: any) {
     console.log("Error in repository file:", error);
     throw new Error(`Error updating request status: ${error.message}`);
+  }
+};
+
+
+export const getLockedSlotsByMentorId = async (mentorId: string): Promise<LockedSlot[]> => {
+  try {
+    const currentDate = new Date();
+
+    // active collaborations 
+    const collaborations = await Collaboration.find({
+      mentorId,
+      isCancelled: false,
+      $or: [
+        { endDate: { $gt: currentDate } },
+        { endDate: null },
+      ],
+    }).select("selectedSlot");
+
+    // accepted mentor requests
+    const mentorRequests = await MentorRequest.find({
+      mentorId,
+      isAccepted: "Accepted",
+    }).select("selectedSlot");
+
+    // Combine slots from collaborations
+    const collabSlots: LockedSlot[] = collaborations.flatMap(collab =>
+      collab.selectedSlot.map(slot => ({
+        day: slot.day,
+        timeSlots: slot.timeSlots,
+      }))
+    );
+
+    // Combine slots from mentor requests
+    const requestSlots: LockedSlot[] = mentorRequests
+      .map(request => {
+        // Type assertion for selectedSlot
+        const selectedSlot = request.selectedSlot as { day?: string; timeSlots?: string };
+        
+        // Runtime validation
+        if (!selectedSlot.day || !selectedSlot.timeSlots) {
+          console.log(`Invalid selectedSlot for mentorRequestId: ${request.mentorRequestId}`);
+          return null;
+        }
+
+        return {
+          day: selectedSlot.day,
+          timeSlots: [selectedSlot.timeSlots], // Wrap string in array
+        };
+      })
+      .filter((slot): slot is LockedSlot => slot !== null);
+
+    // Combine and deduplicate slots
+    const allSlots: LockedSlot[] = [...collabSlots, ...requestSlots];
+    const uniqueSlots: LockedSlot[] = [];
+
+    allSlots.forEach(slot => {
+      const existing = uniqueSlots.find(s => s.day === slot.day);
+      if (existing) {
+        // Merge timeSlots for the same day
+        existing.timeSlots = Array.from(new Set([...existing.timeSlots, ...slot.timeSlots]));
+      } else {
+        uniqueSlots.push({ day: slot.day, timeSlots: slot.timeSlots });
+      }
+    });
+
+    console.log(`Fetched ${uniqueSlots.length} locked slots for mentorId: ${mentorId}`);
+    return uniqueSlots;
+  } catch (error: any) {
+    console.log(`Error fetching locked slots for mentorId ${mentorId}: ${error.message}`);
+    throw new Error(`Error fetching locked slots: ${error.message}`);
   }
 };

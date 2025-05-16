@@ -3,7 +3,7 @@ import { generateCustomId } from "../utils/idGenerator.utils.js";
 const chatSchema = new mongoose.Schema({
     ChatId: {
         type: String,
-        required: true,
+        unique: true,
     },
     senderId: {
         type: Schema.Types.ObjectId,

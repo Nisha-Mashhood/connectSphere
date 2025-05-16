@@ -2,6 +2,7 @@ import * as dotenv from 'dotenv';
 dotenv.config();
 const config = {
     port: process.env.PORT || 3000,
+    adminEmail: process.env.ADMIN_EMAIL,
     defaultprofilepic: process.env.DEFAULT_PROFILE_PIC,
     defaultcoverpic: process.env.DEFAULT_COVER_PIC,
     node_env: process.env.NODE_ENV,
@@ -23,7 +24,7 @@ const config = {
     adminpasscode: process.env.PASSKEY_ADMIN,
     vapidPublicKey: process.env.VAPID_PUBLIC_KEY,
     vapidPrivateKey: process.env.VAPID_PRIVATE_KEY,
-    vapidEmail: process.env.VAPID_EMAIL
+    vapidEmail: process.env.VAPID_EMAIL,
 };
 export default config;
 //# sourceMappingURL=env.config.js.map

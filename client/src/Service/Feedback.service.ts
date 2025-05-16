@@ -11,10 +11,30 @@ export const sendFeedBack = async (feedbackData: any) => {
     }
   };
 
+
   export const getFeedBack = async (data) => {
     try {
       const response = await axiosInstance.get("/feedback/get-feedback",{data});
       return response.data;
+    } catch (error) {
+      handleError(error);
+    }
+  };
+
+    export const getFeedbackByMentorId = async (mentorId) => {
+    try {
+      const response = await axiosInstance.get(`/feedback/get-feedbackByMentorId/${mentorId}`);
+      return response.data.data;
+    } catch (error) {
+      handleError(error);
+    }
+  };
+
+
+    export const getFeedbackByCollaborationId = async (collabId) => {
+    try {
+      const response = await axiosInstance.get(`/feedback/get-feedbackByCollabId/${collabId}`);
+      return response.data.data;
     } catch (error) {
       handleError(error);
     }
@@ -29,6 +49,16 @@ export const sendFeedBack = async (feedbackData: any) => {
       return response.data.data;
     } catch (error) {
       console.error(`Error fetching feedback for ${profileType}:`, error);
-      throw error;
+      handleError(error);
     }
   };
+
+  export const toggleFeedbackVisibility = async (feedbackId) => {
+  try {
+    const response = await axiosInstance.patch(`/feedback/toggle-visibility/${feedbackId}`);
+    return response.data.data;
+  } catch (error) {
+    console.error(`Toggle visibility error for feedback ${feedbackId}:`, error.response?.data || error.message);
+    handleError(error);
+  }
+};

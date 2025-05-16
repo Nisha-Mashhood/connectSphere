@@ -201,3 +201,13 @@ export const approveTimeSlotRequest = async (collabId, requestId, isApproved, re
     handleError(error);
   }
 };
+
+//Find locked slot
+export const getLockedMentorSlot= async (mentorId) => {
+  try {
+    const response = await axiosInstance.get(`/collaboration/locked-slots/${mentorId}`,);
+    return response.data;
+  } catch (error) {
+    handleError(error);
+  }
+};

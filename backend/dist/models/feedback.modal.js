@@ -59,6 +59,10 @@ const FeedbackSchema = new Schema({
         type: Boolean,
         required: true,
     },
+    isHidden: {
+        type: Boolean,
+        default: false,
+    },
 }, { timestamps: true });
 // Pre-save hook to generate feedbackId
 FeedbackSchema.pre("save", async function (next) {

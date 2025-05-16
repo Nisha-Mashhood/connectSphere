@@ -1,5 +1,5 @@
 import Banner from "../../Components/User/Home/Banner"
-import Contact from "../../Components/User/Home/Contact"
+import Contact from "../../Components/Forms/Contact"
 import FeatureSection from "../../Components/User/Home/FeatureSection"
 import Footer from "../../Components/User/Common/Footer"
 import FreqAskedQuestions from "../../Components/User/Home/FreqAskedQuestions"

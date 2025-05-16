@@ -83,8 +83,8 @@ const AdminMentorRequests: React.FC = () => {
   };
 
   return (
-    <div className="container mx-auto p-6">
-      <Card className="shadow-lg rounded-xl">
+    <div className="container mx-auto p-6 min-h-screen">
+      <Card className="shadow-lg rounded-xl h-full">
         <CardHeader className="bg-primary-50 p-4 rounded-t-xl">
           <h1 className="text-2xl font-bold text-primary">Mentor Requests</h1>
         </CardHeader>

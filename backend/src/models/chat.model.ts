@@ -24,7 +24,7 @@ const chatSchema: Schema<IChatMessage> = new mongoose.Schema(
   {
     ChatId:{
       type: String,
-      required: true,
+      unique: true,
     },
     senderId: {
       type: Schema.Types.ObjectId,

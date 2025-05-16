@@ -20,6 +20,7 @@ router.get('/getCollabRequset/:requestId' , [apiLimiter, verifyToken, checkBlock
 router.put("/markUnavailable/:collabId", [apiLimiter, verifyToken, checkBlockedStatus], collaborationController.markUnavailableDays);
 router.put("/updateTimeslot/:collabId", [apiLimiter, verifyToken, checkBlockedStatus], collaborationController.updateTemporarySlotChanges);
 router.put("/approveTimeSlot/:collabId", [apiLimiter, verifyToken, checkBlockedStatus], collaborationController.approveTimeSlotRequest)
+router.get("/locked-slots/:mentorId", [apiLimiter, verifyToken, checkBlockedStatus], verifyToken, collaborationController.getMentorLockedSlotsController);
 
 //FOR ADMIN
 

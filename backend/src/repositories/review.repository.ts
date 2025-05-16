@@ -45,7 +45,7 @@ export const updateReview = async (reviewId: string, updates: { isApproved?: boo
 
 export const getSelectedReviews = async (): Promise<IReview[] | null> => {
   try {
-    return await Review.find({ isSelect: true, isApproved: true }).populate('userId', 'email username');
+    return await Review.find({ isSelect: true, isApproved: true }).populate('userId');
   } catch (error) {
     console.log(`[Review Repository] Failed to fetch selected reviews: ${error}`);
     return null;

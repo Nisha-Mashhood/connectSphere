@@ -1,3 +1,4 @@
+import { LockedSlot } from "../repositories/collaboration.repositry.js";
 export declare const TemporaryRequestService: (requestData: any) => Promise<import("mongoose").Document<unknown, {}, import("../models/mentorRequset.js").IMentorRequest> & import("../models/mentorRequset.js").IMentorRequest & Required<{
     _id: unknown;
 }> & {
@@ -87,4 +88,5 @@ export declare const updateTemporarySlotChangesService: (collabId: string, updat
     __v: number;
 }) | null>;
 export declare const processTimeSlotRequest: (collabId: string, requestId: string, isApproved: boolean, requestType: "unavailable" | "timeSlot") => Promise<import("../models/collaboration.js").ICollaboration | null>;
+export declare const getMentorLockedSlots: (mentorId: string) => Promise<LockedSlot[]>;
 //# sourceMappingURL=collaboration.service.d.ts.map

@@ -92,7 +92,7 @@ export const updateTaskNotifications = async (relatedId, notificationDate, notif
         return notifications;
     }
     catch (error) {
-        console.error("[DEBUG] Error updating task notifications:", error);
+        console.error("Error updating task notifications:", error);
         return null;
     }
 };

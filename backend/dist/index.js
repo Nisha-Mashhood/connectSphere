@@ -17,11 +17,14 @@ import notificationRoutes from './routes/notification.routes.js';
 import adminRoutes from './routes/Admin/adminDashboard.routes.js';
 import chatRoutes from "./routes/chat.routes.js";
 import contactsRoutes from "./routes/contact.routes.js";
+import reviewsRoutes from "./routes/review.routes.js";
+import contactUsRoutes from "./routes/contactUs.routes.js";
 import cors from "cors";
 import cookieParser from "cookie-parser";
 import http from "http";
 import { Server } from "socket.io";
 import initializeSocket from "./socket/socket.js";
+import { scheduleNodeCorn } from "./utils/node-cron.utils.js";
 dotenv.config();
 const app = express();
 const server = http.createServer(app);
@@ -50,6 +53,8 @@ app.use("/api/notification", notificationRoutes);
 app.use("/api/admin", adminRoutes);
 app.use("/api/chat", chatRoutes);
 app.use("/api/contacts", contactsRoutes);
+app.use("/api/reviews", reviewsRoutes);
+app.use("/api/contactUs", contactUsRoutes);
 // Placeholder route
 app.get("/", (_req, res) => {
     res.send("Connect Sphere Backend is running!");
@@ -68,6 +73,8 @@ const io = new Server(server, {
     },
 });
 initializeSocket(io); // Set up socket events
+//Schedule Node_corn
+scheduleNodeCorn();
 // Start server
 server.listen(config.port, () => {
     console.log(`Server is running on http://localhost:${config.port}`);

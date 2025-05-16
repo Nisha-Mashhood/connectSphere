@@ -4,7 +4,7 @@ import { handleError } from "./ErrorHandler";
 // Submit Review
 export const submit_review = async (userId: string, rating: number, comment: string) => {
   try {
-    const response = await axiosInstance.post(`/api/reviews/submit`, {
+    const response = await axiosInstance.post(`/reviews/submit`, {
       userId,
       rating,
       comment,
@@ -18,7 +18,7 @@ export const submit_review = async (userId: string, rating: number, comment: str
 // Skip Review
 export const skip_review = async (userId: string) => {
   try {
-    const response = await axiosInstance.post(`/api/reviews/skip`, { userId });
+    const response = await axiosInstance.post(`/reviews/skip`, { userId });
     return response.data;
   } catch (error) {
     handleError(error);
@@ -28,7 +28,7 @@ export const skip_review = async (userId: string) => {
 // Get All Reviews (Admin)
 export const get_all_reviews = async () => {
   try {
-    const response = await axiosInstance.get(`/api/reviews/all`);
+    const response = await axiosInstance.get(`/reviews/all`);
     return response.data;
   } catch (error) {
     handleError(error);
@@ -38,7 +38,7 @@ export const get_all_reviews = async () => {
 // Get Selected Reviews (Frontend Display)
 export const get_selected_reviews = async () => {
   try {
-    const response = await axiosInstance.get(`/api/reviews/selected`);
+    const response = await axiosInstance.get(`/reviews/selected`);
     return response.data;
   } catch (error) {
     handleError(error);
@@ -48,7 +48,7 @@ export const get_selected_reviews = async () => {
 // Approve Review (Admin)
 export const approve_review = async (reviewId: string) => {
   try {
-    const response = await axiosInstance.patch(`/api/reviews/approve/${reviewId}`);
+    const response = await axiosInstance.patch(`/reviews/approve/${reviewId}`);
     return response.data;
   } catch (error) {
     handleError(error);
@@ -58,7 +58,27 @@ export const approve_review = async (reviewId: string) => {
 // Select Review (Admin)
 export const select_review = async (reviewId: string) => {
   try {
-    const response = await axiosInstance.patch(`/api/reviews/select/${reviewId}`);
+    const response = await axiosInstance.patch(`/reviews/select/${reviewId}`);
+    return response.data;
+  } catch (error) {
+    handleError(error);
+  }
+};
+
+//Cancel Approve Review (Admin)
+export const cancel_approval = async (reviewId: string) => {
+  try {
+    const response = await axiosInstance.patch(`/reviews/cancel/${reviewId}`);
+    return response.data;
+  } catch (error) {
+    handleError(error);
+  }
+};
+
+//Deselect Review (Admin)
+export const deselect_review = async (reviewId: string) => {
+  try {
+    const response = await axiosInstance.patch(`/reviews/deselect/${reviewId}`);
     return response.data;
   } catch (error) {
     handleError(error);

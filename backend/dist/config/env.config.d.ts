@@ -1,5 +1,6 @@
 declare const config: {
     port: string | number;
+    adminEmail: string | undefined;
     defaultprofilepic: string | undefined;
     defaultcoverpic: string | undefined;
     node_env: string | undefined;

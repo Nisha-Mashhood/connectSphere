@@ -278,13 +278,13 @@ const Profile = () => {
               Create Group
             </Button>
 
-            <Button
+            {/* <Button
               color="primary"
               size="sm"
               onPress={() => navigate("/chat")}
             >
               Chat
-            </Button>
+            </Button> */}
             </div>
           </div>
         </div>

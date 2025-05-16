@@ -38,7 +38,7 @@ const HomePageContentSchema: Schema = new Schema(
   {
     HomePageContentId: { 
         type: String, 
-        required: true 
+        unique: true, 
     },
     banner: {
       imageUrl: { 

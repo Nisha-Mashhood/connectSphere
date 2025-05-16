@@ -10,8 +10,10 @@ import {
   findMentorRequest,
   getCollabDataForMentor,
   getCollabDataForUser,
+  getLockedSlotsByMentorId,
   getMentorRequestsByMentorId,
   getRequestByUserId,
+  LockedSlot,
   markCollabAsCancelled,
   updateMentorRequestStatus,
   updateRequestStatus,
@@ -516,4 +518,21 @@ const calculateNewEndDate = (
   }
 
   return currentDate;
+};
+
+
+//Find locked slot for mentor
+export const getMentorLockedSlots = async (mentorId: string): Promise<LockedSlot[]> => {
+  try {
+    if (!mentorId) {
+      throw new Error("Mentor ID is required");
+    }
+
+    const lockedSlots = await getLockedSlotsByMentorId(mentorId);
+   console.log(`Retrieved ${lockedSlots.length} locked slots for mentorId: ${mentorId}`);
+    return lockedSlots;
+  } catch (error: any) {
+    console.log(`Error in service for mentorId ${mentorId}: ${error.message}`);
+    throw new Error(`Failed to fetch locked slots: ${error.message}`);
+  }
 };

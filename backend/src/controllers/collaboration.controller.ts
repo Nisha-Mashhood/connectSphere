@@ -6,6 +6,7 @@ import {
   getCollabDataForMentorService,
   getCollabDataForUserService,
   getCollabsService,
+  getMentorLockedSlots,
   getMentorRequests,
   getMentorRequestsService,
   getRequsetForUser,
@@ -377,6 +378,28 @@ export const approveTimeSlotRequest = async (req: Request, res: Response) => {
     });
   } catch (error: any) {
     console.error("Error processing time slot request:", error);
+    res.status(500).json({ message: error.message });
+  }
+};
+
+//Get the locked slot for mentor
+export const getMentorLockedSlotsController = async (req: Request, res: Response) => {
+  try {
+    const { mentorId } = req.params;
+
+    if (!mentorId) {
+      console.log("Mentor ID not provided in request");
+      res.status(400).json({ message: "Mentor ID is required" });
+      return;
+    }
+
+    const lockedSlots = await getMentorLockedSlots(mentorId);
+    res.status(200).json({
+      message: "Locked slots retrieved successfully",
+      lockedSlots,
+    });
+  } catch (error: any) {
+    console.log(`Error in controller for mentorId ${req.params.mentorId}: ${error.message}`);
     res.status(500).json({ message: error.message });
   }
 };

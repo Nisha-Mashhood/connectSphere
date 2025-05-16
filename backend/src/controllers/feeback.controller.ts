@@ -1,5 +1,6 @@
 import { Request, Response } from "express";
 import * as FeedbackService from "../services/feedback.service.js";
+import { AnyExpression } from "mongoose";
 
 export const createFeedback = async (req: Request, res: Response) => {
   try {
@@ -63,3 +64,33 @@ export const getFeedbackForProfile = async (req: Request, res: Response) => {
     res.status(400).json({ success: false, message: error.message });
   }
 };
+
+export const getFeedBack = async (req: Request, res: Response) => {
+  try {
+    const { collabId } = req.params;
+    const feedback = await FeedbackService.getFeedbackByCollaborationId(collabId);
+    res.status(200).json({ success: true, data: feedback });
+  } catch (error: any) {
+    res.status(400).json({ success: false, message: error.message });
+  }
+};
+
+export const toggleFeedback = async (req: Request, res: Response) => {
+  try {
+    const { feedbackId } = req.params;
+    const feedback = await FeedbackService.toggleFeedbackservice(feedbackId);
+    res.status(200).json({ success: true, data: feedback });
+  } catch (error: any) {
+    res.status(400).json({ success: false, message: error.message });
+  }
+};
+
+export const getFeedBackByMentorId = async(req: Request, res: Response) =>{
+  try {
+    const { mentorId } = req.params;
+    const feedback = await FeedbackService.getFeedBackByMentorIdService(mentorId);
+    res.status(200).json({success: true, data: feedback});
+  } catch (error:AnyExpression) {
+    res.status(400).json({ success: false, message: error.message });
+  }
+}

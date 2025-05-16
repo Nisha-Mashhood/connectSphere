@@ -57,4 +57,34 @@ export const getFeedbackForProfile = async (req, res) => {
         res.status(400).json({ success: false, message: error.message });
     }
 };
+export const getFeedBack = async (req, res) => {
+    try {
+        const { collabId } = req.params;
+        const feedback = await FeedbackService.getFeedbackByCollaborationId(collabId);
+        res.status(200).json({ success: true, data: feedback });
+    }
+    catch (error) {
+        res.status(400).json({ success: false, message: error.message });
+    }
+};
+export const toggleFeedback = async (req, res) => {
+    try {
+        const { feedbackId } = req.params;
+        const feedback = await FeedbackService.toggleFeedbackservice(feedbackId);
+        res.status(200).json({ success: true, data: feedback });
+    }
+    catch (error) {
+        res.status(400).json({ success: false, message: error.message });
+    }
+};
+export const getFeedBackByMentorId = async (req, res) => {
+    try {
+        const { mentorId } = req.params;
+        const feedback = await FeedbackService.getFeedBackByMentorIdService(mentorId);
+        res.status(200).json({ success: true, data: feedback });
+    }
+    catch (error) {
+        res.status(400).json({ success: false, message: error.message });
+    }
+};
 //# sourceMappingURL=feeback.controller.js.map

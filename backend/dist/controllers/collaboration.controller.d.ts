@@ -15,4 +15,5 @@ export declare const getRequestDeatilsbyRequestId: (req: Request, res: Response)
 export declare const markUnavailableDays: (req: Request, res: Response) => Promise<void>;
 export declare const updateTemporarySlotChanges: (req: Request, res: Response) => Promise<void>;
 export declare const approveTimeSlotRequest: (req: Request, res: Response) => Promise<void>;
+export declare const getMentorLockedSlotsController: (req: Request, res: Response) => Promise<void>;
 //# sourceMappingURL=collaboration.controller.d.ts.map

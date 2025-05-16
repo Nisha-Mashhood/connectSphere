@@ -7,7 +7,7 @@ export interface GroupRequestDocument extends Document {
   userId: mongoose.Types.ObjectId; //  the user who sent the request
   status: 'Pending' | 'Accepted' | 'Rejected'; // Request status
   paymentStatus: 'Pending' | 'Completed' | 'Failed'; // Payment status
-  paymentId?: string; // Optional 
+  paymentId?: string;  
   amountPaid?: number; // Amount paid by the user
   createdAt: Date;
 }

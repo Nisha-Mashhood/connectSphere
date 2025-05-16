@@ -14,7 +14,7 @@ export const useReviewModalTimer = (needsReviewPrompt: boolean, isAdminRoute: bo
       timer = setTimeout(() => {
         dispatch(openReviewModal());
         setIsModalOpen(true);
-      }, 5 * 60 * 1000); // 5 minutes
+      },  60 * 1000); 
     }
     return () => clearTimeout(timer);
   }, [needsReviewPrompt, isAdminRoute, dispatch]);

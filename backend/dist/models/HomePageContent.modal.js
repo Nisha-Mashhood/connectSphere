@@ -3,7 +3,7 @@ import { generateCustomId } from "../utils/idGenerator.utils.js";
 const HomePageContentSchema = new Schema({
     HomePageContentId: {
         type: String,
-        required: true
+        unique: true,
     },
     banner: {
         imageUrl: {

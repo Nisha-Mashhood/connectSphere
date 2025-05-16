@@ -3,7 +3,7 @@ import { generateCustomId } from "../utils/idGenerator.utils.js";
 const CallSchema = new Schema({
     CallId: {
         type: String,
-        required: true
+        unique: true
     },
     chatKey: {
         type: String,

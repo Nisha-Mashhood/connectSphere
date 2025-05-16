@@ -1,5 +1,5 @@
 import mongoose, { Document } from "mongoose";
-interface IReview extends Document {
+export interface IReview extends Document {
     reviewId: string;
     userId: mongoose.Types.ObjectId;
     rating: number;

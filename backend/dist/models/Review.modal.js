@@ -3,7 +3,7 @@ import { generateCustomId } from "../utils/idGenerator.utils.js";
 const ReviewSchema = new Schema({
     reviewId: {
         type: String,
-        required: true
+        unique: true,
     },
     userId: {
         type: Schema.Types.ObjectId,

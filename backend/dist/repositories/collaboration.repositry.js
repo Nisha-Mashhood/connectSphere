@@ -353,4 +353,63 @@ export const updateRequestStatus = async (collabId, requestId, requestType, stat
         throw new Error(`Error updating request status: ${error.message}`);
     }
 };
+export const getLockedSlotsByMentorId = async (mentorId) => {
+    try {
+        const currentDate = new Date();
+        // active collaborations 
+        const collaborations = await Collaboration.find({
+            mentorId,
+            isCancelled: false,
+            $or: [
+                { endDate: { $gt: currentDate } },
+                { endDate: null },
+            ],
+        }).select("selectedSlot");
+        // accepted mentor requests
+        const mentorRequests = await MentorRequest.find({
+            mentorId,
+            isAccepted: "Accepted",
+        }).select("selectedSlot");
+        // Combine slots from collaborations
+        const collabSlots = collaborations.flatMap(collab => collab.selectedSlot.map(slot => ({
+            day: slot.day,
+            timeSlots: slot.timeSlots,
+        })));
+        // Combine slots from mentor requests
+        const requestSlots = mentorRequests
+            .map(request => {
+            // Type assertion for selectedSlot
+            const selectedSlot = request.selectedSlot;
+            // Runtime validation
+            if (!selectedSlot.day || !selectedSlot.timeSlots) {
+                console.log(`Invalid selectedSlot for mentorRequestId: ${request.mentorRequestId}`);
+                return null;
+            }
+            return {
+                day: selectedSlot.day,
+                timeSlots: [selectedSlot.timeSlots], // Wrap string in array
+            };
+        })
+            .filter((slot) => slot !== null);
+        // Combine and deduplicate slots
+        const allSlots = [...collabSlots, ...requestSlots];
+        const uniqueSlots = [];
+        allSlots.forEach(slot => {
+            const existing = uniqueSlots.find(s => s.day === slot.day);
+            if (existing) {
+                // Merge timeSlots for the same day
+                existing.timeSlots = Array.from(new Set([...existing.timeSlots, ...slot.timeSlots]));
+            }
+            else {
+                uniqueSlots.push({ day: slot.day, timeSlots: slot.timeSlots });
+            }
+        });
+        console.log(`Fetched ${uniqueSlots.length} locked slots for mentorId: ${mentorId}`);
+        return uniqueSlots;
+    }
+    catch (error) {
+        console.log(`Error fetching locked slots for mentorId ${mentorId}: ${error.message}`);
+        throw new Error(`Error fetching locked slots: ${error.message}`);
+    }
+};
 //# sourceMappingURL=collaboration.repositry.js.map

@@ -15,6 +15,13 @@ const MentorRequestSchema = new Schema({
         ref: "User",
         required: true
     },
+    // selectedSlot: {
+    //   type: {
+    //     day: { type: String },
+    //     timeSlots: { type: String },
+    //   },
+    //   required: true,
+    // },
     selectedSlot: {
         day: { type: String },
         timeSlots: { type: String },

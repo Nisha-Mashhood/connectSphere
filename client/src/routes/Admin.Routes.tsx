@@ -17,6 +17,8 @@ import GroupCollab from "../Components/Admin/GroupCollab";
 import UserUserCollabDetails from "../Components/Admin/User-UserDeatils";
 import GroupDetails from "../Components/Admin/GroupAndRequsetDetails";
 import CollaborationDetails from "../Components/Admin/CollaborationDetails";
+import ReviewManagement from "../Components/Admin/ReviewManagement";
+import Messages from "../Components/Admin/ContactMessage";
 
 const AdminRoutes = () => (
   <Routes>
@@ -39,6 +41,8 @@ const AdminRoutes = () => (
         <Route path="groupManagemnt" element={<GroupCollab />} />
         <Route path="group/:groupId" element={<GroupDetails />} />
         <Route path="group-request/:requestId" element={<GroupDetails />} />
+        <Route path="reviews" element={<ReviewManagement />} />
+        <Route path="messages" element={<Messages/>} />
 
         
       </Route>

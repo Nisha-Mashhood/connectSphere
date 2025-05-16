@@ -1,4 +1,8 @@
 import { ICollaboration } from "../models/collaboration.js";
+export interface LockedSlot {
+    day: string;
+    timeSlots: string[];
+}
 export declare const createTemporaryRequest: (data: any) => Promise<import("mongoose").Document<unknown, {}, import("../models/mentorRequset.js").IMentorRequest> & import("../models/mentorRequset.js").IMentorRequest & Required<{
     _id: unknown;
 }> & {
@@ -109,4 +113,5 @@ export declare const updateTemporarySlotChanges: (collabId: string, updateData: 
     __v: number;
 }) | null>;
 export declare const updateRequestStatus: (collabId: string, requestId: string, requestType: "unavailable" | "timeSlot", status: "approved" | "rejected", newEndDate?: Date) => Promise<ICollaboration | null>;
+export declare const getLockedSlotsByMentorId: (mentorId: string) => Promise<LockedSlot[]>;
 //# sourceMappingURL=collaboration.repositry.d.ts.map

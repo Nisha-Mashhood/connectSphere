@@ -13,6 +13,7 @@ export interface IFeedback extends Document {
   punctuality: number;
   comments: string;
   wouldRecommend: boolean;
+  isHidden: boolean;
   createdAt: Date;
 }
 
@@ -76,6 +77,10 @@ const FeedbackSchema: Schema = new Schema(
       type: Boolean,
       required: true,
     },
+    isHidden: {
+    type: Boolean,
+    default: false,
+  },
   },
   { timestamps: true }
 );

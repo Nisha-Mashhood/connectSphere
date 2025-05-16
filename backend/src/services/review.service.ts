@@ -24,6 +24,7 @@ import * as  ReviewRepository  from '../repositories/review.repository.js';
     const user = await findUserById(userId);
     if (!user) {
       console.log('User not found');
+       throw new Error('User not found')
     }
     await updateUser(userId, { loginCount: 0 });
   }
@@ -36,6 +37,7 @@ import * as  ReviewRepository  from '../repositories/review.repository.js';
     const review = await ReviewRepository.findById(reviewId);
     if (!review) {
       console.log('Review not found');
+       throw new Error('Review not found')
     }
     return await ReviewRepository.updateReview(reviewId, { isApproved: true });
   }
@@ -44,12 +46,36 @@ import * as  ReviewRepository  from '../repositories/review.repository.js';
     const review = await ReviewRepository.findById(reviewId);
     if (!review) {
       console.log('Review not found');
+       throw new Error('Review not found')
     }
     if (!review?.isApproved) {
       console.log('Review must be approved before selecting');
+       throw new Error('Review must be approved before selecting')
     }
     return await ReviewRepository.updateReview(reviewId, { isSelect: true });
   }
+
+  export const cancelApproval = async (reviewId: string) => {
+  const review = await ReviewRepository.findById(reviewId);
+  if (!review) {
+    console.log('Review not found')
+     throw new Error('Review not found')
+  }
+  return await ReviewRepository.updateReview(reviewId, { isApproved: false, isSelect: false });
+};
+
+export const deselectReview = async (reviewId: string) => {
+  const review = await ReviewRepository.findById(reviewId);
+  if (!review) {
+    console.log('Review not found');
+     throw new Error('Review not found');
+  }
+  if (!review.isSelect) {
+    console.log('Review not selected');
+     throw new Error('Review not selected');
+  }
+  return await ReviewRepository.updateReview(reviewId, { isSelect: false });
+};
 
   export const getSelectedReviews = async ()=> {
     return await ReviewRepository.getSelectedReviews();
