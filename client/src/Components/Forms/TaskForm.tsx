@@ -91,10 +91,9 @@ const TaskForm: React.FC<TaskFormProps> = ({
 
   const renderCollaborationName = (collab: any) => {
     if (!collab || !collab.userId || !collab.mentorId) return "Unnamed";
-    // If current user is the userId, show mentorId's name otherwise, show userId's name
     if (currentUser._id === collab.userId._id) {
       return collab.mentorId.userId.name || "Unnamed Mentor";
-    } else if (currentUser._id === collab.mentorId._id) {
+    } else if (currentUser._id === collab.mentorId.userId._id) {
       return collab.userId.name || "Unnamed User";
     }
     return "Unnamed";

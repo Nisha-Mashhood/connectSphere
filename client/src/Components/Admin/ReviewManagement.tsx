@@ -193,7 +193,7 @@ const ReviewManagement: React.FC = () => {
         </Tab>
         <Tab key="user-reviews" title="User Reviews">
           <div className="mt-4">
-            <p>User Reviews management will be implemented later.</p>
+            <p>User Reviews management.</p>
           </div>
         </Tab>
       </Tabs>

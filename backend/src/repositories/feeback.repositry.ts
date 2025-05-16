@@ -75,18 +75,18 @@ export const getFeedbackForProfile = async (
     })
     .sort({ createdAt: -1 })
     .limit(5);
-  console.log(`feedback from repositry : ${feedBack}`);
+  // console.log(`feedback from repositry : ${feedBack}`);
   return feedBack;
 };
 
 export const toggleisHidden = async (feedbackId: string) => {
-  console.log(`Toggling isHidden for feedbackId: ${feedbackId}`);
+  // console.log(`Toggling isHidden for feedbackId: ${feedbackId}`);
   const feedback = await Feedback.findById(feedbackId);
   if (!feedback) {
     throw new Error(`Feedback with feedbackId ${feedbackId} not found`);
   }
   feedback.isHidden = !feedback.isHidden;
   await feedback.save();
-  console.log(`Feedback isHidden updated to: ${feedback.isHidden}`);
+  // console.log(`Feedback isHidden updated to: ${feedback.isHidden}`);
   return feedback;
 };

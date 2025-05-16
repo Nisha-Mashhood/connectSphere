@@ -9,16 +9,18 @@ import {
   fetchCollabDetails,
   fetchMentorDetails,
 } from "../../../../redux/Slice/profileSlice";
-import { Tooltip } from "@nextui-org/react";
+import { Tab, Tabs, Tooltip } from "@nextui-org/react";
 import { getFeedbackByCollaborationId } from "../../../../Service/Feedback.service";
 
 const ActiveCollaborations = ({ handleProfileClick }) => {
   const navigate = useNavigate();
   const { currentUser } = useSelector((state: RootState) => state.user);
   const { collabDetails } = useSelector((state: RootState) => state.profile);
+  const [mentorDetails, setMentorDetails] = useState({})
   const [feedbackModalOpen, setFeedbackModalOpen] = useState(false);
   const [selectedCollab, setSelectedCollab] = useState(null);
   const [feedbackData, setFeedbackData] = useState({});
+  const [activeTab, setActiveTab] = useState("asMentor");
   const dispatch = useDispatch<AppDispatch>();
 
   // Fetch collaboration data and feedback for mentor view
@@ -29,6 +31,7 @@ const ActiveCollaborations = ({ handleProfileClick }) => {
           const mentorDetails = await dispatch(
             fetchMentorDetails(currentUser._id)
           ).unwrap();
+          setMentorDetails(mentorDetails);
           if (mentorDetails?._id) {
             await dispatch(
               fetchCollabDetails({ userId: mentorDetails._id, role: "mentor" })
@@ -46,6 +49,8 @@ const ActiveCollaborations = ({ handleProfileClick }) => {
       }
     }
   };
+  console.log(`mentorDetails of this user is : ${mentorDetails}`);
+
 
   // Fetch feedback for completed collaborations (mentor view)
   const fetchFeedbackForCollabs = async (collabs) => {
@@ -101,6 +106,25 @@ const ActiveCollaborations = ({ handleProfileClick }) => {
       (collab) => new Date(collab.endDate) <= currentDate || collab.isCancelled
     ) || [];
 
+    // For mentors, split collaborations into "As Mentor" and "As User"
+  const mentorOngoingCollabs = currentUser.role === "mentor"
+    ? ongoingCollabs.filter((collab) => collab.mentorId?.userId?._id === currentUser._id)
+    : [];
+  const mentorCompletedCollabs = currentUser.role === "mentor"
+    ? completedCollabs.filter((collab) => collab.mentorId?.userId?._id === currentUser._id)
+    : [];
+  const userOngoingCollabs = currentUser.role === "mentor"
+    ? ongoingCollabs.filter((collab) => collab.userId?._id === currentUser._id)
+    : ongoingCollabs;
+  const userCompletedCollabs = currentUser.role === "mentor"
+    ? completedCollabs.filter((collab) => collab.userId?._id === currentUser._id)
+    : completedCollabs;
+
+  console.log("Ongoing collaborations (Mentor):", mentorOngoingCollabs);
+  console.log("Completed collaborations (Mentor):", mentorCompletedCollabs);
+  console.log("Ongoing collaborations (User):", userOngoingCollabs);
+  console.log("Completed collaborations (User):", userCompletedCollabs);
+
   const renderFeedbackTooltip = (collab) => {
     const feedback = feedbackData[collab._id];
     if (!feedback) return null;
@@ -138,7 +162,10 @@ const ActiveCollaborations = ({ handleProfileClick }) => {
     );
   };
 
-  const renderCollaboration = (collab, isCompleted = false) => (
+  const renderCollaboration = (collab, isCompleted = false) => {
+    const isUserRole = currentUser.role === "user" || (currentUser.role === "mentor" && collab.userId?._id === currentUser._id);
+    const displayUser = isUserRole ? collab.mentorId?.userId : collab.userId;
+    return (
     <div
       key={collab._id}
       className="bg-white dark:bg-gray-700 p-4 rounded-lg shadow-sm border border-gray-200 dark:border-gray-600 cursor-pointer"
@@ -146,11 +173,7 @@ const ActiveCollaborations = ({ handleProfileClick }) => {
     >
       <div className="flex items-center space-x-4">
         <img
-          src={
-            currentUser.role === "user"
-              ? collab.mentorId?.userId?.profilePic
-              : collab.userId?.profilePic
-          }
+          src={displayUser?.profilePic}
           alt="Profile"
           className="w-12 h-12 rounded-full object-cover"
         />
@@ -159,14 +182,10 @@ const ActiveCollaborations = ({ handleProfileClick }) => {
             className="font-semibold text-gray-900 dark:text-white cursor-pointer hover:underline"
             onClick={(e) => {
               e.stopPropagation();
-              currentUser.role === "user"
-                ? handleProfileClick(collab.mentorId?._id)
-                : handleProfileClick(collab.userId?._id);
+              handleProfileClick(isUserRole ? collab.mentorId?._id : collab.userId?._id);
             }}
           >
-            {currentUser.role === "user"
-              ? collab.mentorId?.userId?.name
-              : collab.userId?.name}
+           {displayUser?.name}
           </p>
           <div className="flex items-center space-x-2 text-sm text-gray-600 dark:text-gray-300">
             <span>{collab.selectedSlot[0].day}</span>
@@ -197,7 +216,7 @@ const ActiveCollaborations = ({ handleProfileClick }) => {
             ) : (
               <button
                 onClick={(e) => handleFeedbackClick(e, collab)}
-                className="px-3 py-1 text-sm font-medium rounded-full bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-200 flex items-center"
+                className="px-3 py-1 text-sm font-medium rounded-full bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-200 flex items-center"
               >
                 <FaStar className="mr-1" /> Give Feedback
               </button>
@@ -220,14 +239,6 @@ const ActiveCollaborations = ({ handleProfileClick }) => {
               Active
             </span>
           )}
-          {/* <Button
-            size="sm"
-            color="primary"
-            variant="flat"
-            onPress={() => navigate(`/chat/user-mentor/${collab._id}`)}
-          >
-            Chat
-          </Button> */}
         </div>
       </div>
       {!isCompleted && (
@@ -249,33 +260,112 @@ const ActiveCollaborations = ({ handleProfileClick }) => {
         </div>
       )}
     </div>
-  );
+  )};
 
-  return (
-    <div className="bg-white dark:bg-gray-800 p-6 rounded-lg shadow">
+  const renderMentorTab = () => (
+    <div>
       <h2 className="text-2xl font-semibold mb-4 dark:text-white">
-        Ongoing Collaborations
+        Ongoing Collaborations (As Mentor)
       </h2>
       <div className="space-y-4 mb-8">
-        {ongoingCollabs.map((collab) => renderCollaboration(collab, false))}
-        {ongoingCollabs.length === 0 && (
+        {mentorOngoingCollabs.map((collab) => renderCollaboration(collab, false))}
+        {mentorOngoingCollabs.length === 0 && (
           <p className="text-center text-gray-500 dark:text-gray-400 py-4">
             No ongoing collaborations found
           </p>
         )}
       </div>
       <h2 className="text-2xl font-semibold mb-4 dark:text-white">
-        Completed Collaborations
+        Completed Collaborations (As Mentor)
       </h2>
       <div className="space-y-4">
-        {completedCollabs.map((collab) => renderCollaboration(collab, true))}
-        {completedCollabs.length === 0 && (
+        {mentorCompletedCollabs.map((collab) => renderCollaboration(collab, true))}
+        {mentorCompletedCollabs.length === 0 && (
           <p className="text-center text-gray-500 dark:text-gray-400 py-4">
             No completed collaborations found
           </p>
         )}
       </div>
-      {selectedCollab && currentUser.role === "user" && (
+    </div>
+  );
+
+  const renderUserTab = () => (
+    <div>
+      <h2 className="text-2xl font-semibold mb-4 dark:text-white">
+        Ongoing Collaborations (As User)
+      </h2>
+      <div className="space-y-4 mb-8">
+        {userOngoingCollabs.map((collab) => renderCollaboration(collab, false))}
+        {userOngoingCollabs.length === 0 && (
+          <p className="text-center text-gray-500 dark:text-gray-400 py-4">
+            No ongoing collaborations found
+          </p>
+        )}
+      </div>
+      <h2 className="text-2xl font-semibold mb-4 dark:text-white">
+        Completed Collaborations (As User)
+      </h2>
+      <div className="space-y-4">
+        {userCompletedCollabs.map((collab) => renderCollaboration(collab, true))}
+        {userCompletedCollabs.length === 0 && (
+          <p className="text-center text-gray-500 dark:text-gray-400 py-4">
+            No completed collaborations found
+          </p>
+        )}
+      </div>
+    </div>
+  );
+
+  return (
+    <div className="bg-white dark:bg-gray-800 p-6 rounded-lg shadow">
+      {currentUser.role === "mentor" ? (
+        <Tabs
+          selectedKey={activeTab}
+          onSelectionChange={(key) => setActiveTab(String(key))}
+          aria-label="Collaboration roles"
+          color="primary"
+          variant="underlined"
+        >
+          <Tab
+            key="asMentor"
+            title="As Mentor"
+          >
+            {renderMentorTab()}
+          </Tab>
+          <Tab
+            key="asUser"
+            title="As User"
+          >
+            {renderUserTab()}
+          </Tab>
+        </Tabs>
+      ) : (
+        <>
+          <h2 className="text-2xl font-semibold mb-4 dark:text-white">
+            Ongoing Collaborations
+          </h2>
+          <div className="space-y-4 mb-8">
+            {userOngoingCollabs.map((collab) => renderCollaboration(collab, false))}
+            {userOngoingCollabs.length === 0 && (
+              <p className="text-center text-gray-500 dark:text-gray-400 py-4">
+                No ongoing collaborations found
+              </p>
+            )}
+          </div>
+          <h2 className="text-2xl font-semibold mb-4 dark:text-white">
+            Completed Collaborations
+          </h2>
+          <div className="space-y-4">
+            {userCompletedCollabs.map((collab) => renderCollaboration(collab, true))}
+            {userCompletedCollabs.length === 0 && (
+              <p className="text-center text-gray-500 dark:text-gray-400 py-4">
+                No completed collaborations found
+              </p>
+            )}
+          </div>
+        </>
+      )}
+      {selectedCollab && (currentUser.role === "user" || (currentUser.role === "mentor" && selectedCollab.userId?._id === currentUser._id)) && (
         <FeedbackModal
           isOpen={feedbackModalOpen}
           onClose={() => setFeedbackModalOpen(false)}

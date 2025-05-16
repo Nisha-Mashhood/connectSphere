@@ -394,6 +394,7 @@ export const getMentorLockedSlotsController = async (req: Request, res: Response
     }
 
     const lockedSlots = await getMentorLockedSlots(mentorId);
+    console.log("LOcked slot from backend :",lockedSlots);
     res.status(200).json({
       message: "Locked slots retrieved successfully",
       lockedSlots,

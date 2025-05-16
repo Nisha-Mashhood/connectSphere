@@ -11,22 +11,22 @@ export const initializeNotificationService = (_io) => {
 };
 export const sendTaskNotification = async (taskId, specificUserId, notificationDate, notificationTime) => {
     const notifications = [];
-    console.log(`Entering sendTaskNotification for task ${taskId}, user ${specificUserId || "all"}, date ${notificationDate}, time ${notificationTime}`);
+    // console.log(`Entering sendTaskNotification for task ${taskId}, user ${specificUserId || "all"}, date ${notificationDate}, time ${notificationTime}`);
     try {
         const task = await notificationRepository.getTasksForNotification(taskId);
         if (!task) {
-            console.log(`No task found for _id ${taskId}`);
+            // console.log(`No task found for _id ${taskId}`);
             return notifications;
         }
-        console.log(`Task ${task.taskId} details: status=${task.status}, dueDate=${task.dueDate}, contextType=${task.contextType}, notificationDate=${task.notificationDate}, notificationTime=${task.notificationTime}`);
+        // console.log(`Task ${task.taskId} details: status=${task.status}, dueDate=${task.dueDate}, contextType=${task.contextType}, notificationDate=${task.notificationDate}, notificationTime=${task.notificationTime}`);
         // Skip if task is completed or due date has passed
         const currentTime = new Date();
         if (task.status === "completed") {
-            console.log(`Skipping task ${task.taskId}: Task completed`);
+            // console.log(`Skipping task ${task.taskId}: Task completed`);
             return notifications;
         }
         if (new Date(task.dueDate) < currentTime) {
-            console.log(`Skipping task ${task.taskId}: Due date passed (${task.dueDate})`);
+            // console.log(`Skipping task ${task.taskId}: Due date passed (${task.dueDate})`);
             return notifications;
         }
         // Check if current time matches notificationDate and notificationTime
@@ -44,22 +44,22 @@ export const sendTaskNotification = async (taskId, specificUserId, notificationD
                     const timeDiff = Math.abs(currentTime.getTime() - taskNotificationTime.getTime());
                     // Allow ±1 minute window
                     isTimeToNotify = timeDiff <= 60 * 1000;
-                    console.log(`Task ${task.taskId} time check: currentTime=${currentTime}, taskTime=${taskNotificationTime}, timeDiff=${timeDiff}ms, isTimeToNotify=${isTimeToNotify}`);
+                    // console.log(`Task ${task.taskId} time check: currentTime=${currentTime}, taskTime=${taskNotificationTime}, timeDiff=${timeDiff}ms, isTimeToNotify=${isTimeToNotify}`);
                 }
                 else {
-                    console.log(`Invalid notificationTime format for task ${task.taskId}: ${task.notificationTime}`);
+                    // console.log(`Invalid notificationTime format for task ${task.taskId}: ${task.notificationTime}`);
                 }
             }
             else {
-                console.log(`Task ${task.taskId} not on notification date: ${task.notificationDate}`);
+                // console.log(`Task ${task.taskId} not on notification date: ${task.notificationDate}`);
             }
         }
         else {
-            console.log(`Task ${task.taskId} missing notificationDate or notificationTime`);
+            // console.log(`Task ${task.taskId} missing notificationDate or notificationTime`);
             return notifications;
         }
         if (!isTimeToNotify) {
-            console.log(`Skipping task ${task.taskId}: Not time to notify`);
+            // console.log(`Skipping task ${task.taskId}: Not time to notify`);
             return notifications;
         }
         let recipients = [];
@@ -87,7 +87,7 @@ export const sendTaskNotification = async (taskId, specificUserId, notificationD
         }
         console.log(`Task ${task.taskId} recipients: ${recipients.join(", ")}`);
         if (recipients.length === 0) {
-            console.log(`No recipients for task ${task.taskId}`);
+            // console.log(`No recipients for task ${task.taskId}`);
             return notifications;
         }
         const assigner = await findUserById(task.createdBy.toString());
@@ -99,9 +99,9 @@ export const sendTaskNotification = async (taskId, specificUserId, notificationD
                 const room = `user_${userId}`;
                 const socketsInRoom = await io.in(room).allSockets();
                 isConnected = socketsInRoom.size > 0;
-                console.log(`User ${userId} connection check: ${isConnected ? "Connected" : "Not connected"}`);
+                // console.log(`User ${userId} connection check: ${isConnected ? "Connected" : "Not connected"}`);
                 if (!isConnected) {
-                    console.log(`Skipping notification for user ${userId} on task ${task.taskId}: User not connected`);
+                    // console.log(`Skipping notification for user ${userId} on task ${task.taskId}: User not connected`);
                     continue;
                 }
             }
@@ -113,7 +113,7 @@ export const sendTaskNotification = async (taskId, specificUserId, notificationD
             if (notification && notification.status === "read") {
                 // Update status to unread
                 notification = await notificationRepository.updateNotificationStatus(notification._id.toString(), "unread");
-                console.log(`[DEBUG] Updated notification ${notification?._id} for user ${userId} on task ${task.taskId} to unread (dueDate: ${task.dueDate})`);
+                // console.log(`[DEBUG] Updated notification ${notification?._id} for user ${userId} on task ${task.taskId} to unread (dueDate: ${task.dueDate})`);
             }
             if (!notification) {
                 const isAssigner = userId === task.createdBy.toString();
@@ -138,10 +138,10 @@ export const sendTaskNotification = async (taskId, specificUserId, notificationD
                 };
                 notification = await notificationRepository.createNotification(notificationData);
                 if (!notification) {
-                    console.log(`Failed to create notification for user ${userId} on task ${taskId}`);
+                    // console.log(`Failed to create notification for user ${userId} on task ${taskId}`);
                     continue;
                 }
-                console.log(`Created notification ${notification._id} for user ${userId}: ${content}`);
+                // console.log(`Created notification ${notification._id} for user ${userId}: ${content}`);
             }
             else {
                 console.log(`Found existing notification ${notification._id} for user ${userId} on task ${task.taskId}, emitting again`);
@@ -168,7 +168,7 @@ export const sendTaskNotification = async (taskId, specificUserId, notificationD
             notificationEmitter.emit("notification", payload);
             console.log(`Emitted notification ${notification._id} to user ${userId} for task ${task.taskId}`);
         }
-        console.log(`sendTaskNotification returning ${notifications.length} notifications`);
+        // console.log(`sendTaskNotification returning ${notifications.length} notifications`);
         return notifications;
     }
     catch (error) {
@@ -178,33 +178,33 @@ export const sendTaskNotification = async (taskId, specificUserId, notificationD
 };
 export const checkAndSendNotifications = async () => {
     const allNotifications = [];
-    console.log("Entering checkAndSendNotifications");
+    // console.log("Entering checkAndSendNotifications");
     try {
         const tasks = await notificationRepository.getAllTasksForNotification();
         const currentTime = new Date();
-        console.log(`Checking ${tasks.length} tasks for notifications at ${currentTime}`);
+        // console.log(`Checking ${tasks.length} tasks for notifications at ${currentTime}`);
         for (const task of tasks) {
-            console.log(`Processing task ${task.taskId}: status=${task.status}, dueDate=${task.dueDate}`);
+            // console.log(`Processing task ${task.taskId}: status=${task.status}, dueDate=${task.dueDate}`);
             // Skip tasks without notificationDate or notificationTime
             if (!task.notificationDate || !task.notificationTime) {
-                console.log(`Skipping task ${task.taskId}: Missing notificationDate or notificationTime`);
+                // console.log(`Skipping task ${task.taskId}: Missing notificationDate or notificationTime`);
                 continue;
             }
             // Skip tasks that are completed or past due
             if (task.status === "completed") {
-                console.log(`Skipping task ${task.taskId}: Task completed`);
+                // console.log(`Skipping task ${task.taskId}: Task completed`);
                 continue;
             }
             if (new Date(task.dueDate) < currentTime) {
-                console.log(`Skipping task ${task.taskId}: Due date passed (${task.dueDate})`);
+                // console.log(`Skipping task ${task.taskId}: Due date passed (${task.dueDate})`);
                 continue;
             }
             // Send notification only at the specified time
             const notifications = await sendTaskNotification(task._id.toString(), undefined, task.notificationDate?.toISOString().split("T")[0], task.notificationTime);
             allNotifications.push(...notifications);
-            console.log(`Processed task ${task.taskId}, generated ${notifications.length} notifications`);
+            // console.log(`Processed task ${task.taskId}, generated ${notifications.length} notifications`);
         }
-        console.log(`checkAndSendNotifications returning ${allNotifications.length} notifications`);
+        // console.log(`checkAndSendNotifications returning ${allNotifications.length} notifications`);
         return allNotifications;
     }
     catch (error) {

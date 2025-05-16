@@ -141,7 +141,6 @@ export const getCollabDataForUser = async (userId: string) => {
       path: 'mentorId',  
       populate: {
         path: 'userId',
-        select: 'name email profilePic'
       }
     })
     .populate('userId');
@@ -167,8 +166,13 @@ export const getCollabDataForMentor = async (mentorId: string) => {
         { userId, isCancelled: false },
       ],
     })
-      .populate('mentorId')
-      .populate('userId', 'name email profilePic');
+      .populate({
+      path: 'mentorId',  
+      populate: {
+        path: 'userId',
+      }
+    })
+      .populate('userId');
 
     return collabData;
   } catch (error: any) {
@@ -436,11 +440,14 @@ export const getLockedSlotsByMentorId = async (mentorId: string): Promise<Locked
       ],
     }).select("selectedSlot");
 
+    // console.log("collaboartion for given mentor Id :",collaborations);
     // accepted mentor requests
     const mentorRequests = await MentorRequest.find({
       mentorId,
       isAccepted: "Accepted",
     }).select("selectedSlot");
+
+    // console.log("mentor requset for teh given mentor Id :",mentorRequests)
 
     // Combine slots from collaborations
     const collabSlots: LockedSlot[] = collaborations.flatMap(collab =>
@@ -449,7 +456,7 @@ export const getLockedSlotsByMentorId = async (mentorId: string): Promise<Locked
         timeSlots: slot.timeSlots,
       }))
     );
-
+    // console.log("Slot for collab : ",collabSlots);
     // Combine slots from mentor requests
     const requestSlots: LockedSlot[] = mentorRequests
       .map(request => {
@@ -468,9 +475,11 @@ export const getLockedSlotsByMentorId = async (mentorId: string): Promise<Locked
         };
       })
       .filter((slot): slot is LockedSlot => slot !== null);
+      // console.log("slot for request : ",requestSlots);
 
     // Combine and deduplicate slots
     const allSlots: LockedSlot[] = [...collabSlots, ...requestSlots];
+    // console.log("All Slots :",allSlots)
     const uniqueSlots: LockedSlot[] = [];
 
     allSlots.forEach(slot => {
@@ -482,6 +491,8 @@ export const getLockedSlotsByMentorId = async (mentorId: string): Promise<Locked
         uniqueSlots.push({ day: slot.day, timeSlots: slot.timeSlots });
       }
     });
+
+    // console.log("Locked/ Unique slot :",uniqueSlots)
 
     console.log(`Fetched ${uniqueSlots.length} locked slots for mentorId: ${mentorId}`);
     return uniqueSlots;

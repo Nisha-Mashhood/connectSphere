@@ -1,9 +1,15 @@
 import { Card, CardBody } from "@nextui-org/react";
 
-const CollaborationHeader = ({ collaboration, isMentor }) => {
-  const otherPartyDetails = isMentor ? collaboration.userId : collaboration.mentorId?.userId;
+const CollaborationHeader = ({ collaboration, currentUser }) => {
+  const otherPartyDetails =
+    collaboration.userId._id === currentUser._id
+      ? collaboration.mentorId?.userId
+      : collaboration.mentorId.userId._id === currentUser._id
+      ? collaboration.userId
+      : null;
   const displayName = otherPartyDetails?.name || "Unknown";
-  const profilePic = otherPartyDetails?.profilePic;
+  const profilePic = otherPartyDetails?.profilePic || "/default-profile.png"; // Fallback image
+  const roleLabel = collaboration.userId._id === currentUser._id ? "Mentor" : "Mentee";
 
   return (
     <Card className="mb-6 shadow-md">
@@ -17,7 +23,7 @@ const CollaborationHeader = ({ collaboration, isMentor }) => {
             />
             <div>
               <h2 className="text-2xl font-bold">{displayName}</h2>
-              <p className="text-gray-600 dark:text-gray-400">{isMentor ? "Mentee" : "Mentor"}</p>
+              <p className="text-gray-600 dark:text-gray-400">{roleLabel}</p>
             </div>
           </div>
           <div className="flex flex-col items-end gap-2">

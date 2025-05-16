@@ -20,6 +20,7 @@ import { AppDispatch, RootState } from "../../../redux/store";
 import {
   getCollabDataforMentor,
   getCollabDataforUser,
+  getLockedMentorSlot,
   getTheRequestByUser,
   SendRequsetToMentor,
 } from "../../../Service/collaboration.Service";
@@ -48,10 +49,11 @@ const ProfileDisplay = () => {
   const [isCurrentUserMentor, setIsCurrentUserMentor] = useState(false);
   const [expandedFeedback, setExpandedFeedback] = useState(null);
   const [feedbacks, setFeedbacks] = useState<any[]>([]);
+  const [lockedSlots, setLockedSlots] = useState<any[]>([]);
   const navigate = useNavigate();
   const dispatch = useDispatch<AppDispatch>();
 
-  //function to check if user is a mentor
+  // Function to check if user is a mentor
   const checkIfUserIsMentor = async (userId: string) => {
     try {
       const mentorData = await fetchMentorById(userId);
@@ -62,7 +64,7 @@ const ProfileDisplay = () => {
     }
   };
 
-  //Check for existing requsets
+  // Check for existing requests
   const fetchExistingRequest = async () => {
     try {
       const response = await getTheRequestByUser(currentUser._id);
@@ -77,7 +79,7 @@ const ProfileDisplay = () => {
     }
   };
 
-  //for for any existing collaborations
+  // Check for any existing collaborations
   const checkExistingCollaboration = (collabData: any) => {
     if (!collabData?.collabData || !currentUser) return false;
 
@@ -115,7 +117,7 @@ const ProfileDisplay = () => {
   // Fetch feedback for the profile
   const fetchFeedback = async () => {
     try {
-      console.log("fetching feed back data");
+      console.log("fetching feedback data");
       const profileType = isMentor ? "mentor" : "user";
       const feedbackData = await getFeedbackForProfile(Id, profileType);
       console.log(feedbackData);
@@ -126,61 +128,101 @@ const ProfileDisplay = () => {
     }
   };
 
-  useEffect(() => {
-    const fetchdata = async () => {
-      if (!currentUser?._id) return;
+  // Fetch locked slots for mentor
+  const fetchLockedSlots = async (mentorId: string) => {
+    try {
+      const response = await getLockedMentorSlot(mentorId);
+      // console.log("response :", response);
+      setLockedSlots(response.lockedSlots || []);
+    } catch (error) {
+      console.error("Error fetching locked slots:", error);
+      toast.error("Failed to load locked slots");
+    }
+  };
 
-      console.log(currentUser._id);
-      console.log(Id);
+  // Check if a slot is locked
+  const isSlotLocked = (day: string, timeSlot: string) => {
+    // console.log("Checking slot for:", day, timeSlot);
+    // Extract start time (e.g., "09:00 AM" from "09:00 AM - 10:30 AM")
+    const startTimeMatch = timeSlot.match(/^(\d{1,2}:\d{2}\s[AP]M)/);
+    const startTime = startTimeMatch ? startTimeMatch[1] : timeSlot;
+    // console.log("Extracted startTime:", startTime);
+
+    const normalizedDay = day.trim().toLowerCase();
+    const normalizedStartTime = startTime.trim().toLowerCase();
+
+    const isLocked = lockedSlots.some((locked) => {
+      const lockedDay = locked.day.trim().toLowerCase();
+      const hasTimeSlot = locked.timeSlots.some(
+        (t: string) => t.trim().toLowerCase() === normalizedStartTime
+      );
+      return lockedDay === normalizedDay && hasTimeSlot;
+    });
+
+    // console.log(
+    //   // `Result for ${day} ${timeSlot} (startTime: ${startTime}): isLocked=${isLocked}`
+    // );
+    // if (!isLocked) {
+    //   console.log(
+    //     "No match. Locked slots:",
+    //     lockedSlots.map((ls) => ({
+    //       day: ls.day,
+    //       timeSlots: ls.timeSlots,
+    //     }))
+    //   );
+    // }
+    return isLocked;
+  };
+
+  useEffect(() => {
+    const fetchData = async () => {
+      if (!currentUser?._id) return;
 
       try {
         // First check if current user is a mentor
         const isMentor = await checkIfUserIsMentor(currentUser._id);
         setIsCurrentUserMentor(isMentor);
 
-        //console.log("fetching mentor details");
+        // Fetch mentor or user details
         const mentorData = await fetchMentorById(Id);
-        //console.log(mentorData);
         if (mentorData && mentorData.mentor) {
           setMentor(mentorData.mentor);
           setIsMentor(true);
 
           const collabDataForMentor = await getCollabDataforMentor(Id);
-          //console.log("isMentor", isMentor);
-          //console.log("collab data", collabDataForMentor);
           setCollabData(collabDataForMentor);
           setHasExistingCollaboration(
             checkExistingCollaboration(collabDataForMentor)
           );
+
+          // Fetch locked slots for mentor
+          await fetchLockedSlots(Id);
         } else {
-          //console.log("No mentor details found. Fetching user details...");
           const userData = await fetchUserDetails(Id);
-          //console.log(userData);
           setUser(userData);
           setIsMentor(false);
 
           const collabDataForUser = await getCollabDataforUser(Id);
-          //console.log("isMentor", isMentor);
-          //console.log("collab data", collabDataForUser);
           setCollabData(collabDataForUser);
           setHasExistingCollaboration(
             checkExistingCollaboration(collabDataForUser)
           );
         }
 
-        // Fetch existing requests
+        // Fetch existing requests and feedback
         fetchExistingRequest();
         fetchFeedback();
       } catch (error) {
         console.error("Error fetching details:", error);
       }
     };
-    fetchdata();
-    //fetch user connections
+    fetchData();
+    // Fetch user connections
     dispatch(fetchUserConnections(currentUser._id));
   }, [Id, currentUser?._id]);
 
   console.log("existingRequest :", existingRequest);
+  console.log("lockedSlots :", lockedSlots);
 
   if (!mentor && !user) {
     return (
@@ -226,7 +268,7 @@ const ProfileDisplay = () => {
       console.log(`Sending request to user ${Id}`);
       const newConnection = await sendUser_UserRequset(currentUser._id, Id);
       if (newConnection) {
-        toast.success("Connection Requset send successfully");
+        toast.success("Connection Request sent successfully");
         dispatch(fetchUserConnections(currentUser._id));
       }
     } catch (error) {
@@ -249,8 +291,8 @@ const ProfileDisplay = () => {
   };
 
   // Navigate to user profile page
-  const handleUserProfileClick = (Id: string) => {
-    navigate(`/profileDispaly/${Id}`);
+  const handleUserProfileClick = (userId: string) => {
+    navigate(`/profileDisplay/${userId}`);
   };
 
   // Render stars for rating
@@ -320,18 +362,15 @@ const ProfileDisplay = () => {
               </div>
               <div className="mt-5 sm:mt-0">
                 {currentUser?._id === Id ? (
-                  // If the logged-in user is viewing their own profile
                   <p className="text-gray-500 font-semibold">
                     This is your profile
                   </p>
                 ) : !mentor ? (
-                  // If viewing another user's profile (not a mentor)
                   <div>
                     {userConnections?.received?.find(
                       (req) =>
                         req.requester === Id && req.requestStatus === "Pending"
                     ) ? (
-                      // Show accept/reject buttons for pending received requests
                       <div className="flex gap-2">
                         <button
                           onClick={() =>
@@ -369,7 +408,6 @@ const ProfileDisplay = () => {
                           req.recipient?._id === Id &&
                           req.requestStatus === "Pending"
                       ) ? (
-                      // Request sent but pending
                       <button
                         className="bg-yellow-600 text-white px-4 py-2 rounded-md"
                         disabled
@@ -388,7 +426,6 @@ const ProfileDisplay = () => {
                           (req.connectionStatus === "Connected" ||
                             req.requestStatus === "Accepted")
                       ) ? (
-                      // Already connected
                       <button
                         className="bg-green-600 text-white px-4 py-2 rounded-md"
                         disabled
@@ -400,7 +437,6 @@ const ProfileDisplay = () => {
                           req.recipient?._id === Id &&
                           req.requestStatus === "Rejected"
                       ) ? (
-                      // Request was rejected
                       <button
                         className="bg-gray-600 text-white px-4 py-2 rounded-md hover:bg-blue-700"
                         onClick={handleConnect}
@@ -408,7 +444,6 @@ const ProfileDisplay = () => {
                         Request Again
                       </button>
                     ) : (
-                      // No connection yet, show connect button
                       <button
                         className="bg-blue-600 text-white px-4 py-2 rounded-md hover:bg-blue-700"
                         onClick={handleConnect}
@@ -418,12 +453,10 @@ const ProfileDisplay = () => {
                     )}
                   </div>
                 ) : hasExistingCollaboration ? (
-                  // If the logged-in user is already in collaboration
                   <p className="text-green-600 font-semibold">
                     ✅ Already in Collaboration
                   </p>
                 ) : existingRequest ? (
-                  // If a request is already sent
                   <p
                     className={`font-semibold ${
                       existingRequest.isAccepted === "Pending"
@@ -436,7 +469,6 @@ const ProfileDisplay = () => {
                       : "✔️ Request Approved"}
                   </p>
                 ) : (
-                  // If no request is sent and no collaboration exists, show "Send Request" button
                   <button
                     onClick={openModal}
                     className="w-full flex items-center justify-center px-8 py-3 border border-transparent text-base font-medium rounded-md text-white bg-blue-600 hover:bg-blue-700 md:py-4 md:text-lg md:px-10"
@@ -763,26 +795,43 @@ const ProfileDisplay = () => {
                   <div className="mt-4 space-y-4">
                     {mentor.availableSlots.map((slot: any, dayIndex: number) =>
                       slot.timeSlots.map(
-                        (timeSlot: string, slotIndex: number) => (
-                          <label
-                            key={`${dayIndex}-${slotIndex}`}
-                            className="flex items-center space-x-3 p-3 border rounded-lg hover:bg-gray-50 cursor-pointer"
-                          >
-                            <input
-                              type="radio"
-                              name="slot"
-                              value={`${slot.day} - ${timeSlot}`}
-                              onChange={(e) => setSelectedSlot(e.target.value)}
-                              checked={
-                                selectedSlot === `${slot.day} - ${timeSlot}`
-                              }
-                              className="h-4 w-4 text-blue-600 focus:ring-blue-500"
-                            />
-                            <span className="flex-1 text-gray-800">
-                              {slot.day} - {timeSlot}
-                            </span>
-                          </label>
-                        )
+                        (timeSlot: string, slotIndex: number) => {
+                          const isLocked = isSlotLocked(slot.day, timeSlot);
+                          return (
+                            <label
+                              key={`${dayIndex}-${slotIndex}`}
+                              className={`flex items-center space-x-3 p-3 border rounded-lg ${
+                                isLocked
+                                  ? "bg-gray-100 cursor-not-allowed"
+                                  : "hover:bg-gray-50 cursor-pointer"
+                              }`}
+                            >
+                              <input
+                                type="radio"
+                                name="slot"
+                                value={`${slot.day} - ${timeSlot}`}
+                                onChange={(e) => setSelectedSlot(e.target.value)}
+                                checked={
+                                  selectedSlot === `${slot.day} - ${timeSlot}`
+                                }
+                                disabled={isLocked}
+                                className="h-4 w-4 text-blue-600 focus:ring-blue-500"
+                              />
+                              <span
+                                className={`flex-1 ${
+                                  isLocked ? "text-gray-500" : "text-gray-800"
+                                }`}
+                              >
+                                {slot.day} - {timeSlot}
+                                {isLocked && (
+                                  <span className="ml-2 text-xs text-red-600 lowercase">
+                                    already locked by another user
+                                  </span>
+                                )}
+                              </span>
+                            </label>
+                          );
+                        }
                       )
                     )}
                   </div>

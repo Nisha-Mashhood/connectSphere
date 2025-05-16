@@ -49,20 +49,16 @@ const CollaborationDetails = () => {
 
   if (!collaboration) {
     return (
-    <div className="flex items-center justify-center min-h-screen">
-    <p className="text-xl text-gray-600">
-    Collaboration not found
-    </p>
-    </div>
-    )
+      <div className="flex items-center justify-center min-h-screen">
+        <p className="text-xl text-gray-600">Collaboration not found</p>
+      </div>
+    );
   }
-
-  const isMentor = currentUser.role === "mentor";
 
   return (
     <div className="min-h-screen bg-gray-50 dark:bg-gray-900 py-8 px-4">
       <div className="max-w-5xl mx-auto">
-        <CollaborationHeader collaboration={collaboration} isMentor={isMentor} />
+        <CollaborationHeader collaboration={collaboration} currentUser={currentUser} />
         <PendingRequests
           pendingRequests={pendingRequests}
           setPendingRequests={setPendingRequests}
@@ -76,7 +72,6 @@ const CollaborationDetails = () => {
           activeTab={activeTab}
           setActiveTab={setActiveTab}
           collaboration={collaboration}
-          isMentor={isMentor}
           currentUser={currentUser}
           setShowTimeSlotsModal={setShowTimeSlotsModal}
           setShowUnavailableDatesModal={setShowUnavailableDatesModal}
@@ -84,8 +79,6 @@ const CollaborationDetails = () => {
         />
       </div>
 
-
-      {/* Make this for other person only */}
       <TimeSlotsModal
         isOpen={showTimeSlotsModal}
         onClose={() => {

@@ -121,7 +121,6 @@ export const getCollabDataForUser = async (userId) => {
             path: 'mentorId',
             populate: {
                 path: 'userId',
-                select: 'name email profilePic'
             }
         })
             .populate('userId');
@@ -146,8 +145,13 @@ export const getCollabDataForMentor = async (mentorId) => {
                 { userId, isCancelled: false },
             ],
         })
-            .populate('mentorId')
-            .populate('userId', 'name email profilePic');
+            .populate({
+            path: 'mentorId',
+            populate: {
+                path: 'userId',
+            }
+        })
+            .populate('userId');
         return collabData;
     }
     catch (error) {
@@ -365,16 +369,19 @@ export const getLockedSlotsByMentorId = async (mentorId) => {
                 { endDate: null },
             ],
         }).select("selectedSlot");
+        // console.log("collaboartion for given mentor Id :",collaborations);
         // accepted mentor requests
         const mentorRequests = await MentorRequest.find({
             mentorId,
             isAccepted: "Accepted",
         }).select("selectedSlot");
+        // console.log("mentor requset for teh given mentor Id :",mentorRequests)
         // Combine slots from collaborations
         const collabSlots = collaborations.flatMap(collab => collab.selectedSlot.map(slot => ({
             day: slot.day,
             timeSlots: slot.timeSlots,
         })));
+        // console.log("Slot for collab : ",collabSlots);
         // Combine slots from mentor requests
         const requestSlots = mentorRequests
             .map(request => {
@@ -391,8 +398,10 @@ export const getLockedSlotsByMentorId = async (mentorId) => {
             };
         })
             .filter((slot) => slot !== null);
+        // console.log("slot for request : ",requestSlots);
         // Combine and deduplicate slots
         const allSlots = [...collabSlots, ...requestSlots];
+        // console.log("All Slots :",allSlots)
         const uniqueSlots = [];
         allSlots.forEach(slot => {
             const existing = uniqueSlots.find(s => s.day === slot.day);
@@ -404,6 +413,7 @@ export const getLockedSlotsByMentorId = async (mentorId) => {
                 uniqueSlots.push({ day: slot.day, timeSlots: slot.timeSlots });
             }
         });
+        // console.log("Locked/ Unique slot :",uniqueSlots)
         console.log(`Fetched ${uniqueSlots.length} locked slots for mentorId: ${mentorId}`);
         return uniqueSlots;
     }
