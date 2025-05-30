@@ -63,7 +63,9 @@ const initializeSocket = (_io: Server) => {
   );
 
   io.on("connection", (socket: Socket) => {
-    socket.data.userId = socket.handshake.auth.userId;
+    const userId = socket.handshake.auth.userId;
+    socket.data.userId = userId;
+    console.log(`[Socket.IO] New client connected: socketId=${socket.id}, userId=${userId}, auth=${JSON.stringify(socket.handshake.auth)}`);
     socket.on("joinChats", async (userId: string) => {
       try {
         const contacts = await findContactsByUserId(userId);
@@ -95,7 +97,7 @@ const initializeSocket = (_io: Server) => {
 
     socket.on("joinUserRoom", (userId: string) => {
       socket.join(`user_${userId}`);
-      console.log(`User ${userId} joined personal room: user_${userId}`);
+      console.log(`[Socket.IO] User ${userId} joined personal room: user_${userId}, socketId=${socket.id}`);
     });
 
     socket.on("activeChat", (data: { userId: string; chatKey: string }) => {

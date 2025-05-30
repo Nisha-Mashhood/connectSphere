@@ -9,7 +9,7 @@ export class SocketService {
   connect(userId: string, token: string) {
     this.userId = userId;
     this.socket = io("http://localhost:3000", {
-      auth: { token },
+      auth: { token, userId },
       path: "/socket.io",
       reconnection: true,
       reconnectionAttempts: 5,
@@ -17,7 +17,8 @@ export class SocketService {
     });
 
     this.socket.on("connect", () => {
-      console.log("Connected to Socket.IO server:", this.socket?.id);
+      console.log(`[SocketService] Connected to Socket.IO server: socketId=${this.socket?.id}, userId=${userId}`);
+      console.log(`[SocketService] Emitting joinChats and joinUserRoom for user: ${userId}`);
       this.socket?.emit("joinChats", userId);
       this.socket?.emit("joinUserRoom", userId);
       this.callEndedSent.clear();
@@ -43,6 +44,8 @@ export class SocketService {
   }
 
   isConnected() {
+    const connected = this.socket?.connected || false;
+    console.log(`[SocketService] Connection status for user ${this.userId}: ${connected}`);
     return this.socket?.connected || false;
   }
 
