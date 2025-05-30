@@ -20,9 +20,9 @@ export const createTask = async (req: Request, res: Response): Promise<void> => 
 };
 
 export const getTasksByContext = async (req: Request, res: Response): Promise<void> => {
-  const { contextType, contextId } = req.params;
+  const { contextType, contextId, userId } = req.params;
   try {
-    const tasks = await getTasksByContextService(contextType, contextId);
+    const tasks = await getTasksByContextService(contextType, contextId, userId);
     res.status(200).json(tasks);
   } catch (error: any) {
     res.status(500).json({ message: 'Error fetching tasks', error: error.message });

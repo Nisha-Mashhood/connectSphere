@@ -34,4 +34,3 @@ router.get("/group-requests", [apiLimiter, verifyToken, authorize("admin")], Gro
 
 export default router;
 
-

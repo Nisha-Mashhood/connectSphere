@@ -1,5 +1,5 @@
 import { Request, Response } from "express";
-import * as ContactService from "../services/contactUs.sevice.js";
+import * as ContactService from "../services/contactUs.service.js";
 
 export const createContactMessage = async (req: Request, res: Response) => {
   try {

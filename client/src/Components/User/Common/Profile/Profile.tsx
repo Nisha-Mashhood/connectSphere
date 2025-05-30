@@ -64,6 +64,7 @@ const Profile = () => {
   const { currentUser } = useSelector((state: RootState) => state.user);
   const { mentorDetails } = useSelector((state: RootState) => state.profile);
   const { collabDetails } = useSelector((state: RootState) => state.profile);
+  const { userConnections } = useSelector((state: RootState) => state.profile);
   const navigate = useNavigate();
   const dispatch = useDispatch();
 
@@ -85,6 +86,7 @@ const Profile = () => {
   const formatDate = (dateString) => dateString ? new Date(dateString).toLocaleDateString("en-US", { year: "numeric", month: "long", day: "numeric" }) : "Not specified";
 
   console.log("COLLAB DETAILS OF THIS CURRENT USER : ",collabDetails);
+  console.log("USER CONNECTION DETAILS OF THIS CURRENT USER : ",userConnections);
   // Handlers
   const handleImageUpload = async (file: File, type: "profilePic" | "coverPic") => {
     const formData = new FormData();

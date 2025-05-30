@@ -1,15 +1,17 @@
 import { EventEmitter } from "events";
-import { findContactByUsers, findContactsByUserId } from "../repositories/contacts.repository.js";
-import { getGroupsByGroupId, isUserInGroup } from "../repositories/group.repositry.js";
-import { findChatMessageById, markMessagesAsRead, saveChatMessage } from "../repositories/chat.repository.js";
+import { findContactByUsers, findContactsByUserId, } from "../repositories/contacts.repository.js";
+import { getGroupsByGroupId, isUserInGroup, } from "../repositories/group.repositry.js";
+import { findChatMessageById, markMessagesAsRead, saveChatMessage, } from "../repositories/chat.repository.js";
 import mongoose from "mongoose";
 import Group from "../models/group.model.js";
 import collaboration from "../models/collaboration.js";
 import userConnectionModal from "../models/userConnection.modal.js";
-import { getNotifications, initializeNotificationService, markNotificationAsRead, sendNotification, updateCallNotificationToMissed } from "../services/notification.service.js";
+import { getNotifications, initializeNotificationService, markNotificationAsRead, sendNotification, updateCallNotificationToMissed, } from "../services/notification.service.js";
 import { findUserById } from "../repositories/user.repositry.js";
 let io;
 export const notificationEmitter = new EventEmitter();
+//sentNotifications Set to track emitted notification _id's
+const sentNotifications = new Set();
 const initializeSocket = (_io) => {
     io = _io;
     // Initialize notification service
@@ -28,16 +30,21 @@ const initializeSocket = (_io) => {
         socket.on("joinChats", async (userId) => {
             try {
                 const contacts = await findContactsByUserId(userId);
-                const rooms = Array.from(new Set(contacts.map((contact) => {
+                const rooms = Array.from(new Set(contacts
+                    .map((contact) => {
                     if (contact.type === "group" && contact.groupId) {
                         return `group_${contact.groupId._id.toString()}`;
                     }
                     else if (contact.userId && contact.targetUserId) {
-                        const ids = [contact.userId._id.toString(), contact.targetUserId._id.toString()].sort();
+                        const ids = [
+                            contact.userId._id.toString(),
+                            contact.targetUserId._id.toString(),
+                        ].sort();
                         return `chat_${ids[0]}_${ids[1]}`;
                     }
                     return null;
-                }).filter(Boolean)));
+                })
+                    .filter(Boolean)));
                 socket.join(rooms);
                 console.log(`User ${userId} joined rooms:`, rooms);
             }
@@ -57,7 +64,7 @@ const initializeSocket = (_io) => {
         socket.on("sendMessage", async (message) => {
             try {
                 console.log("Received sendMessage event:", message);
-                const { senderId, targetId, type, content, contentType = "text", collaborationId, userConnectionId, groupId, _id } = message;
+                const { senderId, targetId, type, content, contentType = "text", collaborationId, userConnectionId, groupId, _id, } = message;
                 if (!senderId || !targetId || !type || !content) {
                     console.error("Missing required fields in message:", message);
                     socket.emit("error", { message: "Missing required fields" });
@@ -100,25 +107,38 @@ const initializeSocket = (_io) => {
                             socket.emit("error", { message: "Invalid contact" });
                             return;
                         }
-                        const ids = [contact.userId.toString(), contact.targetUserId?.toString()].sort();
+                        const ids = [
+                            contact.userId.toString(),
+                            contact.targetUserId?.toString(),
+                        ].sort();
                         room = `chat_${ids[0]}_${ids[1]}`;
                         savedMessage = await saveChatMessage({
                             senderId: senderObjectId,
-                            ...(type === "user-mentor" && { collaborationId: new mongoose.Types.ObjectId(collaborationId || contact.collaborationId?.toString()) }),
-                            ...(type === "user-user" && { userConnectionId: new mongoose.Types.ObjectId(userConnectionId || contact.userConnectionId?.toString()) }),
+                            ...(type === "user-mentor" && {
+                                collaborationId: new mongoose.Types.ObjectId(collaborationId || contact.collaborationId?.toString()),
+                            }),
+                            ...(type === "user-user" && {
+                                userConnectionId: new mongoose.Types.ObjectId(userConnectionId || contact.userConnectionId?.toString()),
+                            }),
                             content,
                             contentType,
                             timestamp,
                             isRead: false,
-                            status: 'sent',
+                            status: "sent",
                         });
                     }
                 }
                 else {
-                    savedMessage = { _id: _id || new mongoose.Types.ObjectId(), ...message, timestamp };
+                    savedMessage = {
+                        _id: _id || new mongoose.Types.ObjectId(),
+                        ...message,
+                        timestamp,
+                    };
                     if (!_id) {
                         console.error("Non-text message requires saved message _id:", message);
-                        socket.emit("error", { message: "Non-text message requires saved message _id" });
+                        socket.emit("error", {
+                            message: "Non-text message requires saved message _id",
+                        });
                         return;
                     } //check sending image vedio and files
                     // Validate the saved message
@@ -133,10 +153,23 @@ const initializeSocket = (_io) => {
                     }
                     else {
                         const contact = await findContactByUsers(senderId, targetId);
-                        const ids = [contact?.userId.toString(), contact?.targetUserId?.toString()].sort();
+                        const ids = [
+                            contact?.userId.toString(),
+                            contact?.targetUserId?.toString(),
+                        ].sort();
                         room = `chat_${ids[0]}_${ids[1]}`;
                     }
                 }
+                // Log sockets in room
+                // const socketsInRoom = await io.in(room).allSockets();
+                // const connectedUserIds = new Set<string>();
+                // for (const socketId of socketsInRoom) {
+                //   const s = io.sockets.sockets.get(socketId);
+                //   if (s && s.data.userId) {
+                //     connectedUserIds.add(s.data.userId);
+                //   }
+                // }
+                // console.log(`Users in room ${room}:`, Array.from(connectedUserIds));
                 // Create notifications for both text and non-text messages
                 let recipientIds = [];
                 let chatKey = null;
@@ -145,8 +178,8 @@ const initializeSocket = (_io) => {
                     const group = await Group.findById(savedMessage.groupId);
                     if (group) {
                         recipientIds = group.members
-                            .filter(member => member.userId.toString() !== senderId)
-                            .map(member => member.userId.toString());
+                            .filter((member) => member.userId.toString() !== senderId)
+                            .map((member) => member.userId.toString());
                     }
                 }
                 else if (savedMessage.collaborationId) {
@@ -172,7 +205,7 @@ const initializeSocket = (_io) => {
                     }
                 }
                 if (chatKey && recipientIds.length > 0) {
-                    // Check which recipients are not in the room
+                    // // Check which recipients are not in the room
                     const socketsInRoom = await io.in(room).allSockets();
                     const connectedUserIds = new Set();
                     for (const socketId of socketsInRoom) {
@@ -182,11 +215,28 @@ const initializeSocket = (_io) => {
                         }
                     }
                     for (const recipientId of recipientIds) {
-                        if (!connectedUserIds.has(recipientId) || activeChats.get(recipientId) !== chatKey) {
-                            const notification = await sendNotification(recipientId, 'message', senderId, chatKey, contentType);
-                            io.to(`user_${recipientId}`).emit('notification.new', notification);
-                            console.log(`Emitted notification.new to user_${recipientId}:`, notification);
+                        // if (activeChats.get(recipientId) === chatKey) {
+                        //   console.log(
+                        //     `Skipping message notification for user ${recipientId} (active in chat ${chatKey})`
+                        //   );
+                        //   continue;
+                        // }
+                        // if (
+                        //   !connectedUserIds.has(recipientId) ||
+                        //   activeChats.get(recipientId) !== chatKey
+                        // ) {
+                        try {
+                            const notification = await sendNotification(recipientId, "message", senderId, chatKey, contentType);
+                            // io.to(`user_${recipientId}`).emit(
+                            //   "notification.new",
+                            //   notification
+                            // );
+                            console.log(`Emitted via notification emitter to user_${recipientId}:`, notification);
                         }
+                        catch (error) {
+                            console.warn(`Failed to send notification to user ${recipientId}: ${error.message}`);
+                        }
+                        // }
                     }
                 }
                 if (!savedMessage) {
@@ -203,11 +253,16 @@ const initializeSocket = (_io) => {
                     thumbnailUrl: savedMessage.thumbnailUrl,
                     fileMetadata: savedMessage.fileMetadata,
                     ...(type === "group" && { groupId: groupId || targetId }),
-                    ...(type === "user-mentor" && { collaborationId: collaborationId || savedMessage?.collaborationId?.toString() }),
-                    ...(type === "user-user" && { userConnectionId: userConnectionId || savedMessage?.userConnectionId?.toString() }),
+                    ...(type === "user-mentor" && {
+                        collaborationId: collaborationId || savedMessage?.collaborationId?.toString(),
+                    }),
+                    ...(type === "user-user" && {
+                        userConnectionId: userConnectionId || savedMessage?.userConnectionId?.toString(),
+                    }),
                     timestamp: timestampString,
                     _id: savedMessage._id,
                     status: savedMessage.status,
+                    isRead: savedMessage.isRead || false,
                 };
                 socket.broadcast.to(room).emit("receiveMessage", messageData);
                 socket.emit("messageSaved", messageData);
@@ -250,11 +305,15 @@ const initializeSocket = (_io) => {
                 const updatedMessages = await markMessagesAsRead(chatKey, userId, type);
                 //mark notifications as read
                 const notifications = await getNotifications(userId);
-                const messageNotifications = notifications.filter(n => n.type === 'message' && n.relatedId === chatKey && n.status === 'unread');
+                const messageNotifications = notifications.filter((n) => n.type === "message" &&
+                    n.relatedId === chatKey &&
+                    n.status === "unread");
                 for (const notification of messageNotifications) {
                     const updatedNotification = await markNotificationAsRead(notification._id);
                     if (updatedNotification) {
-                        io.to(`user_${userId}`).emit('notification.read', { notificationId: notification._id });
+                        io.to(`user_${userId}`).emit("notification.read", {
+                            notificationId: notification._id,
+                        });
                     }
                 }
                 let room;
@@ -263,10 +322,17 @@ const initializeSocket = (_io) => {
                 }
                 else {
                     const contact = await findContactByUsers(userId, chatKey.replace(/^(user-mentor_|user-user_)/, ""));
-                    const ids = [contact?.userId.toString(), contact?.targetUserId?.toString()].sort();
+                    const ids = [
+                        contact?.userId.toString(),
+                        contact?.targetUserId?.toString(),
+                    ].sort();
                     room = `chat_${ids[0]}_${ids[1]}`;
                 }
-                io.to(room).emit("messagesRead", { chatKey, userId, messageIds: updatedMessages });
+                io.to(room).emit("messagesRead", {
+                    chatKey,
+                    userId,
+                    messageIds: updatedMessages,
+                });
             }
             catch (error) {
                 console.error("Error marking messages as read:", error.message);
@@ -290,8 +356,8 @@ const initializeSocket = (_io) => {
                         return;
                     }
                     recipientIds = group.members
-                        .filter(member => member.userId.toString() !== userId)
-                        .map(member => member.userId.toString());
+                        .filter((member) => member.userId.toString() !== userId)
+                        .map((member) => member.userId.toString());
                 }
                 else {
                     const contact = await findContactByUsers(userId, targetId);
@@ -300,12 +366,25 @@ const initializeSocket = (_io) => {
                         socket.emit("error", { message: "Invalid contact" });
                         return;
                     }
-                    const ids = [contact.userId.toString(), contact.targetUserId?.toString()].sort();
+                    const ids = [
+                        contact.userId.toString(),
+                        contact.targetUserId?.toString(),
+                    ].sort();
                     room = `chat_${ids[0]}_${ids[1]}`;
                     recipientIds = [targetId];
                 }
                 const sender = await findUserById(userId);
-                socket.broadcast.to(room).emit("offer", { userId, targetId, type, chatKey, offer, callType, senderName: sender?.name });
+                socket.broadcast
+                    .to(room)
+                    .emit("offer", {
+                    userId,
+                    targetId,
+                    type,
+                    chatKey,
+                    offer,
+                    callType,
+                    senderName: sender?.name,
+                });
                 // Create call notifications for recipients not in the room
                 const callId = `${chatKey}_${Date.now()}`;
                 const socketsInRoom = await io.in(room).allSockets();
@@ -317,10 +396,17 @@ const initializeSocket = (_io) => {
                     }
                 }
                 for (const recipientId of recipientIds) {
-                    if (!connectedUserIds.has(recipientId) || activeChats.get(recipientId) !== chatKey) {
-                        const notification = await sendNotification(recipientId, 'incoming_call', userId, chatKey, callType, callId);
-                        io.to(`user_${recipientId}`).emit('notification.new', notification);
-                    }
+                    // if (
+                    //   !connectedUserIds.has(recipientId) ||
+                    //   activeChats.get(recipientId) !== chatKey
+                    // ) {
+                    const notification = await sendNotification(recipientId, "incoming_call", userId, chatKey, callType, callId);
+                    // io.to(`user_${recipientId}`).emit(
+                    //   "notification.new",
+                    //   notification
+                    // );
+                    console.log(`Created call notification for user ${recipientId}, relying on notificationEmitter:`, notification);
+                    // }
                 }
                 // Track the offer for auto-end and missed call notification
                 const endTimeout = setTimeout(async () => {
@@ -345,13 +431,24 @@ const initializeSocket = (_io) => {
                             else {
                                 console.log(`No incoming call notification found for call ${callId}, creating new`);
                                 const newNotification = await sendNotification(recipientId, "missed_call", userId, chatKey, callType, callId);
-                                io.to(`user_${recipientId}`).emit("notification.new", newNotification);
+                                // io.to(`user_${recipientId}`).emit(
+                                //   "notification.new",
+                                //   newNotification
+                                // );
                                 console.log(`Emitted notification.new to user_${recipientId}:`, newNotification);
                             }
                         }
                     }
-                    socket.to(room).emit("callEnded", { userId, targetId, type, chatKey, callType });
-                    socket.emit("callEnded", { userId, targetId, type, chatKey, callType });
+                    socket
+                        .to(room)
+                        .emit("callEnded", { userId, targetId, type, chatKey, callType });
+                    socket.emit("callEnded", {
+                        userId,
+                        targetId,
+                        type,
+                        chatKey,
+                        callType,
+                    });
                     activeOffers.delete(callId);
                 }, 30000);
                 activeOffers.set(callId, {
@@ -384,12 +481,25 @@ const initializeSocket = (_io) => {
                         socket.emit("error", { message: "Invalid contact" });
                         return;
                     }
-                    const ids = [contact.userId.toString(), contact.targetUserId?.toString()].sort();
+                    const ids = [
+                        contact.userId.toString(),
+                        contact.targetUserId?.toString(),
+                    ].sort();
                     room = `chat_${ids[0]}_${ids[1]}`;
                 }
-                socket.broadcast.to(room).emit("answer", { userId, targetId, type, chatKey, answer, callType });
+                socket.broadcast
+                    .to(room)
+                    .emit("answer", {
+                    userId,
+                    targetId,
+                    type,
+                    chatKey,
+                    answer,
+                    callType,
+                });
                 // Clear timeout for this call
-                const callId = Array.from(activeOffers.keys()).find((id) => activeOffers.get(id)?.chatKey === chatKey && activeOffers.get(id)?.senderId === targetId);
+                const callId = Array.from(activeOffers.keys()).find((id) => activeOffers.get(id)?.chatKey === chatKey &&
+                    activeOffers.get(id)?.senderId === targetId);
                 if (callId) {
                     const call = activeOffers.get(callId);
                     if (call) {
@@ -418,10 +528,22 @@ const initializeSocket = (_io) => {
                         socket.emit("error", { message: "Invalid contact" });
                         return;
                     }
-                    const ids = [contact.userId.toString(), contact.targetUserId?.toString()].sort();
+                    const ids = [
+                        contact.userId.toString(),
+                        contact.targetUserId?.toString(),
+                    ].sort();
                     room = `chat_${ids[0]}_${ids[1]}`;
                 }
-                socket.broadcast.to(room).emit("ice-candidate", { userId, targetId, type, chatKey, candidate, callType });
+                socket.broadcast
+                    .to(room)
+                    .emit("ice-candidate", {
+                    userId,
+                    targetId,
+                    type,
+                    chatKey,
+                    candidate,
+                    callType,
+                });
             }
             catch (error) {
                 console.error("Error broadcasting ICE candidate:", error.message);
@@ -448,13 +570,23 @@ const initializeSocket = (_io) => {
                         socket.emit("error", { message: "Invalid contact" });
                         return;
                     }
-                    const ids = [contact.userId.toString(), contact.targetUserId?.toString()].sort();
+                    const ids = [
+                        contact.userId.toString(),
+                        contact.targetUserId?.toString(),
+                    ].sort();
                     room = `chat_${ids[0]}_${ids[1]}`;
                 }
-                io.to(room).emit("callEnded", { userId, targetId, type, chatKey, callType });
+                io.to(room).emit("callEnded", {
+                    userId,
+                    targetId,
+                    type,
+                    chatKey,
+                    callType,
+                });
                 endedCalls.add(callId);
                 setTimeout(() => endedCalls.delete(callId), 60000); // Clear after 60s
-                const callIdToClear = Array.from(activeOffers.keys()).find((id) => activeOffers.get(id)?.chatKey === chatKey && activeOffers.get(id)?.senderId === userId);
+                const callIdToClear = Array.from(activeOffers.keys()).find((id) => activeOffers.get(id)?.chatKey === chatKey &&
+                    activeOffers.get(id)?.senderId === userId);
                 if (callIdToClear) {
                     const call = activeOffers.get(callIdToClear);
                     if (call) {
@@ -473,13 +605,21 @@ const initializeSocket = (_io) => {
                 const { notificationId, userId } = data;
                 const notification = await markNotificationAsRead(notificationId);
                 if (notification) {
-                    io.to(`user_${userId}`).emit('notification.read', { notificationId });
+                    io.to(`user_${userId}`).emit("notification.read", {
+                        notificationId,
+                    });
                 }
             }
             catch (error) {
                 console.error("Error handling notification.read:", error.message);
-                socket.emit("error", { message: "Failed to mark notification as read" });
+                socket.emit("error", {
+                    message: "Failed to mark notification as read",
+                });
             }
+        });
+        socket.on("leaveChat", (userId) => {
+            activeChats.delete(userId);
+            console.log(`User ${userId} left active chat`);
         });
         socket.on("disconnect", () => {
             console.log(`User disconnected: ${socket.id}`);
@@ -492,10 +632,16 @@ const emitTaskNotification = (notification) => {
         console.error("Socket.IO server not initialized");
         return;
     }
+    if (sentNotifications.has(notification._id)) {
+        console.log(`Skipping duplicate notification.new: ${notification._id}`);
+        return;
+    }
     console.log(`Received notification event for user ${notification.userId}:`, notification);
     const room = `user_${notification.userId}`;
     io.to(room).emit("notification.new", notification);
+    sentNotifications.add(notification._id);
     console.log(`Emitted notification.new to user_${notification.userId}:`, notification);
+    setTimeout(() => sentNotifications.delete(notification._id), 300 * 1000);
 };
 export default initializeSocket;
 //# sourceMappingURL=socket.js.map

@@ -6,7 +6,7 @@ import { createTask, deleteTask, editTask, getTasksByContext, updateTaskPriority
 const router = express.Router();
 
 router.post("/createNewTask/:id",[apiLimiter, verifyToken,checkBlockedStatus, upload.single("image")], createTask);
-router.get('/context/:contextType/:contextId', [apiLimiter, verifyToken,checkBlockedStatus], getTasksByContext);
+router.get('/context/:contextType/:contextId/:userId', [apiLimiter, verifyToken,checkBlockedStatus], getTasksByContext);
 router.patch('/updatePriority/:taskId', [apiLimiter, verifyToken,checkBlockedStatus], updateTaskPriority);
 router.patch('/updateStatus/:taskId', [apiLimiter, verifyToken,checkBlockedStatus], updateTaskStatus);
 router.put('/editTask/:taskId',[apiLimiter, verifyToken,checkBlockedStatus],  editTask);

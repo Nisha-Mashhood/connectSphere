@@ -19,6 +19,9 @@ export const createGroupService = async (groupData) => {
     if (!groupData.availableSlots || groupData.availableSlots.length === 0) {
         throw new Error("At least one available slot is required");
     }
+    if (groupData.maxMembers > 4) {
+        throw new Error("Maximum members cannot exceed 4");
+    }
     const groupPayload = {
         ...groupData,
         createdAt: new Date(),
@@ -27,8 +30,8 @@ export const createGroupService = async (groupData) => {
     if (!newGroup) {
         throw new Error("No group created");
     }
-    console.log("newGroup:", newGroup);
-    console.log("newGroup._id:", newGroup._id);
+    // console.log("newGroup:", newGroup);
+    // console.log("newGroup._id:", newGroup._id);
     await createContact({
         userId: groupData.adminId,
         groupId: newGroup._id.toString(),
@@ -95,45 +98,69 @@ export const modifyGroupRequestStatus = async (requestId, status) => {
     if (!group) {
         throw new Error("Group not found.");
     }
-    // Check if the group has space
-    if (group.members.length >= group.maxMembers) {
-        throw new Error("Cannot accept request. Group is full.");
-    }
     if (status === "Accepted") {
+        // Verify group is not full
+        if (group.isFull || group.members.length >= 4) {
+            throw new Error("Cannot accept request. Group is full (maximum 4 members).");
+        }
+        await updateGroupReqStatus(requestId, "Accepted");
         if (group.price > 0) {
-            await updateGroupReqStatus(requestId, "Accepted");
-            return;
+            return { message: "Request accepted. Awaiting payment." };
         }
         else {
-            // If no payment is required, add user to group and delete request
-            await updateGroupReqStatus(requestId, "Accepted");
-            //Add members to the group
-            await addMemberToGroup(group._id.toString(), request.userId.toString());
-            //Add to contact collection
-            await createContact({
-                userId: request.userId.toString(),
-                groupId: group._id.toString(),
-                type: "group",
-            });
-            await deleteGroupRequest(requestId);
-            return { message: "User added to group successfully." };
+            try {
+                // Add member to group
+                await addMemberToGroup(group._id.toString(), request.userId.toString());
+                // Create contact
+                await createContact({
+                    userId: request.userId.toString(),
+                    groupId: group._id.toString(),
+                    type: "group",
+                });
+                // Delete the group request
+                await deleteGroupRequest(requestId);
+                // Verify member was added
+                const updatedGroup = await findGrouptById(group._id);
+                if (!updatedGroup?.members.some((m) => m.userId.toString() === request.userId.toString())) {
+                    throw new Error("Failed to add member to group.");
+                }
+                return { message: "User added to group successfully." };
+            }
+            catch (error) {
+                console.error("Error processing free group request:", error);
+                throw new Error(`Failed to add member: ${error.message}`);
+            }
         }
     }
     else if (status === "Rejected") {
-        return await updateGroupReqStatus(requestId, "Rejected");
+        await updateGroupReqStatus(requestId, "Rejected");
+        return { message: "Request rejected successfully." };
     }
     throw new Error("Invalid status.");
 };
 export const processGroupPaymentService = async (paymentMethodId, amount, requestId, email, groupRequestData, returnUrl) => {
     const idempotencyKey = uuid();
     try {
+        const request = await findRequestById(requestId);
+        if (!request) {
+            throw new Error("Group request not found.");
+        }
+        const group = await findGrouptById(request.groupId);
+        if (!group) {
+            throw new Error("Group not found.");
+        }
+        if (group.isFull || group.members.length >= 4) {
+            throw new Error("Cannot complete payment. Group is full (maximum 4 members).");
+        }
         // Extract payment method ID if it's an object
-        const paymentMethodIdString = typeof paymentMethodId === "string" ? paymentMethodId : paymentMethodId.id;
+        const paymentMethodIdString = typeof paymentMethodId === "string"
+            ? paymentMethodId
+            : paymentMethodId.id;
         if (!paymentMethodIdString || typeof paymentMethodIdString !== "string") {
-            throw new Error("Invalid paymentMethodId: must be a string or an object with an 'id' property");
+            throw new Error("Invalid paymentMethodId");
         }
         console.log(`Processing payment with paymentMethodId: ${paymentMethodIdString}`);
-        // List customers with email filter 
+        // List customers with email filter
         const customerListParams = { email, limit: 1 };
         const customers = await stripe.customers.list(customerListParams);
         let customer = customers.data.length > 0 ? customers.data[0] : null;

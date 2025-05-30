@@ -23,5 +23,5 @@ export declare const countMessagesByGroupId: (groupId: string) => Promise<number
 export declare const countUnreadMessagesByGroupId: (groupId: string, userId: string) => Promise<number>;
 export declare const countUnreadMessagesByCollaborationId: (collaborationId: string, userId: string) => Promise<number>;
 export declare const countUnreadMessagesByUserConnectionId: (userConnectionId: string, userId: string) => Promise<number>;
-export declare const markMessagesAsRead: (chatKey: string, userId: string, type: "group" | "user-mentor" | "user-user") => Promise<void>;
+export declare const markMessagesAsRead: (chatKey: string, userId: string, type: "group" | "user-mentor" | "user-user") => Promise<string[]>;
 //# sourceMappingURL=chat.repository.d.ts.map

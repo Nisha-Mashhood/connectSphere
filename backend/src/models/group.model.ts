@@ -12,6 +12,7 @@ export interface GroupDocument extends Document {
   bio: string;
   price: number;
   maxMembers: number;
+  isFull:boolean;
   availableSlots: TimeSlot[];
   profilePic: string;
   coverPic: string;
@@ -46,6 +47,10 @@ const GroupSchema: Schema = new Schema<GroupDocument>(
     { 
         type: Number, 
         required: true 
+    },
+    isFull: { 
+      type: Boolean, 
+      default: false 
     },
     availableSlots: 
     [

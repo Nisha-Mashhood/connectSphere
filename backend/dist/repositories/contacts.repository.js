@@ -81,7 +81,7 @@ export const findContactsByUserId = async (userId) => {
         })
             .populate({
             path: "groupId",
-            select: "_id name profilePic startDate adminId members",
+            select: "_id name profilePic startDate adminId bio price maxMembers availableSlots members",
             model: "Group",
             populate: [
                 { path: "adminId", select: "_id name profilePic" },

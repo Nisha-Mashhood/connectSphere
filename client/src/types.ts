@@ -36,11 +36,14 @@ export interface Contact {
     startDate: Date;
     adminName: string;
     adminProfilePic: string;
+    maxMembers: number;
+    bio: string;
+    price: number;
+    availableSlots: { day: string; timeSlots: string[] }[];
     members: { 
       userId: string; 
       name: string; 
       profilePic: string; 
-      _id?: string
       joinedAt: Date 
     }[];
   };
@@ -49,14 +52,18 @@ export interface Contact {
 export const formatContact = (contact: any): Contact => ({
   id: contact.targetId,
   contactId: contact._id,
-  userId: contact.userId, 
+  userId: contact.userId,
   targetId: contact.targetId,
   collaborationId: contact?.collaborationId,
+  collaborationDetails: contact?.collaborationDetails,
   userConnectionId: contact?.userConnectionId,
+  connectionDetails: contact?.connectionDetails,
   groupId: contact?.groupId,
+  groupDetails: contact?.groupDetails,
   name: contact.targetName || "Unknown",
   profilePic: contact.targetProfilePic || "",
   type: contact.type,
+  targetJobTitle: contact.targetJobTitle,
 });
 
 export interface IChatMessage {
@@ -79,11 +86,10 @@ export interface IChatMessage {
   caption?: string;
 }
 
-  
 export interface Notification {
   _id: string;
   userId: string;
-  type: "message" | "incoming_call" | "missed_call"| "task_reminder";
+  type: "message" | "incoming_call" | "missed_call" | "task_reminder";
   content: string;
   relatedId: string;
   status: "unread" | "read";
@@ -92,7 +98,7 @@ export interface Notification {
   createdAt: string;
   updatedAt: string;
   taskContext?: {
-    contextType: "profile" | "group" | "collaboration" | "userconnection";
+    contextType: "profile" | "group" | "collaboration" ;
     contextId: string;
   };
 }

@@ -73,11 +73,11 @@ export declare const updateGroupReqStatus: (requestId: string, status: "Accepted
 export declare const updateGroupPaymentStatus: (requestId: string, amountPaid: number) => Promise<void>;
 export declare const addMemberToGroup: (groupId: string, userId: string) => Promise<void>;
 export declare const deleteGroupRequest: (requestId: string) => Promise<void>;
-export declare const removeGroupMemberById: (groupId: string, userId: string) => Promise<(mongoose.Document<unknown, {}, GroupDocument> & GroupDocument & Required<{
+export declare const removeGroupMemberById: (groupId: string, userId: string) => Promise<mongoose.Document<unknown, {}, GroupDocument> & GroupDocument & Required<{
     _id: unknown;
 }> & {
     __v: number;
-}) | null>;
+}>;
 export declare const deleteGroupById: (groupId: string) => Promise<(mongoose.Document<unknown, {}, GroupDocument> & GroupDocument & Required<{
     _id: unknown;
 }> & {

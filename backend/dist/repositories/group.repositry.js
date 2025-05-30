@@ -27,7 +27,9 @@ export const getGroupsByGroupId = async (groupId) => {
 };
 export const getGroups = async () => {
     try {
-        const groups = await Group.find();
+        const groups = await Group.find()
+            .populate("members.userId")
+            .populate("adminId");
         return groups;
     }
     catch (error) {
@@ -146,6 +148,7 @@ export const addMemberToGroup = async (groupId, userId) => {
         const isUserAlreadyInGroup = group.members.some((member) => member.userId.toString() === userId.toString());
         if (!isUserAlreadyInGroup) {
             group.members.push({ userId: new mongoose.Types.ObjectId(userId), joinedAt: new Date() });
+            group.isFull = group.members.length >= 4;
             await group.save();
         }
     }
@@ -164,7 +167,17 @@ export const deleteGroupRequest = async (requestId) => {
 };
 // Remove a user from the group's member list
 export const removeGroupMemberById = async (groupId, userId) => {
-    return await Group.findByIdAndUpdate(groupId, { $pull: { members: { userId } } }, { new: true });
+    const group = await Group.findById(groupId);
+    if (!group) {
+        throw new Error("Group not found");
+    }
+    if (userId === group.adminId.toString()) {
+        throw new Error("Cannot remove admin from group members");
+    }
+    group.members = group.members.filter((member) => member.userId.toString() !== userId);
+    group.isFull = group.members.length >= 4;
+    await group.save();
+    return group;
 };
 // Delete a group by ID
 export const deleteGroupById = async (groupId) => {

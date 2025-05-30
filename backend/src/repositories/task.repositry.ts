@@ -17,16 +17,40 @@ export const deleteTask = async (taskId: string): Promise<void> => {
   await Task.findByIdAndDelete(taskId);
 }
 
-export const findTasksByContext = async (contextType: string, contextId: string): Promise<ITask[]> => {
-  const tasks = await Task.find({
-    $or: [
-      { contextType, contextId }, 
-      { assignedGroups: contextId }, 
-      { assignedCollaborations: contextId } 
-    ]
-  }).populate('createdBy'); 
+export const findTasksByContext = async (contextType: string, contextId: string, userId: string): Promise<ITask[]> => {
+  let query: any;
+  let populatePaths: any[];
 
-  return tasks;
+  if (contextType === "profile" && userId) {
+    // Profile context: tasks where user is creator, assignee, or contextId matches
+    query = {
+      contextType: "profile",
+      $or: [
+        { contextId },
+        { assignedUsers: userId },
+        { createdBy: userId },
+      ],
+    };
+    populatePaths = [
+      { path: "createdBy", model: "User" },
+      { path: "assignedUsers", model: "User" },
+      { path: "contextId", model: "User" },
+    ];
+  } else {
+    // Group or Collaboration context: tasks matching contextType and contextId
+    query = { contextType, contextId };
+    populatePaths = [
+      { path: "createdBy", model: "User" },
+      {
+        path: "contextId",
+        model: contextType === "group" ? "Group" : "Collaboration",
+      },
+    ];
+  }
+
+  return await Task.find(query)
+    .populate(populatePaths)
+    .sort({ createdAt: -1 });
 }
 
 export const updateTaskPriority = async (taskId: string, priority: 'low' | 'medium' | 'high'): Promise<ITask | null> => {

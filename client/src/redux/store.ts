@@ -13,17 +13,25 @@ const appReducer = combineReducers({
     review: reviewReducer,
 });
 
+const initialNotificationState = {
+    chatNotifications: [],
+    taskNotifications: [],
+    chatUnreadCount: 0,
+    taskUnreadCount: 0,
+    isInChatComponent: false,
+};
+
 const rootReducer = (state: ReturnType<typeof appReducer>, action: any) => {
     if (action.type === signOut.type) {
         // Clear slices state on logout
         state = {
             user: undefined, // Clears the user slice
             profile: undefined, // Clears the profile slice
-            notification: undefined,
+            notification: initialNotificationState,
             review:undefined,
         };
     }
-    return appReducer(state, action);
+    return appReducer(state || undefined, action);
 };
 
 const persistConfig = {

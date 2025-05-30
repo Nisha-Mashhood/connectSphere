@@ -38,24 +38,20 @@ export declare const fetchGroupRequestsByuserId: (userId: string) => Promise<(mo
 }> & {
     __v: number;
 })[]>;
-export declare const modifyGroupRequestStatus: (requestId: string, status: "Accepted" | "Rejected") => Promise<(mongoose.Document<unknown, {}, import("../models/groupRequest.model.js").GroupRequestDocument> & import("../models/groupRequest.model.js").GroupRequestDocument & Required<{
-    _id: unknown;
-}> & {
-    __v: number;
-}) | {
+export declare const modifyGroupRequestStatus: (requestId: string, status: "Accepted" | "Rejected") => Promise<{
     message: string;
-} | undefined>;
+}>;
 export declare const processGroupPaymentService: (paymentMethodId: string | {
     id: string;
 }, amount: number, requestId: string, email: string, groupRequestData: {
     groupId: string;
     userId: string;
 }, returnUrl: string) => Promise<Stripe.Response<Stripe.PaymentIntent>>;
-export declare const removeMemberFromGroup: (groupId: string, userId: string) => Promise<(mongoose.Document<unknown, {}, GroupDocument> & GroupDocument & Required<{
+export declare const removeMemberFromGroup: (groupId: string, userId: string) => Promise<mongoose.Document<unknown, {}, GroupDocument> & GroupDocument & Required<{
     _id: unknown;
 }> & {
     __v: number;
-}) | null>;
+}>;
 export declare const deleteGroupByIdService: (groupId: string) => Promise<(mongoose.Document<unknown, {}, GroupDocument> & GroupDocument & Required<{
     _id: unknown;
 }> & {

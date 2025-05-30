@@ -57,7 +57,7 @@ const MentorSchema = new Schema({
 // Pre-save hook to generate mentorId
 MentorSchema.pre("save", async function (next) {
     if (!this.mentorId) {
-        this.mentorId = await generateCustomId("groupRequest", "GRQ");
+        this.mentorId = await generateCustomId("groupRequest", "MTR");
     }
     next();
 });

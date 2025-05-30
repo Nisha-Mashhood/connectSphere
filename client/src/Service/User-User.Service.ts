@@ -42,12 +42,14 @@ export const disconnectUser_UserConnection = async (
   }
 };
 
+
 // Get All User Connections
 export const getUser_UserConnections = async (userId: string) => {
   try {
     const response = await axiosInstance.get(
       `/user-userCollab/connections/${userId}`
     );
+    console.log("Data comingfrom backend :",response);
     return response.data;
   } catch (error) {
     handleError(error);

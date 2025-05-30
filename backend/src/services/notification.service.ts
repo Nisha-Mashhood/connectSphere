@@ -40,24 +40,21 @@ export const sendTaskNotification = async (
   notificationTime?: string
 ): Promise<TaskNotificationPayload[]> => {
   const notifications: TaskNotificationPayload[] = [];
-  // console.log(`Entering sendTaskNotification for task ${taskId}, user ${specificUserId || "all"}, date ${notificationDate}, time ${notificationTime}`);
-
   try {
     const task: ITask | null = await notificationRepository.getTasksForNotification(taskId);
     if (!task) {
-      // console.log(`No task found for _id ${taskId}`);
+      console.log(`No task found for _id ${taskId}`);
       return notifications;
     }
-    // console.log(`Task ${task.taskId} details: status=${task.status}, dueDate=${task.dueDate}, contextType=${task.contextType}, notificationDate=${task.notificationDate}, notificationTime=${task.notificationTime}`);
 
     // Skip if task is completed or due date has passed
     const currentTime = new Date();
     if (task.status === "completed") {
-      // console.log(`Skipping task ${task.taskId}: Task completed`);
+      console.log(`Skipping task ${task.taskId}: Task completed`);
       return notifications;
     }
     if (new Date(task.dueDate) < currentTime) {
-      // console.log(`Skipping task ${task.taskId}: Due date passed (${task.dueDate})`);
+      console.log(`Skipping task ${task.taskId}: Due date passed (${task.dueDate})`);
       return notifications;
     }
 
@@ -76,22 +73,16 @@ export const sendTaskNotification = async (
           const taskNotificationTime = new Date(currentTime);
           taskNotificationTime.setHours(time24.hours, time24.minutes, 0, 0);
           const timeDiff = Math.abs(currentTime.getTime() - taskNotificationTime.getTime());
-          // Allow ±1 minute window
-          isTimeToNotify = timeDiff <= 60 * 1000;
-          // console.log(`Task ${task.taskId} time check: currentTime=${currentTime}, taskTime=${taskNotificationTime}, timeDiff=${timeDiff}ms, isTimeToNotify=${isTimeToNotify}`);
-        } else {
-          // console.log(`Invalid notificationTime format for task ${task.taskId}: ${task.notificationTime}`);
+          isTimeToNotify = timeDiff <= 60 * 1000; // ±1 minute window
         }
-      } else {
-        // console.log(`Task ${task.taskId} not on notification date: ${task.notificationDate}`);
       }
     } else {
-      // console.log(`Task ${task.taskId} missing notificationDate or notificationTime`);
+      console.log(`Task ${task.taskId} missing notificationDate or notificationTime`);
       return notifications;
     }
 
     if (!isTimeToNotify) {
-      // console.log(`Skipping task ${task.taskId}: Not time to notify`);
+      console.log(`Skipping task ${task.taskId}: Not time to notify`);
       return notifications;
     }
 
@@ -105,23 +96,17 @@ export const sendTaskNotification = async (
           (id): id is string => id !== null
         );
       }
-    } else if (task.contextType === "userconnection") {
-      const connectionIds = await notificationRepository.getConnectionUserIds(task.contextId.toString());
-      if (connectionIds) {
-        recipients = [connectionIds.requester, connectionIds.recipient].filter(
-          (id): id is string => id !== null
-        );
-      }
     } else if (task.contextType === "group") {
       const groupMembers = await notificationRepository.getGroupMembers(task.contextId.toString());
       recipients = groupMembers.map(member => member.toString());
     } else if (task.contextType === "profile") {
-      recipients = [task.createdBy.toString()];
+      recipients = [task.createdBy.toString(), ...task.assignedUsers.map(id => id.toString())];
+      recipients = [...new Set(recipients)]; // Remove duplicates
     }
 
     console.log(`Task ${task.taskId} recipients: ${recipients.join(", ")}`);
     if (recipients.length === 0) {
-      // console.log(`No recipients for task ${task.taskId}`);
+      console.log(`No recipients for task ${task.taskId}`);
       return notifications;
     }
 
@@ -129,19 +114,15 @@ export const sendTaskNotification = async (
     const assignerName = assigner?.name || "Unknown";
 
     for (const userId of recipients) {
-      // Check if user is connected (if io is available)
       let isConnected = true;
       if (io) {
         const room = `user_${userId}`;
         const socketsInRoom = await io.in(room).allSockets();
         isConnected = socketsInRoom.size > 0;
-        // console.log(`User ${userId} connection check: ${isConnected ? "Connected" : "Not connected"}`);
         if (!isConnected) {
-          // console.log(`Skipping notification for user ${userId} on task ${task.taskId}: User not connected`);
+          console.log(`Skipping notification for user ${userId} on task ${task.taskId}: User not connected`);
           continue;
         }
-      } else {
-        console.log(`Socket.IO not initialized, skipping connection check for user ${userId}`);
       }
 
       // Check for existing notification
@@ -153,16 +134,14 @@ export const sendTaskNotification = async (
       );
 
       if (notification && notification.status === "read") {
-          // Update status to unread
-          notification = await notificationRepository.updateNotificationStatus(notification._id.toString(), "unread");
-          // console.log(`[DEBUG] Updated notification ${notification?._id} for user ${userId} on task ${task.taskId} to unread (dueDate: ${task.dueDate})`);
-        }
+        notification = await notificationRepository.updateNotificationStatus(notification._id.toString(), "unread");
+      }
 
       if (!notification) {
         const isAssigner = userId === task.createdBy.toString();
         const content = isAssigner
-          ? `Task assigned by you: ${task.name}`
-          : `Task assigned by ${assignerName}: ${task.name}`;
+          ? `Reminder: Your task "${task.name}" is due soon`
+          : `Reminder: Task "${task.name}" assigned by ${assignerName} is due soon`;
 
         const notificationData: Omit<AppNotification, "_id" | "AppNotificationId"> = {
           userId: userId,
@@ -183,15 +162,11 @@ export const sendTaskNotification = async (
 
         notification = await notificationRepository.createNotification(notificationData);
         if (!notification) {
-          // console.log(`Failed to create notification for user ${userId} on task ${taskId}`);
+          console.log(`Failed to create notification for user ${userId} on task ${taskId}`);
           continue;
         }
-        // console.log(`Created notification ${notification._id} for user ${userId}: ${content}`);
-      } else {
-        console.log(`Found existing notification ${notification._id} for user ${userId} on task ${task.taskId}, emitting again`);
       }
 
-      // Emit notification
       const payload: TaskNotificationPayload = {
         _id: notification._id.toString(),
         userId: notification.userId.toString(),
@@ -215,7 +190,6 @@ export const sendTaskNotification = async (
       console.log(`Emitted notification ${notification._id} to user ${userId} for task ${task.taskId}`);
     }
 
-    // console.log(`sendTaskNotification returning ${notifications.length} notifications`);
     return notifications;
   } catch (error) {
     console.error(`Error in sendTaskNotification for task ${taskId}:`, error);
@@ -310,8 +284,8 @@ export const sendNotification = async (
     } else {
       const isAssigner = userId === senderId;
       content = isAssigner
-        ? `Task assigned by you: ${task.name}`
-        : `Task assigned by ${sender?.name || senderId}: ${task.name}`;
+        ? `Reminder: Your task "${task.name}" is due soon`
+        : `Reminder: Task "${task.name}" assigned by ${sender?.name || senderId} is due soon`;
     }
   } else {
     content = `Notification from ${sender?.name || senderId}`;

@@ -12,8 +12,8 @@ import { updateTaskNotifications } from '../repositories/notification.repositry.
     return await createTaskRepo(taskData);
   }
 
-  export const getTasksByContextService = async (contextType: string, contextId: string): Promise<ITask[]> => {
-    return await findTasksByContext(contextType, contextId);
+  export const getTasksByContextService = async (contextType: string, contextId: string, userId: string): Promise<ITask[]> => {
+    return await findTasksByContext(contextType, contextId, userId);
   };
   
   export const changeTaskPriorityService = async (taskId: string, priority: 'low' | 'medium' | 'high'): Promise<ITask | null> => {

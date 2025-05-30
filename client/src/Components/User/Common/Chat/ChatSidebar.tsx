@@ -3,12 +3,14 @@ import { Card, CardBody, Avatar, Input, Chip, Tabs, Tab, Badge } from "@nextui-o
 import { Contact, Notification } from "../../../../types";
 import { FaSearch, FaUserFriends, FaUsers, FaGraduationCap } from "react-icons/fa";
 import { getChatKey } from "./utils/contactUtils";
+// import { useSelector } from "react-redux";
+// import { RootState } from "../../../../redux/store";
 
 interface ChatSidebarProps {
   contacts: Contact[];
   selectedContact: Contact | null;
   onContactSelect: (contact: Contact) => void;
-  notifications: Notification[];
+  chatNotifications: Notification[];
   unreadCounts: { [key: string]: number };
 }
 
@@ -16,9 +18,10 @@ const ChatSidebar: React.FC<ChatSidebarProps> = ({
   contacts,
   selectedContact,
   onContactSelect,
-  // notifications,
+  chatNotifications,
   unreadCounts,
 }) => {
+  // const { isInChatComponent } = useSelector((state: RootState) => state.notification);
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedType, setSelectedType] = useState<string>("all");
 
@@ -154,7 +157,9 @@ const ChatSidebar: React.FC<ChatSidebarProps> = ({
               // const hasNotification = notifications.some((n) => n.contactId === contact.id);
               const chatKey = getChatKey(contact);
               const unreadCount = unreadCounts[chatKey] || 0;
-
+              const hasNotification = chatNotifications.some(
+                n => n.relatedId === chatKey && n.status === "unread"
+              );
               return (
                 <div
                   key={contact.id}
@@ -179,9 +184,9 @@ const ChatSidebar: React.FC<ChatSidebarProps> = ({
                       }
                     />
                     </Badge>
-                    {/* {hasNotification && (
+                    {hasNotification && (
                       <div className="absolute -top-1 -right-1 w-3 h-3 sm:w-4 sm:h-4 bg-red-500 rounded-full animate-pulse" />
-                    )} */}
+                    )}
                   </div>
 
                   <div className="flex-1 min-w-0">

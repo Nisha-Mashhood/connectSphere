@@ -1,5 +1,5 @@
 import ChatMessage, { IChatMessage } from "../models/chat.model.js";
-import mongoose from "mongoose";
+import mongoose, { ObjectId } from "mongoose";
 
 const toObjectId = (id?: string): mongoose.Types.ObjectId | undefined => {
   if (!mongoose.Types.ObjectId.isValid(id as string)) {
@@ -131,20 +131,30 @@ export const markMessagesAsRead = async (
   chatKey: string,
   userId: string,
   type: "group" | "user-mentor" | "user-user"
-): Promise<void> => {
-  const filter: any = { isRead: false, senderId: { $ne: toObjectId(userId) } };
-  if (type === "group") {
-    filter.groupId = toObjectId(chatKey.replace("group_", ""));
-  } else if (type === "user-mentor") {
-    filter.collaborationId = toObjectId(chatKey.replace("user-mentor_", ""));
-  } else {
-    filter.userConnectionId = toObjectId(chatKey.replace("user-user_", ""));
-  }
+): Promise<string[]> => {
+  try {
+    const filter: any = { isRead: false, senderId: { $ne: toObjectId(userId) } };
+    if (type === "group") {
+      filter.groupId = toObjectId(chatKey.replace("group_", ""));
+    } else if (type === "user-mentor") {
+      filter.collaborationId = toObjectId(chatKey.replace("user-mentor_", ""));
+    } else {
+      filter.userConnectionId = toObjectId(chatKey.replace("user-user_", ""));
+    }
+    const unreadMessages = await ChatMessage.find(filter).select("_id");
+    const messageIds = unreadMessages.map((msg) => (msg._id as ObjectId).toString());
 
-  // await ChatMessage.updateMany(filter, { $set: { isRead: true, status: "read" } });
-  await ChatMessage.updateMany(
-    { ...filter, senderId: { $ne: userId } },
-    { $set: { isRead: true, status: "read" } },
-    { new: true }
-  )
+    if (messageIds.length > 0) {
+      await ChatMessage.updateMany(
+        { _id: { $in: messageIds } },
+        { $set: { isRead: true, status: "read" } }
+      );
+    }
+
+    console.log("Marked messages as read:", { chatKey, userId, messageIds });
+    return messageIds;
+  } catch (error: any) {
+    console.error("Error in markMessagesAsRead:", error.message);
+    return [];
+  }
 };

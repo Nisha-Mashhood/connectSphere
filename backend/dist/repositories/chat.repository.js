@@ -117,17 +117,28 @@ export const countUnreadMessagesByUserConnectionId = async (userConnectionId, us
     return count;
 };
 export const markMessagesAsRead = async (chatKey, userId, type) => {
-    const filter = { isRead: false, senderId: { $ne: toObjectId(userId) } };
-    if (type === "group") {
-        filter.groupId = toObjectId(chatKey.replace("group_", ""));
+    try {
+        const filter = { isRead: false, senderId: { $ne: toObjectId(userId) } };
+        if (type === "group") {
+            filter.groupId = toObjectId(chatKey.replace("group_", ""));
+        }
+        else if (type === "user-mentor") {
+            filter.collaborationId = toObjectId(chatKey.replace("user-mentor_", ""));
+        }
+        else {
+            filter.userConnectionId = toObjectId(chatKey.replace("user-user_", ""));
+        }
+        const unreadMessages = await ChatMessage.find(filter).select("_id");
+        const messageIds = unreadMessages.map((msg) => msg._id.toString());
+        if (messageIds.length > 0) {
+            await ChatMessage.updateMany({ _id: { $in: messageIds } }, { $set: { isRead: true, status: "read" } });
+        }
+        console.log("Marked messages as read:", { chatKey, userId, messageIds });
+        return messageIds;
     }
-    else if (type === "user-mentor") {
-        filter.collaborationId = toObjectId(chatKey.replace("user-mentor_", ""));
+    catch (error) {
+        console.error("Error in markMessagesAsRead:", error.message);
+        return [];
     }
-    else {
-        filter.userConnectionId = toObjectId(chatKey.replace("user-user_", ""));
-    }
-    // await ChatMessage.updateMany(filter, { $set: { isRead: true, status: "read" } });
-    await ChatMessage.updateMany({ ...filter, senderId: { $ne: userId } }, { $set: { isRead: true, status: "read" } }, { new: true });
 };
 //# sourceMappingURL=chat.repository.js.map

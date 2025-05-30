@@ -467,7 +467,9 @@ const ChatHeader: React.FC<ChatHeaderProps> = ({
 
     return (
       <p className="text-xs text-green-200 animate-pulse">
-        {typingUsersNames} {typingUsersNames.includes(",") ? "..." : "..."} typing
+        ... {typingUsersNames } 
+        {typingUsersNames.includes(",") ? "   " : "   "} 
+            typing
       </p>
     );
   };

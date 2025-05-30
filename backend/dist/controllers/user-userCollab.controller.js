@@ -40,6 +40,7 @@ export const getUserConnectionsController = async (req, res) => {
     const { userId } = req.params;
     try {
         const connections = await userConnectionService.fetchUserConnections(userId);
+        console.log("user Conections from backend : ", connections);
         res.status(200).json({ message: "Connections fetched", data: connections });
     }
     catch (error) {

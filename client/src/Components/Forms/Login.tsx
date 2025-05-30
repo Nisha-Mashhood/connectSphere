@@ -21,6 +21,7 @@ import {
   fetchGroups,
   fetchMentorDetails,
   fetchRequests,
+  fetchUserConnections,
 } from "../../redux/Slice/profileSlice";
 
 const Login = () => {
@@ -96,6 +97,9 @@ const Login = () => {
       dispatch(fetchGroups(user._id));
       dispatch(fetchGroupRequests(user._id));
       dispatch(fetchGroupDetailsForMembers(user._id));
+
+      //fetch userConnections after login
+      dispatch(fetchUserConnections(user._id));
 
       //Check if profile is complete
       const profileResponse = await checkProfile(user._id);

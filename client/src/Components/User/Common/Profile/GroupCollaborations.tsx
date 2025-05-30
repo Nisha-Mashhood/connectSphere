@@ -55,7 +55,7 @@ const GroupCollaborations = ({ handleProfileClick }) => {
                 {/* Member Count */}
                 <div className="flex items-center space-x-2 text-sm text-gray-600 dark:text-gray-300">
                   <FaUsers className="text-blue-500" />
-                  <span>{group.members?.length || 0} members</span>
+                  <span>{group.members?.length || 0} members {group.isFull ? "(Full)" : ""}</span>
                 </div>
 
                 {/* Admin Info */}
@@ -74,20 +74,12 @@ const GroupCollaborations = ({ handleProfileClick }) => {
                 <span className="px-3 py-1 text-sm font-medium rounded-full bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200">
                   {group.status || "Active"}
                 </span>
-                {/* <Button
-                  size="sm"
-                  color="primary"
-                  variant="flat"
-                  onPress={() => navigate(`/chat/group/${group._id}`)}
-                >
-                  Chat
-                </Button> */}
               </div>
             </div>
 
             {/* Group Description */}
             <div className="mt-3 text-gray-600 dark:text-gray-400 text-sm">
-              {group.description}
+              {group.bio  || "No description available"}
             </div>
           </div>
         ))}

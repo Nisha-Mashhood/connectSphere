@@ -30,6 +30,11 @@ export class SocketService {
     return this.socket;
   }
 
+  public leaveChat(userId: string) {
+    console.log("Sending leaveChat event:", userId);
+    this.socket?.emit("leaveChat", userId);
+  }
+
   disconnect() {
     this.socket?.disconnect();
     this.socket = null;

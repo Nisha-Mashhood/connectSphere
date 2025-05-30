@@ -12,6 +12,7 @@ import {
   update_task_priority,
   update_task_status,
 } from "../../../Service/Task.Service";
+import { getUser_UserConnections } from "../../../Service/User-User.Service";
 import TaskList from "./TaskList";
 import TaskForm from "../../Forms/TaskForm";
 import TaskViewModal from "./TaskViewModal";
@@ -26,8 +27,7 @@ interface ITaskData {
   notificationTime: string;
   privacy: "private";
   status: "pending" | "in-progress" | "completed" | "not-completed";
-  assignedGroups: Set<string>;
-  assignedCollaborations: Set<string>;
+  assignedUsers: Set<string>;
   taskImage: File | null;
   taskImagePreview: string;
 }
@@ -45,20 +45,19 @@ interface ITaskErrors {
 
 const TaskManagement = ({ context, currentUser, contextData }) => {
   const { collabDetails, groupMemberships } = useSelector((state: RootState) => state.profile);
+  const { taskNotifications } = useSelector((state: RootState) => state.notification);
   const collaborations = collabDetails?.data || [];
   const groups = groupMemberships || [];
 
   const [isOpen, setIsOpen] = useState(false);
   const [isEditOpen, setIsEditOpen] = useState(false);
   const [isViewOpen, setIsViewOpen] = useState(false);
-  const [selectedTab, setSelectedTab] = useState("my-tasks");
-  const [tasks, setTasks] = useState<any[]>([]);
-  const [assignedByOthers, setAssignedByOthers] = useState<any[]>([]);
-  const [showGroupSelect, setShowGroupSelect] = useState(false);
-  const [showCollabSelect, setShowCollabSelect] = useState(false);
+  const [allTasks, setAllTasks] = useState<any[]>([]);
+  const [showUserSelect, setShowUserSelect] = useState(false);
   const [selectedTask, setSelectedTask] = useState<any>(null);
   const [isDeleting, setIsDeleting] = useState(false);
   const [errors, setErrors] = useState<ITaskErrors>({});
+  const [connectedUsers, setConnectedUsers] = useState<{ userId: string; name: string }[]>([]);
 
   const [taskData, setTaskData] = useState<ITaskData>({
     name: "",
@@ -70,11 +69,60 @@ const TaskManagement = ({ context, currentUser, contextData }) => {
     notificationTime: "",
     privacy: "private",
     status: "pending",
-    assignedGroups: new Set([]),
-    assignedCollaborations: new Set([]),
+    assignedUsers: new Set([]),
     taskImage: null,
     taskImagePreview: "",
   });
+
+  // Fetch user connections for profile context
+  const fetchUserConnections = async () => {
+    try {
+      const connectionsData = await getUser_UserConnections(currentUser._id);
+      console.log("Connections data in TaskManagement:", connectionsData);
+
+      const users = connectionsData.data
+        .filter((conn) => conn.requestStatus === "Accepted" && conn.connectionStatus === "Connected")
+        .map((conn) => {
+          const otherUser = conn.requester._id === currentUser._id ? conn.recipient : conn.requester;
+          return {
+            userId: otherUser._id,
+            name: otherUser.name || "Unnamed User",
+          };
+        })
+        .filter((user, index, self) => 
+          user.userId && self.findIndex((u) => u.userId === user.userId) === index
+        );
+
+      setConnectedUsers(users);
+      console.log("Connected users in TaskManagement:", users);
+    } catch (error) {
+      console.error("Error fetching user connections:", error);
+      toast.error("Failed to fetch user connections");
+    }
+  };
+
+  // Fetch all tasks
+  const fetchTasks = async () => {
+    try {
+      const response = await get_tasks_by_context(context, contextData?._id, currentUser._id);
+      if (response) {
+        const sortedTasks = response.sort((a, b) => 
+          new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
+        );
+        setAllTasks(sortedTasks);
+      }
+    } catch (error) {
+      console.error("Error fetching tasks:", error);
+      toast.error("Failed to fetch tasks");
+    }
+  };
+  console.log("TASK : ",allTasks)
+  useEffect(() => {
+    fetchTasks();
+    if (context === "profile") {
+      fetchUserConnections();
+    }
+  }, [context, currentUser?._id, contextData]);
 
   const formatDate = (dateString: string) => {
     if (!dateString) return "";
@@ -84,11 +132,11 @@ const TaskManagement = ({ context, currentUser, contextData }) => {
 
   const validateForm = (): ITaskErrors => {
     const newErrors: ITaskErrors = {};
-    if (!taskData.name.trim()) newErrors.name = "Task name is required";
+    if (!taskData.name?.trim()) newErrors.name = "Task name is required";
     else if (taskData.name.length < 2) newErrors.name = "Task name must be at least 2 characters";
     else if (taskData.name.length > 100) newErrors.name = "Task name cannot exceed 100 characters";
 
-    if (!taskData.description.trim()) newErrors.description = "Task description is required";
+    if (!taskData.description?.trim()) newErrors.description = "Task description is required";
     else if (taskData.description.length < 10) newErrors.description = "Description must be at least 10 characters";
     else if (taskData.description.length > 500) newErrors.description = "Description cannot exceed 500 characters";
 
@@ -132,25 +180,6 @@ const TaskManagement = ({ context, currentUser, contextData }) => {
     }
   };
 
-  const fetchTasks = async () => {
-    try {
-      const response = await get_tasks_by_context(context, contextData?._id);
-      if (response) {
-        setTasks(response.filter((task) => task.createdBy._id === currentUser._id));
-        setAssignedByOthers(response.filter((task) => task.createdBy._id !== currentUser._id));
-      }
-    } catch (error) {
-      console.error("Error fetching tasks:", error);
-      toast.error("Failed to fetch tasks");
-    }
-  };
-
-  useEffect(() => {
-    fetchTasks();
-  }, [context, currentUser, contextData]);
-
-
-  //handle create task
   const handleTaskCreate = async () => {
     const validationErrors = validateForm();
     setErrors(validationErrors);
@@ -178,29 +207,24 @@ const TaskManagement = ({ context, currentUser, contextData }) => {
         createdAt: new Date(),
         contextId: context === "profile" ? currentUser._id : contextData?._id,
         contextType: context,
-        assignedGroups: showGroupSelect ? Array.from(taskData.assignedGroups) : [],
-        assignedCollaborations: showCollabSelect ? Array.from(taskData.assignedCollaborations) : [],
+        assignedUsers: context === "profile" && showUserSelect ? Array.from(taskData.assignedUsers) : [],
       };
 
       formData.append("taskData", JSON.stringify(newTask));
       if (taskData.taskImage) formData.append("image", taskData.taskImage);
 
       const response = await create_task(currentUser._id, formData);
-      // const newTaskData = response.task;
-
       if (response) {
         toast.success("Task created successfully!");
         setIsOpen(false);
         resetForm();
         fetchTasks();
-
       }
     } catch (error) {
       toast.error("Failed to create task");
       console.error("Error creating task:", error);
     }
   };
-
 
   const handleTaskUpdate = async () => {
     const validationErrors = validateForm();
@@ -229,8 +253,9 @@ const TaskManagement = ({ context, currentUser, contextData }) => {
       const updatedTask = {
         ...updates,
         status: autoStatus,
-        assignedGroups: showGroupSelect ? Array.from(taskData.assignedGroups) : [],
-        assignedCollaborations: showCollabSelect ? Array.from(taskData.assignedCollaborations) : [],
+        assignedUsers: context === "profile" && showUserSelect ? Array.from(taskData.assignedUsers) : [],
+        assignedGroups: [],
+        assignedCollaborations: [],
       };
 
       const response = await edit_task(selectedTask._id, updatedTask);
@@ -300,13 +325,11 @@ const TaskManagement = ({ context, currentUser, contextData }) => {
       notificationTime: task.notificationTime || "",
       privacy: task.privacy || "private",
       status: task.status || "pending",
-      assignedGroups: new Set(task.assignedGroups || []),
-      assignedCollaborations: new Set(task.assignedCollaborations || []),
+      assignedUsers: new Set(task.assignedUsers || []),
       taskImage: null,
       taskImagePreview: task.image || "",
     });
-    setShowGroupSelect(task.assignedGroups && task.assignedGroups.length > 0);
-    setShowCollabSelect(task.assignedCollaborations && task.assignedCollaborations.length > 0);
+    setShowUserSelect(context === "profile" && task.assignedUsers && task.assignedUsers.length > 0);
     setIsEditOpen(true);
   };
 
@@ -321,13 +344,11 @@ const TaskManagement = ({ context, currentUser, contextData }) => {
       notificationTime: "",
       privacy: "private",
       status: "pending",
-      assignedGroups: new Set([]),
-      assignedCollaborations: new Set([]),
+      assignedUsers: new Set([]),
       taskImage: null,
       taskImagePreview: "",
     });
-    setShowGroupSelect(false);
-    setShowCollabSelect(false);
+    setShowUserSelect(false);
     setErrors({});
   };
 
@@ -341,10 +362,11 @@ const TaskManagement = ({ context, currentUser, contextData }) => {
       </div>
 
       <TaskList
-        tasks={tasks}
-        assignedByOthers={assignedByOthers}
-        selectedTab={selectedTab}
-        setSelectedTab={setSelectedTab}
+        tasks={allTasks}
+        currentUser={currentUser}
+        notifications={taskNotifications}
+        connectedUsers={connectedUsers}
+        context={context}
         onViewTask={(task) => { setSelectedTask(task); setIsViewOpen(true); }}
         onEditTask={openEditModal}
         onStatusChange={handleStatusChange}
@@ -361,15 +383,14 @@ const TaskManagement = ({ context, currentUser, contextData }) => {
               taskData={taskData}
               errors={errors}
               groups={groups}
+              users={connectedUsers}
               collaborations={collaborations}
-              showGroupSelect={showGroupSelect}
-              showCollabSelect={showCollabSelect}
+              showUserSelect={showUserSelect}
               context={context}
               isEditMode={false}
               onInputChange={handleInputChange}
               onImageChange={handleImageChange}
-              setShowGroupSelect={setShowGroupSelect}
-              setShowCollabSelect={setShowCollabSelect}
+              setShowUserSelect={setShowUserSelect}
               onSubmit={handleTaskCreate}
               onCancel={() => setIsOpen(false)}
             />
@@ -386,15 +407,14 @@ const TaskManagement = ({ context, currentUser, contextData }) => {
               taskData={taskData}
               errors={errors}
               groups={groups}
+              users={connectedUsers}
               collaborations={collaborations}
-              showGroupSelect={showGroupSelect}
-              showCollabSelect={showCollabSelect}
+              showUserSelect={showUserSelect}
               context={context}
               isEditMode={true}
               onInputChange={handleInputChange}
               onImageChange={handleImageChange}
-              setShowGroupSelect={setShowGroupSelect}
-              setShowCollabSelect={setShowCollabSelect}
+              setShowUserSelect={setShowUserSelect}
               onSubmit={handleTaskUpdate}
               onCancel={() => setIsEditOpen(false)}
             />

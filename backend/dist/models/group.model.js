@@ -21,6 +21,10 @@ const GroupSchema = new Schema({
         type: Number,
         required: true
     },
+    isFull: {
+        type: Boolean,
+        default: false
+    },
     availableSlots: [
         {
             day: {

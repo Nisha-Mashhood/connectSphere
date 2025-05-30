@@ -11,12 +11,9 @@ export interface ITask extends Document {
     dueDate: Date;
     notificationDate?: Date;
     notificationTime?: string;
-    privacy: "private" | "public";
-    contextType: "profile" | "group" | "collaboration" | "userconnection";
+    contextType: "profile" | "group" | "collaboration";
     contextId: mongoose.Types.ObjectId;
     assignedUsers: mongoose.Types.ObjectId[];
-    assignedCollaborations: mongoose.Types.ObjectId[];
-    assignedGroups: mongoose.Types.ObjectId[];
     createdBy: mongoose.Types.ObjectId;
     createdAt: Date;
 }

@@ -39,15 +39,10 @@ const taskSchema = new mongoose.Schema({
     notificationTime: {
         type: String,
     },
-    privacy: {
-        type: String,
-        enum: ["private", "public"],
-        default: "private",
-    },
     // Contextual fields
     contextType: {
         type: String,
-        enum: ["profile", "group", "collaboration", "userconnection"],
+        enum: ["profile", "group", "collaboration"],
         required: true,
     },
     contextId: {
@@ -60,18 +55,6 @@ const taskSchema = new mongoose.Schema({
         {
             type: mongoose.Schema.Types.ObjectId,
             ref: "User",
-        },
-    ],
-    assignedCollaborations: [
-        {
-            type: mongoose.Schema.Types.ObjectId,
-            ref: "Collaboration",
-        },
-    ],
-    assignedGroups: [
-        {
-            type: mongoose.Schema.Types.ObjectId,
-            ref: "Group",
         },
     ],
     createdBy: {

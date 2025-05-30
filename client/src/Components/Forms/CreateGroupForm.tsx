@@ -38,7 +38,7 @@ const CreateGroupForm = () => {
     name: "",
     bio: "",
     price: 0,
-    maxMembers: 10,
+    maxMembers: 4,
     availableSlots: [],
     profilePic: "",
     coverPic: "",
@@ -58,65 +58,70 @@ const CreateGroupForm = () => {
 
   // Validation function
   const validateForm = (): Errors => {
-    const newErrors: Errors = {};
+  const newErrors: Errors = {};
 
-    // Group Name
-    if (!formData.name.trim()) {
-      newErrors.name = "Group name is required";
-    } else if (formData.name.length < 3) {
-      newErrors.name = "Group name must be at least 3 characters";
-    } else if (formData.name.length > 50) {
-      newErrors.name = "Group name cannot exceed 50 characters";
-    }
+  // Group Name
+  if (!formData.name.trim()) {
+    newErrors.name = "Group name is required";
+  } else if (formData.name.length < 3) {
+    newErrors.name = "Group name must be at least 3 characters";
+  } else if (formData.name.length > 50) {
+    newErrors.name = "Group name cannot exceed 50 characters";
+  }
 
-    // Bio
-    if (!formData.bio.trim()) {
-      newErrors.bio = "Bio is required";
-    } else if (formData.bio.length < 10) {
-      newErrors.bio = "Bio must be at least 10 characters";
-    } else if (formData.bio.length > 500) {
-      newErrors.bio = "Bio cannot exceed 500 characters";
-    }
+  // Bio
+  if (!formData.bio.trim()) {
+    newErrors.bio = "Bio is required";
+  } else if (formData.bio.length < 10) {
+    newErrors.bio = "Bio must be at least 10 characters";
+  } else if (formData.bio.length > 500) {
+    newErrors.bio = "Bio cannot exceed 500 characters";
+  }
 
-    // Price
-    if (formData.price < 0) {
-      newErrors.price = "Price cannot be negative";
-    }
+  // Price
+  if (formData.price < 0) {
+    newErrors.price = "Price cannot be negative";
+  }
 
-    // Max Members
-    if (!formData.maxMembers) {
-      newErrors.maxMembers = "Maximum members is required";
-    } else if (formData.maxMembers < 2) {
-      newErrors.maxMembers = "Maximum members must be at least 2";
-    } else if (formData.maxMembers > 100) {
-      newErrors.maxMembers = "Maximum members cannot exceed 100";
-    }
+  // Max Members
+  if (formData.maxMembers === 0) {
+    newErrors.maxMembers = "Maximum members is required";
+  } else if (formData.maxMembers < 2) {
+    newErrors.maxMembers = "Maximum members must be at least 2";
+  } else if (formData.maxMembers > 4) {
+    newErrors.maxMembers = "Maximum members cannot exceed 4";
+  }
 
-    // Start Date
-    if (!formData.startDate) {
-      newErrors.startDate = "Start date is required";
+  // Start Date
+  if (!formData.startDate || formData.startDate.trim() === "") {
+    newErrors.startDate = "Start date is required";
+  } else {
+    const startDate = new Date(formData.startDate);
+    if (isNaN(startDate.getTime())) {
+      newErrors.startDate = "Invalid date format";
     } else {
-      const startDate = new Date(formData.startDate);
       const today = new Date();
       today.setHours(0, 0, 0, 0); // Reset time for comparison
-      if (startDate < today) {
+      startDate.setHours(0, 0, 0, 0); // Reset time for startDate
+      if (startDate <= today) {
         newErrors.startDate = "Start date must be a future date";
       }
     }
+  }
 
-    // Available Slots
-    if (!formData.availableSlots.length) {
-      newErrors.availableSlots = "At least one time slot is required";
-    }
+  // Available Slots
+  if (!formData.availableSlots.length) {
+    newErrors.availableSlots = "At least one time slot is required";
+  }
 
-    return newErrors;
-  };
+  return newErrors;
+};
 
   const handleInputChange = (field: keyof GroupFormData, value: any) => {
     setFormData((prev) => ({ ...prev, [field]: value }));
     // Validate on change
     const newErrors = validateForm();
-    setErrors((prev) => ({ ...prev, [field]: newErrors[field] }));
+    setErrors(newErrors);
   };
 
   const handleAddSlot = () => {
@@ -176,44 +181,44 @@ const CreateGroupForm = () => {
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
+  e.preventDefault();
 
-    const validationErrors = validateForm();
-    setErrors(validationErrors);
+  const validationErrors = validateForm();
+  setErrors(validationErrors);
 
-    if (Object.keys(validationErrors).length > 0) {
-      toast.error("Please fix the errors before submitting");
-      return;
-    }
+  if (Object.keys(validationErrors).length > 0) {
+    toast.error("Please fix the errors before submitting");
+    return;
+  }
 
-    const confirm = window.confirm(
-      "Once everything is set for the group, it cannot be changed. Do you want to proceed?"
-    );
-    if (!confirm) return;
+  const confirm = window.confirm(
+    "Once everything is set for the group, it cannot be changed. Do you want to proceed?"
+  );
+  if (!confirm) return;
 
-    const membersData = [
-      {
-        userId: currentUser._id,
-        joinedAt: new Date(),
-      },
-    ];
+  const membersData = [
+    {
+      userId: currentUser._id,
+      joinedAt: new Date(),
+    },
+  ];
 
-    try {
-      const response = await createGroup({
-        ...formData,
-        adminId: currentUser._id,
-        createdAt: new Date(),
-        members: membersData,
-      });
+  try {
+    const response = await createGroup({
+      ...formData,
+      adminId: currentUser._id,
+      createdAt: new Date(),
+      members: membersData,
+    });
 
-      console.log(response);
-      toast.success("Group created successfully!");
-      navigate("/profile");
-    } catch (error) {
-      toast.error("Failed to create group");
-      console.error("Error creating group:", error);
-    }
-  };
+    console.log("Group Creation Response:", response);
+    toast.success("Group created successfully!");
+    navigate("/profile");
+  } catch (error: any) {
+    toast.error(error.message || "Failed to create group");
+    console.error("Error creating group:", error);
+  }
+};
 
   return (
     <div className="max-w-4xl mx-auto p-6">

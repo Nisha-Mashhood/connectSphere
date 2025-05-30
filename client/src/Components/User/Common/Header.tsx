@@ -11,7 +11,6 @@ import {
   Avatar,
   Button,
   Badge,
-  Spinner,
 } from "@nextui-org/react";
 import { useDispatch, useSelector } from "react-redux";
 import { useNavigate } from "react-router-dom";
@@ -38,9 +37,7 @@ const Header = () => {
   const dispatch = useDispatch();
   const navigate = useNavigate();
   const { currentUser } = useSelector((state: RootState) => state.user);
-  const { notifications, unreadCount } = useSelector((state: RootState) => state.notification);
-
-  console.log("Unread Notifications :",notifications);
+  const { taskNotifications, taskUnreadCount, chatNotifications, chatUnreadCount } = useSelector((state: RootState) => state.notification);
 
   const handleLogout = async () => {
     const email = currentUser?.email;
@@ -100,22 +97,8 @@ const Header = () => {
     }
   };
 
-  // const handleNotificationClick = async (notification: Notification) => {
-  //   try {
-  //     console.log("clicked on notification");
-  //     const [type] = notification.relatedId.split("_");
-  //     const id = notification.senderId;
-  //     const contactType = type === "group" ? "group" : type === "user-mentor" ? "user-mentor" : "user-user";
-  //     await markNotificationService(notification._id, currentUser?._id || "");
-  //     dispatch(markNotificationAsRead(notification._id));
-  //     navigate(`/chat/${contactType}/${id}`);
-  //   } catch (error) {
-  //     console.error("Error handling notification click:", error);
-  //     toast.error("Failed to open chat.");
-  //   }
-  // };
 
-  const handleNotificationClick = async (notification: Notification) => {
+ const handleNotificationClick = async (notification: Notification) => {
     try {
       console.log("Clicked on notification:", notification);
       await markNotificationService(notification._id, currentUser?._id || "");
@@ -128,17 +111,17 @@ const Header = () => {
           return;
         }
         const { contextType, contextId } = notification.taskContext;
-        if (contextType === "collaboration") {
-          navigate(`/collaboration/${contextId}`);
+        console.log(`Navigating to task context: ${contextType}, ID: ${contextId}`);
+        if (contextType === "profile") {
+          navigate(`/profile?taskId=${notification.relatedId}`);
+        } else if (contextType === "collaboration") {
+          navigate(`/collaboration/${contextId}?taskId=${notification.relatedId}`);
         } else if (contextType === "group") {
-          navigate(`/groupDetails/${contextId}`);
-        } else if (contextType === "userconnection" || contextType === "profile") {
-          // Navigate to a general tasks page or show a message
-          toast.error("Task management for this context is not yet supported.");
-          navigate("/profile"); 
+          navigate(`/group/${contextId}?taskId=${notification.relatedId}`);
+        } else if (contextType === "userconnection") {
+          navigate(`/profile?taskId=${notification.relatedId}`);
         }
       } else {
-        // Handle message, incoming_call, missed_call
         const [type] = notification.relatedId.split("_");
         const id = notification.senderId;
         const contactType = type === "group" ? "group" : type === "user-mentor" ? "user-mentor" : "user-user";
@@ -149,6 +132,24 @@ const Header = () => {
       toast.error("Failed to process notification.");
     }
   };
+
+  const handleChatClick = async () => {
+    try {
+      const unreadChatNotifications = chatNotifications.filter(n => n.status === "unread");
+      for (const notification of unreadChatNotifications) {
+        await markNotificationService(notification._id, currentUser?._id || "");
+        dispatch(markNotificationAsRead(notification._id));
+        socketService.markNotificationAsRead(notification._id, currentUser?._id || "");
+      }
+      navigate("/chat");
+    } catch (error) {
+      console.error("Error marking chat notifications as read:", error);
+      toast.error("Failed to mark chat notifications as read.");
+    }
+  };
+
+  // Ensure taskNotifications is an array
+  const safeTaskNotifications = Array.isArray(taskNotifications) ? taskNotifications : [];
 
   return (
     <Navbar
@@ -192,13 +193,21 @@ const Header = () => {
           </Link>
         </NavbarItem>
         <NavbarItem>
-          <Link
-            href="/chat"
-            color="foreground"
-            className="text-sm font-medium hover:text-primary transition-colors"
+          <Badge
+            content={chatUnreadCount}
+            color="danger"
+            isInvisible={chatUnreadCount === 0}
+            placement="top-right"
           >
-            Chat
-          </Link>
+            <Link
+              href="/chat"
+              color="foreground"
+              className="text-sm font-medium hover:text-primary transition-colors"
+              onPress={handleChatClick}
+            >
+              Chat
+            </Link>
+          </Badge>
         </NavbarItem>
       </NavbarContent>
 
@@ -210,9 +219,9 @@ const Header = () => {
               <Dropdown placement="bottom-end" closeOnSelect={false}>
                 <DropdownTrigger>
                   <Badge
-                    content={unreadCount}
+                    content={taskUnreadCount}
                     color="danger"
-                    isInvisible={unreadCount === 0}
+                    isInvisible={taskUnreadCount === 0}
                     placement="top-right"
                   >
                     <Button
@@ -239,18 +248,12 @@ const Header = () => {
                   </Badge>
                 </DropdownTrigger>
                 <DropdownMenu aria-label="Notifications" variant="flat">
-                  {notifications === null ? (
-                    <DropdownItem key="loading" isReadOnly>
-                      <div className="flex justify-center items-center py-2">
-                        <Spinner size="sm" />
-                      </div>
-                    </DropdownItem>
-                  ) : notifications.length === 0 ? (
+                  {safeTaskNotifications.length === 0 ? (
                     <DropdownItem key="no-notifications" isReadOnly>
                       No new notifications
                     </DropdownItem>
                   ) : (
-                    notifications
+                    safeTaskNotifications
                       .filter((n) => n.status === "unread")
                       .map((notification) => (
                         <DropdownItem

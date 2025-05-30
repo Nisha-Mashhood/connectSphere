@@ -13,12 +13,9 @@ export interface ITask extends Document {
     dueDate: Date;
     notificationDate?: Date;
     notificationTime?: string;
-    privacy: "private" | "public";
-    contextType: "profile" | "group" | "collaboration" | "userconnection";
+    contextType: "profile" | "group" | "collaboration";
     contextId: mongoose.Types.ObjectId;
     assignedUsers: mongoose.Types.ObjectId[];
-    assignedCollaborations: mongoose.Types.ObjectId[];
-    assignedGroups: mongoose.Types.ObjectId[];
     createdBy: mongoose.Types.ObjectId;
     createdAt: Date;
   }
@@ -63,15 +60,10 @@ const taskSchema: Schema<ITask> = new mongoose.Schema({
   notificationTime: {
     type: String,
   },
-  privacy: {
-    type: String,
-    enum: ["private", "public"],
-    default: "private",
-  },
   // Contextual fields
   contextType: {
     type: String,
-    enum: ["profile", "group", "collaboration", "userconnection"],
+    enum: ["profile", "group", "collaboration"],
     required: true,
   },
   contextId: {
@@ -84,18 +76,6 @@ const taskSchema: Schema<ITask> = new mongoose.Schema({
     {
       type: mongoose.Schema.Types.ObjectId,
       ref: "User",
-    },
-  ],
-  assignedCollaborations: [
-    {
-      type: mongoose.Schema.Types.ObjectId,
-      ref: "Collaboration",
-    },
-  ],
-  assignedGroups: [
-    {
-      type: mongoose.Schema.Types.ObjectId,
-      ref: "Group",
     },
   ],
   createdBy: {

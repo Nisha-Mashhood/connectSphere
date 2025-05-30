@@ -1,88 +1,180 @@
 import React from "react";
-import { Card, CardBody, Chip, Button, Dropdown, DropdownTrigger, DropdownMenu, DropdownItem } from "@nextui-org/react";
-import { FaListUl, FaEllipsisV, FaEdit } from "react-icons/fa";
-import { RiTimeLine } from "react-icons/ri";
+import {
+  Card,
+  CardHeader,
+  CardBody,
+  CardFooter,
+  Button,
+  Chip,
+  Select,
+  SelectItem,
+  Badge,
+} from "@nextui-org/react";
+import { FaEye, FaEdit, FaBell } from "react-icons/fa";
 
 interface TaskCardProps {
   task: any;
+  currentUser: any;
+  connectedUsers: { userId: string; name: string }[];
+  context: string;
   onView: () => void;
   onEdit: () => void;
   onStatusChange: (taskId: string, newStatus: string) => void;
   onPriorityChange: (taskId: string, newPriority: string) => void;
   formatDate: (dateString: string) => string;
+  hasUnreadNotification?: boolean;
 }
 
-const TaskCard: React.FC<TaskCardProps> = ({ task, onView, onEdit, onStatusChange, onPriorityChange, formatDate }) => {
-  const getPriorityColor = (priority: string) => {
-    switch (priority) {
-      case "high": return "danger";
-      case "medium": return "warning";
-      case "low": return "success";
-      default: return "default";
+const TaskCard: React.FC<TaskCardProps> = ({
+  task,
+  currentUser,
+  connectedUsers,
+  context,
+  onView,
+  onEdit,
+  onStatusChange,
+  onPriorityChange,
+  formatDate,
+  hasUnreadNotification,
+}) => {
+  const isCreator = task.createdBy?._id === currentUser?._id;
+
+  const getStatusColor = (status: string) => {
+    switch (status.toLowerCase()) {
+      case "pending":
+        return "warning";
+      case "in-progress":
+        return "primary";
+      case "completed":
+        return "success";
+      case "not-completed":
+        return "danger";
+      default:
+        return "default";
     }
   };
 
-  const getStatusColor = (status: string) => {
-    switch (status) {
-      case "completed": return "success";
-      case "pending": return "warning";
-      case "in-progress": return "primary";
-      case "not-completed": return "danger";
-      default: return "default";
+  const getPriorityColor = (priority: string) => {
+    switch (priority.toLowerCase()) {
+      case "low":
+        return "success";
+      case "medium":
+        return "warning";
+      case "high":
+        return "danger";
+      default:
+        return "default";
     }
+  };
+
+  const getCreatedByDisplay = () => {
+    if (isCreator) {
+      return "Created By: You";
+    }
+    return `Created By: ${task.createdBy?.name || "Unknown"}`;
+  };
+
+  const getAssigneeDisplay = () => {
+    if (context !== "profile") {
+      return null;
+    }
+
+    if (!task.assignedUsers?.length) {
+      return "Assigned To: None";
+    }
+
+    const assigneeNames = task.assignedUsers
+      .map((user: any) => user.name || connectedUsers.find((u) => u.userId === user._id)?.name)
+      .filter((name: string) => name && name !== "Unknown");
+
+    return assigneeNames.length > 0
+      ? `Assigned To: ${assigneeNames.join(", ")}`
+      : "Assigned To: None";
   };
 
   return (
-    <Card isPressable isHoverable className="mb-4 hover:shadow-md transition-shadow cursor-pointer" onClick={onView}>
-      <CardBody>
-        <div className="flex justify-between items-start">
-          <div className="flex gap-4">
-            {task.image ? (
-              <img src={task.image} alt="Task" className="w-16 h-16 object-cover rounded" />
-            ) : (
-              <div className="w-16 h-16 bg-gray-200 rounded flex items-center justify-center">
-                <FaListUl className="text-gray-400" />
-              </div>
-            )}
-            <div>
+    <Card className="w-full">
+      <CardHeader className="flex justify-between items-center">
+        <div className="flex items-center gap-2">
+          {hasUnreadNotification && (
+            <Badge content={<FaBell className="text-yellow-500" />} placement="top-left">
               <h3 className="text-lg font-semibold">{task.name}</h3>
-              <p className="text-gray-500 text-sm line-clamp-2 mt-1">{task.description}</p>
-              <div className="flex gap-2 mt-2 flex-wrap">
-                <Chip color={getPriorityColor(task.priority)} size="sm">{task.priority} Priority</Chip>
-                <Chip color={getStatusColor(task.status)} size="sm">{task.status}</Chip>
-              </div>
-            </div>
-          </div>
-          <div className="flex flex-col items-end">
-            <div className="text-sm text-gray-500 mb-2">Due: {formatDate(task.dueDate)}</div>
-            <Dropdown>
-              <DropdownTrigger>
-                <Button isIconOnly size="sm" variant="light" onClick={(e) => e.stopPropagation()}>
-                  <FaEllipsisV />
-                </Button>
-              </DropdownTrigger>
-              <DropdownMenu
-                aria-label="Task Actions"
-                onAction={(key) => {
-                  const keyString = String(key);
-                  if (key === "edit") onEdit();
-                  else if (keyString.startsWith("status-")) onStatusChange(task._id, keyString.replace("status-", ""));
-                  else if (keyString.startsWith("priority-")) onPriorityChange(task._id, keyString.replace("priority-", ""));
-                }}
-              >
-                <DropdownItem key="edit" startContent={<FaEdit />}>Edit Task</DropdownItem>
-                <DropdownItem key="status-pending" startContent={<RiTimeLine />}>Mark as Pending</DropdownItem>
-                <DropdownItem key="status-in-progress" startContent={<RiTimeLine />}>Mark as In-Progress</DropdownItem>
-                <DropdownItem key="status-completed" startContent={<RiTimeLine />}>Mark as Completed</DropdownItem>
-                <DropdownItem key="status-not-completed" startContent={<RiTimeLine />}>Mark as Not-Completed</DropdownItem>
-                <DropdownItem key="priority-low" startContent={<FaListUl />}>Low Priority</DropdownItem>
-                <DropdownItem key="priority-medium" startContent={<FaListUl />}>Medium Priority</DropdownItem>
-                <DropdownItem key="priority-high" startContent={<FaListUl />}>High Priority</DropdownItem>
-              </DropdownMenu>
-            </Dropdown>
-          </div>
+            </Badge>
+          )}
+          {!hasUnreadNotification && (
+            <h3 className="text-lg font-semibold">{task.name}</h3>
+          )}
+          <p className="text-sm text-gray-500">{getCreatedByDisplay()}</p>
+          {context === "profile" && (
+            <p className="text-sm text-gray-500">{getAssigneeDisplay()}</p>
+          )}
+        </div>
+        <div className="flex gap-2">
+          <Button isIconOnly color="secondary" variant="light" onPress={onView}>
+            <FaEye />
+          </Button>
+          <Button isIconOnly color="warning" variant="light" onPress={onEdit}>
+            <FaEdit />
+          </Button>
+        </div>
+      </CardHeader>
+      <CardBody>
+        <p className="text-sm text-gray-700 mb-2">
+          Description: {task.description || "No description"}
+        </p>
+        <div className="flex flex-wrap gap-2">
+          <Chip color={getStatusColor(task.status)} size="sm">
+            Status: {task.status}
+          </Chip>
+          <Chip color={getPriorityColor(task.priority)} size="sm">
+            Priority: {task.priority}
+          </Chip>
+          <Chip variant="flat" size="sm">
+            Due: {formatDate(task.dueDate)}
+          </Chip>
         </div>
       </CardBody>
+      <CardFooter className="flex gap-4">
+        <Select
+          label="Update Status"
+          placeholder="Select status"
+          selectedKeys={[task.status]}
+          onChange={(e) => onStatusChange(task._id, e.target.value)}
+          size="sm"
+          className="w-full max-w-[200px]"
+        >
+          <SelectItem key="pending" value="pending">
+            Pending
+          </SelectItem>
+          <SelectItem key="in-progress" value="in-progress">
+            In Progress
+          </SelectItem>
+          <SelectItem key="completed" value="completed">
+            Completed
+          </SelectItem>
+          <SelectItem key="not-completed" value="not-completed">
+            Not Completed
+          </SelectItem>
+        </Select>
+        <Select
+          label="Update Priority"
+          placeholder="Select priority"
+          selectedKeys={[task.priority]}
+          onChange={(e) => onPriorityChange(task._id, e.target.value)}
+          size="sm"
+          className="w-full max-w-[200px]"
+        >
+          <SelectItem key="low" value="low">
+            Low
+          </SelectItem>
+          <SelectItem key="medium" value="medium">
+            Medium
+          </SelectItem>
+          <SelectItem key="high" value="high">
+            High
+          </SelectItem>
+        </Select>
+      </CardFooter>
     </Card>
   );
 };

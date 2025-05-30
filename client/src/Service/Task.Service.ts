@@ -16,9 +16,9 @@ export const create_task = async (createrId, formData) => {
   };
 
   // Get Tasks by Context
-export const get_tasks_by_context = async (contextType, contextId) => {
+export const get_tasks_by_context = async (contextType, contextId, userId) => {
   try {
-    const response = await axiosInstance.get(`/task/context/${contextType}/${contextId}`);
+    const response = await axiosInstance.get(`/task/context/${contextType}/${contextId}/${userId}`);
     return response.data;
   } catch (error) {
     handleError(error);

@@ -14,13 +14,15 @@ import {
   Elements,
   CardElement,
   useStripe,
-  useElements, 
+  useElements,
 } from "@stripe/react-stripe-js";
 import { Button } from "@nextui-org/react";
 import { FaCreditCard } from "react-icons/fa";
 
 // Initialize Stripe outside the component
-const stripePromise = loadStripe("pk_test_51QjEUpLJKggnYdjdkq6nC53RrJ8U0Uti4Qwvw1CYK7VDzo7hqF8CVldtejMOhiJblOeipP7uwgxU8JGFMo1bD6aZ00XOGuBYhU");
+const stripePromise = loadStripe(
+  "pk_test_51QjEUpLJKggnYdjdkq6nC53RrJ8U0Uti4Qwvw1CYK7VDzo7hqF8CVldtejMOhiJblOeipP7uwgxU8JGFMo1bD6aZ00XOGuBYhU"
+);
 
 // Payment Form Component
 const CheckoutForm = ({ request, currentUser, onSuccess }) => {
@@ -28,17 +30,17 @@ const CheckoutForm = ({ request, currentUser, onSuccess }) => {
   const elements = useElements();
   const [isProcessing, setIsProcessing] = useState(false);
 
-    // Get the current URL to use for return_url
-    const getReturnUrl = () => {
-      // Use window.location if available, or fallback to a hardcoded base URL
-      return typeof window !== 'undefined' 
-        ? `${window.location.origin}/profile` 
-        : 'https://yourwebsite.com/payment-result';
-    };
+  // Get the current URL to use for return_url
+  const getReturnUrl = () => {
+    // Use window.location if available, or fallback to a hardcoded base URL
+    return typeof window !== "undefined"
+      ? `${window.location.origin}/profile`
+      : "https://yourwebsite.com/payment-result";
+  };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    
+
     if (!stripe || !elements) {
       return;
     }
@@ -51,7 +53,7 @@ const CheckoutForm = ({ request, currentUser, onSuccess }) => {
 
       // Create payment method
       const { error, paymentMethod } = await stripe.createPaymentMethod({
-        type: 'card',
+        type: "card",
         card: cardElement,
       });
 
@@ -90,60 +92,60 @@ const CheckoutForm = ({ request, currentUser, onSuccess }) => {
     }
   };
 
-    // Check URL parameters on component mount for payment result
-    useEffect(() => {
-      if (typeof window === 'undefined') return;
-      
-      const urlParams = new URLSearchParams(window.location.search);
-      const paymentStatus = urlParams.get('payment_status');
-      
-      if (paymentStatus === 'success') {
-        toast.success("Payment successful! Your session is now booked.");
-        onSuccess();
-      } else if (paymentStatus === 'failed') {
-        toast.error("Payment failed. Please try again.");
-      }
-    }, []);
+  // Check URL parameters on component mount for payment result
+  useEffect(() => {
+    if (typeof window === "undefined") return;
+
+    const urlParams = new URLSearchParams(window.location.search);
+    const paymentStatus = urlParams.get("payment_status");
+
+    if (paymentStatus === "success") {
+      toast.success("Payment successful! Your session is now booked.");
+      onSuccess();
+    } else if (paymentStatus === "failed") {
+      toast.error("Payment failed. Please try again.");
+    }
+  }, []);
 
   return (
     <form onSubmit={handleSubmit}>
-    <div className="mb-4">
-      <label className="block text-sm font-medium mb-2">Card Details</label>
-      <div className="p-3 border rounded-md">
-        <CardElement 
-          options={{
-            style: {
-              base: {
-                fontSize: '16px',
-                color: '#424770',
-                '::placeholder': {
-                  color: '#aab7c4',
+      <div className="mb-4">
+        <label className="block text-sm font-medium mb-2">Card Details</label>
+        <div className="p-3 border rounded-md">
+          <CardElement
+            options={{
+              style: {
+                base: {
+                  fontSize: "16px",
+                  color: "#424770",
+                  "::placeholder": {
+                    color: "#aab7c4",
+                  },
+                },
+                invalid: {
+                  color: "#9e2146",
                 },
               },
-              invalid: {
-                color: '#9e2146',
-              },
-            },
-          }}
-        />
+            }}
+          />
+        </div>
       </div>
-    </div>
-    
-    <div className="flex justify-between items-center mt-4">
-      <div className="text-sm">
-        <span className="font-medium">Total:</span> ${request.price}
+
+      <div className="flex justify-between items-center mt-4">
+        <div className="text-sm">
+          <span className="font-medium">Total:</span> ${request.price}
+        </div>
+        <Button
+          type="submit"
+          color="primary"
+          isLoading={isProcessing}
+          isDisabled={!stripe || isProcessing}
+          startContent={!isProcessing && <FaCreditCard />}
+        >
+          Pay Now
+        </Button>
       </div>
-      <Button 
-        type="submit" 
-        color="primary"
-        isLoading={isProcessing}
-        isDisabled={!stripe || isProcessing}
-        startContent={!isProcessing && <FaCreditCard />}
-      >
-        Pay Now
-      </Button>
-    </div>
-  </form>
+    </form>
   );
 };
 
@@ -170,7 +172,7 @@ const GroupRequests = () => {
       setGroups(response?.data || []);
     } catch (error) {
       console.error("Error fetching user groups:", error);
-      setGroups([]); 
+      setGroups([]);
       // toast.error("Failed to fetch your groups");
     } finally {
       setLoading(false);
@@ -182,7 +184,7 @@ const GroupRequests = () => {
     try {
       setLoading(true);
       const response = await getGroupRequestsByUser(currentUser._id);
-      
+
       if (response?.data) {
         // Filter requests where the adminId inside groupId is NOT the current user
         const filteredRequests = response.data.filter(
@@ -219,7 +221,7 @@ const GroupRequests = () => {
       <h2 className="text-2xl font-semibold mb-4 dark:text-white">
         Your Requests (Groups)
       </h2>
-      
+
       {/* Group Requests Section */}
       <div className="space-y-4 mb-8">
         {groupRequests.length > 0 ? (
@@ -253,8 +255,16 @@ const GroupRequests = () => {
               </div>
 
               {request.status === "Accepted" &&
-                request.paymentStatus === "Pending" &&
-                request.groupId?.price && (
+              request.paymentStatus === "Pending" &&
+              request.groupId?.price ? (
+                request.groupId.isFull ? (
+                  <div className="mt-3">
+                    <span className="text-red-500 font-medium">
+                      Cannot process payment. Group is already full (maximum 4
+                      members).
+                    </span>
+                  </div>
+                ) : (
                   <div className="mt-3">
                     {paymentRequest && paymentRequest._id === request._id ? (
                       <Elements stripe={stripePromise}>
@@ -273,7 +283,8 @@ const GroupRequests = () => {
                       </button>
                     )}
                   </div>
-                )}
+                )
+              ) : null}
             </div>
           ))
         ) : (

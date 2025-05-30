@@ -1,6 +1,6 @@
 import React, { useEffect, useRef, useCallback, useState } from "react";
 import { debounce } from "lodash";
-import { Contact, IChatMessage, Notification } from "../../../../../types";
+import { Contact, IChatMessage } from "../../../../../types";
 import { fetchChatMessages } from "../../../../../Service/Chat.Service";
 import { Avatar, Spinner, Tooltip } from "@nextui-org/react";
 import { useSelector } from "react-redux";
@@ -15,7 +15,6 @@ interface ChatMessagesProps {
   setAllMessages: React.Dispatch<React.SetStateAction<Map<string, IChatMessage[]>>>;
   getChatKey: (contact: Contact) => string;
   currentUserId?: string;
-  notifications: Notification[];
   onNotificationClick: (contact: Contact) => void;
   messagesEndRef: React.RefObject<HTMLDivElement>;
 }
@@ -26,8 +25,6 @@ const ChatMessages: React.FC<ChatMessagesProps> = ({
   setAllMessages,
   getChatKey,
   currentUserId,
-  // notifications,
-  // onNotificationClick,
   messagesEndRef,
 }) => {
   const { currentUser } = useSelector((state: RootState) => state.user);
@@ -128,10 +125,10 @@ const ChatMessages: React.FC<ChatMessagesProps> = ({
       if (container) {
         const isScrollable = container.scrollHeight > container.clientHeight;
         setIsContainerScrollable(isScrollable);
-        console.log("Is container scrollable:", isScrollable, {
-          scrollHeight: container.scrollHeight,
-          clientHeight: container.clientHeight,
-        });
+        // console.log("Is container scrollable:", isScrollable, {
+        //   scrollHeight: container.scrollHeight,
+        //   clientHeight: container.clientHeight,
+        // });
       }
     };
 
@@ -142,11 +139,20 @@ const ChatMessages: React.FC<ChatMessagesProps> = ({
 
   useEffect(() => {
     if (!selectedContact) return;
-  
+
     const chatKey = getChatKey(selectedContact);
-  
-    const handleMessageSaved = (message: IChatMessage) => {
-      // chat type based on message IDs
+
+    const handleReceiveMessage = (message: IChatMessage) => {
+      console.log("Received receiveMessage:", JSON.stringify(message, null, 2));
+      if (!message._id || !message.senderId || !message.contentType || !message.timestamp) {
+        console.warn("Invalid message in receiveMessage:", message);
+        return;
+      }
+      if (message.groupId && !selectedContact.groupId) {
+        console.warn("Group message received but no groupId in selectedContact:", message);
+        return;
+      }
+
       let inferredChatType: "group" | "user-mentor" | "user-user" | null = null;
       if (message.groupId) {
         inferredChatType = "group";
@@ -155,33 +161,98 @@ const ChatMessages: React.FC<ChatMessagesProps> = ({
       } else if (message.userConnectionId) {
         inferredChatType = "user-user";
       }
-  
-      // Check if the message belongs to the current chat
+
       const isMatchingChat =
         inferredChatType === selectedContact.type &&
         ((inferredChatType === "group" && message.groupId === selectedContact.groupId) ||
          (inferredChatType === "user-mentor" && message.collaborationId === selectedContact.collaborationId) ||
          (inferredChatType === "user-user" && message.userConnectionId === selectedContact.userConnectionId));
-  
+
       if (isMatchingChat && message._id) {
         setAllMessages((prev) => {
           const currentMessages = prev.get(chatKey) || [];
           const messageExists = currentMessages.some((m) => m._id === message._id);
           if (!messageExists) {
+            console.log("Adding new message to allMessages (receiveMessage):", message._id);
             return new Map(prev).set(chatKey, [...currentMessages, message]);
           }
+          console.log("Updating existing message status (receiveMessage):", message._id);
           return new Map(prev).set(
             chatKey,
-            currentMessages.map((m) => (m._id === message._id ? { ...m, status: message.status } : m))
+            currentMessages.map((m) => (m._id === message._id ? { ...m, status: message.status, isRead: message.isRead || false } : m))
           );
+        });
+        scrollToBottom();
+      } else {
+        console.warn("Message does not match selected chat (receiveMessage):", {
+          message,
+          selectedContact,
         });
       }
     };
-  
-    const handleMessagesRead = (data: { chatKey: string; userId: string; messageIds: string[] }) => {
-      if (data.chatKey === chatKey) {
+
+    const handleMessageSaved = (message: IChatMessage) => {
+      console.log("Received messageSaved:", JSON.stringify(message, null, 2));
+      if (!message._id || !message.senderId || !message.contentType || !message.timestamp ) {
+        console.warn("Invalid message in messageSaved:", message);
+        return;
+      }
+      if (message.groupId && !selectedContact.groupId) {
+        console.warn("Group message received but no groupId in selectedContact:", message);
+        return;
+      }
+
+      let inferredChatType: "group" | "user-mentor" | "user-user" | null = null;
+      if (message.groupId) {
+        inferredChatType = "group";
+      } else if (message.collaborationId) {
+        inferredChatType = "user-mentor";
+      } else if (message.userConnectionId) {
+        inferredChatType = "user-user";
+      }
+
+      const isMatchingChat =
+        inferredChatType === selectedContact.type &&
+        ((inferredChatType === "group" && message.groupId === selectedContact.groupId) ||
+         (inferredChatType === "user-mentor" && message.collaborationId === selectedContact.collaborationId) ||
+         (inferredChatType === "user-user" && message.userConnectionId === selectedContact.userConnectionId));
+
+      if (isMatchingChat && message._id) {
         setAllMessages((prev) => {
           const currentMessages = prev.get(chatKey) || [];
+          const messageExists = currentMessages.some((m) => m._id === message._id);
+          if (!messageExists) {
+            console.log("Adding new message to allMessages (messageSaved):", message._id);
+            return new Map(prev).set(chatKey, [...currentMessages, message]);
+          }
+          console.log("Updating existing message status (messageSaved):", message._id);
+          return new Map(prev).set(
+            chatKey,
+            currentMessages.map((m) => (m._id === message._id ? { ...m, status: message.status, isRead: message.isRead || false } : m))
+          );
+        });
+        scrollToBottom();
+      } else {
+        console.warn("Message does not match selected chat (messageSaved):", {
+          message,
+          selectedContact,
+        });
+      }
+    };
+
+    const debouncedHandleMessagesRead = debounce((data: { chatKey: string; userId: string; messageIds: string[] }) => {
+      console.log("Received messagesRead event:", JSON.stringify(data, null, 2));
+      if (data.chatKey === chatKey) {
+        if (!Array.isArray(data.messageIds) || !data.messageIds) {
+          console.warn("Invalid or missing messageIds in messagesRead event:", data.messageIds);
+          return;
+        }
+        setAllMessages((prev) => {
+          const currentMessages = prev.get(chatKey) || [];
+          if (!currentMessages.length) {
+            console.log("No messages yet for chatKey, skipping messagesRead:", chatKey);
+            return prev;
+          }
           return new Map(prev).set(
             chatKey,
             currentMessages.map((msg) =>
@@ -190,16 +261,18 @@ const ChatMessages: React.FC<ChatMessagesProps> = ({
           );
         });
       }
-    };
-  
+    }, 500);
+
+    socketService.onReceiveMessage(handleReceiveMessage);
     socketService.onMessageSaved(handleMessageSaved);
-    socketService.onMessagesRead(handleMessagesRead);
-  
+    socketService.onMessagesRead(debouncedHandleMessagesRead);
+
     return () => {
+      socketService.socket?.off("receiveMessage", handleReceiveMessage);
       socketService.socket?.off("messageSaved", handleMessageSaved);
-      socketService.socket?.off("messagesRead", handleMessagesRead);
+      socketService.socket?.off("messagesRead", debouncedHandleMessagesRead);
     };
-  }, [selectedContact, getChatKey, setAllMessages]);
+  }, [selectedContact, getChatKey, setAllMessages, scrollToBottom]);
 
   const handleScroll = useCallback(
     debounce(() => {
@@ -210,15 +283,15 @@ const ChatMessages: React.FC<ChatMessagesProps> = ({
         const isNearBottom = scrollHeight - scrollTop - clientHeight < 200;
         isUserScrolling.current = scrollTop > 0 && !isNearBottom;
 
-        console.log("Container scroll:", {
-          scrollTop,
-          scrollHeight,
-          clientHeight,
-          isNearTop,
-          isFetching,
-          hasMore,
-          isUserScrolling: isUserScrolling.current,
-        });
+        // console.log("Container scroll:", {
+        //   scrollTop,
+        //   scrollHeight,
+        //   clientHeight,
+        //   isNearTop,
+        //   isFetching,
+        //   hasMore,
+        //   isUserScrolling: isUserScrolling.current,
+        // });
 
         if (isNearTop && hasMore && !isFetching) {
           loadMessages(false);
@@ -298,31 +371,46 @@ const ChatMessages: React.FC<ChatMessagesProps> = ({
   };
 
   const getMessageSender = (msg: IChatMessage) => {
-    if (msg.senderId === currentUserId) {
+  if (!msg.senderId) {
+    // console.warn("Message missing senderId:", msg);
+    return { name: "Unknown", profilePic: undefined, isSelf: false };
+  }
+  // console.log("Processing message with senderId:", msg.senderId);
+  if (msg.senderId === currentUserId) {
+    // console.log("Sender is current user:", currentUserId);
+    return {
+      name: "You",
+      profilePic: currentUser?.profilePic,
+      isSelf: true,
+    };
+  }
+  if (selectedContact?.type === "group" && selectedContact.groupDetails?.members) {
+    // console.log("Group members for contact:", JSON.stringify(selectedContact.groupDetails.members, null, 2));
+    // console.log("Looking for senderId:", msg.senderId);
+    const member = selectedContact.groupDetails.members.find(
+      (m) => m.userId === msg.senderId
+    );
+    if (member) {
+      // console.log("Found member:", JSON.stringify(member, null, 2));
       return {
-        name: "You",
-        profilePic: currentUser?.profilePic,
-        isSelf: true,
+        name: member.name || "Unknown",
+        profilePic: member.profilePic,
+        isSelf: false,
       };
     }
-
-    if (selectedContact?.type === "group" && selectedContact.groupDetails?.members) {
-      const member = selectedContact.groupDetails.members.find((m) => m._id === msg.senderId || m.userId === msg.senderId);
-      if (member) {
-        return {
-          name: member.name,
-          profilePic: member.profilePic,
-          isSelf: false,
-        };
-      }
-    }
-
-    return {
-      name: selectedContact?.name || "Unknown",
-      profilePic: selectedContact?.profilePic,
-      isSelf: false,
-    };
+    // console.warn("No member found for senderId:", msg.senderId);
+    return { name: "Unknown User", profilePic: undefined, isSelf: false };
+  }
+  // console.log("Falling back to contact details:", {
+  //   name: selectedContact?.name,
+  //   profilePic: selectedContact?.profilePic,
+  // });
+  return {
+    name: selectedContact?.name || "Unknown",
+    profilePic: selectedContact?.profilePic,
+    isSelf: false,
   };
+};
 
   const renderMessageContent = (msg: IChatMessage, showSender = false) => {
     const sender = getMessageSender(msg);

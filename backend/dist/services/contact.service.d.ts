@@ -39,7 +39,15 @@ interface FormattedContact {
         startDate: Date;
         adminName: string;
         adminProfilePic: string;
+        bio: string;
+        price: number;
+        maxMembers: number;
+        availableSlots: {
+            day: string;
+            timeSlots: string[];
+        }[];
         members: {
+            userId: string;
             name: string;
             profilePic: string;
             joinedAt: Date;

@@ -108,6 +108,10 @@ export interface PopulatedContact {
       name?: string;
       profilePic?: string;
     };
+    bio:string,
+    price:number,
+    maxMembers:number,
+    availableSlots:{ day: string; timeSlots: string[] }[];
     members: { userId: { _id: string; name?: string; profilePic?: string }; joinedAt: Date }[];
   };
   type: "user-mentor" | "user-user" | "group";
@@ -154,7 +158,7 @@ export const findContactsByUserId = async (userId: string): Promise<PopulatedCon
       })
       .populate({
         path: "groupId",
-        select: "_id name profilePic startDate adminId members",
+        select: "_id name profilePic startDate adminId bio price maxMembers availableSlots members",
         model: "Group",
         populate: [
           { path: "adminId", select: "_id name profilePic" },

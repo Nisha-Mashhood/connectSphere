@@ -68,6 +68,13 @@ export interface PopulatedContact {
             name?: string;
             profilePic?: string;
         };
+        bio: string;
+        price: number;
+        maxMembers: number;
+        availableSlots: {
+            day: string;
+            timeSlots: string[];
+        }[];
         members: {
             userId: {
                 _id: string;

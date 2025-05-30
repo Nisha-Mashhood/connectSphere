@@ -44,11 +44,16 @@ export const formatContact = (contact: any): Contact => ({
   groupId: contact.groupId,
   groupDetails: contact.groupDetails
     ? {
+        groupName:contact.groupDetails.groupName,
         startDate: new Date(contact.groupDetails.startDate),
         adminName: contact.groupDetails.adminName,
         adminProfilePic: contact.groupDetails.adminProfilePic,
+        bio:contact.groupDetails.bio,
+        price:contact.groupDetails.price,
+        maxMembers:contact.groupDetails.maxMembers,
+        availableSlots:contact.groupDetails.availableSlots,
         members: contact.groupDetails.members.map((member: any) => ({
-          _id: member._id,
+         userId: member.userId,
           name: member.name,
           profilePic: member.profilePic,
           joinedAt: new Date(member.joinedAt),

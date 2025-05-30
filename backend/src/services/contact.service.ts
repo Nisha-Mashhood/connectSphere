@@ -38,7 +38,11 @@ interface FormattedContact {
     startDate: Date;
     adminName: string;
     adminProfilePic: string;
-    members: { name: string; profilePic: string; joinedAt: Date }[];
+    bio:string,
+    price:number,
+    maxMembers:number,
+    availableSlots:{ day: string; timeSlots: string[] }[];
+    members: { userId: string; name: string; profilePic: string; joinedAt: Date }[];
   };
 }
 
@@ -63,13 +67,11 @@ export const getUserContactsService = async (userId: string): Promise<FormattedC
 
       if (contact.type === "user-mentor" && contact.collaborationId) {
         if (contactUserId === userId && contactTargetId) {
-          // Current user is the userId 
           targetId = contactTargetId;
           targetName = contact.targetUserId?.name || "Unknown";
           targetProfilePic = contact.targetUserId?.profilePic || "";
           targetJobTitle = contact.targetUserId?.jobTitle;
         } else if (contactTargetId === userId && contactUserId) {
-          // Current user is the targetUserId 
           targetId = contactUserId;
           targetName = contact.userId?.name || "Unknown";
           targetProfilePic = contact.userId?.profilePic || "";
@@ -108,6 +110,7 @@ export const getUserContactsService = async (userId: string): Promise<FormattedC
         };
       } else if (contact.type === "group" && contact.groupId) {
         const group = contact.groupId;
+        // console.log(`Group ${group.name} members:`, JSON.stringify(group.members, null, 2)); // Log raw group members
         targetId = group._id.toString();
         targetName = group.name || "Unknown";
         targetProfilePic = group.profilePic || "";
@@ -117,11 +120,20 @@ export const getUserContactsService = async (userId: string): Promise<FormattedC
           startDate: group.startDate,
           adminName: group.adminId?.name || "Unknown",
           adminProfilePic: group.adminId?.profilePic || "",
-          members: group.members.map((member) => ({
-            name: member.userId.name || "Unknown",
-            profilePic: member.userId.profilePic || "",
-            joinedAt: member.joinedAt,
-          })),
+          bio: group.bio || "No Bio",
+          price: group.price,
+          maxMembers: group.maxMembers,
+          availableSlots: group.availableSlots,
+          members: group.members.map((member) => {
+            const memberDetails = {
+              userId: member.userId._id.toString(),
+              name: member.userId.name || "Unknown",
+              profilePic: member.userId.profilePic || "",
+              joinedAt: member.joinedAt,
+            };
+            // console.log(`Mapped member for group ${group.name}:`, memberDetails); // Log each mapped member
+            return memberDetails;
+          }),
         };
       }
 
@@ -145,13 +157,13 @@ export const getUserContactsService = async (userId: string): Promise<FormattedC
 
     const validContacts = formattedContacts.filter(
       (contact) =>
-        contact.userId === userId && 
+        contact.userId === userId &&
         contact.userId !== contact.targetId &&
         contact.targetId !== ""
     );
 
-    console.log("Formatted contacts: ", formattedContacts);
-    console.log("Valid contacts: ", validContacts);
+    // console.log("Formatted contacts:", JSON.stringify(formattedContacts, null, 2));
+    // console.log("Valid contacts:", JSON.stringify(validContacts, null, 2));
 
     return validContacts;
   } catch (error: any) {

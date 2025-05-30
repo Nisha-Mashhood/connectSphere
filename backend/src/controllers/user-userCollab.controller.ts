@@ -46,6 +46,7 @@ export const getUserConnectionsController = async (req: Request, res: Response) 
 
   try {
     const connections = await userConnectionService.fetchUserConnections(userId);
+    console.log("user Conections from backend : ",connections);
     res.status(200).json({ message: "Connections fetched", data: connections });
   } catch (error: any) {
     res.status(400).json({ message: error.message });

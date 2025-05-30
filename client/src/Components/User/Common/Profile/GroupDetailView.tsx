@@ -93,16 +93,12 @@ const GroupDetails = () => {
 
   const handleRequestUpdate = async (requestId: string, status: string) => {
     try {
-      await updateGroupRequest(requestId, status);
-      setGroupRequests((prevRequests) =>
-        prevRequests.map((req) =>
-          req._id === requestId ? { ...req, status } : req
-        )
-      );
-      toast.success(`Request ${status.toLowerCase()}`);
+      const response = await updateGroupRequest(requestId, status);
+      toast.success(response.message || `Request ${status.toLowerCase()}`);
+      await fetchGroupDetails(); // Refresh group and requests
     } catch (err: any) {
       setError(err.message);
-      toast.error("Failed to update request");
+      toast.error(err.message || "Failed to update request");
     }
   };
 
@@ -135,11 +131,15 @@ const GroupDetails = () => {
 
   const handleDeleteGroup = async () => {
     if (!groupId) return;
-    
-    if (!confirm("Are you sure you want to delete this group? This action cannot be undone.")) {
+
+    if (
+      !confirm(
+        "Are you sure you want to delete this group? This action cannot be undone."
+      )
+    ) {
       return;
     }
-    
+
     try {
       await removeGroup(groupId);
       toast.success("Group deleted successfully!");
@@ -196,9 +196,10 @@ const GroupDetails = () => {
   }
 
   // Filter out admin from members list if available
-  const membersList = group?.members?.filter(
-    (member) => member.userId?._id !== group.adminId._id
-  ) || [];
+  const membersList =
+    group?.members?.filter(
+      (member) => member.userId?._id !== group.adminId._id
+    ) || [];
 
   const pendingRequestsCount = groupRequests.filter(
     (req) => req.status === "Pending"
@@ -226,7 +227,7 @@ const GroupDetails = () => {
           className="w-full h-full object-cover"
         />
         <div className="absolute inset-0 bg-black/40"></div>
-        
+
         {/* Cover Image Upload Button */}
         {group.adminId._id === currentUser._id && (
           <div className="absolute bottom-4 right-4">
@@ -258,7 +259,7 @@ const GroupDetails = () => {
               {/* Group Header */}
               <div className="flex flex-col md:flex-row md:items-start justify-between gap-4">
                 <div className="flex flex-col md:flex-row items-start md:items-center gap-6">
-                  <div 
+                  <div
                     className="relative"
                     onMouseEnter={() => setIsHoveringProfile(true)}
                     onMouseLeave={() => setIsHoveringProfile(false)}
@@ -292,11 +293,13 @@ const GroupDetails = () => {
                       <Chip color="secondary" variant="flat">
                         {group.members?.length || 0} Members
                       </Chip>
-                      {pendingRequestsCount > 0 && group.adminId === currentUser._id && (
-                        <Chip color="warning" variant="flat">
-                          {pendingRequestsCount} Pending Request{pendingRequestsCount !== 1 ? 's' : ''}
-                        </Chip>
-                      )}
+                      {pendingRequestsCount > 0 &&
+                        group.adminId === currentUser._id && (
+                          <Chip color="warning" variant="flat">
+                            {pendingRequestsCount} Pending Request
+                            {pendingRequestsCount !== 1 ? "s" : ""}
+                          </Chip>
+                        )}
                     </div>
                   </div>
                 </div>
@@ -352,11 +355,16 @@ const GroupDetails = () => {
                     <h3 className="font-semibold mb-4">Admin Details</h3>
                     <div className="flex items-center gap-3">
                       <Avatar
-                        src={group.adminId?.profilePic || "/api/placeholder/100/100"}
+                        src={
+                          group.adminId?.profilePic ||
+                          "/api/placeholder/100/100"
+                        }
                         size="md"
                       />
                       <div>
-                        <p className="font-medium">{group.adminId?.name || "Admin"}</p>
+                        <p className="font-medium">
+                          {group.adminId?.name || "Admin"}
+                        </p>
                         <p className="text-sm text-default-500">
                           {group.adminId?.jobTitle || ""}
                         </p>
@@ -373,14 +381,18 @@ const GroupDetails = () => {
                       <div className="flex items-center gap-2 text-default-500">
                         <FaUsers />
                         <span>
-                          {group.members?.length || 0} / {group.maxMembers} members
+                          {group.members?.length || 0} / 4 members{" "}
+                          {group.isFull ? "(Full)" : ""}
+                          members
                         </span>
                       </div>
                       <div className="flex items-center gap-2 text-default-500">
                         <FaCalendarAlt />
                         <span>
                           Created{" "}
-                          {new Date(group.createdAt || Date.now()).toLocaleDateString()}
+                          {new Date(
+                            group.createdAt || Date.now()
+                          ).toLocaleDateString()}
                         </span>
                       </div>
                       {group.price > 0 && (
@@ -414,31 +426,73 @@ const GroupDetails = () => {
                             .filter((req) => req.status === "Pending")
                             .slice(0, 2)
                             .map((req) => (
-                              <div key={req._id} className="flex justify-between items-center">
+                              <div
+                                key={req._id}
+                                className="flex justify-between items-center"
+                              >
                                 <div className="flex items-center gap-2">
                                   <Avatar
-                                    src={req.userId.profilePic || "/api/placeholder/100/100"}
+                                    src={
+                                      req.userId.profilePic ||
+                                      "/api/placeholder/100/100"
+                                    }
                                     size="sm"
                                   />
-                                  <span className="text-sm">{req.userId.name}</span>
+                                  <span className="text-sm">
+                                    {req.userId.name}
+                                  </span>
                                 </div>
                                 <div className="flex gap-1">
-                                  <Button
-                                    color="success"
-                                    size="sm"
-                                    isIconOnly
-                                    onClick={() => handleRequestUpdate(req._id, "Accepted")}
-                                  >
-                                    <FaCheck size={14} />
-                                  </Button>
-                                  <Button
-                                    color="danger"
-                                    size="sm"
-                                    isIconOnly
-                                    onClick={() => handleRequestUpdate(req._id, "Rejected")}
-                                  >
-                                    <FaTimes size={14} />
-                                  </Button>
+                                  {group.isFull && req.status === "Pending" ? (
+                                    <Chip
+                                      color="danger"
+                                      variant="flat"
+                                      size="sm"
+                                    >
+                                      Group is full
+                                    </Chip>
+                                  ) : req.status === "Pending" ? (
+                                    <>
+                                      <Button
+                                        color="success"
+                                        size="sm"
+                                        isIconOnly
+                                        onClick={() =>
+                                          handleRequestUpdate(
+                                            req._id,
+                                            "Accepted"
+                                          )
+                                        }
+                                        isDisabled={group.isFull}
+                                      >
+                                        <FaCheck size={14} />
+                                      </Button>
+                                      <Button
+                                        color="danger"
+                                        size="sm"
+                                        isIconOnly
+                                        onClick={() =>
+                                          handleRequestUpdate(
+                                            req._id,
+                                            "Rejected"
+                                          )
+                                        }
+                                      >
+                                        <FaTimes size={14} />
+                                      </Button>
+                                    </>
+                                  ) : (
+                                    <Chip
+                                      color={
+                                        req.status === "Accepted"
+                                          ? "success"
+                                          : "danger"
+                                      }
+                                      size="sm"
+                                    >
+                                      {req.status}
+                                    </Chip>
+                                  )}
                                 </div>
                               </div>
                             ))}
@@ -456,7 +510,8 @@ const GroupDetails = () => {
                   <Card>
                     <CardBody>
                       <h3 className="font-semibold mb-4">Available Slots</h3>
-                      {group.availableSlots && group.availableSlots.length > 0 ? (
+                      {group.availableSlots &&
+                      group.availableSlots.length > 0 ? (
                         <div className="space-y-3">
                           {group.availableSlots.map((slot, idx) => (
                             <div key={slot._id || idx} className="space-y-1">
@@ -465,11 +520,12 @@ const GroupDetails = () => {
                                 <span className="font-medium">{slot.day}</span>
                               </div>
                               <div className="flex flex-wrap gap-2">
-                                {slot.timeSlots && slot.timeSlots.map((time, index) => (
-                                  <Chip key={index} size="sm" variant="flat">
-                                    {time}
-                                  </Chip>
-                                ))}
+                                {slot.timeSlots &&
+                                  slot.timeSlots.map((time, index) => (
+                                    <Chip key={index} size="sm" variant="flat">
+                                      {time}
+                                    </Chip>
+                                  ))}
                               </div>
                             </div>
                           ))}
@@ -483,59 +539,72 @@ const GroupDetails = () => {
               </div>
 
               {/* Group Requests Section (For admin, full list) */}
-              {group.adminId === currentUser._id && groupRequests.length > 0 && (
-                <div className="mt-8">
-                  <h2 className="text-2xl font-semibold mb-4">Join Requests</h2>
-                  <div className="grid grid-cols-1 gap-4">
-                    {groupRequests.map((req) => (
-                      <Card key={req._id}>
-                        <CardBody>
-                          <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
-                            <User
-                              name={req.userId.name}
-                              description={req.userId.email}
-                              avatarProps={{
-                                src: req.userId.profilePic || "/api/placeholder/100/100",
-                              }}
-                            />
+              {group.adminId === currentUser._id &&
+                groupRequests.length > 0 && (
+                  <div className="mt-8">
+                    <h2 className="text-2xl font-semibold mb-4">
+                      Join Requests
+                    </h2>
+                    <div className="grid grid-cols-1 gap-4">
+                      {groupRequests.map((req) => (
+                        <Card key={req._id}>
+                          <CardBody>
+                            <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+                              <User
+                                name={req.userId.name}
+                                description={req.userId.email}
+                                avatarProps={{
+                                  src:
+                                    req.userId.profilePic ||
+                                    "/api/placeholder/100/100",
+                                }}
+                              />
 
-                            <div className="flex flex-wrap gap-2">
-                              {req.status === "Pending" ? (
-                                <>
-                                  <Button
-                                    color="success"
-                                    variant="flat"
-                                    startContent={<FaCheck />}
-                                    onClick={() => handleRequestUpdate(req._id, "Accepted")}
-                                    size="sm"
+                              <div className="flex flex-wrap gap-2">
+                                {req.status === "Pending" ? (
+                                  <>
+                                    <Button
+                                      color="success"
+                                      variant="flat"
+                                      startContent={<FaCheck />}
+                                      onClick={() =>
+                                        handleRequestUpdate(req._id, "Accepted")
+                                      }
+                                      size="sm"
+                                    >
+                                      Accept
+                                    </Button>
+                                    <Button
+                                      color="danger"
+                                      variant="flat"
+                                      startContent={<FaTimes />}
+                                      onClick={() =>
+                                        handleRequestUpdate(req._id, "Rejected")
+                                      }
+                                      size="sm"
+                                    >
+                                      Reject
+                                    </Button>
+                                  </>
+                                ) : (
+                                  <Chip
+                                    color={
+                                      req.status === "Accepted"
+                                        ? "success"
+                                        : "danger"
+                                    }
                                   >
-                                    Accept
-                                  </Button>
-                                  <Button
-                                    color="danger"
-                                    variant="flat"
-                                    startContent={<FaTimes />}
-                                    onClick={() => handleRequestUpdate(req._id, "Rejected")}
-                                    size="sm"
-                                  >
-                                    Reject
-                                  </Button>
-                                </>
-                              ) : (
-                                <Chip
-                                  color={req.status === "Accepted" ? "success" : "danger"}
-                                >
-                                  {req.status}
-                                </Chip>
-                              )}
+                                    {req.status}
+                                  </Chip>
+                                )}
+                              </div>
                             </div>
-                          </div>
-                        </CardBody>
-                      </Card>
-                    ))}
+                          </CardBody>
+                        </Card>
+                      ))}
+                    </div>
                   </div>
-                </div>
-              )}
+                )}
 
               {/* Members Section */}
               <div className="mt-8">
@@ -548,26 +617,36 @@ const GroupDetails = () => {
                           <div className="flex items-center justify-between">
                             <div className="flex items-center gap-4">
                               <Avatar
-                                src={member.userId?.profilePic || "/api/placeholder/100/100"}
+                                src={
+                                  member.userId?.profilePic ||
+                                  "/api/placeholder/100/100"
+                                }
                                 size="md"
                               />
                               <div>
-                                <p className="font-medium">{member.userId?.name || "Unknown"}</p>
+                                <p className="font-medium">
+                                  {member.userId?.name || "Unknown"}
+                                </p>
                                 <p className="text-sm text-default-500">
                                   {member.userId?.jobTitle || ""}
                                 </p>
                                 <p className="text-xs text-default-400">
-                                  Joined {new Date(member.joinedAt).toLocaleDateString()}
+                                  Joined{" "}
+                                  {new Date(
+                                    member.joinedAt
+                                  ).toLocaleDateString()}
                                 </p>
                               </div>
                             </div>
-                            
+
                             {group.adminId === currentUser._id && (
                               <Button
                                 color="danger"
                                 variant="light"
                                 size="sm"
-                                onClick={() => handleRemoveUser(member.userId?._id)}
+                                onClick={() =>
+                                  handleRemoveUser(member.userId?._id)
+                                }
                               >
                                 Remove
                               </Button>
@@ -580,7 +659,9 @@ const GroupDetails = () => {
                     <div className="col-span-full">
                       <Card>
                         <CardBody>
-                          <p className="text-center text-default-500">No members yet</p>
+                          <p className="text-center text-default-500">
+                            No members yet
+                          </p>
                         </CardBody>
                       </Card>
                     </div>

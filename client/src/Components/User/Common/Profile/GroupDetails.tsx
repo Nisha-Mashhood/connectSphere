@@ -96,16 +96,14 @@ const GroupDetails = () => {
 
   const handleRequestUpdate = async (requestId: string, status: string) => {
     try {
-      await updateGroupRequest(requestId, status);
-      setGroupRequests((prevRequests) =>
-        prevRequests.map((req) =>
-          req._id === requestId ? { ...req, status } : req
-        )
-      );
-      toast.success(`Request ${status.toLowerCase()}`);
+      const response = await updateGroupRequest(requestId, status);
+      if (response) {
+        toast.success(response.message || `Request ${status.toLowerCase()}`);
+        await fetchGroupDetails();
+      }
     } catch (err: any) {
       setError(err.message);
-      toast.error("Failed to update request");
+      toast.error(err.message || "Failed to update request");
     }
   };
 
@@ -283,11 +281,18 @@ const GroupDetails = () => {
                   <h2 className="text-2xl font-bold">{group.name}</h2>
                   <p className="text-default-500 mt-1">{group.bio}</p>
                   <div className="flex flex-wrap gap-2 mt-3">
-                    <Chip color="primary" variant="flat">
+                    {/* <Chip color="primary" variant="flat">
                       {group.maxMembers} Max Members
                     </Chip>
                     <Chip color="secondary" variant="flat">
                       {group.members?.length || 0} Members
+                    </Chip> */}
+                    <Chip
+                      color={group.isFull ? "danger" : "secondary"}
+                      variant="flat"
+                    >
+                      {group.members?.length || 0} / 4 Members{" "}
+                      {group.isFull ? "(Full)" : ""}
                     </Chip>
                     {pendingRequestsCount > 0 &&
                       group.adminId === currentUser._id && (
@@ -495,7 +500,12 @@ const GroupDetails = () => {
                                   />
 
                                   <div className="flex flex-wrap gap-2">
-                                    {req.status === "Pending" ? (
+                                    {group.isFull &&
+                                    req.status === "Pending" ? (
+                                      <Chip color="danger" variant="flat">
+                                        Group is full (maximum 4 members)
+                                      </Chip>
+                                    ) : req.status === "Pending" ? (
                                       <>
                                         <Button
                                           color="success"
@@ -508,6 +518,7 @@ const GroupDetails = () => {
                                             )
                                           }
                                           size="sm"
+                                          isDisabled={group.isFull}
                                         >
                                           Accept
                                         </Button>

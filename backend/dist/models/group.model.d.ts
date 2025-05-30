@@ -9,6 +9,7 @@ export interface GroupDocument extends Document {
     bio: string;
     price: number;
     maxMembers: number;
+    isFull: boolean;
     availableSlots: TimeSlot[];
     profilePic: string;
     coverPic: string;

@@ -16,9 +16,9 @@ export const createTask = async (req, res) => {
     }
 };
 export const getTasksByContext = async (req, res) => {
-    const { contextType, contextId } = req.params;
+    const { contextType, contextId, userId } = req.params;
     try {
-        const tasks = await getTasksByContextService(contextType, contextId);
+        const tasks = await getTasksByContextService(contextType, contextId, userId);
         res.status(200).json(tasks);
     }
     catch (error) {

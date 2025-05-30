@@ -8,8 +8,8 @@ export const createTaskService = async (taskData, imagePath, fileSize) => {
     }
     return await createTaskRepo(taskData);
 };
-export const getTasksByContextService = async (contextType, contextId) => {
-    return await findTasksByContext(contextType, contextId);
+export const getTasksByContextService = async (contextType, contextId, userId) => {
+    return await findTasksByContext(contextType, contextId, userId);
 };
 export const changeTaskPriorityService = async (taskId, priority) => {
     return await updateTaskPriority(taskId, priority);

@@ -1,4 +1,4 @@
-import * as ContactService from "../services/contactUs.sevice.js";
+import * as ContactService from "../services/contactUs.service.js";
 export const createContactMessage = async (req, res) => {
     try {
         const { name, email, message } = req.body;
