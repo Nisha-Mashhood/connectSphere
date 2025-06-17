@@ -1,82 +1,83 @@
 import mongoose, { Schema } from "mongoose";
 import { generateCustomId } from "../utils/idGenerator.utils.js";
 import { IHomePageContent } from "../Interfaces/models/IHomePageContent.js";
+import logger from "../core/Utils/Logger.js";
 
 const HomePageContentSchema: Schema<IHomePageContent> = new Schema(
   {
-    HomePageContentId: { 
-        type: String, 
-        unique: true, 
+    HomePageContentId: {
+      type: String,
+      unique: true,
     },
     banner: {
-      imageUrl: { 
-        type: String, 
-        required: true 
-    },
-      tagline: { 
-        type: String, 
-        required: true 
-    },
-      title: { 
-        type: String, 
-        required: true 
-    },
-      description: { 
-        type: String, 
-        required: true 
-    },
+      imageUrl: {
+        type: String,
+        required: true,
+      },
+      tagline: {
+        type: String,
+        required: true,
+      },
+      title: {
+        type: String,
+        required: true,
+      },
+      description: {
+        type: String,
+        required: true,
+      },
     },
     features: [
       {
-        title: { 
-            type: String, 
-            required: true 
+        title: {
+          type: String,
+          required: true,
         },
         description: [
-            { 
-                type: String, 
-                required: true 
-            }
+          {
+            type: String,
+            required: true,
+          },
         ],
-        icon: { 
-            type: String, 
-            required: true 
+        icon: {
+          type: String,
+          required: true,
         },
       },
     ],
     footer: {
       links: [
         {
-          name: { 
-            type: String, 
-            required: true 
-        },
-          url: { 
-            type: String, 
-            required: true 
-        },
+          name: {
+            type: String,
+            required: true,
+          },
+          url: {
+            type: String,
+            required: true,
+          },
         },
       ],
       socialMedia: [
         {
-          name: { 
-            type: String, 
-            required: true 
-        },
-          url: { 
-            type: String, 
-            required: true 
-        },
-          icon: { 
-            type: String, 
-            required: true 
-        },
+          name: {
+            type: String,
+            required: true,
+          },
+          url: {
+            type: String,
+            required: true,
+          },
+          icon: {
+            type: String,
+            required: true,
+          },
         },
       ],
-      copyright: { 
+      copyright: {
         type: String,
-        required: true 
-        },
+        required: true,
+      },
     },
   },
   { timestamps: true }
@@ -85,7 +86,15 @@ const HomePageContentSchema: Schema<IHomePageContent> = new Schema(
 // Pre-save hook to generate HomePageContentId
 HomePageContentSchema.pre("save", async function (next) {
   if (!this.HomePageContentId) {
-    this.HomePageContentId = await generateCustomId("homePageContent", "HPC");
+    try {
+      this.HomePageContentId = await generateCustomId("homePageContent", "HPC");
+      logger.debug(`Generated HomePageContentId: ${this.HomePageContentId}`);
+    } catch (error) {
+      logger.error(
+        `Error generating HomePageContentId: ${this.HomePageContentId} : ${error}`
+      );
+      return next(error as Error);
+    }
   }
   next();
 });

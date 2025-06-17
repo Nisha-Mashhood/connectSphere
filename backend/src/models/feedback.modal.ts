@@ -1,10 +1,11 @@
-import mongoose, { Schema } from 'mongoose';
-import { generateCustomId } from '../utils/idGenerator.utils.js';
-import { IFeedback } from '../Interfaces/models/IFeedback.js';
+import mongoose, { Schema } from "mongoose";
+import { generateCustomId } from "../utils/idGenerator.utils.js";
+import { IFeedback } from "../Interfaces/models/IFeedback.js";
+import logger from "../core/Utils/Logger.js";
 
 const FeedbackSchema: Schema<IFeedback> = new Schema(
   {
-    feedbackId:{
+    feedbackId: {
       type: String,
       unique: true,
     },
@@ -25,7 +26,7 @@ const FeedbackSchema: Schema<IFeedback> = new Schema(
     },
     givenBy: {
       type: String,
-      enum: ["user", "mentor"], 
+      enum: ["user", "mentor"],
       required: true,
     },
     rating: {
@@ -63,19 +64,29 @@ const FeedbackSchema: Schema<IFeedback> = new Schema(
       required: true,
     },
     isHidden: {
-    type: Boolean,
-    default: false,
-  },
+      type: Boolean,
+      default: false,
+    },
   },
   { timestamps: true }
 );
 
 // Pre-save hook to generate feedbackId
-  FeedbackSchema.pre("save", async function(next) {
-      if (!this.feedbackId) {
-        this.feedbackId = await generateCustomId("feedback", "FDB");
-      }
-      next();
-    });
+FeedbackSchema.pre("save", async function (next) {
+  if (!this.feedbackId) {
+    try {
+      this.feedbackId = await generateCustomId("feedback", "FDB");
+      logger.debug(
+        `Generated feedbackId: ${this.feedbackId} for userId ${this.userId}`
+      );
+    } catch (error) {
+      logger.error(
+        `Error generating feedbackId: ${this.feedbackId} for userId ${this.userId} : ${error}`
+      );
+      return next(error as Error);
+    }
+  }
+  next();
+});
 
 export default mongoose.model<IFeedback>("Feedback", FeedbackSchema);

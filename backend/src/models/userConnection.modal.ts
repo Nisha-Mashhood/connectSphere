@@ -1,12 +1,11 @@
 import mongoose, { Schema } from "mongoose";
 import { generateCustomId } from "../utils/idGenerator.utils.js";
 import { IUserConnection } from "../Interfaces/models/IUserConnection.js";
-
-
+import logger from "../core/Utils/Logger.js";
 
 const UserConnectionSchema: Schema = new Schema(
   {
-    connectionId:{
+    connectionId: {
       type: String,
       unique: true,
     },
@@ -49,12 +48,24 @@ const UserConnectionSchema: Schema = new Schema(
 );
 
 // Pre-save hook to generate connectionId
-UserConnectionSchema.pre("save", async function(next) {
-    if (!this.connectionId) {
+UserConnectionSchema.pre("save", async function (next) {
+  if (!this.connectionId) {
+    try {
       this.connectionId = await generateCustomId("userConnection", "UCN");
+      logger.debug(
+        `Generated connectionId: ${this.connectionId} for requester ${this.requester} and recipient: ${this.recipient}`
+      );
+    } catch (error) {
+      logger.error(
+        `Error generating connectionId for requester: ${this.requester} and recipient: ${this.recipient}: ${error}`
+      );
+      return next(error as Error);
     }
-    next();
-  });
+  }
+  next();
+});
 
-
-export default mongoose.model<IUserConnection>("UserConnection", UserConnectionSchema);
+export default mongoose.model<IUserConnection>(
+  "UserConnection",
+  UserConnectionSchema
+);

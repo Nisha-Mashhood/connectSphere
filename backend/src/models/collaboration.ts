@@ -1,6 +1,7 @@
 import mongoose, { Schema } from "mongoose";
 import { generateCustomId } from "../utils/idGenerator.utils.js";
 import { ICollaboration } from "../Interfaces/models/ICollaboration.js";
+import logger from "../core/Utils/Logger.js";
 
 // Schema remains the same, just ensure it matches the interface
 const CollaborationSchema: Schema<ICollaboration> = new Schema(
@@ -114,7 +115,17 @@ const CollaborationSchema: Schema<ICollaboration> = new Schema(
 // Pre-save hook to generate collaborationId
 CollaborationSchema.pre("save", async function (next) {
   if (!this.collaborationId) {
-    this.collaborationId = await generateCustomId("collaboration", "COL");
+    try {
+      this.collaborationId = await generateCustomId("collaboration", "COL");
+      logger.debug(
+        `Generated collaborationId: ${this.collaborationId} for mentorId ${this.mentorId} and userId ${this.userId}`
+      );
+    } catch (error) {
+      logger.error(
+        `Error generating collaborationId: ${this.collaborationId} for mentorId ${this.mentorId} and userId ${this.userId} : ${error}`
+      );
+      return next(error as Error);
+    }
   }
   next();
 });

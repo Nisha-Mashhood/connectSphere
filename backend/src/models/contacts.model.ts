@@ -1,6 +1,7 @@
 import mongoose, { Schema } from "mongoose";
 import { generateCustomId } from "../utils/idGenerator.utils.js";
 import { IContact } from "../Interfaces/models/IContact.js";
+import logger from "../core/Utils/Logger.js";
 
 const contactSchema: Schema<IContact> = new mongoose.Schema(
   {
@@ -41,12 +42,22 @@ const contactSchema: Schema<IContact> = new mongoose.Schema(
 // Pre-save hook to generate contactId
 contactSchema.pre("save", async function (next) {
   if (!this.contactId) {
-    this.contactId = await generateCustomId("contact", "CNT");
+    try {
+      this.contactId = await generateCustomId("contact", "CNT");
+      logger.debug(
+        `Generated contactId: ${this.contactId} for userId ${this.userId}`
+      );
+    } catch (error) {
+      logger.error(
+        `Error generating contactId: ${this.contactId} for userId ${this.userId} : ${error}`
+      );
+      return next(error as Error);
+    }
   }
   next();
 });
 
-// Ensure contactId is set for bulk operations like insertMany
+// contactId is set for bulk operations like insertMany
 contactSchema.pre("insertMany", async function (next, docs) {
   for (const doc of docs) {
     if (!doc.contactId) {

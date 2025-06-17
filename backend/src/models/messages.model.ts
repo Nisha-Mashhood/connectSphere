@@ -1,28 +1,28 @@
 import mongoose, { Schema } from "mongoose";
-import { generateCustomId } from '../utils/idGenerator.utils.js';
+import { generateCustomId } from "../utils/idGenerator.utils.js";
 import { IMessage } from "../Interfaces/models/IMessage.js";
-
+import logger from "../core/Utils/Logger.js";
 
 const messageSchema: Schema<IMessage> = new mongoose.Schema(
   {
-    messageId: { 
-        type: String,
-         unique: true, 
-        },  
-    senderId: { 
-        type: Schema.Types.ObjectId, 
-        ref: "User",
-        required: true 
-        },
-    contactId: { 
-        type: Schema.Types.ObjectId, 
-        ref: "Contact", 
-        required: true 
+    messageId: {
+      type: String,
+      unique: true,
     },
-    content: { 
-        type: String, 
-        required: true 
-    },  
+    senderId: {
+      type: Schema.Types.ObjectId,
+      ref: "User",
+      required: true,
+    },
+    contactId: {
+      type: Schema.Types.ObjectId,
+      ref: "Contact",
+      required: true,
+    },
+    content: {
+      type: String,
+      required: true,
+    },
     contentType: {
       type: String,
       enum: ["text", "image", "file"],
@@ -37,18 +37,28 @@ const messageSchema: Schema<IMessage> = new mongoose.Schema(
       },
       required: false,
     },
-    isRead: { 
-        type: Boolean, 
-        default: false 
+    isRead: {
+      type: Boolean,
+      default: false,
     },
   },
   { timestamps: true }
 );
 
 // Pre-save hook to generate messageId
-messageSchema.pre("save", async function(next) {
+messageSchema.pre("save", async function (next) {
   if (!this.messageId) {
-    this.messageId = await generateCustomId("message", "MSG");
+    try {
+      this.messageId = await generateCustomId("message", "MSG");
+      logger.debug(
+        `Generated messageId: ${this.messageId} for senderId ${this.senderId}`
+      );
+    } catch (error) {
+      logger.error(
+        `Error generating messageId: ${this.messageId} for senderId ${this.senderId} : ${error}`
+      );
+      return next(error as Error);
+    }
   }
   next();
 });

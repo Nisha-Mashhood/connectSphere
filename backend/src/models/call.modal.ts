@@ -1,6 +1,7 @@
 import { Schema, model } from "mongoose";
 import { generateCustomId } from "../utils/idGenerator.utils.js";
 import { Call } from "../Interfaces/models/Call.js";
+import logger from "../core/Utils/Logger.js";
 
 const CallSchema = new Schema<Call>({
   CallId: {
@@ -41,7 +42,17 @@ CallSchema.index({ chatKey: 1, timestamp: -1 });
 // Pre-save hook to generate CallId
 CallSchema.pre("save", async function (next) {
   if (!this.CallId) {
-    this.CallId = await generateCustomId("call", "CAL");
+    try {
+      this.CallId = await generateCustomId("call", "CAL");
+      logger.debug(
+        `Generated CallId: ${this.CallId} for callerId ${this.callerId}`
+      );
+    } catch (error) {
+      logger.error(
+        `Error generating CallId: ${this.CallId} for callerId ${this.callerId} : ${error}`
+      );
+      return next(error as Error);
+    }
   }
   next();
 });

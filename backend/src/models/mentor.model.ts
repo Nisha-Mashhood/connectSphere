@@ -1,71 +1,82 @@
 import mongoose, { Schema } from "mongoose";
-import { generateCustomId } from '../utils/idGenerator.utils.js';
+import { generateCustomId } from "../utils/idGenerator.utils.js";
 import { IMentor } from "../Interfaces/models/IMentor.js";
+import logger from "../core/Utils/Logger.js";
 
 const MentorSchema: Schema = new Schema(
   {
-    mentorId:{
+    mentorId: {
       type: String,
       unique: true,
     },
-    userId: { 
-        type: Schema.Types.ObjectId, 
-        ref: "User", 
-        required: true 
-    },
-    isApproved: { 
-        type: String, 
-        enum: ["Processing", "Completed", "Rejected"], 
-        default: "Processing"
-    },
-    rejectionReason: { 
-      type: String, 
-      default: null 
-    },
-    skills: [
-        { 
-            type: Schema.Types.ObjectId, 
-            ref: "Skill" 
-        }
-    ],
-    certifications: [
-        { 
-            type: String 
-        }
-    ],
-    specialization: { 
-        type: String, 
-        default:null 
-    },
-    bio: { 
-      type: String, 
+    userId: {
+      type: Schema.Types.ObjectId,
+      ref: "User",
       required: true,
     },
-    price: { 
-      type: Number, 
+    isApproved: {
+      type: String,
+      enum: ["Processing", "Completed", "Rejected"],
+      default: "Processing",
+    },
+    rejectionReason: {
+      type: String,
+      default: null,
+    },
+    skills: [
+      {
+        type: Schema.Types.ObjectId,
+        ref: "Skill",
+      },
+    ],
+    certifications: [
+      {
+        type: String,
+      },
+    ],
+    specialization: {
+      type: String,
+      default: null,
+    },
+    bio: {
+      type: String,
+      required: true,
+    },
+    price: {
+      type: Number,
       required: true,
     },
     availableSlots: [
-        {
-          day: { type: String },
-          timeSlots: [{ type: String }],
-        },
-      ],
-      timePeriod: {
-        type: Number, 
-        required: true,
-        default:30
-      }
+      {
+        day: { type: String },
+        timeSlots: [{ type: String }],
+      },
+    ],
+    timePeriod: {
+      type: Number,
+      required: true,
+      default: 30,
+    },
   },
   { timestamps: true }
 );
 
 // Pre-save hook to generate mentorId
-MentorSchema.pre("save", async function(next) {
-    if (!this.mentorId) {
+MentorSchema.pre("save", async function (next) {
+  if (!this.mentorId) {
+    try {
       this.mentorId = await generateCustomId("groupRequest", "MTR");
+      logger.debug(
+        `Generated mentorId: ${this.mentorId} for userId ${this.userId}`
+      );
+    } catch (error) {
+      logger.error(
+        `Error generating mentorId: ${this.mentorId} for userId ${this.userId} : ${error}`
+      );
+      return next(error as Error);
     }
-    next();
-  });
+  }
+  next();
+});
 
 export default mongoose.model<IMentor>("Mentor", MentorSchema);

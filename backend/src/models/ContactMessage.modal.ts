@@ -1,6 +1,7 @@
 import mongoose, { Schema } from "mongoose";
 import { generateCustomId } from "../utils/idGenerator.utils.js";
 import { IContactMessage } from "../Interfaces/models/IContactMessage.js";
+import logger from "../core/Utils/Logger.js";
 
 const ContactMessageSchema: Schema<IContactMessage> = new Schema(
   {
@@ -35,7 +36,17 @@ const ContactMessageSchema: Schema<IContactMessage> = new Schema(
 // Pre-save hook to generate contact messageId
 ContactMessageSchema.pre("save", async function (next) {
   if (!this.contactMessageId) {
-    this.contactMessageId = await generateCustomId("contactMessage", "CNM");
+    try {
+      this.contactMessageId = await generateCustomId("contactMessage", "CNM");
+      logger.debug(
+        `Generated contactMessageId: ${this.contactMessageId} for name ${this.name}`
+      );
+    } catch (error) {
+      logger.error(
+        `Error generating contactMessageId: ${this.contactMessageId} for name ${this.name} : ${error}`
+      );
+      return next(error as Error);
+    }
   }
   next();
 });
