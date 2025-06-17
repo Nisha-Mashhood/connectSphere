@@ -1,48 +1,38 @@
 import { Schema, model } from "mongoose";
 import { generateCustomId } from "../utils/idGenerator.utils.js";
-
-export interface Call {
-  CallId: string;
-  _id: string;
-  chatKey: string; // e.g., user-user_<userConnectionId>, user-mentor_<collaborationId>
-  callerId: string;
-  recipientId: string;
-  type: "audio" | "video";
-  status: "incoming" | "answered" | "missed";
-  timestamp: Date;
-}
+import { Call } from "../Interfaces/models/Call.js";
 
 const CallSchema = new Schema<Call>({
-  CallId: { 
-    type: String, 
-    unique: true 
+  CallId: {
+    type: String,
+    unique: true,
   },
-  chatKey: { 
-    type: String, 
-    required: true, 
-    index: true 
+  chatKey: {
+    type: String,
+    required: true,
+    index: true,
   },
-  callerId: { 
-    type: String, 
-    required: true 
+  callerId: {
+    type: String,
+    required: true,
   },
-  recipientId: { 
-    type: String, 
-    required: true 
+  recipientId: {
+    type: String,
+    required: true,
   },
-  type: { 
-    type: String, 
-    enum: ["audio", "video"], 
-    required: true 
+  type: {
+    type: String,
+    enum: ["audio", "video"],
+    required: true,
   },
   status: {
     type: String,
     enum: ["incoming", "answered", "missed"],
     required: true,
   },
-  timestamp: { 
-    type: Date, 
-    default: Date.now 
+  timestamp: {
+    type: Date,
+    default: Date.now,
   },
 });
 

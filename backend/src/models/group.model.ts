@@ -1,26 +1,7 @@
-import mongoose, { Schema, Document } from 'mongoose';
+import mongoose, { Schema } from 'mongoose';
 import { generateCustomId } from '../utils/idGenerator.utils.js';
+import { GroupDocument } from '../Interfaces/models/GroupDocument.js';
 
-export interface TimeSlot {
-  day: string;
-  timeSlots: string[];
-}
-
-export interface GroupDocument extends Document {
-  groupId: string;
-  name: string;
-  bio: string;
-  price: number;
-  maxMembers: number;
-  isFull:boolean;
-  availableSlots: TimeSlot[];
-  profilePic: string;
-  coverPic: string;
-  startDate: Date;
-  adminId: mongoose.Types.ObjectId; // the user who created the group
-  members:{ userId: mongoose.Types.ObjectId; joinedAt: Date }[]; // Array of member IDs
-  createdAt: Date;
-}
 
 const GroupSchema: Schema = new Schema<GroupDocument>(
   {

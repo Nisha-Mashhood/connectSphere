@@ -1,20 +1,9 @@
-import mongoose, { Schema, Document } from "mongoose";
+import mongoose, { Schema } from "mongoose";
 import { generateCustomId } from '../utils/idGenerator.utils.js';
+import { IMentorRequest } from "src/Interfaces/models/IMentorRequest.js";
 
-export interface IMentorRequest extends Document {
-  mentorRequestId: string;
-  mentorId: string; 
-  userId: string; 
-  selectedSlot: object;
-  price: number;
-  timePeriod:number;
-  paymentStatus: "Pending" | "Paid" | "Failed";
-  isAccepted: String;
-  createdAt: Date;
-  updatedAt: Date;
-}
 
-const MentorRequestSchema: Schema = new Schema(
+const MentorRequestSchema: Schema<IMentorRequest> = new Schema(
   {
     mentorRequestId:{
       type: String,
@@ -30,13 +19,6 @@ const MentorRequestSchema: Schema = new Schema(
       ref: "User", 
       required: true 
     },
-    // selectedSlot: {
-    //   type: {
-    //     day: { type: String },
-    //     timeSlots: { type: String },
-    //   },
-    //   required: true,
-    // },
     selectedSlot:{
           day: { type: String },
           timeSlots: { type: String },

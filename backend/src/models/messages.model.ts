@@ -1,22 +1,7 @@
-import mongoose, { Schema, Document } from "mongoose";
+import mongoose, { Schema } from "mongoose";
 import { generateCustomId } from '../utils/idGenerator.utils.js';
+import { IMessage } from "../Interfaces/models/IMessage.js";
 
-export interface IMessage extends Document {
-  _id: mongoose.Types.ObjectId;  
-  messageId: string; 
-  senderId: mongoose.Types.ObjectId;  
-  contactId: mongoose.Types.ObjectId;  
-  content: string; 
-  contentType: "text" | "image" | "file";  
-  fileMetadata?: {
-    fileName: string;
-    fileSize: number;  
-    mimeType: string;  
-  };
-  isRead: boolean;
-  createdAt: Date;
-  updatedAt: Date;
-}
 
 const messageSchema: Schema<IMessage> = new mongoose.Schema(
   {

@@ -102,3 +102,49 @@ export interface Notification {
     contextId: string;
   };
 }
+
+export interface CallOffer {
+  sdp: string;
+  type: "offer";
+}
+
+export interface CallAnswer {
+  sdp: string;
+  type: "answer";
+}
+
+export interface IceCandidate {
+  candidate: string;
+  sdpMid: string | null;
+  sdpMLineIndex: number | null;
+}
+
+export interface GroupCallOfferData {
+  groupId: string;
+  offer: RTCSessionDescriptionInit;
+  callerId: string;
+  callType: "audio" | "video";
+  callId: string;
+}
+export interface GroupCallAnswerData {
+  groupId: string;
+  answer: RTCSessionDescriptionInit;
+  answererId: string;
+  callerId: string;
+  callType: "audio" | "video";
+  callId: string;
+}
+export interface GroupIceCandidateData {
+  groupId: string;
+  candidate: RTCIceCandidateInit;
+  senderId: string;
+  recipientId: string;
+  callType: "audio" | "video";
+  callId: string;
+}
+export interface GroupCallEndedData {
+  groupId: string;
+  userId: string;
+  callType: "audio" | "video";
+  callId: string;
+}

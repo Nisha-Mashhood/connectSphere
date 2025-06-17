@@ -1,45 +1,33 @@
-import mongoose, { Schema, Document } from "mongoose";
+import mongoose, { Schema } from "mongoose";
 import { generateCustomId } from "../utils/idGenerator.utils.js";
-
-export interface IContact extends Document {
-  _id: mongoose.Types.ObjectId; 
-  contactId: string; 
-  userId: string | mongoose.Types.ObjectId; 
-  targetUserId?: string | mongoose.Types.ObjectId; 
-  collaborationId?: string | mongoose.Types.ObjectId; 
-  userConnectionId?: string | mongoose.Types.ObjectId; 
-  groupId?: string | mongoose.Types.ObjectId; 
-  type: "user-mentor" | "user-user" | "group"; 
-  createdAt: Date;
-  updatedAt: Date;
-}
+import { IContact } from "../Interfaces/models/IContact.js";
 
 const contactSchema: Schema<IContact> = new mongoose.Schema(
   {
-    contactId: { 
-        type: String, 
-        unique: true, 
-    }, 
-    userId: { 
-        type: Schema.Types.ObjectId, 
-        ref: "User", 
-        required: true 
+    contactId: {
+      type: String,
+      unique: true,
     },
-    targetUserId: { 
-        type: Schema.Types.ObjectId, 
-        ref: "User" 
+    userId: {
+      type: Schema.Types.ObjectId,
+      ref: "User",
+      required: true,
+    },
+    targetUserId: {
+      type: Schema.Types.ObjectId,
+      ref: "User",
     }, // Optional: mentor or user
-    collaborationId: { 
-        type: Schema.Types.ObjectId, 
-        ref: "Collaboration" 
+    collaborationId: {
+      type: Schema.Types.ObjectId,
+      ref: "Collaboration",
     },
-    userConnectionId: { 
-        type: Schema.Types.ObjectId, 
-        ref: "UserConnection" 
+    userConnectionId: {
+      type: Schema.Types.ObjectId,
+      ref: "UserConnection",
     },
-    groupId: { 
-        type: Schema.Types.ObjectId, 
-        ref: "Group" 
+    groupId: {
+      type: Schema.Types.ObjectId,
+      ref: "Group",
     },
     type: {
       type: String,
@@ -67,6 +55,5 @@ contactSchema.pre("insertMany", async function (next, docs) {
   }
   next();
 });
-
 
 export default mongoose.model<IContact>("Contact", contactSchema);

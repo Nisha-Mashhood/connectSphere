@@ -1,31 +1,9 @@
-import mongoose, { Schema, Document, Model } from "mongoose";
+import mongoose, { Schema, Model } from "mongoose";
 import config from '../config/env.config.js'
 import { generateCustomId } from "../utils/idGenerator.utils.js";
+import { UserInterface } from "../Interfaces/models/IUser.js";
 
-export interface UserInterface extends Document {
-  userId: string;
-  name: string;
-  email: string;
-  phone?:string;
-  dateOfBirth?: Date;
-  password: string | null ;
-  jobTitle?: string;
-  industry?: string;
-  reasonForJoining?: string;
-  role?: "user" | "mentor" |"admin";
-  isBlocked: boolean;
-  provider?: string;
-  providerId?: string | null;
-  profilePic?: string;
-  coverPic?: string;
-  accessToken?: string;
-  refreshToken?:string | null;
-  loginCount: number; 
-  hasReviewed: boolean;
-  createdAt: Date;
-  updatedAt: Date;
-  _id: mongoose.Types.ObjectId;
-}
+
 
 const userSchema: Schema<UserInterface> = new mongoose.Schema(
   {

@@ -1,16 +1,8 @@
-import mongoose, { Schema, Document, Model } from "mongoose";
+import mongoose, { Schema, Model } from "mongoose";
 import { generateCustomId } from '../utils/idGenerator.utils.js';
+import { SkillInterface } from "../Interfaces/models/SkillInterface.js";
 
-export interface SkillInterface extends Document {
-    skillId: string;
-    name: string;
-    categoryId: mongoose.Types.ObjectId;
-    subcategoryId: mongoose.Types.ObjectId;
-    description?: string;
-    imageUrl?:string | null;
-    createdAt: Date;
-    updatedAt: Date;
-  }
+
 // Skill Schema
 const skillSchema: Schema<SkillInterface> = new Schema(
     {

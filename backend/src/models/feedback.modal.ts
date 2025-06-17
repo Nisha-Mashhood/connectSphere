@@ -1,23 +1,8 @@
-import mongoose, { Schema, Document } from 'mongoose';
+import mongoose, { Schema } from 'mongoose';
 import { generateCustomId } from '../utils/idGenerator.utils.js';
+import { IFeedback } from '../Interfaces/models/IFeedback.js';
 
-export interface IFeedback extends Document {
-  feedbackId: string;
-  userId: mongoose.Types.ObjectId;
-  mentorId: mongoose.Types.ObjectId;
-  collaborationId: mongoose.Types.ObjectId;
-  givenBy: "user" | "mentor"; 
-  rating: number;
-  communication: number;
-  expertise: number;
-  punctuality: number;
-  comments: string;
-  wouldRecommend: boolean;
-  isHidden: boolean;
-  createdAt: Date;
-}
-
-const FeedbackSchema: Schema = new Schema(
+const FeedbackSchema: Schema<IFeedback> = new Schema(
   {
     feedbackId:{
       type: String,

@@ -474,6 +474,7 @@ const ChatHeader: React.FC<ChatHeaderProps> = ({
     );
   };
 
+  //Starting a Vedio call
   const startVideoCall = async () => {
     if (!selectedContact) {
       console.log("No contact selected for video call");

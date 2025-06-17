@@ -1,24 +1,7 @@
-import mongoose, { Schema, Document, Model } from "mongoose";
+import mongoose, { Schema, Model } from "mongoose";
 import { generateCustomId } from '../utils/idGenerator.utils.js';
+import { ITask } from "../Interfaces/models/ITask.js";
 
-export interface ITask extends Document {
-  _id: mongoose.Types.ObjectId;
-    taskId:string;
-    name: string;
-    description?: string;
-    image?: string;
-    priority: "low" | "medium" | "high";
-    status: "pending" | "in-progress" | "completed" | "not-completed";
-    startDate: Date;
-    dueDate: Date;
-    notificationDate?: Date;
-    notificationTime?: string;
-    contextType: "profile" | "group" | "collaboration";
-    contextId: mongoose.Types.ObjectId;
-    assignedUsers: mongoose.Types.ObjectId[];
-    createdBy: mongoose.Types.ObjectId;
-    createdAt: Date;
-  }
 
 const taskSchema: Schema<ITask> = new mongoose.Schema({
   taskId: {

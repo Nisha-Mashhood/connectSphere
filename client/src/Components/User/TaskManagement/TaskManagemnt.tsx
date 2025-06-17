@@ -240,7 +240,6 @@ const TaskManagement = ({ context, currentUser, contextData }) => {
 
       let autoStatus = updates.status;
       if (autoStatus !== selectedTask.status) {
-        // Keep manual status change
       } else {
         const today = new Date();
         const startDate = new Date(updates.startDate);

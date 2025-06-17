@@ -27,6 +27,7 @@ const initializeSocket = (_io) => {
     });
     io.on("connection", (socket) => {
         const userId = socket.handshake.auth.userId;
+        // const token = socket.handshake.auth.token as string;
         socket.data.userId = userId;
         console.log(`[Socket.IO] New client connected: socketId=${socket.id}, userId=${userId}, auth=${JSON.stringify(socket.handshake.auth)}`);
         socket.on("joinChats", async (userId) => {

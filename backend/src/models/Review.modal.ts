@@ -1,18 +1,10 @@
-import mongoose, { Schema, Document } from "mongoose";
+import mongoose, { Schema } from "mongoose";
 import { generateCustomId } from "../utils/idGenerator.utils.js";
+import { IReview } from "../Interfaces/models/IReview.js";
 
 
-export interface IReview extends Document {
-  reviewId: string;
-  userId: mongoose.Types.ObjectId;
-  rating: number;
-  comment: string;
-  isApproved: boolean;
-  isSelect: boolean;
-  createdAt: Date;
-}
 
-const ReviewSchema: Schema = new Schema({
+const ReviewSchema: Schema<IReview> = new Schema({
   reviewId: { 
     type: String, 
     unique: true,

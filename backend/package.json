@@ -23,6 +23,7 @@
   },
   "description": "Backend for Connect Sphere platform, supporting user authentication, collaboration management, and mentor features.",
   "dependencies": {
+    "@types/winston": "^2.4.4",
     "axios": "^1.7.9",
     "bcrypt": "^5.1.1",
     "bcryptjs": "^2.4.3",
@@ -48,7 +49,8 @@
     "stripe": "^17.5.0",
     "tsconfig-paths": "^4.2.0",
     "uuid": "^11.0.5",
-    "web-push": "^3.6.7"
+    "web-push": "^3.6.7",
+    "winston": "^3.17.0"
   },
   "devDependencies": {
     "@types/bcryptjs": "^2.4.6",

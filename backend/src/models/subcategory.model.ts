@@ -1,15 +1,8 @@
-import mongoose, { Schema, Document, Model } from "mongoose";
+import mongoose, { Schema, Model } from "mongoose";
 import { generateCustomId } from '../utils/idGenerator.utils.js';
+import { SubcategoryInterface } from "../Interfaces/models/SubcategoryInterface.js";
 
-export interface SubcategoryInterface extends Document {
-    subcategoryId:string;
-    name: string;
-    categoryId: mongoose.Types.ObjectId;
-    description?: string;
-    imageUrl?:string | null;
-    createdAt: Date;
-    updatedAt: Date;
-  }
+
 
   // Category Schema
 const SubcategorySchema: Schema<SubcategoryInterface> = new mongoose.Schema(

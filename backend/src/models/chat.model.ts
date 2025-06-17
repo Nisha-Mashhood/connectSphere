@@ -1,28 +1,10 @@
-import mongoose, { Schema, Document } from "mongoose";
+import mongoose, { Schema } from "mongoose";
 import { generateCustomId } from "../utils/idGenerator.utils.js";
-
-export interface IChatMessage extends Document {
-  ChatId: string;
-  senderId: mongoose.Types.ObjectId;
-  content: string;
-  thumbnailUrl?: string;
-  collaborationId?: mongoose.Types.ObjectId; // For user-mentor chats
-  userConnectionId?: mongoose.Types.ObjectId; // For user-user chats
-  groupId?: mongoose.Types.ObjectId; // For group chats
-  contentType: "text" | "image" | "video" | "file";
-  fileMetadata?: {
-    fileName: string;
-    fileSize: number;
-    mimeType: string;
-  };
-  isRead: boolean;
-  status: "pending" | "sent" | "read" ;
-  timestamp: Date;
-}
+import { IChatMessage } from "../Interfaces/models/IChatMessage.js";
 
 const chatSchema: Schema<IChatMessage> = new mongoose.Schema(
   {
-    ChatId:{
+    ChatId: {
       type: String,
       unique: true,
     },
@@ -35,8 +17,8 @@ const chatSchema: Schema<IChatMessage> = new mongoose.Schema(
       type: String,
       required: true,
     },
-    thumbnailUrl: { 
-      type: String 
+    thumbnailUrl: {
+      type: String,
     },
     collaborationId: {
       type: Schema.Types.ObjectId,
@@ -71,9 +53,9 @@ const chatSchema: Schema<IChatMessage> = new mongoose.Schema(
       type: Boolean,
       default: false,
     },
-    status:{
+    status: {
       type: String,
-      enum: [ "pending" , "sent" , "read" ],
+      enum: ["pending", "sent", "read"],
       default: "pending",
     },
     timestamp: {

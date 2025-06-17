@@ -1,41 +1,35 @@
-import mongoose, { Schema, Document } from "mongoose";
+import mongoose, { Schema } from "mongoose";
 import { generateCustomId } from "../utils/idGenerator.utils.js";
+import { IContactMessage } from "../Interfaces/models/IContactMessage.js";
 
-export interface IContactMessage extends Document {
-  contactMessageId: string;
-  name: string;
-  email: string;
-  message: string;
-  givenReply:boolean;
-  createdAt: Date;
-}
-
-const ContactMessageSchema: Schema = new Schema({
-  contactMessageId: { 
-    type: String, 
-    unique: true,
-},
-  name: { 
-    type: String, 
-    required: true 
-},
-  email: { 
-    type: String, 
-    required: true 
-},
-  message: { 
-    type: String, 
-    required: true 
-},
-  createdAt: { 
-    type: Date, 
-    default: Date.now 
-},
-  givenReply: {
-    type: Boolean,
-    default: false
+const ContactMessageSchema: Schema<IContactMessage> = new Schema(
+  {
+    contactMessageId: {
+      type: String,
+      unique: true,
+    },
+    name: {
+      type: String,
+      required: true,
+    },
+    email: {
+      type: String,
+      required: true,
+    },
+    message: {
+      type: String,
+      required: true,
+    },
+    createdAt: {
+      type: Date,
+      default: Date.now,
+    },
+    givenReply: {
+      type: Boolean,
+      default: false,
+    },
   },
-},{ timestamps: true }
+  { timestamps: true }
 );
 
 // Pre-save hook to generate contact messageId
@@ -50,4 +44,3 @@ export default mongoose.model<IContactMessage>(
   "ContactMessage",
   ContactMessageSchema
 );
-

@@ -60,6 +60,8 @@ const Login = () => {
         toast.error("Your account has been blocked. Please contact support.");
         return;
       }
+      //Store UserId in the localStorage
+      localStorage.setItem("userId", user._id);
 
       dispatch(signinSuccess({ user, needsReviewPrompt }));
 

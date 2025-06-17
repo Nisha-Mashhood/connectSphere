@@ -1,40 +1,8 @@
-import mongoose, { Schema, Document } from "mongoose";
+import mongoose, { Schema } from "mongoose";
 import { generateCustomId } from "../utils/idGenerator.utils.js";
+import { IHomePageContent } from "../Interfaces/models/IHomePageContent.js";
 
-interface IFeature {
-  title: string;
-  description: string[];
-  icon: string; // URL to icon or SVG path
-}
-
-interface IFooterLink {
-  name: string;
-  url: string;
-}
-
-interface ISocialMedia {
-  name: string;
-  url: string;
-  icon: string; // URL to icon or SVG path
-}
-
-interface IHomePageContent extends Document {
-  HomePageContentId: string;
-  banner: {
-    imageUrl: string;
-    tagline: string;
-    title: string;
-    description: string;
-  };
-  features: IFeature[];
-  footer: {
-    links: IFooterLink[];
-    socialMedia: ISocialMedia[];
-    copyright: string;
-  };
-}
-
-const HomePageContentSchema: Schema = new Schema(
+const HomePageContentSchema: Schema<IHomePageContent> = new Schema(
   {
     HomePageContentId: { 
         type: String, 

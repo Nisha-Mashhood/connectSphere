@@ -1,20 +1,8 @@
-import mongoose, { Schema, Document } from "mongoose";
-import { UserInterface } from "./user.model.js";
+import mongoose, { Schema } from "mongoose";
 import { generateCustomId } from "../utils/idGenerator.utils.js";
+import { IUserConnection } from "../Interfaces/models/IUserConnection.js";
 
-export interface IUserConnection extends Document {
-  connectionId:string;
-  requester: string | UserInterface;
-  recipient: string | UserInterface;
-  requestStatus: "Pending" | "Accepted" | "Rejected";
-  connectionStatus: "Connected" | "Disconnected";
-  requestSentAt: Date;
-  requestAcceptedAt?: Date;
-  disconnectedAt?: Date;
-  disconnectionReason?: string;
-  createdAt: Date;
-  updatedAt: Date;
-}
+
 
 const UserConnectionSchema: Schema = new Schema(
   {

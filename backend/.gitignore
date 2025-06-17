@@ -10,3 +10,6 @@ backend/dist/
 
 #uploads folder for local storage of images
 backend/uploads/
+
+#log File
+logs/

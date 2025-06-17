@@ -1,16 +1,6 @@
-import mongoose, { Schema, Document } from 'mongoose';
+import mongoose, { Schema } from 'mongoose';
 import { generateCustomId } from '../utils/idGenerator.utils.js';
-
-export interface GroupRequestDocument extends Document {
-  groupRequestId: string;
-  groupId: mongoose.Types.ObjectId; //  the group
-  userId: mongoose.Types.ObjectId; //  the user who sent the request
-  status: 'Pending' | 'Accepted' | 'Rejected'; // Request status
-  paymentStatus: 'Pending' | 'Completed' | 'Failed'; // Payment status
-  paymentId?: string;  
-  amountPaid?: number; // Amount paid by the user
-  createdAt: Date;
-}
+import { GroupRequestDocument } from '../Interfaces/models/GroupRequestDocument.js';
 
 const GroupRequestSchema: Schema = new Schema<GroupRequestDocument>(
   {

@@ -1,23 +1,6 @@
-import mongoose, { Schema, Document } from "mongoose";
-import { UserInterface } from "./user.model.js";
+import mongoose, { Schema } from "mongoose";
 import { generateCustomId } from '../utils/idGenerator.utils.js';
-
-
-export interface IMentor extends Document {
-  mentorId: string;
-  userId: string | UserInterface;
-  isApproved?: string;
-  rejectionReason?:string;
-  skills?: string[];
-  certifications?: string[];
-  specialization?: string;
-  bio:string;
-  price:number;
-  availableSlots?: object[];
-  timePeriod?:number
-  createdAt: Date;
-  updatedAt: Date;
-}
+import { IMentor } from "../Interfaces/models/IMentor.js";
 
 const MentorSchema: Schema = new Schema(
   {

@@ -1,27 +1,8 @@
 import mongoose from "mongoose";
-import { ObjectId } from "mongoose";
 import { Schema, model } from "mongoose";
 import { generateCustomId } from "../utils/idGenerator.utils.js";
+import { AppNotification } from "../Interfaces/models/AppNotification.js";
 
-export interface AppNotification {
-  _id: string;
-  AppNotificationId: string;
-  userId: string | ObjectId;
-  type: "message" | "incoming_call" | "missed_call" | "task_reminder";
-  content: string;
-  relatedId: string; // chatKey for messages/calls, taskId for tasks
-  senderId: string | ObjectId;
-  status: "unread" | "read";
-  callId?: string;
-  notificationDate?: Date;
-  notificationTime?: string;
-  createdAt: Date;
-  updatedAt: Date;
-  taskContext?: {
-    contextType: "profile" | "group" | "collaboration" | "userconnection";
-    contextId: string;
-  };
-}
 
 const AppNotificationSchema = new Schema<AppNotification>({
   AppNotificationId:{
