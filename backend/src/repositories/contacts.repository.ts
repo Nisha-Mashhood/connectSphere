@@ -1,4 +1,5 @@
-import Contact, { IContact } from "../models/contacts.model.js";
+import { IContact } from "../../../Interfaces/models/IContact.js";
+import Contact from "../models/contacts.model.js";
 import mongoose from "mongoose";
 
 // Utility to convert string to ObjectId

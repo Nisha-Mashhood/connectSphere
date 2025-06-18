@@ -1,5 +1,6 @@
-import ChatMessage, { IChatMessage } from "../models/chat.model.js";
-import mongoose, { ObjectId } from "mongoose";
+import { IChatMessage } from "../Interfaces/models/IChatMessage.js";
+import ChatMessage from "../models/chat.model.js";
+import mongoose from "mongoose";
 
 const toObjectId = (id?: string): mongoose.Types.ObjectId | undefined => {
   if (!mongoose.Types.ObjectId.isValid(id as string)) {
@@ -142,7 +143,7 @@ export const markMessagesAsRead = async (
       filter.userConnectionId = toObjectId(chatKey.replace("user-user_", ""));
     }
     const unreadMessages = await ChatMessage.find(filter).select("_id");
-    const messageIds = unreadMessages.map((msg) => (msg._id as ObjectId).toString());
+    const messageIds = unreadMessages.map((msg) => (msg._id).toString());
 
     if (messageIds.length > 0) {
       await ChatMessage.updateMany(

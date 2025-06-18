@@ -9,7 +9,7 @@ import {
   countUnreadMessagesByCollaborationId,
   countUnreadMessagesByUserConnectionId,
 } from "../repositories/chat.repository.js";
-import { IChatMessage } from "../models/chat.model.js";
+import { IChatMessage } from "../Interfaces/models/IChatMessage.js";
 import { findContactById, findContactsByUserId } from "../repositories/contacts.repository.js";
 import mongoose from "mongoose";
 
