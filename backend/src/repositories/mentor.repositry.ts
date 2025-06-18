@@ -1,4 +1,5 @@
-import Mentor, { IMentor } from "../models/mentor.model.js";
+import { IMentor } from "../Interfaces/models/IMentor.js";
+import Mentor from "../models/mentor.model.js";
 
 // Submit mentor request
 export const submitMentorRequest = async (data: Partial<IMentor>): Promise<IMentor> => {

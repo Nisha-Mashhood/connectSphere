@@ -5,7 +5,10 @@ export interface IMentorRequest extends Document {
   mentorRequestId: string;
   mentorId: Types.ObjectId;
   userId: Types.ObjectId;
-  selectedSlot: object;
+  selectedSlot: {
+    day: 'Sunday' | 'Monday' | 'Tuesday' | 'Wednesday' | 'Thursday' | 'Friday' | 'Saturday';
+    timeSlots: string[];
+  };
   price: number;
   timePeriod: number;
   paymentStatus: "Pending" | "Paid" | "Failed";

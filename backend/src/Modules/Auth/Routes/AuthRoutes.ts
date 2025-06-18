@@ -31,5 +31,15 @@ router.put(
   [apiLimiter, verifyToken, checkBlockedStatus, upload.fields([{ name: 'profilePic', maxCount: 1 }, { name: 'coverPic', maxCount: 1 }])],
   authController.updateUserDetails.bind(authController)
 );
+router.get('/users', [apiLimiter, verifyToken], authController.getAllUsers.bind(authController));
+router.get('/users/:id', [apiLimiter, verifyToken], authController.getUserById.bind(authController));
+router.put(
+  '/users/:id',
+  [apiLimiter, verifyToken, checkBlockedStatus, upload.fields([{ name: 'profilePhoto', maxCount: 1 }, { name: 'coverPhoto', maxCount: 1 }])],
+  authController.updateUserDetails.bind(authController)
+);
+router.put('/users/block/:id', [apiLimiter, verifyToken, authorize('admin')], authController.blockUser.bind(authController));
+router.put('/users/unblock/:id', [apiLimiter, verifyToken, authorize('admin')], authController.unblockUser.bind(authController));
+router.put('/users/role/:id', [apiLimiter, verifyToken, authorize('admin')], authController.changeRole.bind(authController));
 
 export default router;

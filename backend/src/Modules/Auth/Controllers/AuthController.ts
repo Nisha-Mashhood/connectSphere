@@ -333,4 +333,86 @@ export class AuthController extends BaseController {
       this.handleError(error, res);
     }
   }
+
+  //get all User Details
+  async getAllUsers(_req: Request, res: Response) {
+    try {
+      logger.debug(`Fetching all users`);
+      const users = await this.authService.getAllUsers();
+      this.sendSuccess(res, { users }, 'Users retrieved successfully');
+      logger.info(`Fetched all users`);
+    } catch (error) {
+      logger.error(`Error fetching all users: ${error}`);
+      this.handleError(error, res);
+    }
+  }
+
+  //get user Deatils by Id
+  async getUserById(req: Request<{ id: string }>, res: Response) {
+    try {
+      const { id } = req.params;
+      logger.debug(`Fetching user by ID: ${id}`);
+      if (!id) {
+        this.throwError(400, 'User ID is required');
+      }
+      const user = await this.authService.profileDetails(id);
+      this.sendSuccess(res, { user }, 'User retrieved successfully');
+      logger.info(`Fetched user: ${id}`);
+    } catch (error) {
+      logger.error(`Error fetching user ${req.params.id || 'unknown'}: ${error}`);
+      this.handleError(error, res);
+    }
+  }
+
+  //Block teh given User
+  async blockUser(req: Request<{ id: string }>, res: Response) {
+    try {
+      const { id } = req.params;
+      logger.debug(`Blocking user: ${id}`);
+      if (!id) {
+        this.throwError(400, 'User ID is required');
+      }
+      await this.authService.blockUser(id);
+      this.sendSuccess(res, {}, 'User blocked successfully');
+      logger.info(`Blocked user: ${id}`);
+    } catch (error) {
+      logger.error(`Error blocking user ${req.params.id || 'unknown'}: ${error}`);
+      this.handleError(error, res);
+    }
+  }
+
+  //Unblock the given user
+  async unblockUser(req: Request<{ id: string }>, res: Response) {
+    try {
+      const { id } = req.params;
+      logger.debug(`Unblocking user: ${id}`);
+      if (!id) {
+        this.throwError(400, 'User ID is required');
+      }
+      await this.authService.unblockUser(id);
+      this.sendSuccess(res, {}, 'User unblocked successfully');
+      logger.info(`Unblocked user: ${id}`);
+    } catch (error) {
+      logger.error(`Error unblocking user ${req.params.id || 'unknown'}: ${error}`);
+      this.handleError(error, res);
+    }
+  }
+
+  //Change the user role
+  async changeRole(req: Request<{ id: string }, {}, { role: string }>, res: Response) {
+    try {
+      const { id } = req.params;
+      const { role } = req.body;
+      logger.debug(`Changing role for user: ${id} to ${role}`);
+      if (!id || !role) {
+        this.throwError(400, 'User ID and role are required');
+      }
+      const updatedUser = await this.authService.changeRole(id, role);
+      this.sendSuccess(res, { user: updatedUser }, 'User role updated successfully');
+      logger.info(`Updated role for user: ${id} to ${role}`);
+    } catch (error) {
+      logger.error(`Error changing role for user ${req.params.id || 'unknown'}: ${error}`);
+      this.handleError(error, res);
+    }
+  }
 }

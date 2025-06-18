@@ -164,13 +164,13 @@ export const processPaymentService = async (
         createContact({
           userId: mentorRequestData.userId,
           targetUserId: mentor.userId as string,
-          collaborationId: collaboration?._id as string,
+          collaborationId: collaboration?._id,
           type: "user-mentor",
         }),
         createContact({
           userId: mentor.userId as string,
           targetUserId: mentorRequestData.userId,
-          collaborationId: collaboration?._id as string,
+          collaborationId: collaboration?._id,
           type: "user-mentor",
         }),
       ]);
@@ -219,25 +219,9 @@ export const removecollab = async (collabId: string, reason: string) => {
     throw new Error("Collab not found");
   }
 
-  // Ensure mentorId is an object, not a string
-  if (typeof collab.mentorId === "string") {
-    throw new Error("Mentor details are not populated properly.");
-  }
-
-  // Ensure userId in mentor is an object
-  if (typeof collab.mentorId.userId === "string") {
-    throw new Error("Mentor's user details are not populated properly.");
-  }
-
-  // Ensure userId is an object, not a string
-  if (typeof collab.userId === "string") {
-    throw new Error("User details are not populated properly.");
-  }
-
-  // Extract mentor details
-  const mentorEmail = collab.mentorId?.userId?.email;
-  const mentorName = collab.mentorId?.userId?.name;
-  const userName = collab.userId?.name;
+  const mentorEmail = (collab.mentorId as any).userId?.email;
+  const mentorName = (collab.mentorId as any).userId?.name;
+  const userName = (collab.userId as any).name;
 
   if (!mentorEmail) {
     throw new Error("Mentor email not found");
@@ -425,23 +409,10 @@ export const processTimeSlotRequest = async (
 
     // Send email if the request is rejected
     if (status === "rejected") {
-      // Type guard for userId
-      if (typeof collaboration.userId === "string") {
-        throw new Error("User details not populated");
-      }
-      const userEmail = collaboration.userId.email;
-      const userName = collaboration.userId.name;
-
-      // Type guard for mentorId
-      if (typeof collaboration.mentorId === "string") {
-        throw new Error("Mentor details not populated");
-      }
-      const mentorUser = collaboration.mentorId.userId;
-      if (typeof mentorUser === "string") {
-        throw new Error("Mentor's user details not populated");
-      }
-      const mentorEmail = mentorUser.email;
-      const mentorName = mentorUser.name;
+      const userEmail = (collaboration.userId as any).email;
+      const userName = (collaboration.userId as any).name;
+      const mentorEmail = (collaboration.mentorId as any).userId.email;
+      const mentorName = (collaboration.mentorId as any).userId.name;
 
       if (!userEmail || !mentorEmail) {
         throw new Error("User or mentor email not found");
@@ -520,16 +491,19 @@ const calculateNewEndDate = (
   return currentDate;
 };
 
-
 //Find locked slot for mentor
-export const getMentorLockedSlots = async (mentorId: string): Promise<LockedSlot[]> => {
+export const getMentorLockedSlots = async (
+  mentorId: string
+): Promise<LockedSlot[]> => {
   try {
     if (!mentorId) {
       throw new Error("Mentor ID is required");
     }
 
     const lockedSlots = await getLockedSlotsByMentorId(mentorId);
-   console.log(`Retrieved ${lockedSlots.length} locked slots for mentorId: ${mentorId}`);
+    console.log(
+      `Retrieved ${lockedSlots.length} locked slots for mentorId: ${mentorId}`
+    );
     return lockedSlots;
   } catch (error: any) {
     console.log(`Error in service for mentorId ${mentorId}: ${error.message}`);

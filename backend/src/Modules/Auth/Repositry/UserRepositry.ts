@@ -4,7 +4,6 @@ import { BaseRepository } from "../../../core/Repositries/BaseRepositry.js";
 import { RepositoryError } from "../../../core/Utils/ErrorHandler.js";
 import logger from "../../../core/Utils/Logger.js";
 
-
 // Repository for User-specific database operations
 export class UserRepository extends BaseRepository<UserInterface> {
   constructor() {
@@ -17,7 +16,7 @@ export class UserRepository extends BaseRepository<UserInterface> {
       return await this.create(userData);
     } catch (error) {
       logger.error(`Error creating user: ${error}`);
-      throw new RepositoryError('Failed to create user');
+      throw new RepositoryError("Failed to create user");
     }
   }
 
@@ -31,31 +30,54 @@ export class UserRepository extends BaseRepository<UserInterface> {
     }
   }
 
+  //Find a User By id
+  async getUserById(id: string): Promise<UserInterface | null> {
+    try {
+      return await this.findById(id);
+    } catch (error) {
+      logger.error(`Error finding user by id ${id}: ${error}`);
+      throw new RepositoryError(`Failed to find user by id ${id}`);
+    }
+  }
+
   // Find or create a user by OAuth profile
-  async findOrCreateUser(profile: { email: string; displayName?: string; id?: string; photos?: { value: string }[] }, provider: string): Promise<UserInterface> {
+  async findOrCreateUser(
+    profile: {
+      email: string;
+      displayName?: string;
+      id?: string;
+      photos?: { value: string }[];
+    },
+    provider: string
+  ): Promise<UserInterface> {
     try {
       const email = profile.email;
       let user = await this.findUserByEmail(email);
       if (!user) {
         user = await this.create({
-          name: profile.displayName || 'Unknown',
+          name: profile.displayName || "Unknown",
           email,
           provider,
           providerId: profile.id,
           profilePic: profile.photos?.[0]?.value || null,
-          role: 'user',
+          role: "user",
         });
         logger.info(`Created OAuth user: ${email} via ${provider}`);
       }
       return user;
     } catch (error) {
       logger.error(`Error in findOrCreateUser for ${profile.email}: ${error}`);
-      throw new RepositoryError(`Failed to find or create user for ${profile.email}`);
+      throw new RepositoryError(
+        `Failed to find or create user for ${profile.email}`
+      );
     }
   }
 
   // Update user password
-  async updatePassword(id: string, password: string): Promise<UserInterface | null> {
+  async updatePassword(
+    id: string,
+    password: string
+  ): Promise<UserInterface | null> {
     try {
       return await this.update(id, { password });
     } catch (error) {
@@ -69,36 +91,53 @@ export class UserRepository extends BaseRepository<UserInterface> {
     try {
       return await this.findByIdAndUpdate(userId, { $inc: { loginCount: 1 } });
     } catch (error) {
-      logger.error(`Error incrementing login count for user ${userId}: ${error}`);
-      throw new RepositoryError(`Failed to increment login count for user ${userId}`);
+      logger.error(
+        `Error incrementing login count for user ${userId}: ${error}`
+      );
+      throw new RepositoryError(
+        `Failed to increment login count for user ${userId}`
+      );
     }
   }
 
   // Update refresh token
-  async updateRefreshToken(userId: string, refreshToken: string): Promise<UserInterface | null> {
+  async updateRefreshToken(
+    userId: string,
+    refreshToken: string
+  ): Promise<UserInterface | null> {
     try {
       return await this.update(userId, { refreshToken });
     } catch (error) {
       logger.error(`Error updating refresh token for user ${userId}: ${error}`);
-      throw new RepositoryError(`Failed to update refresh token for user ${userId}`);
+      throw new RepositoryError(
+        `Failed to update refresh token for user ${userId}`
+      );
     }
   }
 
   // Remove refresh token
   async removeRefreshToken(email: string): Promise<void> {
     try {
-      await this.model.updateOne({ email }, { $unset: { refreshToken: '' } });
+      await this.model.updateOne({ email }, { $unset: { refreshToken: "" } });
       logger.info(`Removed refresh token for user with email: ${email}`);
     } catch (error) {
       logger.error(`Error removing refresh token for email ${email}: ${error}`);
-      throw new RepositoryError(`Failed to remove refresh token for email ${email}`);
+      throw new RepositoryError(
+        `Failed to remove refresh token for email ${email}`
+      );
     }
   }
 
   // Check if profile is complete
   async isProfileComplete(user: UserInterface): Promise<boolean> {
     try {
-      const requiredFields: (keyof UserInterface)[] = ['phone', 'dateOfBirth', 'jobTitle', 'industry', 'reasonForJoining'];
+      const requiredFields: (keyof UserInterface)[] = [
+        "phone",
+        "dateOfBirth",
+        "jobTitle",
+        "industry",
+        "reasonForJoining",
+      ];
       for (const field of requiredFields) {
         if (!user[field]) {
           return false;
@@ -106,8 +145,73 @@ export class UserRepository extends BaseRepository<UserInterface> {
       }
       return true;
     } catch (error) {
-      logger.error(`Error checking profile completion for user ${user._id}: ${error}`);
-      throw new RepositoryError(`Failed to check profile completion for user ${user._id}`);
+      logger.error(
+        `Error checking profile completion for user ${user._id}: ${error}`
+      );
+      throw new RepositoryError(
+        `Failed to check profile completion for user ${user._id}`
+      );
+    }
+  }
+
+  //Fetch All User Details
+  async getAllUsers(): Promise<UserInterface[]> {
+    try {
+      logger.debug(`Fetching all users`);
+      return await this.model.find({ role: { $ne: "admin" } }).exec();
+    } catch (error) {
+      logger.error(`Error fetching all users: ${error}`);
+      throw new RepositoryError("Failed to fetch all users");
+    }
+  }
+
+  //Update The User Profile
+  async updateUserProfile(
+    id: string,
+    data: Partial<UserInterface>
+  ): Promise<UserInterface | null> {
+    try {
+      logger.debug(`Updating user profile for ID: ${id}`);
+      return await this.findByIdAndUpdate(id, data, { new: true });
+    } catch (error) {
+      logger.error(`Error updating user profile for ID ${id}: ${error}`);
+      throw new RepositoryError(`Failed to update user profile for ID ${id}`);
+    }
+  }
+
+  //Block the given User
+  async blockUser(id: string): Promise<void> {
+    try {
+      logger.debug(`Blocking user: ${id}`);
+      await this.findByIdAndUpdate(id, { isBlocked: true });
+    } catch (error) {
+      logger.error(`Error blocking user ${id}: ${error}`);
+      throw new RepositoryError(`Failed to block user ${id}`);
+    }
+  }
+
+  //Unblock the given user
+  async unblockUser(id: string): Promise<void> {
+    try {
+      logger.debug(`Unblocking user: ${id}`);
+      await this.findByIdAndUpdate(id, { isBlocked: false });
+    } catch (error) {
+      logger.error(`Error unblocking user ${id}: ${error}`);
+      throw new RepositoryError(`Failed to unblock user ${id}`);
+    }
+  }
+
+  //Update The user Role
+  async updateUserRole(
+    userId: string,
+    role: string
+  ): Promise<UserInterface | null> {
+    try {
+      logger.debug(`Updating role for user: ${userId} to ${role}`);
+      return await this.findByIdAndUpdate(userId, { role }, { new: true });
+    } catch (error) {
+      logger.error(`Error updating role for user ${userId}: ${error}`);
+      throw new RepositoryError(`Failed to update role for user ${userId}`);
     }
   }
 }

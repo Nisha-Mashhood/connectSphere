@@ -5,8 +5,8 @@ import { Document, Types } from "mongoose";
 export interface ICollaboration extends Document {
   _id: Types.ObjectId;
   collaborationId: string;
-  mentorId: IMentor | string;
-  userId: UserInterface | string;
+  mentorId: IMentor | string | Types.ObjectId;
+  userId: UserInterface | string | Types.ObjectId;
   selectedSlot: {
     day:
       | "Sunday"

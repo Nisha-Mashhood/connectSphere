@@ -4,7 +4,7 @@ import { UserInterface } from "./IUser.js";
 export interface IMentor extends Document {
   _id: Types.ObjectId;
   mentorId: string;
-  userId: string | UserInterface;
+  userId: string | UserInterface | Types.ObjectId ;
   isApproved?: string;
   rejectionReason?: string;
   skills?: string[];

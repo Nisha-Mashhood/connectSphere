@@ -1,6 +1,7 @@
 import MentorRequest from "../models/mentorRequset.js";
-import Collaboration, { ICollaboration } from "../models/collaboration.js";
+import Collaboration from "../models/collaboration.js";
 import Mentor from "../models/mentor.model.js";
+import { ICollaboration } from "../Interfaces/models/ICollaboration.js";
 
 export interface LockedSlot {
   day: string;
