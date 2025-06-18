@@ -1,4 +1,4 @@
-import { IContact } from "../../../Interfaces/models/IContact.js";
+import { IContact } from "../Interfaces/models/IContact.js";
 import Contact from "../models/contacts.model.js";
 import mongoose from "mongoose";
 

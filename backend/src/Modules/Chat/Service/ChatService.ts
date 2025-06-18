@@ -2,14 +2,16 @@ import { Types } from 'mongoose';
 import { BaseService } from '../../../core/Services/BaseService.js';
 import { ChatRepository } from '../Repositry/ChatRepositry.js';
 import { IChatMessage } from '../../../Interfaces/models/IChatMessage.js';
-import { findContactById, findContactsByUserId } from '../../../repositories/contactUs.repositry.js';
+import { ContactRepository } from '../../Contact/Repositry/ContactRepositry.js';
 import logger from '../../../core/Utils/Logger.js';
 
 export class ChatService extends BaseService {
 private chatRepo: ChatRepository;
+private contactRepo: ContactRepository;
     constructor() {
         super();
         this.chatRepo = new ChatRepository();
+        this.contactRepo = new ContactRepository();
       }
 
   async getChatMessages(
@@ -35,7 +37,7 @@ private chatRepo: ChatRepository;
       total = await this.chatRepo.countMessagesByGroupId(groupId);
     } else if (contactId) {
       this.checkData(contactId);
-      const contact = await findContactById(contactId);
+      const contact = await this.contactRepo.findContactById(contactId);
       if (!contact) {
         this.throwError('Invalid contact');
       }
@@ -61,7 +63,7 @@ private chatRepo: ChatRepository;
       this.throwError('Invalid user ID: must be a 24 character hex string');
     }
 
-    const contacts = await findContactsByUserId(userId);
+    const contacts = await this.contactRepo.findContactsByUserId(userId);
     logger.debug(`Found ${contacts.length} contacts for user: ${userId}`);
     const unreadCounts: { [key: string]: number } = {};
 
