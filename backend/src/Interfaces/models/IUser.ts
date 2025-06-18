@@ -14,8 +14,8 @@ export interface UserInterface extends Document {
   isBlocked: boolean;
   provider?: string;
   providerId?: string | null;
-  profilePic?: string;
-  coverPic?: string;
+  profilePic?: string | null;
+  coverPic?: string | null;
   accessToken?: string;
   refreshToken?: string | null;
   loginCount: number;

@@ -1,4 +1,5 @@
-import { Skill, SkillInterface } from "../models/skills.model.js";
+import { SkillInterface } from "../Interfaces/models/SkillInterface.js";
+import { Skill } from "../models/skills.model.js";
 
 // Create Skill
 export const createSkill = async (data: Partial<SkillInterface>) => {

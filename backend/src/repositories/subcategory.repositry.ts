@@ -1,4 +1,6 @@
-import { Subcategory, SubcategoryInterface } from "../models/subcategory.model.js";
+import { SubcategoryInterface } from "../Interfaces/models/SubcategoryInterface.js";
+import { Subcategory } from "../models/subcategory.model.js";
+
 
 // Create Subcategory
 export const createSubcategory = async (data: Partial<SubcategoryInterface>) => {

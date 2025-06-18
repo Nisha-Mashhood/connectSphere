@@ -1,4 +1,4 @@
-import { SkillInterface } from "src/models/skills.model.js";
+import { SkillInterface } from "../Interfaces/models/SkillInterface.js";
 import * as SkillRepo from "../repositories/skills.repositry.js";
 import { uploadMedia } from "../utils/cloudinary.utils.js";
 

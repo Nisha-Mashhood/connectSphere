@@ -1,4 +1,5 @@
-import User, { UserInterface } from "../models/user.model.js";
+import { UserInterface } from "src/Interfaces/models/IUser.js";
+import User from "../models/user.model.js";
 
 // Create a new user
 export const createUser = async (userData: Partial<UserInterface>) => {

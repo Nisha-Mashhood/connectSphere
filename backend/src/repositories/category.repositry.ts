@@ -1,4 +1,5 @@
-import { Category, CategoryInterface } from "../models/category.model.js";
+import { CategoryInterface } from "../Interfaces/models/CategoryInterface.js";
+import { Category } from "../models/category.model.js";
 
 // Create Category
 export const createCategory = async (data: Partial<CategoryInterface>) => {

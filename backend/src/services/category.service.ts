@@ -1,8 +1,8 @@
-import { CategoryInterface } from "../models/category.model.js";
 import * as CategoryRepo from "../repositories/category.repositry.js";
 import { deleteManySubcategories } from "../repositories/subcategory.repositry.js";
 import { deleteManySkills } from "../repositories/skills.repositry.js";
 import { uploadMedia } from "../utils/cloudinary.utils.js";
+import { CategoryInterface } from "../Interfaces/models/CategoryInterface.js";
 
 export const isDuplicateCategoryName = async (
   name: string,

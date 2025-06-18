@@ -1,7 +1,7 @@
-import { SubcategoryInterface } from "src/models/subcategory.model.js";
 import * as SubcategoryRepo from "../repositories/subcategory.repositry.js";
 import { deleteManySkillsbySubcategoryId } from '../repositories/skills.repositry.js';
 import { uploadMedia } from "../utils/cloudinary.utils.js";
+import { SubcategoryInterface } from "../Interfaces/models/SubcategoryInterface.js";
 
 export const createSubcategory = async (data: Partial<SubcategoryInterface>, imagePath?: string, fileSize?: number) => {
     let imageUrl = null;

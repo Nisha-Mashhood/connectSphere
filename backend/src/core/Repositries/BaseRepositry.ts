@@ -97,4 +97,16 @@ export abstract class BaseRepository<T extends Document> implements IBaseReposit
       throw new RepositoryError(`Failed to update entity with ID ${id} in ${this.model.modelName}`);
     }
   }
+
+  //Delete an entity by Id
+  async findByIdAndDelete(id: string): Promise<T | null> {
+    try {
+      const result = await this.model.findByIdAndDelete(id).exec();
+      logger.info(`Deleted entity in ${this.model.modelName}: ${id}`);
+      return result;
+    } catch (error) {
+      logger.error(`Error deleting entity in ${this.model.modelName} with ID ${id}: ${error}`);
+      throw new RepositoryError(`Failed to delete entity with ID ${id} in ${this.model.modelName}`);
+    }
+  }
 }

@@ -1,5 +1,6 @@
 export interface IBaseService {
 
-  validateData(data: any): Promise<void>;
+  checkData(data: any): void;
+  throwError(message: string): never;
   
 }
