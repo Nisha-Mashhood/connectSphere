@@ -1,4 +1,5 @@
-import UserConnection, { IUserConnection } from "../models/userConnection.modal.js";
+import { IUserConnection } from "../Interfaces/models/IUserConnection.js";
+import UserConnection from "../models/userConnection.modal.js";
 
 export const createUserConnection = async (requesterId: string, recipientId: string): Promise<IUserConnection> => {
   const newConnection = new UserConnection({

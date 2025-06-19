@@ -4,8 +4,8 @@ import { Document, Types } from "mongoose";
 export interface IUserConnection extends Document {
   _id: Types.ObjectId;
   connectionId: string;
-  requester: string | UserInterface;
-  recipient: string | UserInterface;
+  requester: string | UserInterface | Types.ObjectId;
+  recipient: string | UserInterface | Types.ObjectId;
   requestStatus: "Pending" | "Accepted" | "Rejected";
   connectionStatus: "Connected" | "Disconnected";
   requestSentAt: Date;

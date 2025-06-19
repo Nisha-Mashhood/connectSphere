@@ -1,5 +1,5 @@
 import { createContact } from "../repositories/contacts.repository.js";
-import { IUserConnection } from "../models/userConnection.modal.js";
+import { IUserConnection } from "../Interfaces/models/IUserConnection.js";
 import * as userConnectionRepo from "../repositories/user-userRepo.repositry.js";
 
 export const sendUserConnectionRequest = async (requesterId: string, recipientId: string) => {
