@@ -1,6 +1,7 @@
 import GroupRequest from "../models/groupRequest.model.js";
-import Group, { GroupDocument } from "../models/group.model.js";
+import Group from "../models/group.model.js";
 import mongoose from "mongoose";
+import { GroupDocument } from "../Interfaces/models/GroupDocument.js";
 
 
 export interface GroupFormData {

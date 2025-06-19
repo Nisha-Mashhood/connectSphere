@@ -31,7 +31,7 @@ import { v4 as uuid } from "uuid";
 import { Stripe } from "stripe";
 import { findUserById } from "../repositories/user.repositry.js";
 import { createContact } from "../repositories/contacts.repository.js";
-import { GroupDocument } from "../models/group.model.js";
+import { GroupDocument } from "../Interfaces/models/GroupDocument.js";
 import mongoose from "mongoose";
 
 export const createGroupService = async (
