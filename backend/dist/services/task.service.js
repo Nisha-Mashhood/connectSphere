@@ -1,4 +1,4 @@
-import { uploadMedia } from '../utils/cloudinary.utils.js';
+import { uploadMedia } from '../core/Utils/Cloudinary.js';
 import { createTaskRepo, deleteTask, editTask, findTasksByContext, updateTaskPriority, updateTaskStatus } from '../repositories/task.repositry.js';
 import { updateTaskNotifications } from '../repositories/notification.repositry.js';
 export const createTaskService = async (taskData, imagePath, fileSize) => {

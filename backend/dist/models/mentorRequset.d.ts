@@ -1,18 +1,7 @@
-import mongoose, { Document } from "mongoose";
-export interface IMentorRequest extends Document {
-    mentorRequestId: string;
-    mentorId: string;
-    userId: string;
-    selectedSlot: object;
-    price: number;
-    timePeriod: number;
-    paymentStatus: "Pending" | "Paid" | "Failed";
-    isAccepted: String;
-    createdAt: Date;
-    updatedAt: Date;
-}
+import mongoose from "mongoose";
+import { IMentorRequest } from "src/Interfaces/models/IMentorRequest.js";
 declare const _default: mongoose.Model<IMentorRequest, {}, {}, {}, mongoose.Document<unknown, {}, IMentorRequest> & IMentorRequest & Required<{
-    _id: unknown;
+    _id: mongoose.Types.ObjectId;
 }> & {
     __v: number;
 }, any>;

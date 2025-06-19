@@ -7,7 +7,9 @@ export const createSkill = async (req, res) => {
         res.status(201).json({ message: "Skill created successfully", skill });
     }
     catch (error) {
-        res.status(500).json({ message: "Error creating skill", error: error.message });
+        res
+            .status(500)
+            .json({ message: "Error creating skill", error: error.message });
     }
 };
 export const getAllSkills = async (req, res) => {
@@ -16,7 +18,9 @@ export const getAllSkills = async (req, res) => {
         res.status(200).json(skills);
     }
     catch (error) {
-        res.status(500).json({ message: "Error fetching skills", error: error.message });
+        res
+            .status(500)
+            .json({ message: "Error fetching skills", error: error.message });
     }
 };
 export const getSkillById = async (req, res) => {
@@ -29,7 +33,9 @@ export const getSkillById = async (req, res) => {
         res.status(200).json(skill);
     }
     catch (error) {
-        res.status(500).json({ message: "Error fetching skill", error: error.message });
+        res
+            .status(500)
+            .json({ message: "Error fetching skill", error: error.message });
     }
 };
 export const updateSkill = async (req, res) => {
@@ -41,10 +47,14 @@ export const updateSkill = async (req, res) => {
             res.status(404).json({ message: "Skill not found" });
             return;
         }
-        res.status(200).json({ message: "Skill updated successfully", updatedSkill });
+        res
+            .status(200)
+            .json({ message: "Skill updated successfully", updatedSkill });
     }
     catch (error) {
-        res.status(500).json({ message: "Error updating skill", error: error.message });
+        res
+            .status(500)
+            .json({ message: "Error updating skill", error: error.message });
     }
 };
 export const deleteSkill = async (req, res) => {
@@ -57,18 +67,22 @@ export const deleteSkill = async (req, res) => {
         res.status(200).json({ message: "Skill deleted successfully" });
     }
     catch (error) {
-        res.status(500).json({ message: "Error deleting skill", error: error.message });
+        res
+            .status(500)
+            .json({ message: "Error deleting skill", error: error.message });
     }
 };
-//fetch skills 
+//fetch skills
 export const getSkills = async (_, res) => {
     try {
         const skills = await SkillService.getSkills();
         res.status(200).json({ skills });
     }
     catch (error) {
-        console.error('Error fetching skills:', error.message);
-        res.status(500).json({ message: "Error fetching skills", error: error.message });
+        console.error("Error fetching skills:", error.message);
+        res
+            .status(500)
+            .json({ message: "Error fetching skills", error: error.message });
     }
 };
 //# sourceMappingURL=skills.controller.js.map

@@ -3,16 +3,12 @@ import { ServiceError } from "../../../core/Utils/ErrorHandler.js";
 import { UserRepository } from "../Repositry/UserRepositry.js";
 import { UserInterface as IUser } from "../../../Interfaces/models/IUser.js";
 import bcrypt from "bcryptjs";
-import {
-  generateAccessToken,
-  generateRefreshToken,
-  verifyRefreshToken,
-} from "../../../utils//jwt.utils.js";
-import { generateOTP } from "../../../utils/otp.utils.js";
-import { sendEmail } from "../../../utils/email.utils.js";
+import { AuthService as JWTService } from "../Utils/JWT.js"
+import { generateOTP } from "../Utils/OTP.js";
+import { sendEmail } from "../../../core/Utils/Email.js";
 import config from "../../../config/env.config.js";
-import { uploadMedia } from "../../../utils/cloudinary.utils.js";
-import { OAuth2Client } from "../../../utils/googleconfig.utils.js";
+import { uploadMedia } from "../../../core/Utils/Cloudinary.js";
+import { OAuth2Client } from "../Utils/GoogleConfig.js";
 import axios from "axios";
 import logger from "../../../core/Utils/Logger.js";
 
@@ -35,10 +31,12 @@ const otpStore: Record<string, string> = {};
 // Service for authentication and user profile operations
 export class AuthService extends BaseService {
   private userRepository: UserRepository;
+  private jwtservice = new JWTService();
 
   constructor() {
     super();
     this.userRepository = new UserRepository();
+    this.jwtservice = new JWTService();
   }
 
   //  user signup
@@ -97,11 +95,11 @@ export class AuthService extends BaseService {
       if (!updatedUser) {
         throw new ServiceError("User not found after login count update");
       }
-      const accessToken = generateAccessToken({
+      const accessToken = this.jwtservice.generateAccessToken({
         userId: user._id,
         userRole: user.role,
       });
-      const refreshToken = generateRefreshToken({
+      const refreshToken = this.jwtservice.generateRefreshToken({
         userId: user._id,
         userRole: user.role,
       });
@@ -186,11 +184,11 @@ export class AuthService extends BaseService {
       if (!updatedUser) {
         throw new ServiceError("User not found after login count update");
       }
-      const accessToken = generateAccessToken({
+      const accessToken = this.jwtservice.generateAccessToken({
         userId: existingUser._id,
         userRole: existingUser.role,
       });
-      const refreshToken = generateRefreshToken({
+      const refreshToken = this.jwtservice.generateRefreshToken({
         userId: existingUser._id,
         userRole: existingUser.role,
       });
@@ -317,11 +315,11 @@ export class AuthService extends BaseService {
       if (!updatedUser) {
         throw new ServiceError("User not found after login count update");
       }
-      const accessToken = generateAccessToken({
+      const accessToken = this.jwtservice.generateAccessToken({
         userId: existingUser._id,
         userRole: existingUser.role,
       });
-      const refreshToken = generateRefreshToken({
+      const refreshToken = this.jwtservice.generateRefreshToken({
         userId: existingUser._id,
         userRole: existingUser.role,
       });
@@ -353,8 +351,8 @@ export class AuthService extends BaseService {
     refreshToken: string
   ): Promise<{ newAccessToken: string }> {
     try {
-      const decoded = verifyRefreshToken(refreshToken);
-      const newAccessToken = generateAccessToken({ userId: decoded.userId });
+      const decoded = this.jwtservice.verifyRefreshToken(refreshToken);
+      const newAccessToken = this.jwtservice.generateAccessToken({ userId: decoded.userId });
       logger.info(`Refreshed access token for userId: ${decoded.userId}`);
       return { newAccessToken };
     } catch (error) {
@@ -390,7 +388,7 @@ export class AuthService extends BaseService {
         throw new ServiceError("Invalid or expired OTP");
       }
       delete otpStore[email];
-      const token = generateAccessToken({ email }, "10m");
+      const token = this.jwtservice.generateAccessToken({ email }, "10m");
       logger.info(`OTP verified for ${email}`);
       return token;
     } catch (error) {

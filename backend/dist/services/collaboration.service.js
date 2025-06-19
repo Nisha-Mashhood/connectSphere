@@ -1,6 +1,6 @@
-import { sendEmail } from "../utils/email.utils.js";
+import { sendEmail } from "../core/Utils/Email.js";
 import { createCollaboration, createTemporaryRequest, deleteMentorRequest, fetchMentorRequsetDetails, findCollab, findCollabById, findCollabDetails, findMentorRequest, getCollabDataForMentor, getCollabDataForUser, getLockedSlotsByMentorId, getMentorRequestsByMentorId, getRequestByUserId, markCollabAsCancelled, updateMentorRequestStatus, updateRequestStatus, updateTemporarySlotChanges, updateUnavailableDays, } from "../repositories/collaboration.repositry.js";
-import stripe from "../utils/stripe.utils.js";
+import stripe from "../core/Utils/Stripe.js";
 import { v4 as uuid } from "uuid";
 import { getMentorById } from "../repositories/mentor.repositry.js";
 import { createContact } from "../repositories/contacts.repository.js";
@@ -166,22 +166,9 @@ export const removecollab = async (collabId, reason) => {
     if (!collab) {
         throw new Error("Collab not found");
     }
-    // Ensure mentorId is an object, not a string
-    if (typeof collab.mentorId === "string") {
-        throw new Error("Mentor details are not populated properly.");
-    }
-    // Ensure userId in mentor is an object
-    if (typeof collab.mentorId.userId === "string") {
-        throw new Error("Mentor's user details are not populated properly.");
-    }
-    // Ensure userId is an object, not a string
-    if (typeof collab.userId === "string") {
-        throw new Error("User details are not populated properly.");
-    }
-    // Extract mentor details
-    const mentorEmail = collab.mentorId?.userId?.email;
-    const mentorName = collab.mentorId?.userId?.name;
-    const userName = collab.userId?.name;
+    const mentorEmail = collab.mentorId.userId?.email;
+    const mentorName = collab.mentorId.userId?.name;
+    const userName = collab.userId.name;
     if (!mentorEmail) {
         throw new Error("Mentor email not found");
     }
@@ -296,22 +283,10 @@ export const processTimeSlotRequest = async (collabId, requestId, isApproved, re
         console.log("Updated collaboration from service file:", updatedCollaboration);
         // Send email if the request is rejected
         if (status === "rejected") {
-            // Type guard for userId
-            if (typeof collaboration.userId === "string") {
-                throw new Error("User details not populated");
-            }
             const userEmail = collaboration.userId.email;
             const userName = collaboration.userId.name;
-            // Type guard for mentorId
-            if (typeof collaboration.mentorId === "string") {
-                throw new Error("Mentor details not populated");
-            }
-            const mentorUser = collaboration.mentorId.userId;
-            if (typeof mentorUser === "string") {
-                throw new Error("Mentor's user details not populated");
-            }
-            const mentorEmail = mentorUser.email;
-            const mentorName = mentorUser.name;
+            const mentorEmail = collaboration.mentorId.userId.email;
+            const mentorName = collaboration.mentorId.userId.name;
             if (!userEmail || !mentorEmail) {
                 throw new Error("User or mentor email not found");
             }

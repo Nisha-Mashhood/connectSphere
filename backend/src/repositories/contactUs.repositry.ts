@@ -1,4 +1,5 @@
-import ContactMessage, { IContactMessage } from "../models/ContactMessage.modal.js";
+import { IContactMessage } from "../Interfaces/models/IContactMessage.js";
+import ContactMessage from "../models/ContactMessage.modal.js";
 
 export const createContactMessage = async (data: {
   name: string;

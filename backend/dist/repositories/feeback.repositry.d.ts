@@ -1,4 +1,4 @@
-import { IFeedback } from "../models/feedback.modal.js";
+import { IFeedback } from "../Interfaces/models/IFeedback.js";
 import mongoose from "mongoose";
 export declare const createFeedback: (feedbackData: Partial<IFeedback>) => Promise<IFeedback>;
 export declare const getFeedbacksByMentorId: (mentorId: string) => Promise<IFeedback[]>;

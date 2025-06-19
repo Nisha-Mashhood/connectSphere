@@ -1,5 +1,6 @@
-import mongoose, { Schema } from 'mongoose';
-import { generateCustomId } from '../utils/idGenerator.utils.js';
+import mongoose, { Schema } from "mongoose";
+import { generateCustomId } from "../core/Utils/IdGenerator.js";
+import logger from "../core/Utils/Logger.js";
 const GroupSchema = new Schema({
     groupId: {
         type: String,
@@ -7,79 +8,86 @@ const GroupSchema = new Schema({
     },
     name: {
         type: String,
-        required: true
+        required: true,
     },
     bio: {
         type: String,
-        required: true
+        required: true,
     },
     price: {
         type: Number,
-        default: 0
+        default: 0,
     },
     maxMembers: {
         type: Number,
-        required: true
+        required: true,
     },
     isFull: {
         type: Boolean,
-        default: false
+        default: false,
     },
     availableSlots: [
         {
             day: {
                 type: String,
-                required: true
+                required: true,
             },
             timeSlots: [
                 {
                     type: String,
-                    required: true
-                }
+                    required: true,
+                },
             ],
         },
     ],
     profilePic: {
         type: String,
-        default: '' // Optional
+        default: "", // Optional
     },
     coverPic: {
         type: String,
-        default: '' // Optional
+        default: "", // Optional
     },
     startDate: {
         type: Date,
-        required: true
+        required: true,
     },
     adminId: {
         type: mongoose.Schema.Types.ObjectId,
-        ref: 'User',
-        required: true
+        ref: "User",
+        required: true,
     },
     members: [
         {
             userId: {
                 type: mongoose.Schema.Types.ObjectId,
-                ref: 'User'
+                ref: "User",
             },
             joinedAt: {
                 type: Date,
-                default: Date.now
+                default: Date.now,
             },
         },
     ],
     createdAt: {
         type: Date,
-        default: Date.now
+        default: Date.now,
     },
 }, { timestamps: true });
 // Pre-save hook to generate groupId
 GroupSchema.pre("save", async function (next) {
     if (!this.groupId) {
-        this.groupId = await generateCustomId("group", "GRP");
+        try {
+            this.groupId = await generateCustomId("group", "GRP");
+            logger.debug(`Generated groupId: ${this.groupId} for name ${this.name}`);
+        }
+        catch (error) {
+            logger.error(`Error generating groupId: ${this.groupId} for name ${this.name} : ${error}`);
+            return next(error);
+        }
     }
     next();
 });
-const Group = mongoose.model('Group', GroupSchema);
+const Group = mongoose.model("Group", GroupSchema);
 export default Group;
 //# sourceMappingURL=group.model.js.map

@@ -1,4 +1,5 @@
-import Feedback, { IFeedback } from "../models/feedback.modal.js";
+import { IFeedback } from "../Interfaces/models/IFeedback.js";
+import Feedback from "../models/feedback.modal.js";
 import mongoose from "mongoose";
 
 export const createFeedback = async (

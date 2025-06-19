@@ -2,34 +2,35 @@ import express from "express";
 import dotenv from "dotenv";
 import connectDB from "./config/db.config.js";
 import config from "./config/env.config.js";
-import authRoutes from "./routes/auth.routes.js";
-import categoryRoutes from "./routes/category.routes.js";
-import subCategoryRoutes from "./routes/sucategory.routes.js";
-import skillsRoutes from "./routes/skills.routes.js";
-import userRoutes from "./routes/user.routes.js";
-import mentorRoutes from "./routes/mentor.routes.js";
-import collaborationRoutes from "./routes/collaboration.routes.js";
-import groupRoutes from "./routes/group.routes.js";
-import feedbackRoutes from './routes/feedback.routes.js';
-import user_userCollabRoutes from './routes/userCollaboration.routes.js';
-import taskRoutes from './routes/tasks.routes.js';
-import  notificationRoutes from './routes/notification.routes.js';
-import adminRoutes from './routes/Admin/adminDashboard.routes.js';
-import chatRoutes from "./routes/chat.routes.js";
-import contactsRoutes from "./routes/contact.routes.js";
-import reviewsRoutes from "./routes/review.routes.js";
-import contactUsRoutes from "./routes/contactUs.routes.js";
+import authRoutes from "./Modules/Auth/Routes/AuthRoutes.js";
 import cors from "cors";
 import cookieParser from "cookie-parser";
 import http from "http";
 import { Server } from "socket.io";
-import initializeSocket from "./socket/socket.js";
-import { scheduleNodeCorn } from "./utils/node-cron.utils.js";
+import { SocketService }from "./socket/SocketService.js";
+import { CleanupScheduler } from "./core/Utils/NotificationSchdduler.js";
+import logger from "./core/Utils/Logger.js";
+import categoryRoutes from "./Modules/Category/Routes/CategoryRoutes.js";
+import subCategoryRoutes from "./Modules/Subcategory/Routes/SubCategoryRoutes.js";
+import skillsRoutes from "./Modules/Skills/Routes/SkillsRoutes.js";
+import userRoutes from "./Modules/Auth/Routes/AuthRoutes.js";//Check this
+import mentorRoutes from "./Modules/Mentor/Routes/MentorRoutes.js";
+import collaborationRoutes from "./Modules/Collaboration/Routes/CollaborationRoutes.js";
+import groupRoutes from "./Modules/Group/Routes/GroupRoutes.js";
+import feedbackRoutes from './Modules/Feedback/Routes/FeedBackRoutes.js';
+import user_userCollabRoutes from './Modules/UserCollaboration/Routes/UserCollaborationroutes.js';
+import taskRoutes from './Modules/Task/Routes/TaskRoutes.js';
+import  notificationRoutes from './Modules/Notification/Routes/Notificationroutes.js';
+import adminRoutes from './routes/Admin/adminDashboard.routes.js';//Check This also
+import chatRoutes from "./Modules/Chat/Routes/ChatRoutes.js";
+import contactsRoutes from "./Modules/Contact/Routes/ContactRoutes.js";
+import reviewsRoutes from "./Modules/Review/Routes/ReviewRoutes.js";
+import contactUsRoutes from "./Modules/ContactUs/Routes/ContactUsRoutes.js";
 
 dotenv.config();
 
 const app = express();
-const server = http.createServer(app);
+const server: http.Server = http.createServer(app);
 
 // Connect to DB
 connectDB();
@@ -81,13 +82,15 @@ const io = new Server(server, {
     credentials: true,
   },
 });
-initializeSocket(io); // Set up socket events
+const socketService = new SocketService(); // Instantiate SocketService
+socketService.initialize(io); // Call initialize method
 
 //Schedule Node_corn
-scheduleNodeCorn();
+const cleanupScheduler = new CleanupScheduler();
+cleanupScheduler.start();
 
 
 // Start server
 server.listen(config.port, () => {
-  console.log(`Server is running on http://localhost:${config.port}`);
+  logger.info(`Server is running on http://localhost:${config.port}`);
 });

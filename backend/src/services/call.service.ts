@@ -1,22 +1,22 @@
-import { Call } from "../models/call.modal.js";
-import * as callRepositry from '../repositories/call.repositry.js';
-// import * as notificationService from "../services/notification.service.js";
+// import { Call } from "../Interfaces/models/Call.js";
+// import * as callRepositry from '../repositories/call.repositry.js';
+// // import * as notificationService from "../services/notification.service.js";
 
-  export const logCall = async(
-    chatKey: string,
-    callerId: string,
-    recipientId: string,
-    type: 'audio' | 'video',
-    status: 'incoming' | 'answered' | 'missed'
-  ): Promise<Call> => {
-    const call = await callRepositry.create({
-      chatKey,
-      callerId,
-      recipientId,
-      type,
-      status,
-      timestamp: new Date(),
-    });
+//   export const logCall = async(
+//     chatKey: string,
+//     callerId: string,
+//     recipientId: string,
+//     type: 'audio' | 'video',
+//     status: 'incoming' | 'answered' | 'missed'
+//   ): Promise<Call> => {
+//     const call = await callRepositry.create({
+//       chatKey,
+//       callerId,
+//       recipientId,
+//       type,
+//       status,
+//       timestamp: new Date(),
+//     });
 
     // if (status === 'incoming') {
     //   await notificationService.createNotification(
@@ -33,13 +33,13 @@ import * as callRepositry from '../repositories/call.repositry.js';
     //     chatKey
     //   );
     // }
-    return call;
-  }
+  //   return call;
+  // }
 
-  export const getCallsByChatKey = async(chatKey: string): Promise<Call[]> => {
-    return callRepositry.findByChatKey(chatKey);
-  }
+  // export const getCallsByChatKey = async(chatKey: string): Promise<Call[]> => {
+  //   return callRepositry.findByChatKey(chatKey);
+  // }
 
-  export const getCallsByUserId = async(userId: string): Promise<Call[]> => {
-    return callRepositry.findByUserId(userId);
-  }
+  // export const getCallsByUserId = async(userId: string): Promise<Call[]> => {
+  //   return callRepositry.findByUserId(userId);
+  // }

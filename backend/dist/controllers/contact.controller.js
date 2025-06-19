@@ -8,7 +8,9 @@ export const getUserContactsController = async (req, res) => {
             return;
         }
         const contacts = await getUserContactsService(userId.toString());
-        res.status(200).json({ data: contacts, message: "Contacts retrieved successfully" });
+        res
+            .status(200)
+            .json({ data: contacts, message: "Contacts retrieved successfully" });
         return;
     }
     catch (error) {

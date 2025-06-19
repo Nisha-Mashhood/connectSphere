@@ -16,19 +16,15 @@ import {
   githubLogin,
   githubSignup
 } from "../controllers/auth.controller.js";
-import {
-  verifyToken,
-  checkBlockedStatus,
-  verifyRefreshTokenMiddleware,
-  authorize,
-} from "../middlewares/auth.middleware.js";
+import { AuthMiddleware } from '../middlewares/auth.middleware.js';
 import {
   apiLimiter,
   authLimiter,
 } from "../middlewares/ratelimit.middleware.js";
-import { upload } from "../utils/multer.utils.js";
+import { upload } from "../core/Utils/Multer.js";
 
 const router = express.Router();
+const authMiddleware = new AuthMiddleware();
 
 // Public routes
 router.post("/register/signup", authLimiter, signup);
@@ -43,25 +39,25 @@ router.post('/github-login',authLimiter,githubLogin);
 // Protected routes
 router.post(
   "/verify-admin-passkey",
-  [authLimiter, verifyToken, authorize("admin")],
+  [authLimiter, authMiddleware.verifyToken, authMiddleware.authorize('admin')],
   verifyPasskey
 );
 router.post(
   "/refresh-token",
-  [apiLimiter, verifyRefreshTokenMiddleware],
+  [apiLimiter, authMiddleware.verifyRefreshToken],
   refreshToken
 );
-router.post("/logout", [apiLimiter, verifyToken], logout);
+router.post("/logout", [apiLimiter, authMiddleware.verifyToken], logout);
 
 // Protected user routes
 router.get(
   "/check-profile/:id",
-  [apiLimiter, verifyToken, checkBlockedStatus],
+  [apiLimiter, authMiddleware.verifyToken, authMiddleware.checkBlockedStatus],
   checkProfile
 );
 router.get(
   "/profiledetails/:id",
-  [apiLimiter, verifyToken, checkBlockedStatus],
+  [apiLimiter, authMiddleware.verifyToken, authMiddleware.checkBlockedStatus],
   getprofileDetails
 );
 
@@ -69,8 +65,8 @@ router.put(
   "/updateUserDetails/:Id",
   [
     apiLimiter,
-    verifyToken,
-    checkBlockedStatus,
+    authMiddleware.verifyToken,
+    authMiddleware.checkBlockedStatus,
     upload.fields([
       { name: "profilePic", maxCount: 1 },
       { name: "coverPic", maxCount: 1 },

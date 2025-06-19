@@ -1,5 +1,6 @@
 import mongoose, { Schema } from "mongoose";
-import { generateCustomId } from '../utils/idGenerator.utils.js';
+import { generateCustomId } from "../core/Utils/IdGenerator.js";
+import logger from "../core/Utils/Logger.js";
 const MentorRequestSchema = new Schema({
     mentorRequestId: {
         type: String,
@@ -8,48 +9,48 @@ const MentorRequestSchema = new Schema({
     mentorId: {
         type: Schema.Types.ObjectId,
         ref: "Mentor",
-        required: true
+        required: true,
     },
     userId: {
         type: Schema.Types.ObjectId,
         ref: "User",
-        required: true
+        required: true,
     },
-    // selectedSlot: {
-    //   type: {
-    //     day: { type: String },
-    //     timeSlots: { type: String },
-    //   },
-    //   required: true,
-    // },
     selectedSlot: {
         day: { type: String },
         timeSlots: { type: String },
     },
     price: {
         type: Number,
-        required: true
+        required: true,
     },
     timePeriod: {
         type: Number,
         required: true,
-        default: 30
+        default: 30,
     },
     paymentStatus: {
         type: String,
         enum: ["Pending", "Paid", "Failed"],
-        default: "Pending"
+        default: "Pending",
     },
     isAccepted: {
         type: String,
         enum: ["Pending", "Accepted", "Rejected"],
-        default: "Pending"
+        default: "Pending",
     },
 }, { timestamps: true });
 // Pre-save hook to generate mentorRequestId
 MentorRequestSchema.pre("save", async function (next) {
     if (!this.mentorRequestId) {
-        this.mentorRequestId = await generateCustomId("mentorRequest", "MRQ");
+        try {
+            this.mentorRequestId = await generateCustomId("mentorRequest", "MRQ");
+            logger.debug(`Generated mentorRequestId: ${this.mentorRequestId} for mentorId ${this.mentorId}`);
+        }
+        catch (error) {
+            logger.error(`Error generating mentorRequestId: ${this.mentorRequestId} for mentorId ${this.mentorId} : ${error}`);
+            return next(error);
+        }
     }
     next();
 });

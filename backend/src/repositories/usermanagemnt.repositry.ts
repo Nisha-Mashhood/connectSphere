@@ -1,5 +1,6 @@
 // src/repositories/user.repository.ts
-import User, { UserInterface } from "../models/user.model.js";
+import { UserInterface } from "../Interfaces/models/IUser.js";
+import User from "../models/user.model.js";
 
 // Fetch all users
 export const getAllUsers = async (): Promise<UserInterface[]> => {

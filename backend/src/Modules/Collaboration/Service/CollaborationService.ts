@@ -5,8 +5,8 @@ import {
 } from "../Repositry/CollaborationRepositry.js";
 import { MentorRepository } from "../../Mentor/Repositry/MentorRepositry.js";
 import { ContactRepository } from "../../Contact/Repositry/ContactRepositry.js";
-import { sendEmail } from "../../../utils/email.utils.js";
-import stripe from "../../../utils/stripe.utils.js";
+import { sendEmail } from "../../../core/Utils/Email.js";
+import stripe from "../../../core/Utils/Stripe.js";
 import { v4 as uuid } from "uuid";
 import logger from "../../../core/Utils/Logger.js";
 import { ICollaboration } from "../../../Interfaces/models/ICollaboration.js";

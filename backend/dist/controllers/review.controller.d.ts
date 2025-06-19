@@ -1,4 +1,4 @@
-import { Request, Response } from 'express';
+import { Request, Response } from "express";
 export declare const submitReview: (req: Request, res: Response) => Promise<void>;
 export declare const skipReview: (req: Request, res: Response) => Promise<void>;
 export declare const getAllReviews: (_req: Request, res: Response) => Promise<void>;

@@ -1,4 +1,4 @@
-import { IContactMessage } from "../models/ContactMessage.modal.js";
+import { IContactMessage } from "../Interfaces/models/IContactMessage.js";
 export declare const createContactMessage: (data: {
     name: string;
     email: string;

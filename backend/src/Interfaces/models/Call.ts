@@ -10,3 +10,6 @@ export interface Call extends Document {
   status: "incoming" | "answered" | "missed";
   timestamp: Date;
 }
+
+
+

@@ -1,8 +1,9 @@
 import { Request, Response, NextFunction } from 'express';
-import { verifyAccessToken, verifyRefreshToken } from '../utils/jwt.utils.js';
-import {  findUserById } from '../repositories/user.repositry.js';
-import { UserInterface } from '../models/user.model.js';
-
+import logger from '../core/Utils/Logger.js';
+import { ServiceError } from '../core/Utils/ErrorHandler.js';
+import { AuthService } from '../Modules/Auth/Utils/JWT.js';
+import { UserRepository } from '../Modules/Auth/Repositry/UserRepositry.js';
+import { UserInterface } from '../Interfaces/models/IUser.js';
 
 // Extend Express Request type to include user
 declare global {
@@ -13,82 +14,79 @@ declare global {
   }
 }
 
+export class AuthMiddleware {
+  private authService: AuthService;
+  private userRepo: UserRepository;
 
-// Verify access token middleware
-export const verifyToken = async (req: Request, res: Response, next: NextFunction) => {
-  const accessToken = req.cookies.accessToken;
-  if (!accessToken) {
-    res.status(401).json({ message: "Access token not found" });
-    return 
+  constructor() {
+    this.authService = new AuthService();
+    this.userRepo = new UserRepository();
   }
-  try {
-    const decoded = verifyAccessToken(accessToken);
-    const user = await findUserById(decoded.userId);
-    // console.log("current user",user);
 
-    if (!user) {
-      res.status(401).json({ message: "User not found" });
-      return 
+  public async verifyToken(req: Request, _res: Response, next: NextFunction): Promise<void> {
+    const accessToken = req.cookies.accessToken;
+    if (!accessToken) {
+      logger.warn('Access token not found in request');
+      throw new ServiceError('Access token not found');
     }
-
-    req.currentUser = user;
-    next();
-  } catch (error) {
-   res.status(401).json({ message: "Invalid or expired token" });
-   return 
+    try {
+      const decoded = this.authService.verifyAccessToken(accessToken);
+      const user = await this.userRepo.getUserById(decoded.userId);
+      logger.debug(`Current user: ${user?._id}`);
+      if (!user) {
+        logger.warn(`User not found for ID: ${decoded.userId}`);
+        throw new ServiceError('User not found');
+      }
+      req.currentUser = user;
+      next();
+    } catch (error: any) {
+      logger.error(`Token verification failed: ${error.message}`);
+      throw new ServiceError('Invalid or expired token');
+    }
   }
-};
 
-
-
-// Verify refresh token
-export const verifyRefreshTokenMiddleware = async (req: Request, res: Response, next: NextFunction) => {
-  try {
+  public async verifyRefreshToken(req: Request, _res: Response, next: NextFunction): Promise<void> {
     const refreshToken = req.cookies.refreshToken;
-    
     if (!refreshToken) {
-      res.status(401).json({ message: "Refresh token not found" });
-      return 
+      logger.warn('Refresh token not found in request');
+      throw new ServiceError('Refresh token not found');
     }
-
-    const decoded = verifyRefreshToken(refreshToken);
-    const user = await findUserById(decoded.userId);
-    
-    if (!user || user.refreshToken !== refreshToken) {
-      res.status(401).json({ message: "Invalid refresh token" });
-      return 
+    try {
+      const decoded = this.authService.verifyRefreshToken(refreshToken);
+      const user = await this.userRepo.getUserById(decoded.userId);
+      if (!user || user.refreshToken !== refreshToken) {
+        logger.warn(`Invalid refresh token for user ID: ${decoded.userId}`);
+        throw new ServiceError('Invalid refresh token');
+      }
+      req.currentUser = user;
+      next();
+    } catch (error: any) {
+      logger.error(`Refresh token verification failed: ${error.message}`);
+      throw new ServiceError('Invalid or expired refresh token');
     }
-
-    req.currentUser = user;
-    next();
-  } catch (error) {
-   res.status(401).json({ message: "Invalid or expired refresh token" });
-   return 
   }
-};
 
-// Check if user is blocked
-export const checkBlockedStatus = async (req: Request, res: Response, next: NextFunction) => {
-  if (req.currentUser?.isBlocked) {
-    res.status(403).json({ message: "Your account has been blocked. Please contact support." });
-    return 
-  }
-  next();
-};
-
-// Role-based authorization middleware
-export const authorize = (...allowedRoles: string[]) => {
-  return (req: Request, res: Response, next: NextFunction) => {
-    if (!req.currentUser) {
-      res.status(401).json({ message: "Authentication required" });
-      return 
-    }
-    const userRole = req.currentUser.role ?? "";
-
-    if (!allowedRoles.includes(userRole)) {
-      res.status(403).json({ message: "Access forbidden" });
-      return 
+  public async checkBlockedStatus(req: Request, _res: Response, next: NextFunction): Promise<void> {
+    if (req.currentUser?.isBlocked) {
+      logger.warn(`Blocked user attempted access: ${req.currentUser._id}`);
+      throw new ServiceError('Your account has been blocked. Please contact support.');
     }
     next();
-  };
-};
+  }
+
+  public authorize(...allowedRoles: string[]) {
+    return (req: Request, _res: Response, next: NextFunction) => {
+      if (!req.currentUser) {
+        logger.warn('Authentication required for protected route');
+        throw new ServiceError('Authentication required');
+      }
+      const userRole = req.currentUser.role ?? '';
+      if (!allowedRoles.includes(userRole)) {
+        logger.warn(`Access forbidden for user ${req.currentUser._id} with role ${userRole}`);
+        throw new ServiceError('Access forbidden');
+      }
+      logger.debug(`Authorized user ${req.currentUser._id} with role ${userRole}`);
+      next();
+    };
+  }
+}

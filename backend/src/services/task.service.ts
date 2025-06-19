@@ -1,5 +1,5 @@
-import { uploadMedia } from '../utils/cloudinary.utils.js';
-import { ITask } from '../models/task.modal.js';
+import { uploadMedia } from '../core/Utils/Cloudinary.js';
+import { ITask } from '../Interfaces/models/ITask.js';
 import { createTaskRepo, deleteTask, editTask, findTasksByContext, updateTaskPriority, updateTaskStatus } from '../repositories/task.repositry.js';
 import { updateTaskNotifications } from '../repositories/notification.repositry.js';
 

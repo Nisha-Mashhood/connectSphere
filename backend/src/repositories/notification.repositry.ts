@@ -1,10 +1,11 @@
 import{ Task }from "../models/task.modal.js";
 import collaboration from "../models/collaboration.js";
 import Group from "../models/group.model.js";
-import { IMentor } from "../models/mentor.model.js";
 import { ObjectId } from "mongoose";
-import { AppNotification, AppNotificationModel } from "../models/notification.modal.js";
+import { AppNotificationModel } from "../models/notification.modal.js";
 import userConnectionModal from "../models/userConnection.modal.js";
+import { IMentor } from "../Interfaces/models/IMentor.js";
+import { AppNotification } from "../Interfaces/models/AppNotification.js";
 
 interface CollaborationData {
   userId: ObjectId;
@@ -133,7 +134,7 @@ export const updateTaskNotifications = async (relatedId:string, notificationDate
 
 //Notification with socket.io
 
-  export const createNotification = async (notification: Omit<AppNotification, '_id' | "AppNotificationId">): Promise<AppNotification> => {
+  export const createNotification = async (notification: Partial<AppNotification>): Promise<AppNotification> => {
     return AppNotificationModel.create(notification);
   }
 

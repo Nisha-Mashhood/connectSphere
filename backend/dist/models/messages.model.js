@@ -1,5 +1,6 @@
 import mongoose, { Schema } from "mongoose";
-import { generateCustomId } from '../utils/idGenerator.utils.js';
+import { generateCustomId } from "../core/Utils/IdGenerator.js";
+import logger from "../core/Utils/Logger.js";
 const messageSchema = new mongoose.Schema({
     messageId: {
         type: String,
@@ -8,16 +9,16 @@ const messageSchema = new mongoose.Schema({
     senderId: {
         type: Schema.Types.ObjectId,
         ref: "User",
-        required: true
+        required: true,
     },
     contactId: {
         type: Schema.Types.ObjectId,
         ref: "Contact",
-        required: true
+        required: true,
     },
     content: {
         type: String,
-        required: true
+        required: true,
     },
     contentType: {
         type: String,
@@ -35,13 +36,20 @@ const messageSchema = new mongoose.Schema({
     },
     isRead: {
         type: Boolean,
-        default: false
+        default: false,
     },
 }, { timestamps: true });
 // Pre-save hook to generate messageId
 messageSchema.pre("save", async function (next) {
     if (!this.messageId) {
-        this.messageId = await generateCustomId("message", "MSG");
+        try {
+            this.messageId = await generateCustomId("message", "MSG");
+            logger.debug(`Generated messageId: ${this.messageId} for senderId ${this.senderId}`);
+        }
+        catch (error) {
+            logger.error(`Error generating messageId: ${this.messageId} for senderId ${this.senderId} : ${error}`);
+            return next(error);
+        }
     }
     next();
 });

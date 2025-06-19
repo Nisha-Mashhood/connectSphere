@@ -1,4 +1,4 @@
-import { sendEmail } from "../utils/email.utils.js";
+import { sendEmail } from "../core/Utils/Email.js";
 import {
   addMemberToGroup,
   createGroupRepository,
@@ -26,7 +26,7 @@ import {
   updateGroupReqStatus,
   // updateGroupRequestStatus,
 } from "../repositories/group.repositry.js";
-import stripe from "../utils/stripe.utils.js";
+import stripe from "../core/Utils/Stripe.js";
 import { v4 as uuid } from "uuid";
 import { Stripe } from "stripe";
 import { findUserById } from "../repositories/user.repositry.js";

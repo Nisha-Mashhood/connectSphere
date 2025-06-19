@@ -1,22 +1,7 @@
-import mongoose, { Document } from "mongoose";
-import { UserInterface } from "./user.model.js";
-export interface IMentor extends Document {
-    mentorId: string;
-    userId: string | UserInterface;
-    isApproved?: string;
-    rejectionReason?: string;
-    skills?: string[];
-    certifications?: string[];
-    specialization?: string;
-    bio: string;
-    price: number;
-    availableSlots?: object[];
-    timePeriod?: number;
-    createdAt: Date;
-    updatedAt: Date;
-}
+import mongoose from "mongoose";
+import { IMentor } from "../Interfaces/models/IMentor.js";
 declare const _default: mongoose.Model<IMentor, {}, {}, {}, mongoose.Document<unknown, {}, IMentor> & IMentor & Required<{
-    _id: unknown;
+    _id: mongoose.Types.ObjectId;
 }> & {
     __v: number;
 }, any>;

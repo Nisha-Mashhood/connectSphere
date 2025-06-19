@@ -1,4 +1,5 @@
-import Review, { IReview } from '../models/Review.modal.js';
+import { IReview } from '../Interfaces/models/IReview.js';
+import Review from '../models/Review.modal.js';
 
 
 export const createReview = async (data: { userId: string; rating: number; comment: string }): Promise<IReview | null> => {

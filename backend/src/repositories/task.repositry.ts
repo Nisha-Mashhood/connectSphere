@@ -1,4 +1,5 @@
-import { ITask, Task } from '../models/task.modal.js';
+import { ITask } from '../Interfaces/models/ITask.js';
+import { Task } from '../models/task.modal.js';
 
 export const createTaskRepo = async (taskData: Partial<ITask>): Promise<ITask> => {
   const task = new Task(taskData);

@@ -1,5 +1,6 @@
 import mongoose, { Schema } from "mongoose";
-import { generateCustomId } from "../utils/idGenerator.utils.js";
+import { generateCustomId } from "../core/Utils/IdGenerator.js";
+import logger from "../core/Utils/Logger.js";
 // Schema remains the same, just ensure it matches the interface
 const CollaborationSchema = new Schema({
     collaborationId: {
@@ -9,18 +10,26 @@ const CollaborationSchema = new Schema({
     mentorId: {
         type: Schema.Types.ObjectId,
         ref: "Mentor",
-        required: true
+        required: true,
     },
     userId: {
         type: Schema.Types.ObjectId,
         ref: "User",
-        required: true
+        required: true,
     },
     selectedSlot: [
         {
             day: {
                 type: String,
-                enum: ["Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday",],
+                enum: [
+                    "Sunday",
+                    "Monday",
+                    "Tuesday",
+                    "Wednesday",
+                    "Thursday",
+                    "Friday",
+                    "Saturday",
+                ],
             },
             timeSlots: [{ type: String }],
         },
@@ -35,10 +44,10 @@ const CollaborationSchema = new Schema({
             ],
             requestedBy: {
                 type: String,
-                enum: ["user", "mentor"]
+                enum: ["user", "mentor"],
             },
             requesterId: {
-                type: Schema.Types.ObjectId
+                type: Schema.Types.ObjectId,
             },
             isApproved: {
                 type: String,
@@ -58,10 +67,10 @@ const CollaborationSchema = new Schema({
             ],
             requestedBy: {
                 type: String,
-                enum: ["user", "mentor"]
+                enum: ["user", "mentor"],
             },
             requesterId: {
-                type: Schema.Types.ObjectId
+                type: Schema.Types.ObjectId,
             },
             isApproved: {
                 type: String,
@@ -73,34 +82,41 @@ const CollaborationSchema = new Schema({
     ],
     payment: {
         type: Boolean,
-        default: false
+        default: false,
     },
     isCancelled: {
         type: Boolean,
-        default: false
+        default: false,
     },
     price: {
         type: Number,
-        required: true
+        required: true,
     },
     startDate: {
         type: Date,
         required: true,
-        default: Date.now
+        default: Date.now,
     },
     endDate: {
         type: Date,
-        default: null
+        default: null,
     },
     feedbackGiven: {
         type: Boolean,
-        default: false
+        default: false,
     },
 }, { timestamps: true });
 // Pre-save hook to generate collaborationId
 CollaborationSchema.pre("save", async function (next) {
     if (!this.collaborationId) {
-        this.collaborationId = await generateCustomId("collaboration", "COL");
+        try {
+            this.collaborationId = await generateCustomId("collaboration", "COL");
+            logger.debug(`Generated collaborationId: ${this.collaborationId} for mentorId ${this.mentorId} and userId ${this.userId}`);
+        }
+        catch (error) {
+            logger.error(`Error generating collaborationId: ${this.collaborationId} for mentorId ${this.mentorId} and userId ${this.userId} : ${error}`);
+            return next(error);
+        }
     }
     next();
 });

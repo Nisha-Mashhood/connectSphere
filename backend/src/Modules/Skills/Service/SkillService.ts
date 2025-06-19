@@ -2,7 +2,7 @@ import { BaseService } from "../../../core/Services/BaseService.js";
 import { SkillsRepository } from "../Repositry/SkillsRepositry.js";
 import { SkillInterface as ISkill } from "../../../Interfaces/models/SkillInterface.js";
 import logger from "../../../core/Utils/Logger.js";
-import { uploadMedia } from "../../../utils/cloudinary.utils.js";
+import { uploadMedia } from "../../../core/Utils/Cloudinary.js";
 import { ServiceError } from "../../../core/Utils/ErrorHandler.js";
 
 export class SkillsService extends BaseService {

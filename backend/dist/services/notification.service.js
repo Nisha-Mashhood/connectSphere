@@ -1,7 +1,7 @@
 import User from "../models/user.model.js";
 import * as notificationRepository from "../repositories/notification.repositry.js";
 import { findUserById } from "../repositories/user.repositry.js";
-import { convertTo24HourFormat } from "../utils/helperForNotService.js";
+import { convertTo24HourFormat } from "../Modules/Notification/Utils/Helper.js";
 import { notificationEmitter } from "../socket/socket.js";
 let io; // Store Socket.IO instance
 // Initialize Socket.IO instance (called from socket.ts)
@@ -223,17 +223,27 @@ export const sendNotification = async (userId, notificationType, senderId, relat
     else {
         content = `Notification from ${sender?.name || senderId}`;
     }
-    const notification = await notificationRepository.createNotification({
+    const notificationData = {
         userId,
         type: notificationType,
         content,
         relatedId,
         senderId,
-        status: "unread",
+        status: 'unread',
         callId,
-        createdAt: new Date(),
-        updatedAt: new Date(),
-    });
+    };
+    const notification = await notificationRepository.createNotification(notificationData);
+    // const notification = await notificationRepository.createNotification({
+    //   userId,
+    //   type: notificationType,
+    //   content,
+    //   relatedId,
+    //   senderId,
+    //   status: "unread",
+    //   callId,
+    //   createdAt: new Date(),
+    //   updatedAt: new Date(),
+    // });
     console.log(`[NotificationService] Created notification:`, notification);
     if (io) {
         const socketsInRoom = await io.in(`user_${userId}`).allSockets();

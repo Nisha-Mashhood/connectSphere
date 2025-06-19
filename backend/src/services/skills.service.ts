@@ -1,6 +1,6 @@
 import { SkillInterface } from "../Interfaces/models/SkillInterface.js";
 import * as SkillRepo from "../repositories/skills.repositry.js";
-import { uploadMedia } from "../utils/cloudinary.utils.js";
+import { uploadMedia } from "../core/Utils/Cloudinary.js";
 
 export const createSkill = async (data: Partial<SkillInterface>, imagePath?: string, fileSize?: number) => {
     let imageUrl = null;

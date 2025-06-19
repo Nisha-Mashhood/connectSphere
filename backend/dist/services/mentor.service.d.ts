@@ -1,4 +1,4 @@
-import { IMentor } from "../models/mentor.model.js";
+import { IMentor } from "../Interfaces/models/IMentor.js";
 export declare const submitMentorRequest: (mentorData: {
     userId: string;
     skills: string[];
@@ -9,7 +9,7 @@ export declare const submitMentorRequest: (mentorData: {
     timePeriod: number;
     certifications: string[];
 }) => Promise<import("mongoose").Document<unknown, {}, IMentor> & IMentor & Required<{
-    _id: unknown;
+    _id: import("mongoose").Types.ObjectId;
 }> & {
     __v: number;
 }>;

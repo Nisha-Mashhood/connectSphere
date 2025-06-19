@@ -1,19 +1,19 @@
-import { IChatMessage } from "../models/chat.model.js";
+import { IChatMessage } from "../Interfaces/models/IChatMessage.js";
 import mongoose from "mongoose";
 export declare const saveChatMessage: (messageData: Partial<IChatMessage>) => Promise<IChatMessage>;
 export declare const findChatMessageById: (messageId: string) => Promise<IChatMessage | null>;
 export declare const findChatMessagesByCollaborationId: (collaborationId: string, page: number, limit: number) => Promise<(mongoose.Document<unknown, {}, IChatMessage> & IChatMessage & Required<{
-    _id: unknown;
+    _id: mongoose.Types.ObjectId;
 }> & {
     __v: number;
 })[]>;
 export declare const findChatMessagesByUserConnectionId: (userConnectionId: string, page: number, limit: number) => Promise<(mongoose.Document<unknown, {}, IChatMessage> & IChatMessage & Required<{
-    _id: unknown;
+    _id: mongoose.Types.ObjectId;
 }> & {
     __v: number;
 })[]>;
 export declare const findChatMessagesByGroupId: (groupId: string, page: number, limit: number) => Promise<(mongoose.Document<unknown, {}, IChatMessage> & IChatMessage & Required<{
-    _id: unknown;
+    _id: mongoose.Types.ObjectId;
 }> & {
     __v: number;
 })[]>;

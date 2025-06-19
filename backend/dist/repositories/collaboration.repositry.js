@@ -369,36 +369,30 @@ export const getLockedSlotsByMentorId = async (mentorId) => {
                 { endDate: null },
             ],
         }).select("selectedSlot");
-        // console.log("collaboartion for given mentor Id :",collaborations);
         // accepted mentor requests
         const mentorRequests = await MentorRequest.find({
             mentorId,
             isAccepted: "Accepted",
         }).select("selectedSlot");
-        // console.log("mentor requset for teh given mentor Id :",mentorRequests)
         // Combine slots from collaborations
         const collabSlots = collaborations.flatMap(collab => collab.selectedSlot.map(slot => ({
             day: slot.day,
             timeSlots: slot.timeSlots,
         })));
-        // console.log("Slot for collab : ",collabSlots);
         // Combine slots from mentor requests
         const requestSlots = mentorRequests
-            .map(request => {
-            // Type assertion for selectedSlot
+            .map((request) => {
             const selectedSlot = request.selectedSlot;
-            // Runtime validation
             if (!selectedSlot.day || !selectedSlot.timeSlots) {
-                console.log(`Invalid selectedSlot for mentorRequestId: ${request.mentorRequestId}`);
+                console.log(`Invalid selectedSlot for mentorRequestId: ${request._id}`);
                 return null;
             }
             return {
                 day: selectedSlot.day,
-                timeSlots: [selectedSlot.timeSlots], // Wrap string in array
+                timeSlots: [selectedSlot.timeSlots],
             };
         })
             .filter((slot) => slot !== null);
-        // console.log("slot for request : ",requestSlots);
         // Combine and deduplicate slots
         const allSlots = [...collabSlots, ...requestSlots];
         // console.log("All Slots :",allSlots)

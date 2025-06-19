@@ -1,4 +1,4 @@
-import { UserInterface } from "../models/user.model.js";
+import { UserInterface } from "src/Interfaces/models/IUser.js";
 export declare const createUser: (userData: Partial<UserInterface>) => Promise<import("mongoose").Document<unknown, {}, UserInterface> & UserInterface & Required<{
     _id: import("mongoose").Types.ObjectId;
 }> & {

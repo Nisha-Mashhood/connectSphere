@@ -1,28 +1,7 @@
-import mongoose, { Document } from 'mongoose';
-export interface TimeSlot {
-    day: string;
-    timeSlots: string[];
-}
-export interface GroupDocument extends Document {
-    groupId: string;
-    name: string;
-    bio: string;
-    price: number;
-    maxMembers: number;
-    isFull: boolean;
-    availableSlots: TimeSlot[];
-    profilePic: string;
-    coverPic: string;
-    startDate: Date;
-    adminId: mongoose.Types.ObjectId;
-    members: {
-        userId: mongoose.Types.ObjectId;
-        joinedAt: Date;
-    }[];
-    createdAt: Date;
-}
+import mongoose from "mongoose";
+import { GroupDocument } from "../Interfaces/models/GroupDocument.js";
 declare const Group: mongoose.Model<GroupDocument, {}, {}, {}, mongoose.Document<unknown, {}, GroupDocument> & GroupDocument & Required<{
-    _id: unknown;
+    _id: mongoose.Types.ObjectId;
 }> & {
     __v: number;
 }, any>;

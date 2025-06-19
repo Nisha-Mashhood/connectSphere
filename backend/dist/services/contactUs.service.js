@@ -1,4 +1,4 @@
-import { sendEmail } from "../utils/email.utils.js";
+import { sendEmail } from "../core/Utils/Email.js";
 import * as ContactRepository from '../repositories/contactUs.repositry.js';
 import config from "../config/env.config.js";
 export const createContactMessage = async (data) => {

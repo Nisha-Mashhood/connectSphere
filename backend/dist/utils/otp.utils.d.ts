@@ -1,2 +1,2 @@
-export declare const generateOTP: () => string;
+export {};
 //# sourceMappingURL=otp.utils.d.ts.map

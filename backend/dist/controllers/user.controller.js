@@ -1,5 +1,5 @@
 import * as UserService from "../services/user.service.js";
-import { uploadMedia } from "../utils/cloudinary.utils.js";
+import { uploadMedia } from "../core/Utils/Cloudinary.js";
 export const getAllUsers = async (_req, res) => {
     const users = await UserService.getAllUsers();
     res.json(users);
@@ -40,7 +40,7 @@ export const changeRole = async (req, res) => {
     const { role } = req.body;
     try {
         await UserService.changeRole(req.params.id, role);
-        res.json({ message: 'Changed the role Successfully' });
+        res.json({ message: "Changed the role Successfully" });
     }
     catch (error) {
         res.status(400).json({ error: error.message });

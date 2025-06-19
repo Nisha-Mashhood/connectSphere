@@ -11,10 +11,14 @@ export const createCategory = async (req, res) => {
             return;
         }
         const category = await CategoryService.createCategory(req.body, imagePath, fileSize);
-        res.status(201).json({ message: "Category created successfully", category });
+        res
+            .status(201)
+            .json({ message: "Category created successfully", category });
     }
     catch (error) {
-        res.status(500).json({ message: "Error creating category", error: error.message });
+        res
+            .status(500)
+            .json({ message: "Error creating category", error: error.message });
     }
 };
 export const getAllCategories = async (_, res) => {
@@ -23,7 +27,9 @@ export const getAllCategories = async (_, res) => {
         res.status(200).json(categories);
     }
     catch (error) {
-        res.status(500).json({ message: "Error fetching categories", error: error.message });
+        res
+            .status(500)
+            .json({ message: "Error fetching categories", error: error.message });
     }
 };
 export const getCategoryById = async (req, res) => {
@@ -36,7 +42,9 @@ export const getCategoryById = async (req, res) => {
         res.status(200).json(category);
     }
     catch (error) {
-        res.status(500).json({ message: "Error fetching category", error: error.message });
+        res
+            .status(500)
+            .json({ message: "Error fetching category", error: error.message });
     }
 };
 export const updateCategory = async (req, res) => {
@@ -55,10 +63,14 @@ export const updateCategory = async (req, res) => {
             res.status(404).json({ message: "Category not found" });
             return;
         }
-        res.status(200).json({ message: "Category updated successfully", updatedCategory });
+        res
+            .status(200)
+            .json({ message: "Category updated successfully", updatedCategory });
     }
     catch (error) {
-        res.status(500).json({ message: "Error updating category", error: error.message });
+        res
+            .status(500)
+            .json({ message: "Error updating category", error: error.message });
     }
 };
 export const deleteCategory = async (req, res) => {
@@ -71,7 +83,9 @@ export const deleteCategory = async (req, res) => {
         res.status(200).json({ message: "Category deleted successfully" });
     }
     catch (error) {
-        res.status(500).json({ message: "Error deleting category", error: error.message });
+        res
+            .status(500)
+            .json({ message: "Error deleting category", error: error.message });
     }
 };
 //# sourceMappingURL=category.controller.js.map

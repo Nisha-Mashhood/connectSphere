@@ -1,5 +1,5 @@
 import mongoose, { Schema } from "mongoose";
-import { generateCustomId } from "../utils/idGenerator.utils.js";
+import { generateCustomId } from "../core/Utils/IdGenerator.js";
 import { IReview } from "../Interfaces/models/IReview.js";
 import logger from "../core/Utils/Logger.js";
 

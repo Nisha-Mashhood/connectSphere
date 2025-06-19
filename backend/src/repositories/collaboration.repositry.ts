@@ -427,6 +427,7 @@ export const updateRequestStatus = async (
 };
 
 
+
 export const getLockedSlotsByMentorId = async (mentorId: string): Promise<LockedSlot[]> => {
   try {
     const currentDate = new Date();
@@ -441,14 +442,11 @@ export const getLockedSlotsByMentorId = async (mentorId: string): Promise<Locked
       ],
     }).select("selectedSlot");
 
-    // console.log("collaboartion for given mentor Id :",collaborations);
     // accepted mentor requests
     const mentorRequests = await MentorRequest.find({
       mentorId,
       isAccepted: "Accepted",
     }).select("selectedSlot");
-
-    // console.log("mentor requset for teh given mentor Id :",mentorRequests)
 
     // Combine slots from collaborations
     const collabSlots: LockedSlot[] = collaborations.flatMap(collab =>
@@ -457,26 +455,21 @@ export const getLockedSlotsByMentorId = async (mentorId: string): Promise<Locked
         timeSlots: slot.timeSlots,
       }))
     );
-    // console.log("Slot for collab : ",collabSlots);
+
     // Combine slots from mentor requests
     const requestSlots: LockedSlot[] = mentorRequests
-      .map(request => {
-        // Type assertion for selectedSlot
-        const selectedSlot = request.selectedSlot as { day?: string; timeSlots?: string };
-        
-        // Runtime validation
-        if (!selectedSlot.day || !selectedSlot.timeSlots) {
-          console.log(`Invalid selectedSlot for mentorRequestId: ${request.mentorRequestId}`);
-          return null;
-        }
-
-        return {
-          day: selectedSlot.day,
-          timeSlots: [selectedSlot.timeSlots], // Wrap string in array
-        };
-      })
-      .filter((slot): slot is LockedSlot => slot !== null);
-      // console.log("slot for request : ",requestSlots);
+            .map((request: any) => {
+              const selectedSlot = request.selectedSlot as { day?: string; timeSlots?: string };
+              if (!selectedSlot.day || !selectedSlot.timeSlots) {
+                console.log(`Invalid selectedSlot for mentorRequestId: ${request._id}`);
+                return null;
+              }
+              return {
+                day: selectedSlot.day,
+                timeSlots: [selectedSlot.timeSlots],
+              };
+            })
+            .filter((slot): slot is LockedSlot => slot !== null);
 
     // Combine and deduplicate slots
     const allSlots: LockedSlot[] = [...collabSlots, ...requestSlots];

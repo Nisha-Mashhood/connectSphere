@@ -1,24 +1,24 @@
 import * as MentorRepository from "../repositories/mentor.repositry.js";
-import { sendEmail } from "../utils/email.utils.js";
-import { IMentor } from "../models/mentor.model.js";
-
+import { sendEmail } from "../core/Utils/Email.js";
+import { IMentor } from "../Interfaces/models/IMentor.js";
+import { getUserById } from "../repositories/usermanagemnt.repositry.js";
 
 // Function to submit a mentor request (for admin review)
 export const submitMentorRequest = async (mentorData: {
   userId: string;
   skills: string[];
   specialization: string;
-  bio:string,
-  price:number,
+  bio: string;
+  price: number;
   availableSlots: string[];
-  timePeriod:number,
+  timePeriod: number;
   certifications: string[];
 }) => {
   try {
     // Save mentor data (pending admin approval)
     const newMentor = await MentorRepository.saveMentorRequest(mentorData);
-    return newMentor; 
-  } catch (error:any) {
+    return newMentor;
+  } catch (error: any) {
     throw new Error("Error saving mentor request: " + error.message);
   }
 };
@@ -32,30 +32,36 @@ export const getAllMentorRequests = async (
   sort: string = "desc"
 ) => {
   try {
-    return await MentorRepository.getAllMentorRequests(page, limit, search, status, sort);
+    return await MentorRepository.getAllMentorRequests(
+      page,
+      limit,
+      search,
+      status,
+      sort
+    );
   } catch (error: any) {
     throw new Error("Error fetching mentor requests: " + error.message);
   }
 };
 
 //Get All Mentors
-export const getAllMentors = async() =>{
+export const getAllMentors = async () => {
   try {
     return await MentorRepository.getAllMentors();
-  } catch (error:any) {
+  } catch (error: any) {
     throw new Error("Error fetching mentors: " + error.message);
   }
-}
+};
 
 //get Mentor Details using mentorId
-export const getMentorBymentorId = async(mentorId: string) =>{
+export const getMentorBymentorId = async (mentorId: string) => {
   try {
     const mentor = await MentorRepository.getMentorDetails(mentorId);
     return mentor;
-  } catch (error:any) {
+  } catch (error: any) {
     throw new Error("Error fetching mentor details: " + error.message);
   }
-}
+};
 // Approve a mentor request
 export const approveMentorRequest = async (id: string) => {
   try {
@@ -73,8 +79,12 @@ export const approveMentorRequest = async (id: string) => {
     }
 
     if (mentor) {
-      const userEmail = mentor.userId.email;
-      const userName = mentor.userId.name;
+      const user = await getUserById(mentor.userId.toString());
+      if (!user) {
+        throw new Error("User not found");
+      }
+      const userEmail = user.email;
+      const userName = user.name;
       await sendEmail(
         userEmail,
         "Mentor Request Approved",
@@ -99,21 +109,24 @@ export const rejectMentorRequest = async (id: string, reason: string) => {
     }
     if (typeof mentor.userId === "string") {
       throw new Error("User details are not populated.");
-    }  
-     if (mentor) {
-      const userEmail = mentor.userId.email;
-      const userName = mentor.userId.name;
+    }
+    if (mentor) {
+      const user = await getUserById(mentor.userId.toString());
+      if (!user) {
+        throw new Error("User not found");
+      }
+      const userEmail = user.email;
+      const userName = user.name;
       await sendEmail(
         userEmail,
         "Mentor Request Rejected",
         `Hello ${userName},\n\nWe regret to inform you that your mentor request has been rejected.\n\nReason: ${reason}\n\nBest regards,\nAdmin \n ConnectSphere`
       );
-     }
+    }
   } catch (error: any) {
     throw new Error("Error rejecting mentor request: " + error.message);
   }
 };
-
 
 // Cancel mentorship
 export const cancelMentorship = async (id: string) => {
@@ -133,8 +146,12 @@ export const cancelMentorship = async (id: string) => {
     }
 
     if (mentor) {
-      const userEmail = mentor.userId.email;
-      const userName = mentor.userId.name;
+      const user = await getUserById(mentor.userId.toString());
+      if (!user) {
+        throw new Error("User not found");
+      }
+      const userEmail = user.email;
+      const userName = user.name;
       await sendEmail(
         userEmail,
         "Mentorship Cancelled",
@@ -146,7 +163,6 @@ export const cancelMentorship = async (id: string) => {
   }
 };
 
-
 // Get mentor details by userId
 export const getMentorByUserId = async (userId: string) => {
   try {
@@ -157,17 +173,22 @@ export const getMentorByUserId = async (userId: string) => {
 };
 
 // Update mentor details by mentorId
-export const updateMentorById = async (mentorId: string, updateData: Partial<IMentor>) => {
+export const updateMentorById = async (
+  mentorId: string,
+  updateData: Partial<IMentor>
+) => {
   try {
     const mentor = await MentorRepository.getMentorById(mentorId);
 
     if (!mentor) {
       throw new Error("Mentor not found.");
     }
-    const MentorData = await MentorRepository.updateMentorById(mentorId, updateData);
-    return MentorData
+    const MentorData = await MentorRepository.updateMentorById(
+      mentorId,
+      updateData
+    );
+    return MentorData;
   } catch (error: any) {
     throw new Error("Error updating mentor details: " + error.message);
   }
 };
-

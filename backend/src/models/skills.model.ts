@@ -1,5 +1,5 @@
 import mongoose, { Schema, Model } from "mongoose";
-import { generateCustomId } from "../utils/idGenerator.utils.js";
+import { generateCustomId } from "../core/Utils/IdGenerator.js";
 import { SkillInterface } from "../Interfaces/models/SkillInterface.js";
 import logger from "../core/Utils/Logger.js";
 

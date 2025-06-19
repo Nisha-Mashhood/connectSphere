@@ -1,4 +1,4 @@
-import { IContact } from "../models/contacts.model.js";
+import { IContact } from "../Interfaces/models/IContact.js";
 import mongoose from "mongoose";
 export declare const createContact: (contactData: Partial<IContact>) => Promise<IContact>;
 export declare const findContactById: (contactId: string) => Promise<IContact | null>;

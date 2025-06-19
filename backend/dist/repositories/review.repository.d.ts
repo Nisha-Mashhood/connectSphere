@@ -1,4 +1,4 @@
-import { IReview } from '../models/Review.modal.js';
+import { IReview } from '../Interfaces/models/IReview.js';
 export declare const createReview: (data: {
     userId: string;
     rating: number;

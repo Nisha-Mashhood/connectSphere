@@ -1,5 +1,6 @@
 import mongoose, { Schema } from "mongoose";
-import { generateCustomId } from "../utils/idGenerator.utils.js";
+import { generateCustomId } from "../core/Utils/IdGenerator.js";
+import logger from "../core/Utils/Logger.js";
 const chatSchema = new mongoose.Schema({
     ChatId: {
         type: String,
@@ -15,7 +16,7 @@ const chatSchema = new mongoose.Schema({
         required: true,
     },
     thumbnailUrl: {
-        type: String
+        type: String,
     },
     collaborationId: {
         type: Schema.Types.ObjectId,
@@ -63,7 +64,14 @@ const chatSchema = new mongoose.Schema({
 // Pre-save hook to generate ChatId
 chatSchema.pre("save", async function (next) {
     if (!this.ChatId) {
-        this.ChatId = await generateCustomId("chatMessage", "CMG");
+        try {
+            this.ChatId = await generateCustomId("chatMessage", "CMG");
+            logger.debug(`Generated ChatId: ${this.ChatId} for senderId ${this.senderId}`);
+        }
+        catch (error) {
+            logger.error(`Error generating ChatId: ${this.ChatId} for senderId ${this.senderId} : ${error}`);
+            return next(error);
+        }
     }
     next();
 });

@@ -1,0 +1,20 @@
+import { Router } from 'express';
+import { MentorController } from '../Controllers/Mentorcontroller.js';
+import { apiLimiter } from '../../../middlewares/ratelimit.middleware.js';
+import { AuthMiddleware } from '../../../middlewares/auth.middleware.js';
+import { upload } from '../../../core/Utils/Multer.js';
+const router = Router();
+const mentorController = new MentorController();
+const authMiddleware = new AuthMiddleware();
+router.post('/mentors', [apiLimiter, authMiddleware.verifyToken, authMiddleware.checkBlockedStatus, upload.array('certificates', 2)], mentorController.createMentor);
+router.get('/mentors/check/:id', [apiLimiter, authMiddleware.verifyToken, authMiddleware.checkBlockedStatus], mentorController.checkMentorStatus);
+router.get('/mentors/requests', [apiLimiter, authMiddleware.verifyToken, authMiddleware.authorize('admin')], mentorController.getAllMentorRequests);
+router.put('/mentors/approve/:id', [apiLimiter, authMiddleware.verifyToken, authMiddleware.authorize('admin')], mentorController.approveMentorRequest);
+router.put('/mentors/reject/:id', [apiLimiter, authMiddleware.verifyToken, authMiddleware.authorize('admin')], mentorController.rejectMentorRequest);
+router.put('/mentors/cancel/:mentorId', [apiLimiter, authMiddleware.verifyToken, authMiddleware.authorize('admin')], mentorController.cancelMentorship);
+router.get('/mentors/:mentorId', [apiLimiter, authMiddleware.verifyToken, authMiddleware.checkBlockedStatus], mentorController.getMentorDetails);
+router.put('/mentors/:mentorId', [apiLimiter, authMiddleware.verifyToken, authMiddleware.checkBlockedStatus], mentorController.updateMentorProfile);
+router.get('/mentors', [apiLimiter, authMiddleware.verifyToken, authMiddleware.checkBlockedStatus], mentorController.getAllMentors);
+router.get('/mentors/user/:userId', [apiLimiter, authMiddleware.verifyToken, authMiddleware.checkBlockedStatus], mentorController.getMentorByUserId);
+export default router;
+//# sourceMappingURL=MentorRoutes.js.map

@@ -4,7 +4,7 @@ fetchGroupDetails,
 // fetchGroupDetailsById,
 fetchGroupDetailsService, fetchGroupRequestById, fetchGroupRequestsByAdminId, fetchGroupRequestsByGroupId, fetchGroupRequestsByuserId, fetchGroups, groupDetilsForMembers, modifyGroupRequestStatus, processGroupPaymentService, removeMemberFromGroup, requestToJoinGroup, updateGroupImageService, } from "../services/group.service.js";
 import { findRequestById } from "../repositories/group.repositry.js";
-import { uploadMedia } from "../utils/cloudinary.utils.js";
+import { uploadMedia } from "../core/Utils/Cloudinary.js";
 export const createGroup = async (req, res) => {
     try {
         const groupData = req.body;
@@ -149,14 +149,19 @@ export const updaterequsetDeatils = async (req, res) => {
 };
 //Make payemnt requset
 export const makeStripePaymentController = async (req, res) => {
-    const { paymentMethodId, amount, requestId, email, groupRequestData, returnUrl } = req.body;
+    const { paymentMethodId, amount, requestId, email, groupRequestData, returnUrl, } = req.body;
     console.log("Payment request received:", req.body);
     try {
         // Validate input
-        if (!paymentMethodId || !amount || !requestId || !email || !groupRequestData || !returnUrl) {
+        if (!paymentMethodId ||
+            !amount ||
+            !requestId ||
+            !email ||
+            !groupRequestData ||
+            !returnUrl) {
             res.status(400).json({
                 status: "failure",
-                message: "Missing required payment information"
+                message: "Missing required payment information",
             });
             return;
         }
@@ -165,18 +170,19 @@ export const makeStripePaymentController = async (req, res) => {
         if (!groupRequest) {
             res.status(404).json({
                 status: "failure",
-                message: "Group request not found"
+                message: "Group request not found",
             });
             return;
         }
         // Process payment and handle members in group collection
         const paymentResult = await processGroupPaymentService(paymentMethodId, amount, requestId, email, groupRequestData, returnUrl);
         // Handle different payment intent statuses
-        if (paymentResult.status === "requires_action" && paymentResult.next_action) {
+        if (paymentResult.status === "requires_action" &&
+            paymentResult.next_action) {
             // Payment requires additional action (like 3D Secure)
             res.status(200).json({
                 status: "requires_action",
-                charge: paymentResult
+                charge: paymentResult,
             });
             return;
         }
@@ -190,7 +196,7 @@ export const makeStripePaymentController = async (req, res) => {
             res.status(200).json({
                 status: "pending",
                 charge: paymentResult,
-                message: `Payment status: ${paymentResult.status}`
+                message: `Payment status: ${paymentResult.status}`,
             });
             return;
         }
@@ -199,7 +205,7 @@ export const makeStripePaymentController = async (req, res) => {
         console.error("Payment processing error:", error.message);
         res.status(500).json({
             status: "failure",
-            error: error.message || "An error occurred during payment processing"
+            error: error.message || "An error occurred during payment processing",
         });
         return;
     }
@@ -219,9 +225,7 @@ export const deleteGroup = async (req, res) => {
     const { groupId } = req.params;
     try {
         const response = await deleteGroupByIdService(groupId);
-        res
-            .status(200)
-            .json({
+        res.status(200).json({
             status: "success",
             message: "Group deleted successfully",
             response,
@@ -281,7 +285,9 @@ export const fetchGroupDetailsForMembers = async (req, res) => {
         // Fetch group details by userId using GroupService
         const groupDetails = await groupDetilsForMembers(userId);
         if (!groupDetails) {
-            res.status(404).json({ message: "Group not found or user is not part of a group." });
+            res
+                .status(404)
+                .json({ message: "Group not found or user is not part of a group." });
             return;
         }
         res.status(200).json(groupDetails);

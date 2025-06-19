@@ -14,57 +14,58 @@ import {
   googleSignupService,
   googleLoginService,
   githubLoginService,
-  githubSignupService
+  githubSignupService,
 } from "../services/auth.service.js";
-import { clearCookies, setTokensInCookies } from "../utils/jwt.utils.js";
+import { AuthService as JWTService } from "../Modules/Auth/Utils/JWT.js";
+
+const jwtservice = new JWTService();
 
 //Handles the Registration
 export const signup = async (req: Request, res: Response) => {
   try {
-    
-    await sigupDetails(req.body)
+    await sigupDetails(req.body);
     res.status(201).json({
-      message:"User Registered Successfully"
-    })
+      message: "User Registered Successfully",
+    });
   } catch (error: any) {
     console.error("Signup Error:", error.message);
     res.status(400).json({ message: error.message });
   }
 };
 
-
 // Handle user login
 export const login = async (req: Request, res: Response) => {
   try {
     const { email, password } = req.body;
     //console.log(req.body);
-    const { user, accessToken, refreshToken, needsReviewPrompt } = await loginUser(
-      email,
-      password
-    );
+    const { user, accessToken, refreshToken, needsReviewPrompt } =
+      await loginUser(email, password);
     // Store tokens in cookies
-    setTokensInCookies(res, accessToken, refreshToken);
+    jwtservice.setTokensInCookies(res, accessToken, refreshToken);
     res.json({ message: "Login successful", user, needsReviewPrompt });
   } catch (error: any) {
     if (error.message === "User not found") {
       res.status(404).json({ message: error.message });
-      return 
+      return;
     }
     if (error.message === "Blocked") {
       res.status(403).json({ message: error.message });
-      return 
+      return;
     }
     if (error.message === "Invalid credentials") {
       res.status(401).json({ message: error.message });
-      return 
+      return;
     }
-    if (error.message === "This account is registered using a third-party provider. Please log in with your provider.") {
+    if (
+      error.message ===
+      "This account is registered using a third-party provider. Please log in with your provider."
+    ) {
       res.status(404).json({ message: error.message });
-      return 
+      return;
     }
     res.status(500).json({ message: "Internal Server Error" });
   }
-  }
+};
 
 // Google Signup Controller
 export const googleSignup = async (req: Request, res: Response) => {
@@ -72,10 +73,14 @@ export const googleSignup = async (req: Request, res: Response) => {
     const { code } = req.body;
 
     const newUser = await googleSignupService(code);
-    res.status(201).json({ message: "User signed up successfully", user: newUser });
+    res
+      .status(201)
+      .json({ message: "User signed up successfully", user: newUser });
   } catch (error: any) {
     console.error("Google Signup Error:", error.message);
-    res.status(500).json({ message: "Google signup failed.", error: error.message });
+    res
+      .status(500)
+      .json({ message: "Google signup failed.", error: error.message });
   }
 };
 
@@ -84,10 +89,11 @@ export const googleLogin = async (req: Request, res: Response) => {
   try {
     const { code } = req.body;
 
-    const { user, accessToken, refreshToken, needsReviewPrompt } = await googleLoginService(code);
+    const { user, accessToken, refreshToken, needsReviewPrompt } =
+      await googleLoginService(code);
 
     // Store tokens in cookies
-    setTokensInCookies(res, accessToken, refreshToken);
+    jwtservice.setTokensInCookies(res, accessToken, refreshToken);
 
     res.status(200).json({
       message: "Google login successful",
@@ -96,41 +102,46 @@ export const googleLogin = async (req: Request, res: Response) => {
       refreshToken,
       needsReviewPrompt,
     });
-
   } catch (error: any) {
     if (error.message === "Email not registered") {
       res.status(404).json({ message: error.message });
     } else {
-      res.status(500).json({ message: "Google login failed.", error: error.message });
+      res
+        .status(500)
+        .json({ message: "Google login failed.", error: error.message });
     }
-    return
+    return;
   }
 };
 
 //Handles github Signup
-export const githubSignup = async (req: Request, res: Response) =>{
+export const githubSignup = async (req: Request, res: Response) => {
   try {
     const { code } = req.body;
     console.log("Code received for signup:", code);
 
     const newUser = await githubSignupService(code);
-    res.status(201).json({ message: "User signed up successfully", user: newUser });
-
-  } catch (error:any) {
+    res
+      .status(201)
+      .json({ message: "User signed up successfully", user: newUser });
+  } catch (error: any) {
     console.error("Github Signup Error:", error.message);
-    res.status(500).json({ message: "Github signup failed.", error: error.message });
-    return
+    res
+      .status(500)
+      .json({ message: "Github signup failed.", error: error.message });
+    return;
   }
-}
+};
 
 //Handles github login
-export const githubLogin = async (req: Request, res: Response) =>{
+export const githubLogin = async (req: Request, res: Response) => {
   try {
     const { code } = req.body;
-    const { user, accessToken, refreshToken, needsReviewPrompt } = await githubLoginService(code);
+    const { user, accessToken, refreshToken, needsReviewPrompt } =
+      await githubLoginService(code);
 
     // Store tokens in cookies
-    setTokensInCookies(res, accessToken, refreshToken);
+    jwtservice.setTokensInCookies(res, accessToken, refreshToken);
 
     res.status(200).json({
       message: "Github login successful",
@@ -139,16 +150,17 @@ export const githubLogin = async (req: Request, res: Response) =>{
       refreshToken,
       needsReviewPrompt,
     });
-
-  } catch (error:any) {
+  } catch (error: any) {
     if (error.message === "Email not registered") {
       res.status(404).json({ message: error.message });
     } else {
-      res.status(500).json({ message: "Github login failed.", error: error.message });
+      res
+        .status(500)
+        .json({ message: "Github login failed.", error: error.message });
     }
-    return
+    return;
   }
-}
+};
 
 // Handle refresh token logic
 export const refreshToken = async (req: Request, res: Response) => {
@@ -166,7 +178,7 @@ export const checkProfile = async (req: Request, res: Response) => {
     const userId = req.params.id;
     const isComplete = await checkProfileCompletion(userId);
     res.status(200).json({ isProfileComplete: isComplete });
-  } catch (error:any) {
+  } catch (error: any) {
     res.status(500).json({ message: error.message || "Internal Server Error" });
   }
 };
@@ -189,34 +201,38 @@ export const updateUserDetails = async (req: Request, res: Response) => {
     const id = req.params.Id;
     const updateData: any = req.body;
 
-
     // Uploaded files (from multer)
-    const profilePicFile = (req.files as { [fieldname: string]: Express.Multer.File[] })?.["profilePic"]?.[0];
-    const coverPicFile = (req.files as { [fieldname: string]: Express.Multer.File[] })?.["coverPic"]?.[0];
+    const profilePicFile = (
+      req.files as { [fieldname: string]: Express.Multer.File[] }
+    )?.["profilePic"]?.[0];
+    const coverPicFile = (
+      req.files as { [fieldname: string]: Express.Multer.File[] }
+    )?.["coverPic"]?.[0];
     if (profilePicFile) updateData.profilePicFile = profilePicFile;
     if (coverPicFile) updateData.coverPicFile = coverPicFile;
 
     const updatedUser = await updateUserProfile(id, updateData);
 
-    res.status(200).json({ message: "Profile updated successfully", user: updatedUser });
+    res
+      .status(200)
+      .json({ message: "Profile updated successfully", user: updatedUser });
   } catch (error: any) {
     res.status(400).json({ message: error.message });
   }
 };
-
 
 // Handle logout
 export const logout = async (req: Request, res: Response) => {
   try {
     const { email } = req.body; // Get email from the request body
     if (!email) {
-       res.status(400).json({ message: "email is required." });
-       return
+      res.status(400).json({ message: "email is required." });
+      return;
     }
     // Call the logout service to remove the refresh token
     await logoutUserService(email);
     // Clear cookies
-    clearCookies(res);
+    jwtservice.clearCookies(res);
 
     res.status(200).json({ message: "Logged out successfully." });
   } catch (error: any) {
@@ -257,17 +273,16 @@ export const handleResetPassword = async (req: Request, res: Response) => {
   }
 };
 
-
-export const verifyPasskey = async(req:Request, res:Response) => {
+export const verifyPasskey = async (req: Request, res: Response) => {
   try {
     const { passkey } = req.body;
     const isValid = verifyAdminPasskey(passkey);
     res.status(200).json({ valid: isValid });
-  } catch (error:any) {
+  } catch (error: any) {
     if (error.message === "Invalid admin passkey") {
       res.status(401).json({ valid: false, message: error.message });
-      return 
+      return;
     }
     res.status(500).json({ message: "Internal Server Error" });
   }
-  }
+};

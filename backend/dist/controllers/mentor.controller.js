@@ -1,6 +1,6 @@
 import * as MentorService from "../services/mentor.service.js";
-import { uploadMedia } from "../utils/cloudinary.utils.js";
-import * as UserService from '../services/user.service.js';
+import { uploadMedia } from "../core/Utils/Cloudinary.js";
+import * as UserService from "../services/user.service.js";
 export const checkMentorStatus = async (req, res) => {
     const userId = req.params.id;
     try {
@@ -13,7 +13,9 @@ export const checkMentorStatus = async (req, res) => {
         return;
     }
     catch (error) {
-        res.status(400).json({ message: "Error fetching mentor status", error: error.message });
+        res
+            .status(400)
+            .json({ message: "Error fetching mentor status", error: error.message });
         return;
     }
 };
@@ -26,13 +28,15 @@ export const getMentorDetails = async (req, res) => {
         return;
     }
     catch (error) {
-        res.status(400).json({ message: "Error fetching mentor Details", error: error.message });
+        res
+            .status(400)
+            .json({ message: "Error fetching mentor Details", error: error.message });
         return;
     }
 };
 //create mentor record
 export const createMentor = async (req, res) => {
-    const { userId, specialization, bio, price, skills, availableSlots, timePeriod } = req.body;
+    const { userId, specialization, bio, price, skills, availableSlots, timePeriod, } = req.body;
     try {
         const user = await UserService.getUserById(userId);
         if (!user) {
@@ -53,12 +57,16 @@ export const createMentor = async (req, res) => {
         let uploadedCertificates = [];
         if (req.files && Array.isArray(req.files) && req.files.length > 0) {
             const files = req.files;
-            const uploadPromises = files.map((file) => uploadMedia(file.path, "mentor_certificates", file.size).then(result => result.url) // Extract url
+            const uploadPromises = files.map((file) => uploadMedia(file.path, "mentor_certificates", file.size).then((result) => result.url) // Extract url
             );
             uploadedCertificates = await Promise.all(uploadPromises); // Get URLs of uploaded certificates
         }
         else {
-            res.status(400).json({ message: "Certificates are required for mentor registration." });
+            res
+                .status(400)
+                .json({
+                message: "Certificates are required for mentor registration.",
+            });
             return;
         }
         // Create mentor record (submit for admin review)
@@ -86,7 +94,7 @@ export const createMentor = async (req, res) => {
 };
 export const getAllMentorRequests = async (req, res) => {
     try {
-        const { page = "1", limit = "10", search = "", status = "", sort = "desc" } = req.query;
+        const { page = "1", limit = "10", search = "", status = "", sort = "desc", } = req.query;
         const mentorRequests = await MentorService.getAllMentorRequests(parseInt(page), parseInt(limit), search, status, sort);
         res.json({
             mentors: mentorRequests.mentors,
@@ -129,7 +137,9 @@ export const getMentorByUserId = async (req, res) => {
 export const approveMentorRequest = async (req, res) => {
     try {
         await MentorService.approveMentorRequest(req.params.id);
-        res.json({ message: "Mentor request approved successfully. \n Mail has been send to the user" });
+        res.json({
+            message: "Mentor request approved successfully. \n Mail has been send to the user",
+        });
     }
     catch (error) {
         res.status(400).json({ message: error.message });
@@ -138,7 +148,11 @@ export const approveMentorRequest = async (req, res) => {
 export const rejectMentorRequest = async (req, res) => {
     const { reason } = req.body;
     if (!reason) {
-        res.status(400).json({ message: "Rejection reason is required. \n Mail has been send to the user" });
+        res
+            .status(400)
+            .json({
+            message: "Rejection reason is required. \n Mail has been send to the user",
+        });
         return;
     }
     try {
@@ -154,7 +168,7 @@ export const cancelMentorship = async (req, res) => {
     try {
         const { mentorId } = req.params;
         await MentorService.cancelMentorship(mentorId);
-        res.status(200).json({ message: 'Mentorship canceled successfully.' });
+        res.status(200).json({ message: "Mentorship canceled successfully." });
     }
     catch (error) {
         res.status(500).json({ error: error.message });
@@ -166,7 +180,9 @@ export const updateMentorProfile = async (req, res) => {
         const { mentorId } = req.params;
         const updateData = req.body;
         const MentorData = await MentorService.updateMentorById(mentorId, updateData);
-        res.status(200).json({ message: 'Mentor Profile Updated successfully.', MentorData });
+        res
+            .status(200)
+            .json({ message: "Mentor Profile Updated successfully.", MentorData });
     }
     catch (error) {
         res.status(500).json({ error: error.message });

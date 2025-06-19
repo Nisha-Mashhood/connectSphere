@@ -102,12 +102,10 @@ export const getRequsetForUserController = async (
   try {
     const { id } = req.params;
     const userRequest = await getRequsetForUser(id);
-    res
-      .status(200)
-      .json({
-        message: "Request retrieved successfully",
-        requests: userRequest,
-      });
+    res.status(200).json({
+      message: "Request retrieved successfully",
+      requests: userRequest,
+    });
   } catch (error: any) {
     res.status(500).json({ message: error.message });
   }
@@ -151,9 +149,15 @@ export const makeStripePaymentController = async (
     );
 
     // Handle different payment intent statuses
-    const paymentIntent = "paymentIntent" in paymentResult ? paymentResult.paymentIntent : paymentResult;
+    const paymentIntent =
+      "paymentIntent" in paymentResult
+        ? paymentResult.paymentIntent
+        : paymentResult;
 
-    if (paymentIntent.status === "requires_action" && paymentIntent.next_action) {
+    if (
+      paymentIntent.status === "requires_action" &&
+      paymentIntent.next_action
+    ) {
       console.log(paymentIntent.status);
       // Payment requires additional action (like 3D Secure)
       res.status(200).json({
@@ -166,7 +170,8 @@ export const makeStripePaymentController = async (
       res.status(200).json({
         status: "success",
         charge: paymentIntent,
-        contacts: "contacts" in paymentResult ? paymentResult.contacts : undefined, // Include contacts if present
+        contacts:
+          "contacts" in paymentResult ? paymentResult.contacts : undefined, // Include contacts if present
       });
       return;
     } else {
@@ -240,11 +245,11 @@ export const deleteCollab = async (req: Request, res: Response) => {
 // Get all mentor requests
 export const getAllMentorRequests = async (req: Request, res: Response) => {
   try {
-    const { page = 1, limit = 10, search = '' } = req.query;
+    const { page = 1, limit = 10, search = "" } = req.query;
     const mentorRequests = await getMentorRequestsService({
       page: Number(page),
       limit: Number(limit),
-      search: String(search)
+      search: String(search),
     });
     res.status(200).json(mentorRequests);
   } catch (error: any) {
@@ -254,11 +259,11 @@ export const getAllMentorRequests = async (req: Request, res: Response) => {
 
 export const getAllCollabs = async (req: Request, res: Response) => {
   try {
-    const { page = 1, limit = 10, search = '' } = req.query;
+    const { page = 1, limit = 10, search = "" } = req.query;
     const collaborations = await getCollabsService({
       page: Number(page),
       limit: Number(limit),
-      search: String(search)
+      search: String(search),
     });
     res.status(200).json(collaborations);
   } catch (error: any) {
@@ -276,7 +281,10 @@ export const getCollabDeatilsbyCollabId = async (
     const collabDetails = await fetchCollabById(collabId);
     res
       .status(200)
-      .json({ message: "Collab details accessed successfully", data: collabDetails });
+      .json({
+        message: "Collab details accessed successfully",
+        data: collabDetails,
+      });
     return;
   } catch (error: any) {
     res.status(500).json({ message: error.message });
@@ -294,7 +302,10 @@ export const getRequestDeatilsbyRequestId = async (
     const requestDetails = await fetchRequsetById(requestId);
     res
       .status(200)
-      .json({ message: "Requset details accessed successfully", data: requestDetails });
+      .json({
+        message: "Requset details accessed successfully",
+        data: requestDetails,
+      });
     return;
   } catch (error: any) {
     res.status(500).json({ message: error.message });
@@ -302,12 +313,16 @@ export const getRequestDeatilsbyRequestId = async (
   }
 };
 
-
 // Mark Dates as Unavailable
 export const markUnavailableDays = async (req: Request, res: Response) => {
   const { collabId } = req.params;
-  const { datesAndReasons, requestedBy, requesterId, approvedById, isApproved } =
-    req.body;
+  const {
+    datesAndReasons,
+    requestedBy,
+    requesterId,
+    approvedById,
+    isApproved,
+  } = req.body;
 
   try {
     const updatedCollaboration = await markUnavailableDaysService(collabId, {
@@ -321,36 +336,53 @@ export const markUnavailableDays = async (req: Request, res: Response) => {
     console.log("collaboration collection updated");
     res
       .status(200)
-      .json({ message: "Unavailable days updated", data: updatedCollaboration });
-      return 
-  } catch (error:any) {
+      .json({
+        message: "Unavailable days updated",
+        data: updatedCollaboration,
+      });
+    return;
+  } catch (error: any) {
     res.status(500).json({ message: error.message });
-    return
+    return;
   }
 };
 
 // Update Time Slots
-export const updateTemporarySlotChanges = async (req: Request, res: Response) => {
+export const updateTemporarySlotChanges = async (
+  req: Request,
+  res: Response
+) => {
   const { collabId } = req.params;
-  const { datesAndNewSlots, requestedBy, requesterId, approvedById, isApproved } =
-    req.body;
+  const {
+    datesAndNewSlots,
+    requestedBy,
+    requesterId,
+    approvedById,
+    isApproved,
+  } = req.body;
 
   try {
-    const updatedCollaboration = await updateTemporarySlotChangesService(collabId, {
-      datesAndNewSlots,
-      requestedBy,
-      requesterId,
-      approvedById,
-      isApproved,
-    });
+    const updatedCollaboration = await updateTemporarySlotChangesService(
+      collabId,
+      {
+        datesAndNewSlots,
+        requestedBy,
+        requesterId,
+        approvedById,
+        isApproved,
+      }
+    );
 
     res
       .status(200)
-      .json({ message: "Temporary slot changes updated", data: updatedCollaboration });
-      return 
-  } catch (error:any) {
+      .json({
+        message: "Temporary slot changes updated",
+        data: updatedCollaboration,
+      });
+    return;
+  } catch (error: any) {
     res.status(500).json({ message: error.message });
-    return
+    return;
   }
 };
 
@@ -369,7 +401,7 @@ export const approveTimeSlotRequest = async (req: Request, res: Response) => {
       collabId,
       requestId,
       isApproved,
-      requestType as "unavailable" | "timeSlot",
+      requestType as "unavailable" | "timeSlot"
     );
 
     res.status(200).json({
@@ -383,7 +415,10 @@ export const approveTimeSlotRequest = async (req: Request, res: Response) => {
 };
 
 //Get the locked slot for mentor
-export const getMentorLockedSlotsController = async (req: Request, res: Response) => {
+export const getMentorLockedSlotsController = async (
+  req: Request,
+  res: Response
+) => {
   try {
     const { mentorId } = req.params;
 
@@ -394,13 +429,15 @@ export const getMentorLockedSlotsController = async (req: Request, res: Response
     }
 
     const lockedSlots = await getMentorLockedSlots(mentorId);
-    console.log("LOcked slot from backend :",lockedSlots);
+    console.log("LOcked slot from backend :", lockedSlots);
     res.status(200).json({
       message: "Locked slots retrieved successfully",
       lockedSlots,
     });
   } catch (error: any) {
-    console.log(`Error in controller for mentorId ${req.params.mentorId}: ${error.message}`);
+    console.log(
+      `Error in controller for mentorId ${req.params.mentorId}: ${error.message}`
+    );
     res.status(500).json({ message: error.message });
   }
 };

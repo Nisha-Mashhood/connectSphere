@@ -1,5 +1,5 @@
 import * as SkillRepo from "../repositories/skills.repositry.js";
-import { uploadMedia } from "../utils/cloudinary.utils.js";
+import { uploadMedia } from "../core/Utils/Cloudinary.js";
 export const createSkill = async (data, imagePath, fileSize) => {
     let imageUrl = null;
     if (imagePath) {

@@ -1,7 +1,7 @@
 import { BaseService } from "../../../core/Services/BaseService.js";
 import { MentorRepository } from "../Repositry/MentorRepositry.js";
 import { UserRepository } from "../../Auth/Repositry/UserRepositry.js";
-import { sendEmail } from "../../../utils/email.utils.js";
+import { sendEmail } from "../../../core/Utils/Email.js";
 import logger from "../../../core/Utils/Logger.js";
 import { IMentor } from "../../../Interfaces/models/IMentor.js";
 

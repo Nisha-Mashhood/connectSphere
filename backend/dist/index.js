@@ -23,8 +23,9 @@ import cors from "cors";
 import cookieParser from "cookie-parser";
 import http from "http";
 import { Server } from "socket.io";
-import initializeSocket from "./socket/socket.js";
-import { scheduleNodeCorn } from "./utils/node-cron.utils.js";
+import { SocketService } from "./socket/SocketService.js";
+import { CleanupScheduler } from "./core/Utils/NotificationSchdduler.js";
+import logger from "./core/Utils/Logger.js";
 dotenv.config();
 const app = express();
 const server = http.createServer(app);
@@ -72,11 +73,13 @@ const io = new Server(server, {
         credentials: true,
     },
 });
-initializeSocket(io); // Set up socket events
+const socketService = new SocketService(); // Instantiate SocketService
+socketService.initialize(io); // Call initialize method
 //Schedule Node_corn
-scheduleNodeCorn();
+const cleanupScheduler = new CleanupScheduler();
+cleanupScheduler.start();
 // Start server
 server.listen(config.port, () => {
-    console.log(`Server is running on http://localhost:${config.port}`);
+    logger.info(`Server is running on http://localhost:${config.port}`);
 });
 //# sourceMappingURL=index.js.map

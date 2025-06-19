@@ -1,14 +1,7 @@
-import mongoose, { Document } from "mongoose";
-export interface IContactMessage extends Document {
-    contactMessageId: string;
-    name: string;
-    email: string;
-    message: string;
-    givenReply: boolean;
-    createdAt: Date;
-}
+import mongoose from "mongoose";
+import { IContactMessage } from "../Interfaces/models/IContactMessage.js";
 declare const _default: mongoose.Model<IContactMessage, {}, {}, {}, mongoose.Document<unknown, {}, IContactMessage> & IContactMessage & Required<{
-    _id: unknown;
+    _id: mongoose.Types.ObjectId;
 }> & {
     __v: number;
 }, any>;

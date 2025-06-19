@@ -129,7 +129,7 @@ export const markMessagesAsRead = async (chatKey, userId, type) => {
             filter.userConnectionId = toObjectId(chatKey.replace("user-user_", ""));
         }
         const unreadMessages = await ChatMessage.find(filter).select("_id");
-        const messageIds = unreadMessages.map((msg) => msg._id.toString());
+        const messageIds = unreadMessages.map((msg) => (msg._id).toString());
         if (messageIds.length > 0) {
             await ChatMessage.updateMany({ _id: { $in: messageIds } }, { $set: { isRead: true, status: "read" } });
         }

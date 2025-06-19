@@ -1,6 +1,6 @@
 import { Request, Response } from "express";
 import * as UserService from "../services/user.service.js";
-import { uploadMedia } from "../utils/cloudinary.utils.js";
+import { uploadMedia } from "../core/Utils/Cloudinary.js";
 
 export const getAllUsers = async (_req: Request, res: Response) => {
   const users = await UserService.getAllUsers();
@@ -15,7 +15,9 @@ export const getUserById = async (req: Request, res: Response) => {
 export const updateUserProfile = async (req: Request, res: Response) => {
   const { profilePic, coverPic, ...data } = req.body;
 
-  const files = req.files as { [fieldname: string]: Express.Multer.File[] } | undefined;
+  const files = req.files as
+    | { [fieldname: string]: Express.Multer.File[] }
+    | undefined;
 
   // Check if profile photo is uploaded
   if (files?.profilePhoto?.[0]) {
@@ -23,7 +25,7 @@ export const updateUserProfile = async (req: Request, res: Response) => {
     const uploadedProfilePic = await uploadMedia(
       profilePhoto.path,
       "profile_photos",
-      profilePhoto.size 
+      profilePhoto.size
     );
     data.profilePic = uploadedProfilePic;
   }
@@ -34,7 +36,7 @@ export const updateUserProfile = async (req: Request, res: Response) => {
     const uploadedCoverPic = await uploadMedia(
       coverPhoto.path,
       "cover_photos",
-      coverPhoto.size 
+      coverPhoto.size
     );
     data.coverPic = uploadedCoverPic;
   }
@@ -59,8 +61,8 @@ export const changeRole = async (req: Request, res: Response) => {
   const { role } = req.body;
   try {
     await UserService.changeRole(req.params.id, role);
-    res.json({ message: 'Changed the role Successfully' });
-  } catch (error:any) {
+    res.json({ message: "Changed the role Successfully" });
+  } catch (error: any) {
     res.status(400).json({ error: error.message });
   }
 };

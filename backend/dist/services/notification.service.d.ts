@@ -1,5 +1,5 @@
-import { AppNotification } from "../models/notification.modal.js";
 import { Server } from "socket.io";
+import { AppNotification } from "../Interfaces/models/AppNotification.js";
 export declare const initializeNotificationService: (_io: Server) => void;
 export interface TaskNotificationPayload {
     _id: string;

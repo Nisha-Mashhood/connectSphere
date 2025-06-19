@@ -1,11 +1,12 @@
-import { loginUser, forgotPassword, verifyOTP, resetPassword, refreshToken as refeshTokenService, logout as logoutUserService, sigupDetails, verifyAdminPasskey, checkProfileCompletion, profileDetails, updateUserProfile, googleSignupService, googleLoginService, githubLoginService, githubSignupService } from "../services/auth.service.js";
-import { clearCookies, setTokensInCookies } from "../utils/jwt.utils.js";
+import { loginUser, forgotPassword, verifyOTP, resetPassword, refreshToken as refeshTokenService, logout as logoutUserService, sigupDetails, verifyAdminPasskey, checkProfileCompletion, profileDetails, updateUserProfile, googleSignupService, googleLoginService, githubLoginService, githubSignupService, } from "../services/auth.service.js";
+import { AuthService as JWTService } from "../Modules/Auth/Utils/JWT.js";
+const jwtservice = new JWTService();
 //Handles the Registration
 export const signup = async (req, res) => {
     try {
         await sigupDetails(req.body);
         res.status(201).json({
-            message: "User Registered Successfully"
+            message: "User Registered Successfully",
         });
     }
     catch (error) {
@@ -20,7 +21,7 @@ export const login = async (req, res) => {
         //console.log(req.body);
         const { user, accessToken, refreshToken, needsReviewPrompt } = await loginUser(email, password);
         // Store tokens in cookies
-        setTokensInCookies(res, accessToken, refreshToken);
+        jwtservice.setTokensInCookies(res, accessToken, refreshToken);
         res.json({ message: "Login successful", user, needsReviewPrompt });
     }
     catch (error) {
@@ -36,7 +37,8 @@ export const login = async (req, res) => {
             res.status(401).json({ message: error.message });
             return;
         }
-        if (error.message === "This account is registered using a third-party provider. Please log in with your provider.") {
+        if (error.message ===
+            "This account is registered using a third-party provider. Please log in with your provider.") {
             res.status(404).json({ message: error.message });
             return;
         }
@@ -48,11 +50,15 @@ export const googleSignup = async (req, res) => {
     try {
         const { code } = req.body;
         const newUser = await googleSignupService(code);
-        res.status(201).json({ message: "User signed up successfully", user: newUser });
+        res
+            .status(201)
+            .json({ message: "User signed up successfully", user: newUser });
     }
     catch (error) {
         console.error("Google Signup Error:", error.message);
-        res.status(500).json({ message: "Google signup failed.", error: error.message });
+        res
+            .status(500)
+            .json({ message: "Google signup failed.", error: error.message });
     }
 };
 // Google Login Controller
@@ -61,7 +67,7 @@ export const googleLogin = async (req, res) => {
         const { code } = req.body;
         const { user, accessToken, refreshToken, needsReviewPrompt } = await googleLoginService(code);
         // Store tokens in cookies
-        setTokensInCookies(res, accessToken, refreshToken);
+        jwtservice.setTokensInCookies(res, accessToken, refreshToken);
         res.status(200).json({
             message: "Google login successful",
             user,
@@ -75,7 +81,9 @@ export const googleLogin = async (req, res) => {
             res.status(404).json({ message: error.message });
         }
         else {
-            res.status(500).json({ message: "Google login failed.", error: error.message });
+            res
+                .status(500)
+                .json({ message: "Google login failed.", error: error.message });
         }
         return;
     }
@@ -86,11 +94,15 @@ export const githubSignup = async (req, res) => {
         const { code } = req.body;
         console.log("Code received for signup:", code);
         const newUser = await githubSignupService(code);
-        res.status(201).json({ message: "User signed up successfully", user: newUser });
+        res
+            .status(201)
+            .json({ message: "User signed up successfully", user: newUser });
     }
     catch (error) {
         console.error("Github Signup Error:", error.message);
-        res.status(500).json({ message: "Github signup failed.", error: error.message });
+        res
+            .status(500)
+            .json({ message: "Github signup failed.", error: error.message });
         return;
     }
 };
@@ -100,7 +112,7 @@ export const githubLogin = async (req, res) => {
         const { code } = req.body;
         const { user, accessToken, refreshToken, needsReviewPrompt } = await githubLoginService(code);
         // Store tokens in cookies
-        setTokensInCookies(res, accessToken, refreshToken);
+        jwtservice.setTokensInCookies(res, accessToken, refreshToken);
         res.status(200).json({
             message: "Github login successful",
             user,
@@ -114,7 +126,9 @@ export const githubLogin = async (req, res) => {
             res.status(404).json({ message: error.message });
         }
         else {
-            res.status(500).json({ message: "Github login failed.", error: error.message });
+            res
+                .status(500)
+                .json({ message: "Github login failed.", error: error.message });
         }
         return;
     }
@@ -165,7 +179,9 @@ export const updateUserDetails = async (req, res) => {
         if (coverPicFile)
             updateData.coverPicFile = coverPicFile;
         const updatedUser = await updateUserProfile(id, updateData);
-        res.status(200).json({ message: "Profile updated successfully", user: updatedUser });
+        res
+            .status(200)
+            .json({ message: "Profile updated successfully", user: updatedUser });
     }
     catch (error) {
         res.status(400).json({ message: error.message });
@@ -182,7 +198,7 @@ export const logout = async (req, res) => {
         // Call the logout service to remove the refresh token
         await logoutUserService(email);
         // Clear cookies
-        clearCookies(res);
+        jwtservice.clearCookies(res);
         res.status(200).json({ message: "Logged out successfully." });
     }
     catch (error) {

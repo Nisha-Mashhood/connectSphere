@@ -1,6 +1,6 @@
 import mongoose from "mongoose";
 import { Schema, model } from "mongoose";
-import { generateCustomId } from "../utils/idGenerator.utils.js";
+import { generateCustomId } from "../core/Utils/IdGenerator.js";
 import { AppNotification } from "../Interfaces/models/AppNotification.js";
 import logger from "../core/Utils/Logger.js";
 

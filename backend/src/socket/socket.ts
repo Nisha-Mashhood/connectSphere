@@ -442,14 +442,11 @@ const initializeSocket = (_io: Server) => {
           //mark notifications as read
           const notifications = await getNotifications(userId);
           const messageNotifications = notifications.filter(
-            (n) =>
-              n.type === "message" &&
-              n.relatedId === chatKey &&
-              n.status === "unread"
-          );
+        (n) => n.type === 'message' && n.relatedId === chatKey && n.status === 'unread'
+      );
           for (const notification of messageNotifications) {
             const updatedNotification = await markNotificationAsRead(
-              notification._id
+              notification._id.toString()
             );
             if (updatedNotification) {
               io.to(`user_${userId}`).emit("notification.read", {

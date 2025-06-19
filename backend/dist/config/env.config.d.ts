@@ -23,6 +23,7 @@ declare const config: {
     vapidPublicKey: string | undefined;
     vapidPrivateKey: string | undefined;
     vapidEmail: string | undefined;
+    logLevel: string | undefined;
 };
 export default config;
 //# sourceMappingURL=env.config.d.ts.map

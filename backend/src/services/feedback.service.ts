@@ -1,5 +1,5 @@
 import { findCollabById, updateCollabFeedback } from "../repositories/collaboration.repositry.js";
-import { IFeedback } from "../models/feedback.modal.js";
+import { IFeedback } from "../Interfaces/models/IFeedback.js";
 import * as FeedbackRepository from "../repositories/feeback.repositry.js";
 
 export const createFeedback = async (

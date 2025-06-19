@@ -1,11 +1,11 @@
 import User from "../models/user.model.js";
-import { AppNotification } from "../models/notification.modal.js";
 import * as notificationRepository from "../repositories/notification.repositry.js";
 import { findUserById } from "../repositories/user.repositry.js";
-import { convertTo24HourFormat } from "../utils/helperForNotService.js";
-import { ITask } from "../models/task.modal.js";
+import { convertTo24HourFormat } from "../Modules/Notification/Utils/Helper.js";
 import { notificationEmitter } from "../socket/socket.js";
 import { Server } from "socket.io";
+import { ITask } from "../Interfaces/models/ITask.js";
+import { AppNotification } from "../Interfaces/models/AppNotification.js";
 
 let io: Server; // Store Socket.IO instance
 
@@ -144,7 +144,7 @@ export const sendTaskNotification = async (
           ? `Reminder: Your task "${task.name}" is due soon`
           : `Reminder: Task "${task.name}" assigned by ${assignerName} is due soon`;
 
-        const notificationData: Omit<AppNotification, "_id" | "AppNotificationId"> = {
+        const notificationData: Partial<AppNotification> = {
           userId: userId,
           type: "task_reminder",
           content,
@@ -282,17 +282,29 @@ export const sendNotification = async (
     content = `Notification from ${sender?.name || senderId}`;
   }
 
-  const notification = await notificationRepository.createNotification({
-    userId,
-    type: notificationType,
-    content,
-    relatedId,
-    senderId,
-    status: "unread",
-    callId,
-    createdAt: new Date(),
-    updatedAt: new Date(),
-  });
+  const notificationData: Partial<AppNotification> = {
+          userId,
+          type: notificationType,
+          content,
+          relatedId,
+          senderId,
+          status: 'unread',
+          callId,
+        };
+  
+        const notification = await notificationRepository.createNotification(notificationData);
+
+  // const notification = await notificationRepository.createNotification({
+  //   userId,
+  //   type: notificationType,
+  //   content,
+  //   relatedId,
+  //   senderId,
+  //   status: "unread",
+  //   callId,
+  //   createdAt: new Date(),
+  //   updatedAt: new Date(),
+  // });
 
   console.log(`[NotificationService] Created notification:`, notification);
 

@@ -1,5 +1,5 @@
-import { sendEmail } from "../utils/email.utils.js";
-import { IContactMessage } from "../models/ContactMessage.modal.js";
+import { sendEmail } from "../core/Utils/Email.js";
+import { IContactMessage } from "../Interfaces/models/IContactMessage.js";
 import * as ContactRepository from '../repositories/contactUs.repositry.js';
 import config from "../config/env.config.js";
 

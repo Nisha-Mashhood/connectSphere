@@ -3,7 +3,7 @@ import { SkillsRepository } from "../../Skills/Repositry/SkillsRepositry.js";
 import { SubcategoryRepository } from "../Repositry/SubCategoryRepositry.js";
 import { SubcategoryInterface as ISubcategory } from "../../../Interfaces/models/SubcategoryInterface.js";
 import logger from "../../../core/Utils/Logger.js";
-import { uploadMedia } from "../../../utils/cloudinary.utils.js";
+import { uploadMedia } from "../../../core/Utils/Cloudinary.js";
 import { ServiceError } from "../../../core/Utils/ErrorHandler.js";
 
 export class SubcategoryService extends BaseService {

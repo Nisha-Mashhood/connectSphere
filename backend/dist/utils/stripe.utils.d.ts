@@ -1,4 +1,2 @@
-import Stripe from "stripe";
-declare const stripe: Stripe;
-export default stripe;
+export {};
 //# sourceMappingURL=stripe.utils.d.ts.map

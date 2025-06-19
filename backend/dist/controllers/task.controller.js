@@ -1,5 +1,4 @@
-import { changeTaskPriorityService, changeTaskStatusService, createTaskService, deleteTaskService, editTaskService, getTasksByContextService } from "../services/task.service.js";
-// import { sendTaskNotification } from "../services/notification.service.js";
+import { changeTaskPriorityService, changeTaskStatusService, createTaskService, deleteTaskService, editTaskService, getTasksByContextService, } from "../services/task.service.js";
 export const createTask = async (req, res) => {
     const { id } = req.params;
     try {
@@ -8,11 +7,15 @@ export const createTask = async (req, res) => {
         const taskData = JSON.parse(req.body.taskData);
         taskData.createdBy = id;
         const newTask = await createTaskService(taskData, imagePath, fileSize);
-        res.status(201).json({ message: "Task created successfully", task: newTask });
+        res
+            .status(201)
+            .json({ message: "Task created successfully", task: newTask });
     }
     catch (error) {
         console.error("Error:", error);
-        res.status(500).json({ message: "Error creating task", error: error.message });
+        res
+            .status(500)
+            .json({ message: "Error creating task", error: error.message });
     }
 };
 export const getTasksByContext = async (req, res) => {
@@ -22,7 +25,9 @@ export const getTasksByContext = async (req, res) => {
         res.status(200).json(tasks);
     }
     catch (error) {
-        res.status(500).json({ message: 'Error fetching tasks', error: error.message });
+        res
+            .status(500)
+            .json({ message: "Error fetching tasks", error: error.message });
     }
 };
 export const updateTaskPriority = async (req, res) => {
@@ -33,7 +38,9 @@ export const updateTaskPriority = async (req, res) => {
         res.status(200).json(updatedTask);
     }
     catch (error) {
-        res.status(500).json({ message: 'Error updating priority', error: error.message });
+        res
+            .status(500)
+            .json({ message: "Error updating priority", error: error.message });
     }
 };
 export const updateTaskStatus = async (req, res) => {
@@ -44,7 +51,9 @@ export const updateTaskStatus = async (req, res) => {
         res.status(200).json(updatedTask);
     }
     catch (error) {
-        res.status(500).json({ message: 'Error updating status', error: error.message });
+        res
+            .status(500)
+            .json({ message: "Error updating status", error: error.message });
     }
 };
 export const editTask = async (req, res) => {
@@ -55,7 +64,9 @@ export const editTask = async (req, res) => {
         res.status(200).json(updatedTask);
     }
     catch (error) {
-        res.status(500).json({ message: 'Error editing task', error: error.message });
+        res
+            .status(500)
+            .json({ message: "Error editing task", error: error.message });
     }
 };
 export const deleteTask = async (req, res) => {
@@ -66,7 +77,9 @@ export const deleteTask = async (req, res) => {
     }
     catch (error) {
         console.error("Error deleting task:", error);
-        res.status(500).json({ message: "Error deleting task", error: error.message });
+        res
+            .status(500)
+            .json({ message: "Error deleting task", error: error.message });
     }
 };
 //# sourceMappingURL=task.controller.js.map

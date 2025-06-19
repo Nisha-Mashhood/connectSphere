@@ -5,7 +5,9 @@ export const sendRequestController = async (req, res) => {
     const { recipientId } = req.body;
     try {
         const newConnection = await userConnectionService.sendUserConnectionRequest(requesterId, recipientId);
-        res.status(201).json({ message: "Connection request sent", data: newConnection });
+        res
+            .status(201)
+            .json({ message: "Connection request sent", data: newConnection });
     }
     catch (error) {
         res.status(400).json({ message: error.message });
@@ -17,7 +19,12 @@ export const respondToRequestController = async (req, res) => {
     const { action } = req.body; // "Accepted" or "Rejected"
     try {
         const updatedConnection = await userConnectionService.respondToConnectionRequest(connectionId, action);
-        res.status(200).json({ message: `Request ${action.toLowerCase()}`, data: updatedConnection });
+        res
+            .status(200)
+            .json({
+            message: `Request ${action.toLowerCase()}`,
+            data: updatedConnection,
+        });
     }
     catch (error) {
         res.status(400).json({ message: error.message });
@@ -29,7 +36,9 @@ export const disconnectConnectionController = async (req, res) => {
     const { reason } = req.body;
     try {
         const disconnected = await userConnectionService.disconnectConnection(connectionId, reason);
-        res.status(200).json({ message: "Connection disconnected", data: disconnected });
+        res
+            .status(200)
+            .json({ message: "Connection disconnected", data: disconnected });
     }
     catch (error) {
         res.status(400).json({ message: error.message });

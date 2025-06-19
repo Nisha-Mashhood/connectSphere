@@ -1,11 +1,4 @@
-import { Document, Model } from "mongoose";
-export interface CategoryInterface extends Document {
-    categoryId: string;
-    name: string;
-    description?: string;
-    imageUrl?: string | null;
-    createdAt: Date;
-    updatedAt: Date;
-}
+import { Model } from "mongoose";
+import { CategoryInterface } from "../Interfaces/models/CategoryInterface.js";
 export declare const Category: Model<CategoryInterface>;
 //# sourceMappingURL=category.model.d.ts.map

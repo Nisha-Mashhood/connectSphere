@@ -1,16 +1,7 @@
-import mongoose, { Document } from 'mongoose';
-export interface GroupRequestDocument extends Document {
-    groupRequestId: string;
-    groupId: mongoose.Types.ObjectId;
-    userId: mongoose.Types.ObjectId;
-    status: 'Pending' | 'Accepted' | 'Rejected';
-    paymentStatus: 'Pending' | 'Completed' | 'Failed';
-    paymentId?: string;
-    amountPaid?: number;
-    createdAt: Date;
-}
+import mongoose from "mongoose";
+import { GroupRequestDocument } from "../Interfaces/models/GroupRequestDocument.js";
 declare const GroupRequest: mongoose.Model<GroupRequestDocument, {}, {}, {}, mongoose.Document<unknown, {}, GroupRequestDocument> & GroupRequestDocument & Required<{
-    _id: unknown;
+    _id: mongoose.Types.ObjectId;
 }> & {
     __v: number;
 }, any>;

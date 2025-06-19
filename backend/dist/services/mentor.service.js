@@ -1,5 +1,6 @@
 import * as MentorRepository from "../repositories/mentor.repositry.js";
-import { sendEmail } from "../utils/email.utils.js";
+import { sendEmail } from "../core/Utils/Email.js";
+import { getUserById } from "../repositories/usermanagemnt.repositry.js";
 // Function to submit a mentor request (for admin review)
 export const submitMentorRequest = async (mentorData) => {
     try {
@@ -52,8 +53,12 @@ export const approveMentorRequest = async (id) => {
             throw new Error("User details are not populated.");
         }
         if (mentor) {
-            const userEmail = mentor.userId.email;
-            const userName = mentor.userId.name;
+            const user = await getUserById(mentor.userId.toString());
+            if (!user) {
+                throw new Error("User not found");
+            }
+            const userEmail = user.email;
+            const userName = user.name;
             await sendEmail(userEmail, "Mentor Request Approved", `Hello ${userName},\n\nCongratulations! Your mentor request has been approved.\n\nBest regards,\n Admin \n ConnectSphere`);
         }
     }
@@ -74,8 +79,12 @@ export const rejectMentorRequest = async (id, reason) => {
             throw new Error("User details are not populated.");
         }
         if (mentor) {
-            const userEmail = mentor.userId.email;
-            const userName = mentor.userId.name;
+            const user = await getUserById(mentor.userId.toString());
+            if (!user) {
+                throw new Error("User not found");
+            }
+            const userEmail = user.email;
+            const userName = user.name;
             await sendEmail(userEmail, "Mentor Request Rejected", `Hello ${userName},\n\nWe regret to inform you that your mentor request has been rejected.\n\nReason: ${reason}\n\nBest regards,\nAdmin \n ConnectSphere`);
         }
     }
@@ -97,8 +106,12 @@ export const cancelMentorship = async (id) => {
             throw new Error("User details are not populated.");
         }
         if (mentor) {
-            const userEmail = mentor.userId.email;
-            const userName = mentor.userId.name;
+            const user = await getUserById(mentor.userId.toString());
+            if (!user) {
+                throw new Error("User not found");
+            }
+            const userEmail = user.email;
+            const userName = user.name;
             await sendEmail(userEmail, "Mentorship Cancelled", `Hello ${userName},\n\nWe regret to inform you that your mentorship has been cancelled by the admin. If you have any questions, please contact support.\n\nBest regards,\nAdmin \nConnectSphere`);
         }
     }

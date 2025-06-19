@@ -1,14 +1,15 @@
 import { createUser, findUserByEmail, updatePassword, updateRefreshToken, findUserById, isProfileComplete, updateUser, incrementLoginCount, } from "../repositories/user.repositry.js";
 import bcrypt from "bcryptjs";
-import { generateAccessToken, generateRefreshToken, verifyRefreshToken, removeRefreshToken, } from "../utils/jwt.utils.js";
-import { generateOTP } from "../utils/otp.utils.js";
-import { sendEmail } from "../utils/email.utils.js";
+import { AuthService as JWTService } from "../Modules/Auth/Utils/JWT.js";
+import { generateOTP } from "../Modules/Auth/Utils/OTP.js";
+import { sendEmail } from "../core/Utils/Email.js";
 import config from "../config/env.config.js";
-import { uploadMedia } from "../utils/cloudinary.utils.js";
-import { OAuth2Client } from "../utils/googleconfig.utils.js";
+import { uploadMedia } from "../core/Utils/Cloudinary.js";
+import { OAuth2Client } from "../Modules/Auth/Utils/GoogleConfig.js";
 import axios from "axios";
 const gitclientId = config.githubclientid;
 const gitclientSecret = config.githubclientsecret;
+const jwtservice = new JWTService();
 // Handle Registration with details
 export const sigupDetails = async (data) => {
     const { name, email, password } = data;
@@ -40,11 +41,11 @@ export const loginUser = async (email, password) => {
     if (!updatedUser)
         throw new Error("User not found after login count update");
     console.log(`[AuthService] User ${email} logged in. loginCount: ${updatedUser.loginCount}`);
-    const accessToken = generateAccessToken({
+    const accessToken = jwtservice.generateAccessToken({
         userId: user._id,
         userRole: user.role,
     });
-    const refreshToken = generateRefreshToken({
+    const refreshToken = jwtservice.generateRefreshToken({
         userId: user._id,
         userRole: user.role,
     });
@@ -57,9 +58,9 @@ export const loginUser = async (email, password) => {
 export const refreshToken = async (refreshToken) => {
     try {
         // Verify the refresh token
-        const decoded = verifyRefreshToken(refreshToken);
+        const decoded = jwtservice.verifyRefreshToken(refreshToken);
         // Generate a new access token
-        const newAccessToken = generateAccessToken({ userId: decoded.userId });
+        const newAccessToken = jwtservice.generateAccessToken({ userId: decoded.userId });
         return { newAccessToken };
     }
     catch (error) {
@@ -106,11 +107,11 @@ export const googleLoginService = async (code) => {
         if (!updatedUser)
             throw new Error("User not found after login count update");
         console.log(`[AuthService] Google login for ${email}. loginCount: ${updatedUser.loginCount}`);
-        const accessToken = generateAccessToken({
+        const accessToken = jwtservice.generateAccessToken({
             userId: existingUser._id,
             userRole: existingUser.role,
         });
-        const refreshToken = generateRefreshToken({
+        const refreshToken = jwtservice.generateRefreshToken({
             userId: existingUser._id,
             userRole: existingUser.role,
         });
@@ -224,11 +225,11 @@ export const githubLoginService = async (code) => {
         if (!updatedUser)
             throw new Error("User not found after login count update");
         console.log(`[AuthService] GitHub login for ${email}. loginCount: ${updatedUser.loginCount}`);
-        const accessToken = generateAccessToken({
+        const accessToken = jwtservice.generateAccessToken({
             userId: existingUser._id,
             userRole: existingUser.role,
         });
-        const refreshToken = generateRefreshToken({
+        const refreshToken = jwtservice.generateRefreshToken({
             userId: existingUser._id,
             userRole: existingUser.role,
         });
@@ -259,7 +260,7 @@ export const verifyOTP = async (email, otp) => {
     if (otpStore[email] !== otp)
         throw new Error("Invalid or expired OTP.");
     delete otpStore[email]; // OTP is used once
-    return generateAccessToken({ email }, "10m"); // Temporary token for resetting password
+    return jwtservice.generateAccessToken({ email }, "10m"); // Temporary token for resetting password
 };
 //Handle reset password
 export const resetPassword = async (email, newPassword) => {
@@ -277,7 +278,7 @@ export const resetPassword = async (email, newPassword) => {
 export const logout = async (useremail) => {
     try {
         // Call the removeRefreshToken function
-        await removeRefreshToken(useremail);
+        await jwtservice.removeRefreshToken(useremail);
     }
     catch (error) {
         throw new Error("Error during logout: " + error.message);

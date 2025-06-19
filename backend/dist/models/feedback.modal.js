@@ -1,5 +1,6 @@
-import mongoose, { Schema } from 'mongoose';
-import { generateCustomId } from '../utils/idGenerator.utils.js';
+import mongoose, { Schema } from "mongoose";
+import { generateCustomId } from "../core/Utils/IdGenerator.js";
+import logger from "../core/Utils/Logger.js";
 const FeedbackSchema = new Schema({
     feedbackId: {
         type: String,
@@ -67,7 +68,14 @@ const FeedbackSchema = new Schema({
 // Pre-save hook to generate feedbackId
 FeedbackSchema.pre("save", async function (next) {
     if (!this.feedbackId) {
-        this.feedbackId = await generateCustomId("feedback", "FDB");
+        try {
+            this.feedbackId = await generateCustomId("feedback", "FDB");
+            logger.debug(`Generated feedbackId: ${this.feedbackId} for userId ${this.userId}`);
+        }
+        catch (error) {
+            logger.error(`Error generating feedbackId: ${this.feedbackId} for userId ${this.userId} : ${error}`);
+            return next(error);
+        }
     }
     next();
 });

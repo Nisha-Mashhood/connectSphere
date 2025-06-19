@@ -1,6 +1,6 @@
 import mongoose, { Schema, Model } from "mongoose";
 import config from "../config/env.config.js";
-import { generateCustomId } from "../utils/idGenerator.utils.js";
+import { generateCustomId } from "../core/Utils/IdGenerator.js";
 import { UserInterface } from "../Interfaces/models/IUser.js";
 import logger from "../core/Utils/Logger.js";
 

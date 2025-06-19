@@ -1,7 +1,7 @@
-import { google } from 'googleapis';
-import config from '../config/env.config.js'
+// import { google } from 'googleapis';
+// import config from '../config/env.config.js'
 
-const clientId = config.googleclientid;
-const clientSecret = config.googleclientsecret;
+// const clientId = config.googleclientid;
+// const clientSecret = config.googleclientsecret;
 
-export const OAuth2Client = new google.auth.OAuth2(clientId, clientSecret, 'postmessage');
+// export const OAuth2Client = new google.auth.OAuth2(clientId, clientSecret, 'postmessage');

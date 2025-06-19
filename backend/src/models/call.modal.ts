@@ -1,9 +1,9 @@
 import { Schema, model } from "mongoose";
-import { generateCustomId } from "../utils/idGenerator.utils.js";
+import { generateCustomId } from "../core/Utils/IdGenerator.js";
 import { Call } from "../Interfaces/models/Call.js";
 import logger from "../core/Utils/Logger.js";
 
-const CallSchema = new Schema<Call>({
+export const CallSchema = new Schema<Call>({
   CallId: {
     type: String,
     unique: true,

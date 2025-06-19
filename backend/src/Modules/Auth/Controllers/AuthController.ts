@@ -1,7 +1,7 @@
 import { BaseController } from './../../../core/Controller/BaseController.js';
 import { AuthService } from '../Service/AuthService.js';
 import { Request, Response } from 'express';
-import { setTokensInCookies, clearCookies } from  '../../../utils/jwt.utils.js';
+import { AuthService as JWTService } from  '../Utils/JWT.js';
 import logger from '../../../core/Utils/Logger.js';
 import { UserInterface as IUser } from '../../../Interfaces/models/IUser.js';
 
@@ -64,10 +64,12 @@ interface UpdateProfileRequestBody extends Partial<IUser> {
 // Controller for authentication and user profile endpoints
 export class AuthController extends BaseController {
   private authService: AuthService;
+  private jwtService: JWTService;
 
   constructor() {
     super();
     this.authService = new AuthService();
+    this.jwtService = new JWTService();
   }
 
   // Handle user signup
@@ -96,7 +98,7 @@ export class AuthController extends BaseController {
         this.throwError(400, 'Email and password are required');
       }
       const { user, accessToken, refreshToken, needsReviewPrompt } = await this.authService.login(email, password);
-      setTokensInCookies(res, accessToken, refreshToken);
+      this.jwtService.setTokensInCookies(res, accessToken, refreshToken);
       this.sendSuccess(res, { user, needsReviewPrompt }, 'Login successful');
       logger.info(`User logged in: ${user.userId} (${email})`);
     } catch (error) {
@@ -131,7 +133,7 @@ export class AuthController extends BaseController {
         this.throwError(400, 'Authorization code is required');
       }
       const { user, accessToken, refreshToken, needsReviewPrompt } = await this.authService.googleLogin(code);
-      setTokensInCookies(res, accessToken, refreshToken);
+      this.jwtService.setTokensInCookies(res, accessToken, refreshToken);
       this.sendSuccess(res, { user, accessToken, refreshToken, needsReviewPrompt }, 'Google login successful');
       logger.info(`Google login completed for user: ${user.userId} (${user.email})`);
     } catch (error) {
@@ -166,7 +168,7 @@ export class AuthController extends BaseController {
         this.throwError(400, 'Authorization code is required');
       }
       const { user, accessToken, refreshToken, needsReviewPrompt } = await this.authService.githubLogin(code);
-      setTokensInCookies(res, accessToken, refreshToken);
+      this.jwtService.setTokensInCookies(res, accessToken, refreshToken);
       this.sendSuccess(res, { user, accessToken, refreshToken, needsReviewPrompt }, 'GitHub login successful');
       logger.info(`GitHub login completed for user: ${user.userId} (${user.email})`);
     } catch (error) {
@@ -257,7 +259,7 @@ export class AuthController extends BaseController {
         this.throwError(400, 'Email is required');
       }
       await this.authService.logout(email);
-      clearCookies(res);
+      this.jwtService.clearCookies(res);
       this.sendSuccess(res, {}, 'Logged out successfully');
       logger.info(`User logged out: ${email}`);
     } catch (error) {

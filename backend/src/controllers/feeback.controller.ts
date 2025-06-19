@@ -14,11 +14,11 @@ export const createFeedback = async (req: Request, res: Response) => {
       punctuality: req.body.punctuality,
       comments: req.body.comments,
       wouldRecommend: req.body.wouldRecommend,
-      givenBy:req.body.role,
+      givenBy: req.body.role,
     };
 
     const feedback = await FeedbackService.createFeedback(feedbackData);
-    console.log(feedback)
+    console.log(feedback);
     res.status(201).json({ success: true, data: feedback });
   } catch (error: any) {
     res.status(400).json({ success: false, message: error.message });
@@ -45,15 +45,14 @@ export const getUserFeedbacks = async (req: Request, res: Response) => {
   }
 };
 
-
 export const getFeedbackForProfile = async (req: Request, res: Response) => {
   try {
     const { profileId, profileType } = req.params;
-    console.log('profile Id :',profileId);
-    console.log('Profile Type : ',profileType);
+    console.log("profile Id :", profileId);
+    console.log("Profile Type : ", profileType);
     if (!["mentor", "user"].includes(profileType)) {
-       res.status(400).json({ success: false, message: "Invalid profile type" });
-       return
+      res.status(400).json({ success: false, message: "Invalid profile type" });
+      return;
     }
     const feedbackData = await FeedbackService.getFeedbackForProfile(
       profileId,
@@ -68,7 +67,9 @@ export const getFeedbackForProfile = async (req: Request, res: Response) => {
 export const getFeedBack = async (req: Request, res: Response) => {
   try {
     const { collabId } = req.params;
-    const feedback = await FeedbackService.getFeedbackByCollaborationId(collabId);
+    const feedback = await FeedbackService.getFeedbackByCollaborationId(
+      collabId
+    );
     res.status(200).json({ success: true, data: feedback });
   } catch (error: any) {
     res.status(400).json({ success: false, message: error.message });
@@ -85,12 +86,14 @@ export const toggleFeedback = async (req: Request, res: Response) => {
   }
 };
 
-export const getFeedBackByMentorId = async(req: Request, res: Response) =>{
+export const getFeedBackByMentorId = async (req: Request, res: Response) => {
   try {
     const { mentorId } = req.params;
-    const feedback = await FeedbackService.getFeedBackByMentorIdService(mentorId);
-    res.status(200).json({success: true, data: feedback});
-  } catch (error:AnyExpression) {
+    const feedback = await FeedbackService.getFeedBackByMentorIdService(
+      mentorId
+    );
+    res.status(200).json({ success: true, data: feedback });
+  } catch (error: AnyExpression) {
     res.status(400).json({ success: false, message: error.message });
   }
-}
+};

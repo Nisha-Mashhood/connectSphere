@@ -4,7 +4,7 @@ import { SkillsRepository } from "../../Skills/Repositry/SkillsRepositry.js";
 import { SubcategoryRepository } from "../../Subcategory/Repositry/SubCategoryRepositry.js";
 import { CategoryInterface as ICategory } from "../../../Interfaces/models/CategoryInterface.js";
 import logger from "../../../core/Utils/Logger.js";
-import { uploadMedia } from "../../../utils/cloudinary.utils.js";
+import { uploadMedia } from "../../../core/Utils/Cloudinary.js";
 import { ServiceError } from "../../../core/Utils/ErrorHandler.js";
 
 export class CategoryService extends BaseService {

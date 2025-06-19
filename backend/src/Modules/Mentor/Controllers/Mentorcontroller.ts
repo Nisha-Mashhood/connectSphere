@@ -3,8 +3,8 @@ import { BaseController } from '../../../core/Controller/BaseController.js';
 import { MentorService } from '../Service/Mentorservice.js';
 import { AuthService } from '../../Auth/Service/AuthService.js';
 import { UserRepository } from '../../Auth/Repositry/UserRepositry.js';
-import { uploadMedia } from '../../../utils/cloudinary.utils.js';
-// import logger from '../../../core/utils/Logger.js';
+import { uploadMedia } from '../../../core/Utils/Cloudinary.js';
+
 
 export class MentorController extends BaseController {
   private mentorService: MentorService;

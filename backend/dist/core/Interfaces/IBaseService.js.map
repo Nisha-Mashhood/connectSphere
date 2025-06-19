@@ -1,0 +1,1 @@
+{"version":3,"file":"IBaseService.js","sourceRoot":"","sources":["../../../src/core/Interfaces/IBaseService.ts"],"names":[],"mappings":"","sourcesContent":["export interface IBaseService {\r\n\r\n  checkData(data: any): void;\r\n  throwError(message: string): never;\r\n  \r\n}"]}

@@ -46,7 +46,10 @@ export const sendReply = async (req: Request, res: Response) => {
   try {
     const { contactMessageId } = req.params;
     const { email, replyMessage } = req.body;
-    const updatedMessage = await ContactService.sendReply(contactMessageId, { email, replyMessage });
+    const updatedMessage = await ContactService.sendReply(contactMessageId, {
+      email,
+      replyMessage,
+    });
     res.status(200).json({
       success: true,
       message: "Reply sent successfully",

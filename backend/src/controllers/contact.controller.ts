@@ -1,18 +1,23 @@
 import { Request, Response } from "express";
 import { getUserContactsService } from "../services/contact.service.js";
 
-export const getUserContactsController = async (req: Request, res: Response) => {
+export const getUserContactsController = async (
+  req: Request,
+  res: Response
+) => {
   try {
-    const userId = req.currentUser?._id; 
-    const userRole = req.currentUser?.role; 
+    const userId = req.currentUser?._id;
+    const userRole = req.currentUser?.role;
     if (!userId || !userRole) {
       res.status(400).json({ message: "User ID or role not provided" });
-      return 
+      return;
     }
 
     const contacts = await getUserContactsService(userId.toString());
 
-    res.status(200).json({ data: contacts, message: "Contacts retrieved successfully" });
+    res
+      .status(200)
+      .json({ data: contacts, message: "Contacts retrieved successfully" });
     return;
   } catch (error) {
     console.error("Error in getUserContactsController:", error);

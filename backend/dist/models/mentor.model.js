@@ -1,5 +1,6 @@
 import mongoose, { Schema } from "mongoose";
-import { generateCustomId } from '../utils/idGenerator.utils.js';
+import { generateCustomId } from "../core/Utils/IdGenerator.js";
+import logger from "../core/Utils/Logger.js";
 const MentorSchema = new Schema({
     mentorId: {
         type: String,
@@ -8,31 +9,31 @@ const MentorSchema = new Schema({
     userId: {
         type: Schema.Types.ObjectId,
         ref: "User",
-        required: true
+        required: true,
     },
     isApproved: {
         type: String,
         enum: ["Processing", "Completed", "Rejected"],
-        default: "Processing"
+        default: "Processing",
     },
     rejectionReason: {
         type: String,
-        default: null
+        default: null,
     },
     skills: [
         {
             type: Schema.Types.ObjectId,
-            ref: "Skill"
-        }
+            ref: "Skill",
+        },
     ],
     certifications: [
         {
-            type: String
-        }
+            type: String,
+        },
     ],
     specialization: {
         type: String,
-        default: null
+        default: null,
     },
     bio: {
         type: String,
@@ -51,13 +52,20 @@ const MentorSchema = new Schema({
     timePeriod: {
         type: Number,
         required: true,
-        default: 30
-    }
+        default: 30,
+    },
 }, { timestamps: true });
 // Pre-save hook to generate mentorId
 MentorSchema.pre("save", async function (next) {
     if (!this.mentorId) {
-        this.mentorId = await generateCustomId("groupRequest", "MTR");
+        try {
+            this.mentorId = await generateCustomId("groupRequest", "MTR");
+            logger.debug(`Generated mentorId: ${this.mentorId} for userId ${this.userId}`);
+        }
+        catch (error) {
+            logger.error(`Error generating mentorId: ${this.mentorId} for userId ${this.userId} : ${error}`);
+            return next(error);
+        }
     }
     next();
 });

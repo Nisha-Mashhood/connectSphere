@@ -1,3 +1,2 @@
-import multer from "multer";
-export declare const upload: multer.Multer;
+export {};
 //# sourceMappingURL=multer.utils.d.ts.map

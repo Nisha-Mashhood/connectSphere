@@ -1,15 +1,7 @@
-import mongoose, { Document } from "mongoose";
-export interface IReview extends Document {
-    reviewId: string;
-    userId: mongoose.Types.ObjectId;
-    rating: number;
-    comment: string;
-    isApproved: boolean;
-    isSelect: boolean;
-    createdAt: Date;
-}
+import mongoose from "mongoose";
+import { IReview } from "../Interfaces/models/IReview.js";
 declare const _default: mongoose.Model<IReview, {}, {}, {}, mongoose.Document<unknown, {}, IReview> & IReview & Required<{
-    _id: unknown;
+    _id: mongoose.Types.ObjectId;
 }> & {
     __v: number;
 }, any>;

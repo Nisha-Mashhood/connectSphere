@@ -18,14 +18,14 @@ declare class AdminRepository {
         users: number;
         mentors: number;
     }[]>;
-    getPendingMentorRequests(limit?: number): Promise<(import("mongoose").Document<unknown, {}, import("../../models/mentor.model.js").IMentor> & import("../../models/mentor.model.js").IMentor & Required<{
-        _id: unknown;
+    getPendingMentorRequests(limit?: number): Promise<(import("mongoose").Document<unknown, {}, import("../../Interfaces/models/IMentor.js").IMentor> & import("../../Interfaces/models/IMentor.js").IMentor & Required<{
+        _id: import("mongoose").Types.ObjectId;
     }> & {
         __v: number;
     })[]>;
     getTopMentors(limit: number): Promise<any[]>;
-    getRecentCollaborations(limit: number): Promise<(import("mongoose").Document<unknown, {}, import("../../models/collaboration.js").ICollaboration> & import("../../models/collaboration.js").ICollaboration & Required<{
-        _id: unknown;
+    getRecentCollaborations(limit: number): Promise<(import("mongoose").Document<unknown, {}, import("../../Interfaces/models/ICollaboration.js").ICollaboration> & import("../../Interfaces/models/ICollaboration.js").ICollaboration & Required<{
+        _id: import("mongoose").Types.ObjectId;
     }> & {
         __v: number;
     })[]>;

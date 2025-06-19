@@ -1,4 +1,4 @@
-import { sendEmail } from "../utils/email.utils.js";
+import { sendEmail } from "../core/Utils/Email.js";
 import {
   createCollaboration,
   createTemporaryRequest,
@@ -20,7 +20,7 @@ import {
   updateTemporarySlotChanges,
   updateUnavailableDays,
 } from "../repositories/collaboration.repositry.js";
-import stripe from "../utils/stripe.utils.js";
+import stripe from "../core/Utils/Stripe.js";
 import { v4 as uuid } from "uuid";
 import { getMentorById } from "../repositories/mentor.repositry.js";
 import { createContact } from "../repositories/contacts.repository.js";

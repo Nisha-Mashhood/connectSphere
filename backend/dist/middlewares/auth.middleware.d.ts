@@ -1,5 +1,5 @@
 import { Request, Response, NextFunction } from 'express';
-import { UserInterface } from '../models/user.model.js';
+import { UserInterface } from '../Interfaces/models/IUser.js';
 declare global {
     namespace Express {
         interface Request {
@@ -7,8 +7,13 @@ declare global {
         }
     }
 }
-export declare const verifyToken: (req: Request, res: Response, next: NextFunction) => Promise<void>;
-export declare const verifyRefreshTokenMiddleware: (req: Request, res: Response, next: NextFunction) => Promise<void>;
-export declare const checkBlockedStatus: (req: Request, res: Response, next: NextFunction) => Promise<void>;
-export declare const authorize: (...allowedRoles: string[]) => (req: Request, res: Response, next: NextFunction) => void;
+export declare class AuthMiddleware {
+    private authService;
+    private userRepo;
+    constructor();
+    verifyToken(req: Request, _res: Response, next: NextFunction): Promise<void>;
+    verifyRefreshToken(req: Request, _res: Response, next: NextFunction): Promise<void>;
+    checkBlockedStatus(req: Request, _res: Response, next: NextFunction): Promise<void>;
+    authorize(...allowedRoles: string[]): (req: Request, _res: Response, next: NextFunction) => void;
+}
 //# sourceMappingURL=auth.middleware.d.ts.map

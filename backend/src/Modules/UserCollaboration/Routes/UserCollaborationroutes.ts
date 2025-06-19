@@ -1,50 +1,51 @@
 import express from 'express';
 import { UserConnectionController } from '../Controllers/userCollaborationController.js';
 import { apiLimiter } from '../../../middlewares/ratelimit.middleware.js';
-import { verifyToken, checkBlockedStatus, authorize } from '../../../middlewares/auth.middleware.js';
+import { AuthMiddleware } from '../../../middlewares/auth.middleware.js';
 
 const router = express.Router();
 const userConnectionController = new UserConnectionController();
+const authMiddleware = new AuthMiddleware();
 
 router.post(
   '/sendUser-User/:id',
-  [apiLimiter, verifyToken, checkBlockedStatus],
+  [apiLimiter, authMiddleware.verifyToken, authMiddleware.checkBlockedStatus],
   userConnectionController.sendRequest.bind(userConnectionController)
 );
 
 router.put(
   '/respond/:connectionId',
-  [apiLimiter, verifyToken, checkBlockedStatus],
+  [apiLimiter, authMiddleware.verifyToken, authMiddleware.checkBlockedStatus],
   userConnectionController.respondToRequest.bind(userConnectionController)
 );
 
 router.put(
   '/disconnect/:connectionId',
-  [apiLimiter, verifyToken, checkBlockedStatus],
+  [apiLimiter, authMiddleware.verifyToken, authMiddleware.checkBlockedStatus],
   userConnectionController.disconnectConnection.bind(userConnectionController)
 );
 
 router.get(
   '/connections/:userId',
-  [apiLimiter, verifyToken, checkBlockedStatus],
+  [apiLimiter, authMiddleware.verifyToken, authMiddleware.checkBlockedStatus],
   userConnectionController.getUserConnections.bind(userConnectionController)
 );
 
 router.get(
   '/connections/:userId/requests',
-  [apiLimiter, verifyToken, checkBlockedStatus],
+  [apiLimiter, authMiddleware.verifyToken, authMiddleware.checkBlockedStatus],
   userConnectionController.getUserRequests.bind(userConnectionController)
 );
 
 router.get(
   '/getConnection/:connectionId',
-  [apiLimiter, verifyToken, checkBlockedStatus],
+  [apiLimiter, authMiddleware.verifyToken, authMiddleware.checkBlockedStatus],
   userConnectionController.getUserConnectionById.bind(userConnectionController)
 );
 
 router.get(
   '/getAllconnection',
-  [apiLimiter, verifyToken, authorize('admin')],
+  [apiLimiter, authMiddleware.verifyToken, authMiddleware.authorize('admin')],
   userConnectionController.getAllUserConnections.bind(userConnectionController)
 );
 

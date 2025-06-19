@@ -69,9 +69,7 @@ export const getRequsetForUserController = async (req, res) => {
     try {
         const { id } = req.params;
         const userRequest = await getRequsetForUser(id);
-        res
-            .status(200)
-            .json({
+        res.status(200).json({
             message: "Request retrieved successfully",
             requests: userRequest,
         });
@@ -103,8 +101,11 @@ export const makeStripePaymentController = async (req, res) => {
         // Process payment and handle collaboration creation
         const paymentResult = await processPaymentService(paymentMethodId, amount, requestId, mentorRequestData, email, returnUrl);
         // Handle different payment intent statuses
-        const paymentIntent = "paymentIntent" in paymentResult ? paymentResult.paymentIntent : paymentResult;
-        if (paymentIntent.status === "requires_action" && paymentIntent.next_action) {
+        const paymentIntent = "paymentIntent" in paymentResult
+            ? paymentResult.paymentIntent
+            : paymentResult;
+        if (paymentIntent.status === "requires_action" &&
+            paymentIntent.next_action) {
             console.log(paymentIntent.status);
             // Payment requires additional action (like 3D Secure)
             res.status(200).json({
@@ -185,11 +186,11 @@ export const deleteCollab = async (req, res) => {
 // Get all mentor requests
 export const getAllMentorRequests = async (req, res) => {
     try {
-        const { page = 1, limit = 10, search = '' } = req.query;
+        const { page = 1, limit = 10, search = "" } = req.query;
         const mentorRequests = await getMentorRequestsService({
             page: Number(page),
             limit: Number(limit),
-            search: String(search)
+            search: String(search),
         });
         res.status(200).json(mentorRequests);
     }
@@ -199,11 +200,11 @@ export const getAllMentorRequests = async (req, res) => {
 };
 export const getAllCollabs = async (req, res) => {
     try {
-        const { page = 1, limit = 10, search = '' } = req.query;
+        const { page = 1, limit = 10, search = "" } = req.query;
         const collaborations = await getCollabsService({
             page: Number(page),
             limit: Number(limit),
-            search: String(search)
+            search: String(search),
         });
         res.status(200).json(collaborations);
     }
@@ -218,7 +219,10 @@ export const getCollabDeatilsbyCollabId = async (req, res) => {
         const collabDetails = await fetchCollabById(collabId);
         res
             .status(200)
-            .json({ message: "Collab details accessed successfully", data: collabDetails });
+            .json({
+            message: "Collab details accessed successfully",
+            data: collabDetails,
+        });
         return;
     }
     catch (error) {
@@ -233,7 +237,10 @@ export const getRequestDeatilsbyRequestId = async (req, res) => {
         const requestDetails = await fetchRequsetById(requestId);
         res
             .status(200)
-            .json({ message: "Requset details accessed successfully", data: requestDetails });
+            .json({
+            message: "Requset details accessed successfully",
+            data: requestDetails,
+        });
         return;
     }
     catch (error) {
@@ -244,7 +251,7 @@ export const getRequestDeatilsbyRequestId = async (req, res) => {
 // Mark Dates as Unavailable
 export const markUnavailableDays = async (req, res) => {
     const { collabId } = req.params;
-    const { datesAndReasons, requestedBy, requesterId, approvedById, isApproved } = req.body;
+    const { datesAndReasons, requestedBy, requesterId, approvedById, isApproved, } = req.body;
     try {
         const updatedCollaboration = await markUnavailableDaysService(collabId, {
             datesAndReasons,
@@ -256,7 +263,10 @@ export const markUnavailableDays = async (req, res) => {
         console.log("collaboration collection updated");
         res
             .status(200)
-            .json({ message: "Unavailable days updated", data: updatedCollaboration });
+            .json({
+            message: "Unavailable days updated",
+            data: updatedCollaboration,
+        });
         return;
     }
     catch (error) {
@@ -267,7 +277,7 @@ export const markUnavailableDays = async (req, res) => {
 // Update Time Slots
 export const updateTemporarySlotChanges = async (req, res) => {
     const { collabId } = req.params;
-    const { datesAndNewSlots, requestedBy, requesterId, approvedById, isApproved } = req.body;
+    const { datesAndNewSlots, requestedBy, requesterId, approvedById, isApproved, } = req.body;
     try {
         const updatedCollaboration = await updateTemporarySlotChangesService(collabId, {
             datesAndNewSlots,
@@ -278,7 +288,10 @@ export const updateTemporarySlotChanges = async (req, res) => {
         });
         res
             .status(200)
-            .json({ message: "Temporary slot changes updated", data: updatedCollaboration });
+            .json({
+            message: "Temporary slot changes updated",
+            data: updatedCollaboration,
+        });
         return;
     }
     catch (error) {

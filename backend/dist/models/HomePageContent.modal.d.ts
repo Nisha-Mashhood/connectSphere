@@ -1,35 +1,7 @@
-import mongoose, { Document } from "mongoose";
-interface IFeature {
-    title: string;
-    description: string[];
-    icon: string;
-}
-interface IFooterLink {
-    name: string;
-    url: string;
-}
-interface ISocialMedia {
-    name: string;
-    url: string;
-    icon: string;
-}
-interface IHomePageContent extends Document {
-    HomePageContentId: string;
-    banner: {
-        imageUrl: string;
-        tagline: string;
-        title: string;
-        description: string;
-    };
-    features: IFeature[];
-    footer: {
-        links: IFooterLink[];
-        socialMedia: ISocialMedia[];
-        copyright: string;
-    };
-}
+import mongoose from "mongoose";
+import { IHomePageContent } from "../Interfaces/models/IHomePageContent.js";
 declare const _default: mongoose.Model<IHomePageContent, {}, {}, {}, mongoose.Document<unknown, {}, IHomePageContent> & IHomePageContent & Required<{
-    _id: unknown;
+    _id: mongoose.Types.ObjectId;
 }> & {
     __v: number;
 }, any>;

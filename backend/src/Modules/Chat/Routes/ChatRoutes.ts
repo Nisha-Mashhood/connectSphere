@@ -1,14 +1,15 @@
 import { Router } from 'express';
 import { ChatController } from '../Controllers/ChatController.js';
-import { upload } from '../../../utils/multer.utils.js';
+import { upload } from '../../../core/Utils/Multer.js';
 import { apiLimiter } from '../../../middlewares/ratelimit.middleware.js';
-import { authorize, checkBlockedStatus, verifyToken } from '../../../middlewares/auth.middleware.js';
+import { AuthMiddleware } from '../../../middlewares/auth.middleware.js';
 
 const router = Router();
 const chatController = new ChatController();
+const authMiddleware = new AuthMiddleware();
 
-router.get('/chat/messages', [apiLimiter, verifyToken, checkBlockedStatus, authorize('user')], chatController.getChatMessages);
-router.post('/chat/messages', [apiLimiter, verifyToken, checkBlockedStatus, authorize('user'), upload.single('file')], chatController.uploadAndSaveMessage);
-router.get('/chat/unread', [apiLimiter, verifyToken, checkBlockedStatus, authorize('user')], chatController.getUnreadMessageCounts);
+router.get('/chat/messages', [apiLimiter, authMiddleware.verifyToken, authMiddleware.checkBlockedStatus, authMiddleware.authorize('user')], chatController.getChatMessages);
+router.post('/chat/messages', [apiLimiter, authMiddleware.verifyToken, authMiddleware.checkBlockedStatus, authMiddleware.authorize('user'), upload.single('file')], chatController.uploadAndSaveMessage);
+router.get('/chat/unread', [apiLimiter, authMiddleware.verifyToken, authMiddleware.checkBlockedStatus, authMiddleware.authorize('user')], chatController.getUnreadMessageCounts);
 
 export default router;

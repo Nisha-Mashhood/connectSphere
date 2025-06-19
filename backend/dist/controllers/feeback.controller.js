@@ -44,8 +44,8 @@ export const getUserFeedbacks = async (req, res) => {
 export const getFeedbackForProfile = async (req, res) => {
     try {
         const { profileId, profileType } = req.params;
-        console.log('profile Id :', profileId);
-        console.log('Profile Type : ', profileType);
+        console.log("profile Id :", profileId);
+        console.log("Profile Type : ", profileType);
         if (!["mentor", "user"].includes(profileType)) {
             res.status(400).json({ success: false, message: "Invalid profile type" });
             return;

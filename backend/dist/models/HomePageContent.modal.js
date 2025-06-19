@@ -1,5 +1,6 @@
 import mongoose, { Schema } from "mongoose";
-import { generateCustomId } from "../utils/idGenerator.utils.js";
+import { generateCustomId } from "../core/Utils/IdGenerator.js";
+import logger from "../core/Utils/Logger.js";
 const HomePageContentSchema = new Schema({
     HomePageContentId: {
         type: String,
@@ -8,36 +9,36 @@ const HomePageContentSchema = new Schema({
     banner: {
         imageUrl: {
             type: String,
-            required: true
+            required: true,
         },
         tagline: {
             type: String,
-            required: true
+            required: true,
         },
         title: {
             type: String,
-            required: true
+            required: true,
         },
         description: {
             type: String,
-            required: true
+            required: true,
         },
     },
     features: [
         {
             title: {
                 type: String,
-                required: true
+                required: true,
             },
             description: [
                 {
                     type: String,
-                    required: true
-                }
+                    required: true,
+                },
             ],
             icon: {
                 type: String,
-                required: true
+                required: true,
             },
         },
     ],
@@ -46,11 +47,11 @@ const HomePageContentSchema = new Schema({
             {
                 name: {
                     type: String,
-                    required: true
+                    required: true,
                 },
                 url: {
                     type: String,
-                    required: true
+                    required: true,
                 },
             },
         ],
@@ -58,28 +59,35 @@ const HomePageContentSchema = new Schema({
             {
                 name: {
                     type: String,
-                    required: true
+                    required: true,
                 },
                 url: {
                     type: String,
-                    required: true
+                    required: true,
                 },
                 icon: {
                     type: String,
-                    required: true
+                    required: true,
                 },
             },
         ],
         copyright: {
             type: String,
-            required: true
+            required: true,
         },
     },
 }, { timestamps: true });
 // Pre-save hook to generate HomePageContentId
 HomePageContentSchema.pre("save", async function (next) {
     if (!this.HomePageContentId) {
-        this.HomePageContentId = await generateCustomId("homePageContent", "HPC");
+        try {
+            this.HomePageContentId = await generateCustomId("homePageContent", "HPC");
+            logger.debug(`Generated HomePageContentId: ${this.HomePageContentId}`);
+        }
+        catch (error) {
+            logger.error(`Error generating HomePageContentId: ${this.HomePageContentId} : ${error}`);
+            return next(error);
+        }
     }
     next();
 });

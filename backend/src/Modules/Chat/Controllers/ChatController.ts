@@ -2,7 +2,7 @@ import { Request, Response } from 'express';
 import { BaseController } from '../../../core/Controller/BaseController.js';
 import { ChatService } from '../Service/ChatService.js';
 import { ChatRepository } from '../Repositry/ChatRepositry.js';
-import { uploadMedia } from '../../../utils/cloudinary.utils.js';
+import { uploadMedia } from '../../../core/Utils/Cloudinary.js';
 import logger from '../../../core/Utils/Logger.js';
 import { HttpError } from '../../../core/Utils/ErrorHandler.js';
 

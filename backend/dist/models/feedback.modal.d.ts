@@ -1,19 +1,5 @@
-import mongoose, { Document } from 'mongoose';
-export interface IFeedback extends Document {
-    feedbackId: string;
-    userId: mongoose.Types.ObjectId;
-    mentorId: mongoose.Types.ObjectId;
-    collaborationId: mongoose.Types.ObjectId;
-    givenBy: "user" | "mentor";
-    rating: number;
-    communication: number;
-    expertise: number;
-    punctuality: number;
-    comments: string;
-    wouldRecommend: boolean;
-    isHidden: boolean;
-    createdAt: Date;
-}
+import mongoose from "mongoose";
+import { IFeedback } from "../Interfaces/models/IFeedback.js";
 declare const _default: mongoose.Model<IFeedback, {}, {}, {}, mongoose.Document<unknown, {}, IFeedback> & IFeedback & Required<{
     _id: unknown;
 }> & {

@@ -1,6 +1,7 @@
 import mongoose from "mongoose";
 import { Schema, model } from "mongoose";
-import { generateCustomId } from "../utils/idGenerator.utils.js";
+import { generateCustomId } from "../core/Utils/IdGenerator.js";
+import logger from "../core/Utils/Logger.js";
 const AppNotificationSchema = new Schema({
     AppNotificationId: {
         type: String,
@@ -71,7 +72,14 @@ AppNotificationSchema.index({ userId: 1, createdAt: -1 });
 // Pre-save hook to generate AppNotificationId
 AppNotificationSchema.pre("save", async function (next) {
     if (!this.AppNotificationId) {
-        this.AppNotificationId = await generateCustomId("appNotification", "ANF");
+        try {
+            this.AppNotificationId = await generateCustomId("appNotification", "ANF");
+            logger.debug(`Generated AppNotificationId: ${this.AppNotificationId} for userId ${this.userId}`);
+        }
+        catch (error) {
+            logger.error(`Error generating AppNotificationId: ${this.AppNotificationId} for userId ${this.userId} : ${error}`);
+            return next(error);
+        }
     }
     next();
 });

@@ -1,6 +1,7 @@
 import mongoose from "mongoose";
-import config from '../config/env.config.js';
-import { generateCustomId } from "../utils/idGenerator.utils.js";
+import config from "../config/env.config.js";
+import { generateCustomId } from "../core/Utils/IdGenerator.js";
+import logger from "../core/Utils/Logger.js";
 const userSchema = new mongoose.Schema({
     userId: {
         type: String,
@@ -8,12 +9,12 @@ const userSchema = new mongoose.Schema({
     },
     name: {
         type: String,
-        required: true
+        required: true,
     },
     email: {
         type: String,
         required: true,
-        unique: true
+        unique: true,
     },
     phone: {
         type: String,
@@ -23,37 +24,37 @@ const userSchema = new mongoose.Schema({
     },
     password: {
         type: String,
-        default: null
+        default: null,
     },
     jobTitle: {
         type: String,
-        default: null
+        default: null,
     },
     industry: {
         type: String,
-        default: null
+        default: null,
     },
     reasonForJoining: {
         type: String,
-        default: null
+        default: null,
     },
     role: {
         type: String,
         enum: ["user", "mentor", "admin"],
-        default: "user"
+        default: "user",
     },
     isBlocked: {
         type: Boolean,
-        default: false
+        default: false,
     },
     provider: {
         type: String,
         enum: ["google", "facebook", "github"],
-        default: null
+        default: null,
     },
     providerId: {
         type: String,
-        default: null
+        default: null,
     },
     profilePic: {
         type: String,
@@ -66,12 +67,12 @@ const userSchema = new mongoose.Schema({
     accessToken: {
         type: String,
         default: null,
-        required: false
+        required: false,
     },
     refreshToken: {
         type: String,
         default: null,
-        required: false
+        required: false,
     },
     loginCount: {
         type: Number,
@@ -85,7 +86,14 @@ const userSchema = new mongoose.Schema({
 // Pre-save hook to generate userId
 userSchema.pre("save", async function (next) {
     if (!this.userId) {
-        this.userId = await generateCustomId("user", "USR");
+        try {
+            this.userId = await generateCustomId("user", "USR");
+            logger.debug(`Generated userId: ${this.userId} for email: ${this.email}`);
+        }
+        catch (error) {
+            logger.error(`Error generating userId for email: ${this.email}: ${error}`);
+            return next(error);
+        }
     }
     next();
 });

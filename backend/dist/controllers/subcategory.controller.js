@@ -4,10 +4,14 @@ export const createSubcategory = async (req, res) => {
         const imagePath = req.file?.path;
         const fileSize = req.file?.size;
         const subcategory = await SubcategoryService.createSubcategory(req.body, imagePath, fileSize);
-        res.status(201).json({ message: "Subcategory created successfully", subcategory });
+        res
+            .status(201)
+            .json({ message: "Subcategory created successfully", subcategory });
     }
     catch (error) {
-        res.status(500).json({ message: "Error creating subcategory", error: error.message });
+        res
+            .status(500)
+            .json({ message: "Error creating subcategory", error: error.message });
     }
 };
 export const getAllSubcategories = async (req, res) => {
@@ -16,7 +20,9 @@ export const getAllSubcategories = async (req, res) => {
         res.status(200).json(subcategories);
     }
     catch (error) {
-        res.status(500).json({ message: "Error fetching subcategories", error: error.message });
+        res
+            .status(500)
+            .json({ message: "Error fetching subcategories", error: error.message });
     }
 };
 export const getSubcategoryById = async (req, res) => {
@@ -29,7 +35,9 @@ export const getSubcategoryById = async (req, res) => {
         res.status(200).json(subcategory);
     }
     catch (error) {
-        res.status(500).json({ message: "Error fetching subcategory", error: error.message });
+        res
+            .status(500)
+            .json({ message: "Error fetching subcategory", error: error.message });
     }
 };
 export const updateSubcategory = async (req, res) => {
@@ -41,10 +49,17 @@ export const updateSubcategory = async (req, res) => {
             res.status(404).json({ message: "Subcategory not found" });
             return;
         }
-        res.status(200).json({ message: "Subcategory updated successfully", updatedSubcategory });
+        res
+            .status(200)
+            .json({
+            message: "Subcategory updated successfully",
+            updatedSubcategory,
+        });
     }
     catch (error) {
-        res.status(500).json({ message: "Error updating subcategory", error: error.message });
+        res
+            .status(500)
+            .json({ message: "Error updating subcategory", error: error.message });
     }
 };
 export const deleteSubcategory = async (req, res) => {
@@ -57,7 +72,9 @@ export const deleteSubcategory = async (req, res) => {
         res.status(200).json({ message: "Subcategory deleted successfully" });
     }
     catch (error) {
-        res.status(500).json({ message: "Error deleting subcategory", error: error.message });
+        res
+            .status(500)
+            .json({ message: "Error deleting subcategory", error: error.message });
     }
 };
 //# sourceMappingURL=subcategory.controller.js.map

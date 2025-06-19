@@ -1,8 +1,5 @@
-import mongoose, { Document } from "mongoose";
-export interface ICounter extends Document {
-    _id: string;
-    sequence: number;
-}
+import mongoose from "mongoose";
+import { ICounter } from "../Interfaces/models/ICounter.js";
 declare const _default: mongoose.Model<ICounter, {}, {}, {}, mongoose.Document<unknown, {}, ICounter> & ICounter & Required<{
     _id: string;
 }> & {

@@ -1,4 +1,3 @@
-// src/repositories/user.repository.ts
 import User from "../models/user.model.js";
 // Fetch all users
 export const getAllUsers = async () => {

@@ -1,5 +1,6 @@
 import mongoose, { Schema } from "mongoose";
-import { generateCustomId } from "../utils/idGenerator.utils.js";
+import { generateCustomId } from "../core/Utils/IdGenerator.js";
+import logger from "../core/Utils/Logger.js";
 const contactSchema = new mongoose.Schema({
     contactId: {
         type: String,
@@ -8,23 +9,23 @@ const contactSchema = new mongoose.Schema({
     userId: {
         type: Schema.Types.ObjectId,
         ref: "User",
-        required: true
+        required: true,
     },
     targetUserId: {
         type: Schema.Types.ObjectId,
-        ref: "User"
+        ref: "User",
     }, // Optional: mentor or user
     collaborationId: {
         type: Schema.Types.ObjectId,
-        ref: "Collaboration"
+        ref: "Collaboration",
     },
     userConnectionId: {
         type: Schema.Types.ObjectId,
-        ref: "UserConnection"
+        ref: "UserConnection",
     },
     groupId: {
         type: Schema.Types.ObjectId,
-        ref: "Group"
+        ref: "Group",
     },
     type: {
         type: String,
@@ -35,11 +36,18 @@ const contactSchema = new mongoose.Schema({
 // Pre-save hook to generate contactId
 contactSchema.pre("save", async function (next) {
     if (!this.contactId) {
-        this.contactId = await generateCustomId("contact", "CNT");
+        try {
+            this.contactId = await generateCustomId("contact", "CNT");
+            logger.debug(`Generated contactId: ${this.contactId} for userId ${this.userId}`);
+        }
+        catch (error) {
+            logger.error(`Error generating contactId: ${this.contactId} for userId ${this.userId} : ${error}`);
+            return next(error);
+        }
     }
     next();
 });
-// Ensure contactId is set for bulk operations like insertMany
+// contactId is set for bulk operations like insertMany
 contactSchema.pre("insertMany", async function (next, docs) {
     for (const doc of docs) {
         if (!doc.contactId) {

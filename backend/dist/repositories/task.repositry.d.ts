@@ -1,4 +1,4 @@
-import { ITask } from '../models/task.modal.js';
+import { ITask } from '../Interfaces/models/ITask.js';
 export declare const createTaskRepo: (taskData: Partial<ITask>) => Promise<ITask>;
 export declare const findTaskById: (taskId: string) => Promise<ITask | null>;
 export declare const updateTask: (taskId: string, updates: Partial<ITask>) => Promise<ITask | null>;
