@@ -17,7 +17,7 @@ export class CollaborationService extends BaseService {
         this.contactRepo = new ContactRepository();
         this.mentorRepo = new MentorRepository();
     }
-    async TemporaryRequestService(requestData) {
+    TemporaryRequestService = async (requestData) => {
         logger.debug(`Creating temporary request`);
         this.checkData(requestData);
         return await this.collabRepo.createTemporaryRequest({
@@ -25,28 +25,28 @@ export class CollaborationService extends BaseService {
             paymentStatus: "Pending",
             isAccepted: "Pending",
         });
-    }
-    async getMentorRequests(mentorId) {
+    };
+    getMentorRequests = async (mentorId) => {
         logger.debug(`Fetching mentor requests for mentor: ${mentorId}`);
         this.checkData(mentorId);
         return await this.collabRepo.getMentorRequestsByMentorId(mentorId);
-    }
-    async acceptRequest(requestId) {
+    };
+    acceptRequest = async (requestId) => {
         logger.debug(`Accepting mentor request: ${requestId}`);
         this.checkData(requestId);
         return await this.collabRepo.updateMentorRequestStatus(requestId, "Accepted");
-    }
-    async rejectRequest(requestId) {
+    };
+    rejectRequest = async (requestId) => {
         logger.debug(`Rejecting mentor request: ${requestId}`);
         this.checkData(requestId);
         return await this.collabRepo.updateMentorRequestStatus(requestId, "Rejected");
-    }
-    async getRequestForUser(userId) {
+    };
+    getRequestForUser = async (userId) => {
         logger.debug(`Fetching requests for user: ${userId}`);
         this.checkData(userId);
         return await this.collabRepo.getRequestByUserId(userId);
-    }
-    async processPaymentService(paymentMethodId, amount, requestId, mentorRequestData, email, returnUrl) {
+    };
+    processPaymentService = async (paymentMethodId, amount, requestId, mentorRequestData, email, returnUrl) => {
         logger.debug(`Processing payment for request: ${requestId}`);
         this.checkData({ paymentMethodId, amount, requestId, email, returnUrl });
         if (!mentorRequestData.mentorId || !mentorRequestData.userId) {
@@ -123,18 +123,18 @@ export class CollaborationService extends BaseService {
             return { paymentIntent, contacts: [contact1, contact2] };
         }
         return { paymentIntent };
-    }
-    async getCollabDataForUserService(userId) {
+    };
+    getCollabDataForUserService = async (userId) => {
         logger.debug(`Fetching collaboration data for user: ${userId}`);
         this.checkData(userId);
         return await this.collabRepo.getCollabDataForUser(userId);
-    }
-    async getCollabDataForMentorService(mentorId) {
+    };
+    getCollabDataForMentorService = async (mentorId) => {
         logger.debug(`Fetching collaboration data for mentor: ${mentorId}`);
         this.checkData(mentorId);
         return await this.collabRepo.getCollabDataForMentor(mentorId);
-    }
-    async removeCollab(collabId, reason) {
+    };
+    removeCollab = async (collabId, reason) => {
         logger.debug(`Removing collaboration: ${collabId}`);
         this.checkData({ collabId, reason });
         const collab = await this.collabRepo.findCollabById(collabId);
@@ -152,36 +152,36 @@ export class CollaborationService extends BaseService {
         await sendEmail(mentorEmail, subject, text);
         logger.info(`Cancellation email sent to mentor: ${mentorEmail}`);
         return await this.collabRepo.markCollabAsCancelled(collabId);
-    }
-    async getMentorRequestsService({ page, limit, search, }) {
+    };
+    getMentorRequestsService = async ({ page, limit, search, }) => {
         logger.debug(`Fetching mentor requests for admin`);
         return await this.collabRepo.findMentorRequest({ page, limit, search });
-    }
-    async getCollabsService({ page, limit, search, }) {
+    };
+    getCollabsService = async ({ page, limit, search, }) => {
         logger.debug(`Fetching collaborations for admin`);
         return await this.collabRepo.findCollab({ page, limit, search });
-    }
-    async fetchCollabById(collabId) {
+    };
+    fetchCollabById = async (collabId) => {
         logger.debug(`Fetching collaboration by ID: ${collabId}`);
         this.checkData(collabId);
         return await this.collabRepo.findCollabDetails(collabId);
-    }
-    async fetchRequestById(requestId) {
+    };
+    fetchRequestById = async (requestId) => {
         logger.debug(`Fetching request by ID: ${requestId}`);
         this.checkData(requestId);
         return await this.collabRepo.fetchMentorRequestDetails(requestId);
-    }
-    async markUnavailableDaysService(collabId, updateData) {
+    };
+    markUnavailableDaysService = async (collabId, updateData) => {
         logger.debug(`Marking unavailable days for collaboration: ${collabId}`);
         this.checkData({ collabId, updateData });
         return await this.collabRepo.updateUnavailableDays(collabId, updateData);
-    }
-    async updateTemporarySlotChangesService(collabId, updateData) {
+    };
+    updateTemporarySlotChangesService = async (collabId, updateData) => {
         logger.debug(`Updating temporary slot changes for collaboration: ${collabId}`);
         this.checkData({ collabId, updateData });
         return await this.collabRepo.updateTemporarySlotChanges(collabId, updateData);
-    }
-    async processTimeSlotRequest(collabId, requestId, isApproved, requestType) {
+    };
+    processTimeSlotRequest = async (collabId, requestId, isApproved, requestType) => {
         logger.debug(`Processing time slot request for collaboration: ${collabId}`);
         this.checkData({ collabId, requestId, requestType });
         const status = isApproved ? "approved" : "rejected";
@@ -240,12 +240,12 @@ export class CollaborationService extends BaseService {
             logger.info(`Rejection email sent to ${requestedBy === "user" ? "mentor" : "user"}: ${recipientEmail}`);
         }
         return updatedCollaboration;
-    }
-    async getMentorLockedSlots(mentorId) {
+    };
+    getMentorLockedSlots = async (mentorId) => {
         logger.debug(`Fetching locked slots for mentor: ${mentorId}`);
         this.checkData(mentorId);
         return await this.collabRepo.getLockedSlotsByMentorId(mentorId);
-    }
+    };
     calculateNewEndDate(currentEndDate, unavailableDates, selectedDay) {
         const dayMap = {
             Sunday: 0,

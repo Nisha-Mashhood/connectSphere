@@ -23,7 +23,7 @@ export class NotificationRepository extends BaseRepository {
         }
         return new Types.ObjectId(idStr);
     }
-    async getTasksForNotification(taskId) {
+    getTasksForNotification = async (taskId) => {
         try {
             logger.debug(`Fetching task for notification: ${taskId}`);
             const now = new Date();
@@ -38,8 +38,8 @@ export class NotificationRepository extends BaseRepository {
             logger.error(`Error fetching task for notification: ${error.message}`);
             throw new RepositoryError(`Error fetching task for notification: ${error.message}`);
         }
-    }
-    async getAllTasksForNotification() {
+    };
+    getAllTasksForNotification = async () => {
         try {
             logger.debug('Fetching all tasks for notification');
             const now = new Date();
@@ -54,8 +54,8 @@ export class NotificationRepository extends BaseRepository {
             logger.error(`Error fetching all tasks for notification: ${error.message}`);
             throw new RepositoryError(`Error fetching all tasks for notification: ${error.message}`);
         }
-    }
-    async getGroupMembers(groupId) {
+    };
+    getGroupMembers = async (groupId) => {
         try {
             logger.debug(`Fetching group members for group: ${groupId}`);
             const group = await Group.findById(this.toObjectId(groupId)).select('members').exec();
@@ -65,8 +65,8 @@ export class NotificationRepository extends BaseRepository {
             logger.error(`Error fetching group members: ${error.message}`);
             throw new RepositoryError(`Error fetching group members: ${error.message}`);
         }
-    }
-    async getMentorIdAndUserId(collaborationId) {
+    };
+    getMentorIdAndUserId = async (collaborationId) => {
         try {
             logger.debug(`Fetching mentor and user IDs for collaboration: ${collaborationId}`);
             const collaborationData = (await Collaboration.findById(this.toObjectId(collaborationId))
@@ -86,8 +86,8 @@ export class NotificationRepository extends BaseRepository {
             logger.error(`Error fetching collaboration IDs: ${error.message}`);
             throw new RepositoryError(`Error fetching collaboration IDs: ${error.message}`);
         }
-    }
-    async getConnectionUserIds(connectionId) {
+    };
+    getConnectionUserIds = async (connectionId) => {
         try {
             logger.debug(`Fetching connection user IDs for connection: ${connectionId}`);
             const connection = await UserConnectionModal.findById(this.toObjectId(connectionId))
@@ -106,8 +106,8 @@ export class NotificationRepository extends BaseRepository {
             logger.error(`Error fetching connection user IDs: ${error.message}`);
             throw new RepositoryError(`Error fetching connection user IDs: ${error.message}`);
         }
-    }
-    async findTaskNotification(userId, taskId, notificationDate, notificationTime) {
+    };
+    findTaskNotification = async (userId, taskId, notificationDate, notificationTime) => {
         try {
             logger.debug(`Finding task notification for user: ${userId}, task: ${taskId}`);
             return await this.model
@@ -124,8 +124,8 @@ export class NotificationRepository extends BaseRepository {
             logger.error(`Error finding task notification: ${error.message}`);
             throw new RepositoryError(`Error finding task notification: ${error.message}`);
         }
-    }
-    async updateNotificationStatus(notificationId, status) {
+    };
+    updateNotificationStatus = async (notificationId, status) => {
         try {
             logger.debug(`Updating notification status: ${notificationId} to ${status}`);
             const notification = await this.model
@@ -140,8 +140,8 @@ export class NotificationRepository extends BaseRepository {
             logger.error(`Error updating notification status: ${error.message}`);
             throw new RepositoryError(`Error updating notification status: ${error.message}`);
         }
-    }
-    async updateTaskNotifications(relatedId, notificationDate, notificationTime) {
+    };
+    updateTaskNotifications = async (relatedId, notificationDate, notificationTime) => {
         try {
             logger.debug(`Updating task notifications for task: ${relatedId}`);
             const updateData = {
@@ -156,8 +156,8 @@ export class NotificationRepository extends BaseRepository {
             logger.error(`Error updating task notifications: ${error.message}`);
             throw new RepositoryError(`Error updating task notifications: ${error.message}`);
         }
-    }
-    async createNotification(notification) {
+    };
+    createNotification = async (notification) => {
         try {
             logger.debug(`Creating notification for user: ${notification.userId}`);
             return await this.create({
@@ -172,8 +172,8 @@ export class NotificationRepository extends BaseRepository {
             logger.error(`Error creating notification: ${error.message}`);
             throw new RepositoryError(`Error creating notification: ${error.message}`);
         }
-    }
-    async findNotificationByUserId(userId) {
+    };
+    findNotificationByUserId = async (userId) => {
         try {
             logger.debug(`Fetching notifications for user: ${userId}`);
             return await this.model
@@ -186,8 +186,8 @@ export class NotificationRepository extends BaseRepository {
             logger.error(`Error fetching notifications by user ID: ${error.message}`);
             throw new RepositoryError(`Error fetching notifications by user ID: ${error.message}`);
         }
-    }
-    async findNotificationByCallId(userId, callId) {
+    };
+    findNotificationByCallId = async (userId, callId) => {
         try {
             logger.debug(`Finding notification by call ID: ${callId} for user: ${userId}`);
             return await this.model
@@ -198,8 +198,8 @@ export class NotificationRepository extends BaseRepository {
             logger.error(`Error finding notification by call ID: ${error.message}`);
             throw new RepositoryError(`Error finding notification by call ID: ${error.message}`);
         }
-    }
-    async updateNotificationToMissed(userId, callId, content) {
+    };
+    updateNotificationToMissed = async (userId, callId, content) => {
         try {
             logger.debug(`Updating notification to missed call for user: ${userId}, call: ${callId}`);
             return await this.model
@@ -210,8 +210,8 @@ export class NotificationRepository extends BaseRepository {
             logger.error(`Error updating notification to missed: ${error.message}`);
             throw new RepositoryError(`Error updating notification to missed: ${error.message}`);
         }
-    }
-    async markNotificationAsRead(notificationId) {
+    };
+    markNotificationAsRead = async (notificationId) => {
         try {
             logger.debug(`Marking notification as read: ${notificationId}`);
             return await this.model
@@ -222,8 +222,8 @@ export class NotificationRepository extends BaseRepository {
             logger.error(`Error marking notification as read: ${error.message}`);
             throw new RepositoryError(`Error marking notification as read: ${error.message}`);
         }
-    }
-    async getNotificationUnreadCount(userId) {
+    };
+    getNotificationUnreadCount = async (userId) => {
         try {
             logger.debug(`Counting unread notifications for user: ${userId}`);
             return await this.model.countDocuments({ userId: this.toObjectId(userId), status: 'unread' }).exec();
@@ -232,6 +232,6 @@ export class NotificationRepository extends BaseRepository {
             logger.error(`Error counting unread notifications: ${error.message}`);
             throw new RepositoryError(`Error counting unread notifications: ${error.message}`);
         }
-    }
+    };
 }
 //# sourceMappingURL=NotificationRepositry.js.map

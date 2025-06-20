@@ -11,7 +11,7 @@ export class UserRepository extends BaseRepository<UserInterface> {
   }
 
   // Create a new user
-  async createUser(userData: Partial<UserInterface>): Promise<UserInterface> {
+   createUser=async(userData: Partial<UserInterface>): Promise<UserInterface> =>{
     try {
       return await this.create(userData);
     } catch (error) {
@@ -21,7 +21,7 @@ export class UserRepository extends BaseRepository<UserInterface> {
   }
 
   // Find a user by email
-  async findUserByEmail(email: string): Promise<UserInterface | null> {
+   findUserByEmail=async(email: string): Promise<UserInterface | null> =>{
     try {
       return await this.findOne({ email });
     } catch (error) {
@@ -31,7 +31,10 @@ export class UserRepository extends BaseRepository<UserInterface> {
   }
 
   //Find a User By id
-  async getUserById(id: string): Promise<UserInterface | null> {
+   getUserById=async(id?: string): Promise<UserInterface | null> =>{
+    if(!id){
+      throw new RepositoryError("id is not provided");
+    }
     try {
       return await this.findById(id);
     } catch (error) {
@@ -41,7 +44,7 @@ export class UserRepository extends BaseRepository<UserInterface> {
   }
 
   // Find or create a user by OAuth profile
-  async findOrCreateUser(
+   findOrCreateUser=async(
     profile: {
       email: string;
       displayName?: string;
@@ -49,7 +52,7 @@ export class UserRepository extends BaseRepository<UserInterface> {
       photos?: { value: string }[];
     },
     provider: string
-  ): Promise<UserInterface> {
+  ): Promise<UserInterface> =>{
     try {
       const email = profile.email;
       let user = await this.findUserByEmail(email);
@@ -74,10 +77,10 @@ export class UserRepository extends BaseRepository<UserInterface> {
   }
 
   // Update user password
-  async updatePassword(
+   updatePassword=async(
     id: string,
     password: string
-  ): Promise<UserInterface | null> {
+  ): Promise<UserInterface | null> =>{
     try {
       return await this.update(id, { password });
     } catch (error) {
@@ -87,7 +90,7 @@ export class UserRepository extends BaseRepository<UserInterface> {
   }
 
   // Increment login count
-  async incrementLoginCount(userId: string): Promise<UserInterface | null> {
+   incrementLoginCount=async(userId: string): Promise<UserInterface | null> =>{
     try {
       return await this.findByIdAndUpdate(userId, { $inc: { loginCount: 1 } });
     } catch (error) {
@@ -101,10 +104,10 @@ export class UserRepository extends BaseRepository<UserInterface> {
   }
 
   // Update refresh token
-  async updateRefreshToken(
+   updateRefreshToken=async(
     userId: string,
     refreshToken: string
-  ): Promise<UserInterface | null> {
+  ): Promise<UserInterface | null> =>{
     try {
       return await this.update(userId, { refreshToken });
     } catch (error) {
@@ -116,7 +119,7 @@ export class UserRepository extends BaseRepository<UserInterface> {
   }
 
   // Remove refresh token
-  async removeRefreshToken(email: string): Promise<void> {
+   removeRefreshToken= async(email: string): Promise<void> =>{
     try {
       await this.model.updateOne({ email }, { $unset: { refreshToken: "" } });
       logger.info(`Removed refresh token for user with email: ${email}`);
@@ -129,7 +132,7 @@ export class UserRepository extends BaseRepository<UserInterface> {
   }
 
   // Check if profile is complete
-  async isProfileComplete(user: UserInterface): Promise<boolean> {
+   isProfileComplete=async(user: UserInterface): Promise<boolean> =>{
     try {
       const requiredFields: (keyof UserInterface)[] = [
         "phone",
@@ -155,7 +158,7 @@ export class UserRepository extends BaseRepository<UserInterface> {
   }
 
   //Fetch All User Details
-  async getAllUsers(): Promise<UserInterface[]> {
+   getAllUsers=async(): Promise<UserInterface[]> =>{
     try {
       logger.debug(`Fetching all users`);
       return await this.model.find({ role: { $ne: "admin" } }).exec();
@@ -166,10 +169,10 @@ export class UserRepository extends BaseRepository<UserInterface> {
   }
 
   //Update The User Profile
-  async updateUserProfile(
+   updateUserProfile=async(
     id: string,
     data: Partial<UserInterface>
-  ): Promise<UserInterface | null> {
+  ): Promise<UserInterface | null> => {
     try {
       logger.debug(`Updating user profile for ID: ${id}`);
       return await this.findByIdAndUpdate(id, data, { new: true });
@@ -180,7 +183,7 @@ export class UserRepository extends BaseRepository<UserInterface> {
   }
 
   //Block the given User
-  async blockUser(id: string): Promise<void> {
+   blockUser=async(id: string): Promise<void> =>{
     try {
       logger.debug(`Blocking user: ${id}`);
       await this.findByIdAndUpdate(id, { isBlocked: true });
@@ -191,7 +194,7 @@ export class UserRepository extends BaseRepository<UserInterface> {
   }
 
   //Unblock the given user
-  async unblockUser(id: string): Promise<void> {
+   unblockUser=async(id: string): Promise<void> =>{
     try {
       logger.debug(`Unblocking user: ${id}`);
       await this.findByIdAndUpdate(id, { isBlocked: false });
@@ -202,10 +205,10 @@ export class UserRepository extends BaseRepository<UserInterface> {
   }
 
   //Update The user Role
-  async updateUserRole(
+   updateUserRole=async(
     userId: string,
     role: string
-  ): Promise<UserInterface | null> {
+  ): Promise<UserInterface | null> =>{
     try {
       logger.debug(`Updating role for user: ${userId} to ${role}`);
       return await this.findByIdAndUpdate(userId, { role }, { new: true });

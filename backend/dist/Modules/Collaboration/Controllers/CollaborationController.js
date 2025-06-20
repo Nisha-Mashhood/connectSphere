@@ -8,7 +8,7 @@ export class CollaborationController extends BaseController {
         super();
         this.collabService = new CollaborationService();
     }
-    async TemporaryRequestController(req, res) {
+    TemporaryRequestController = async (req, res) => {
         try {
             const { mentorId, userId, selectedSlot, price, timePeriod } = req.body;
             if (!mentorId || !userId || !selectedSlot || !price || !timePeriod) {
@@ -21,8 +21,8 @@ export class CollaborationController extends BaseController {
         catch (error) {
             this.handleError(error, res);
         }
-    }
-    async getMentorRequestsController(req, res) {
+    };
+    getMentorRequestsController = async (req, res) => {
         try {
             const mentorId = req.query.mentorId;
             if (!mentorId) {
@@ -34,8 +34,8 @@ export class CollaborationController extends BaseController {
         catch (error) {
             this.handleError(error, res);
         }
-    }
-    async acceptRequestController(req, res) {
+    };
+    acceptRequestController = async (req, res) => {
         try {
             const { id } = req.params;
             const request = await this.collabService.acceptRequest(id);
@@ -44,8 +44,8 @@ export class CollaborationController extends BaseController {
         catch (error) {
             this.handleError(error, res);
         }
-    }
-    async rejectRequestController(req, res) {
+    };
+    rejectRequestController = async (req, res) => {
         try {
             const { id } = req.params;
             const request = await this.collabService.rejectRequest(id);
@@ -54,8 +54,8 @@ export class CollaborationController extends BaseController {
         catch (error) {
             this.handleError(error, res);
         }
-    }
-    async getRequestForUserController(req, res) {
+    };
+    getRequestForUserController = async (req, res) => {
         try {
             const { id } = req.params;
             const userRequest = await this.collabService.getRequestForUser(id);
@@ -64,8 +64,8 @@ export class CollaborationController extends BaseController {
         catch (error) {
             this.handleError(error, res);
         }
-    }
-    async makeStripePaymentController(req, res) {
+    };
+    makeStripePaymentController = async (req, res) => {
         try {
             const { paymentMethodId, amount, requestId, email, returnUrl } = req.body;
             if (!returnUrl) {
@@ -90,8 +90,8 @@ export class CollaborationController extends BaseController {
         catch (error) {
             this.handleError(error, res);
         }
-    }
-    async getCollabDataForUserController(req, res) {
+    };
+    getCollabDataForUserController = async (req, res) => {
         try {
             const { id } = req.params;
             const collabData = await this.collabService.getCollabDataForUserService(id);
@@ -100,8 +100,8 @@ export class CollaborationController extends BaseController {
         catch (error) {
             this.handleError(error, res);
         }
-    }
-    async getCollabDataForMentorController(req, res) {
+    };
+    getCollabDataForMentorController = async (req, res) => {
         try {
             const { id } = req.params;
             const collabData = await this.collabService.getCollabDataForMentorService(id);
@@ -110,8 +110,8 @@ export class CollaborationController extends BaseController {
         catch (error) {
             this.handleError(error, res);
         }
-    }
-    async deleteCollab(req, res) {
+    };
+    deleteCollab = async (req, res) => {
         try {
             const { collabId } = req.params;
             const { reason } = req.body;
@@ -121,8 +121,8 @@ export class CollaborationController extends BaseController {
         catch (error) {
             this.handleError(error, res);
         }
-    }
-    async getAllMentorRequests(req, res) {
+    };
+    getAllMentorRequests = async (req, res) => {
         try {
             const { page = '1', limit = '10', search = '' } = req.query;
             const mentorRequests = await this.collabService.getMentorRequestsService({
@@ -135,8 +135,8 @@ export class CollaborationController extends BaseController {
         catch (error) {
             this.handleError(error, res);
         }
-    }
-    async getAllCollabs(req, res) {
+    };
+    getAllCollabs = async (req, res) => {
         try {
             const { page = '1', limit = '10', search = '' } = req.query;
             const collaborations = await this.collabService.getCollabsService({
@@ -149,8 +149,8 @@ export class CollaborationController extends BaseController {
         catch (error) {
             this.handleError(error, res);
         }
-    }
-    async getCollabDetailsByCollabId(req, res) {
+    };
+    getCollabDetailsByCollabId = async (req, res) => {
         try {
             const { collabId } = req.params;
             const collabDetails = await this.collabService.fetchCollabById(collabId);
@@ -159,8 +159,8 @@ export class CollaborationController extends BaseController {
         catch (error) {
             this.handleError(error, res);
         }
-    }
-    async getRequestDetailsByRequestId(req, res) {
+    };
+    getRequestDetailsByRequestId = async (req, res) => {
         try {
             const { requestId } = req.params;
             const requestDetails = await this.collabService.fetchRequestById(requestId);
@@ -169,8 +169,8 @@ export class CollaborationController extends BaseController {
         catch (error) {
             this.handleError(error, res);
         }
-    }
-    async markUnavailableDays(req, res) {
+    };
+    markUnavailableDays = async (req, res) => {
         try {
             const { collabId } = req.params;
             const { datesAndReasons, requestedBy, requesterId, approvedById, isApproved } = req.body;
@@ -186,8 +186,8 @@ export class CollaborationController extends BaseController {
         catch (error) {
             this.handleError(error, res);
         }
-    }
-    async updateTemporarySlotChanges(req, res) {
+    };
+    updateTemporarySlotChanges = async (req, res) => {
         try {
             const { collabId } = req.params;
             const { datesAndNewSlots, requestedBy, requesterId, approvedById, isApproved } = req.body;
@@ -203,8 +203,8 @@ export class CollaborationController extends BaseController {
         catch (error) {
             this.handleError(error, res);
         }
-    }
-    async approveTimeSlotRequest(req, res) {
+    };
+    approveTimeSlotRequest = async (req, res) => {
         try {
             const { collabId } = req.params;
             const { requestId, isApproved, requestType } = req.body;
@@ -214,8 +214,8 @@ export class CollaborationController extends BaseController {
         catch (error) {
             this.handleError(error, res);
         }
-    }
-    async getMentorLockedSlotsController(req, res) {
+    };
+    getMentorLockedSlotsController = async (req, res) => {
         try {
             const { mentorId } = req.params;
             if (!mentorId) {
@@ -227,6 +227,6 @@ export class CollaborationController extends BaseController {
         catch (error) {
             this.handleError(error, res);
         }
-    }
+    };
 }
 //# sourceMappingURL=CollaborationController.js.map

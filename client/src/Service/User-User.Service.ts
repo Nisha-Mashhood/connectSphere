@@ -7,7 +7,7 @@ export const sendUser_UserRequset = async (requesterId, recipientId) => {
     const response = await axiosInstance.post(`/user-userCollab/sendUser-User/${requesterId}`, {
       recipientId,
     });
-    return response.data
+    return response.data.data
   } catch (error) {
     handleError(error);
   }
@@ -22,7 +22,7 @@ export const respondToUser_UserRequest = async (
     const response =await axiosInstance.put(`/user-userCollab/respond/${connectionId}`, {
       action: action,
     });
-    return response.data;
+    return response.data.data;
   } catch (error) {
     handleError(error);
   }
@@ -34,9 +34,10 @@ export const disconnectUser_UserConnection = async (
   disconnectionReason?: string
 ) => {
   try {
-    await axiosInstance.put(`/user-userCollab/disconnect/${connectionId}`, {
+    const response = await axiosInstance.put(`/user-userCollab/disconnect/${connectionId}`, {
       disconnectionReason,
     });
+    return response.data.data;
   } catch (error) {
     handleError(error);
   }
@@ -50,7 +51,7 @@ export const getUser_UserConnections = async (userId: string) => {
       `/user-userCollab/connections/${userId}`
     );
     console.log("Data comingfrom backend :",response);
-    return response.data;
+    return response.data.data;
   } catch (error) {
     handleError(error);
   }
@@ -63,7 +64,7 @@ export const User_UserConnectionsById = async (connectionId: string) => {
     const response = await axiosInstance.get(
       `/user-userCollab/getConnection/${connectionId}`
     );
-    return response.data;
+    return response.data.data;
   } catch (error) {
     handleError(error);
   }
@@ -75,7 +76,7 @@ export const getUser_UserRequests = async (userId: string) => {
     const response = await axiosInstance.get(
       `/user-userCollab/connections/${userId}/requests`
     );
-    return response.data;
+    return response.data.data;
   } catch (error) {
     handleError(error);
   }
@@ -87,7 +88,7 @@ export const getUser_UserRequests = async (userId: string) => {
       const response = await axiosInstance.get(
         `/user-userCollab/getAllconnection`
       );
-      return response.data;
+      return response.data.data;
     } catch (error) {
       handleError(error);
     }

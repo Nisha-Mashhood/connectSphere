@@ -7,7 +7,7 @@ export class CategoryController extends BaseController {
         super();
         this.categoryService = new CategoryService();
     }
-    async createCategory(req, res) {
+    createCategory = async (req, res) => {
         try {
             logger.debug(`Creating category: ${req.body.name}`);
             if (!req.body.name) {
@@ -25,8 +25,8 @@ export class CategoryController extends BaseController {
         catch (error) {
             this.handleError(error, res);
         }
-    }
-    async getAllCategories(_req, res) {
+    };
+    getAllCategories = async (_req, res) => {
         try {
             logger.debug('Fetching all categories');
             const categories = await this.categoryService.getAllCategories();
@@ -35,8 +35,8 @@ export class CategoryController extends BaseController {
         catch (error) {
             this.handleError(error, res);
         }
-    }
-    async getCategoryById(req, res) {
+    };
+    getCategoryById = async (req, res) => {
         try {
             logger.debug(`Fetching category: ${req.params.id}`);
             const category = await this.categoryService.getCategoryById(req.params.id);
@@ -48,8 +48,8 @@ export class CategoryController extends BaseController {
         catch (error) {
             this.handleError(error, res);
         }
-    }
-    async updateCategory(req, res) {
+    };
+    updateCategory = async (req, res) => {
         try {
             logger.debug(`Updating category: ${req.params.id}`);
             if (!req.body.name) {
@@ -70,8 +70,8 @@ export class CategoryController extends BaseController {
         catch (error) {
             this.handleError(error, res);
         }
-    }
-    async deleteCategory(req, res) {
+    };
+    deleteCategory = async (req, res) => {
         try {
             logger.debug(`Deleting category: ${req.params.id}`);
             const deletedCategory = await this.categoryService.deleteCategory(req.params.id);
@@ -83,6 +83,6 @@ export class CategoryController extends BaseController {
         catch (error) {
             this.handleError(error, res);
         }
-    }
+    };
 }
 //# sourceMappingURL=CategoryController.js.map

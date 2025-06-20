@@ -19,7 +19,7 @@ export class TaskRepository extends BaseRepository {
         }
         return new Types.ObjectId(idStr);
     }
-    async createTask(taskData) {
+    createTask = async (taskData) => {
         try {
             logger.debug(`Creating task: ${taskData.name}`);
             return await this.create({
@@ -36,8 +36,8 @@ export class TaskRepository extends BaseRepository {
             logger.error(`Error creating task: ${error.message}`);
             throw new RepositoryError(`Error creating task: ${error.message}`);
         }
-    }
-    async findTaskById(taskId) {
+    };
+    findTaskById = async (taskId) => {
         try {
             logger.debug(`Fetching task by ID: ${taskId}`);
             return await this.findById(this.toObjectId(taskId).toString());
@@ -46,8 +46,8 @@ export class TaskRepository extends BaseRepository {
             logger.error(`Error fetching task by ID: ${error.message}`);
             throw new RepositoryError(`Error fetching task by ID: ${error.message}`);
         }
-    }
-    async updateTask(taskId, updates) {
+    };
+    updateTask = async (taskId, updates) => {
         try {
             logger.debug(`Updating task: ${taskId}`);
             const updateData = {
@@ -64,8 +64,8 @@ export class TaskRepository extends BaseRepository {
             logger.error(`Error updating task: ${error.message}`);
             throw new RepositoryError(`Error updating task: ${error.message}`);
         }
-    }
-    async deleteTask(taskId) {
+    };
+    deleteTask = async (taskId) => {
         try {
             logger.debug(`Deleting task: ${taskId}`);
             const result = await this.delete(this.toObjectId(taskId).toString());
@@ -77,8 +77,8 @@ export class TaskRepository extends BaseRepository {
             logger.error(`Error deleting task: ${error.message}`);
             throw new RepositoryError(`Error deleting task: ${error.message}`);
         }
-    }
-    async findTasksByContext(contextType, contextId, userId) {
+    };
+    findTasksByContext = async (contextType, contextId, userId) => {
         try {
             logger.debug(`Fetching tasks for contextType=${contextType}, contextId=${contextId}, userId=${userId}`);
             let query;
@@ -119,8 +119,8 @@ export class TaskRepository extends BaseRepository {
             logger.error(`Error fetching tasks by context: ${error.message}`);
             throw new RepositoryError(`Error fetching tasks by context: ${error.message}`);
         }
-    }
-    async updateTaskPriority(taskId, priority) {
+    };
+    updateTaskPriority = async (taskId, priority) => {
         try {
             logger.debug(`Updating task priority: taskId=${taskId}, priority=${priority}`);
             return await this.findByIdAndUpdate(this.toObjectId(taskId).toString(), { priority }, { new: true });
@@ -129,8 +129,8 @@ export class TaskRepository extends BaseRepository {
             logger.error(`Error updating task priority: ${error.message}`);
             throw new RepositoryError(`Error updating task priority: ${error.message}`);
         }
-    }
-    async updateTaskStatus(taskId, status) {
+    };
+    updateTaskStatus = async (taskId, status) => {
         try {
             logger.debug(`Updating task status: taskId=${taskId}, status=${status}`);
             return await this.findByIdAndUpdate(this.toObjectId(taskId).toString(), { status }, { new: true });
@@ -139,6 +139,6 @@ export class TaskRepository extends BaseRepository {
             logger.error(`Error updating task status: ${error.message}`);
             throw new RepositoryError(`Error updating task status: ${error.message}`);
         }
-    }
+    };
 }
 //# sourceMappingURL=TaskRepositry.js.map

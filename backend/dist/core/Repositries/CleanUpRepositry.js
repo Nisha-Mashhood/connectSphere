@@ -3,7 +3,7 @@ import logger from '../Utils/Logger.js';
 import GroupRequest from '../../models/groupRequest.model.js';
 import MentorRequest from '../../models/mentorRequset.js';
 export class CleanupRepository {
-    async deleteOldGroupRequests(cutoffDate) {
+    deleteOldGroupRequests = async (cutoffDate) => {
         try {
             logger.debug(`Deleting GroupRequest documents older than ${cutoffDate}`);
             const result = await GroupRequest.deleteMany({
@@ -16,8 +16,8 @@ export class CleanupRepository {
             logger.error(`Failed to delete old GroupRequest documents: ${error.message}`);
             throw new RepositoryError(`Failed to delete old GroupRequest documents: ${error.message}`);
         }
-    }
-    async deleteOldMentorRequests(cutoffDate) {
+    };
+    deleteOldMentorRequests = async (cutoffDate) => {
         try {
             logger.debug(`Deleting MentorRequest documents older than ${cutoffDate}`);
             const result = await MentorRequest.deleteMany({
@@ -30,6 +30,6 @@ export class CleanupRepository {
             logger.error(`Failed to delete old MentorRequest documents: ${error.message}`);
             throw new RepositoryError(`Failed to delete old MentorRequest documents: ${error.message}`);
         }
-    }
+    };
 }
 //# sourceMappingURL=CleanUpRepositry.js.map

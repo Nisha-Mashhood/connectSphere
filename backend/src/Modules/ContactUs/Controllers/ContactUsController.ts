@@ -9,7 +9,7 @@ export class ContactMessageController {
     this.contactMessageService = new ContactMessageService();
   }
 
-  async createContactMessage(req: Request, res: Response): Promise<void> {
+    createContactMessage = async(req: Request, res: Response): Promise<void> => {
     try {
       const { name, email, message } = req.body;
       logger.debug(`Creating contact message from: ${email}`);
@@ -32,7 +32,7 @@ export class ContactMessageController {
     }
   }
 
-  async getAllContactMessages(_req: Request, res: Response): Promise<void> {
+    getAllContactMessages = async(_req: Request, res: Response): Promise<void> => {
     try {
       logger.debug('Fetching all contact messages');
       const messages = await this.contactMessageService.getAllContactMessages();
@@ -50,7 +50,7 @@ export class ContactMessageController {
     }
   }
 
-  async sendReply(req: Request, res: Response): Promise<void> {
+    sendReply = async(req: Request, res: Response): Promise<void> =>{
     try {
       const { contactMessageId } = req.params;
       const { email, replyMessage } = req.body;

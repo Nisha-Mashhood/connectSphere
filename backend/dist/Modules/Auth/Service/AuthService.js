@@ -22,7 +22,7 @@ export class AuthService extends BaseService {
         this.jwtservice = new JWTService();
     }
     //  user signup
-    async signup(data) {
+    signup = async (data) => {
         try {
             const { name, email, password } = data;
             const userExists = await this.userRepository.findUserByEmail(email);
@@ -42,9 +42,9 @@ export class AuthService extends BaseService {
                 ? error
                 : new ServiceError("Failed to signup user");
         }
-    }
+    };
     //  user login
-    async login(email, password) {
+    login = async (email, password) => {
         try {
             const user = await this.userRepository.findUserByEmail(email);
             if (!user) {
@@ -89,9 +89,9 @@ export class AuthService extends BaseService {
                 ? error
                 : new ServiceError("Failed to login user");
         }
-    }
+    };
     //  Google signup
-    async googleSignup(code) {
+    googleSignup = async (code) => {
         try {
             const { tokens } = await OAuth2Client.getToken(code);
             OAuth2Client.setCredentials(tokens);
@@ -116,9 +116,9 @@ export class AuthService extends BaseService {
                 ? error
                 : new ServiceError("Google signup failed");
         }
-    }
+    };
     //  Google login
-    async googleLogin(code) {
+    googleLogin = async (code) => {
         try {
             const { tokens } = await OAuth2Client.getToken(code);
             OAuth2Client.setCredentials(tokens);
@@ -157,9 +157,9 @@ export class AuthService extends BaseService {
                 ? error
                 : new ServiceError("Google login failed");
         }
-    }
+    };
     //  GitHub signup
-    async githubSignup(code) {
+    githubSignup = async (code) => {
         try {
             const tokenResponse = await axios.post("https://github.com/login/oauth/access_token", {
                 client_id: config.githubclientid,
@@ -200,9 +200,9 @@ export class AuthService extends BaseService {
                 ? error
                 : new ServiceError("GitHub signup failed");
         }
-    }
+    };
     //  GitHub login
-    async githubLogin(code) {
+    githubLogin = async (code) => {
         try {
             const tokenResponse = await axios.post("https://github.com/login/oauth/access_token", {
                 client_id: config.githubclientid,
@@ -257,9 +257,9 @@ export class AuthService extends BaseService {
                 ? error
                 : new ServiceError("GitHub login failed");
         }
-    }
+    };
     //  refresh token
-    async refreshToken(refreshToken) {
+    refreshToken = async (refreshToken) => {
         try {
             const decoded = this.jwtservice.verifyRefreshToken(refreshToken);
             const newAccessToken = this.jwtservice.generateAccessToken({ userId: decoded.userId });
@@ -270,9 +270,9 @@ export class AuthService extends BaseService {
             logger.error(`Error refreshing token: ${error}`);
             throw new ServiceError("Invalid or expired refresh token");
         }
-    }
+    };
     //  forgot password
-    async forgotPassword(email) {
+    forgotPassword = async (email) => {
         try {
             const user = await this.userRepository.findUserByEmail(email);
             if (!user) {
@@ -290,9 +290,9 @@ export class AuthService extends BaseService {
                 ? error
                 : new ServiceError("Failed to send OTP");
         }
-    }
+    };
     //  verify OTP
-    async verifyOTP(email, otp) {
+    verifyOTP = async (email, otp) => {
         try {
             if (otpStore[email] !== otp) {
                 throw new ServiceError("Invalid or expired OTP");
@@ -308,9 +308,9 @@ export class AuthService extends BaseService {
                 ? error
                 : new ServiceError("Failed to verify OTP");
         }
-    }
+    };
     //  reset password
-    async resetPassword(email, newPassword) {
+    resetPassword = async (email, newPassword) => {
         try {
             const user = await this.userRepository.findUserByEmail(email);
             if (!user) {
@@ -329,9 +329,9 @@ export class AuthService extends BaseService {
                 ? error
                 : new ServiceError("Failed to reset password");
         }
-    }
+    };
     //  logout
-    async logout(email) {
+    logout = async (email) => {
         try {
             await this.userRepository.removeRefreshToken(email);
             logger.info(`User ${email} logged out`);
@@ -340,9 +340,9 @@ export class AuthService extends BaseService {
             logger.error(`Error logging out user ${email}: ${error}`);
             throw new ServiceError("Failed to logout user");
         }
-    }
+    };
     // Verify admin passkey
-    async verifyAdminPasskey(passkey) {
+    verifyAdminPasskey = async (passkey) => {
         try {
             if (passkey !== config.adminpasscode) {
                 throw new ServiceError("Invalid admin passkey");
@@ -356,9 +356,9 @@ export class AuthService extends BaseService {
                 ? error
                 : new ServiceError("Failed to verify admin passkey");
         }
-    }
+    };
     // Check profile completion
-    async checkProfileCompletion(userId) {
+    checkProfileCompletion = async (userId) => {
         try {
             const user = await this.userRepository.findById(userId);
             if (!user) {
@@ -374,9 +374,9 @@ export class AuthService extends BaseService {
                 ? error
                 : new ServiceError("Failed to check profile completion");
         }
-    }
+    };
     // Get profile details
-    async profileDetails(userId) {
+    profileDetails = async (userId) => {
         try {
             const user = await this.userRepository.findById(userId);
             if (!user) {
@@ -391,9 +391,9 @@ export class AuthService extends BaseService {
                 ? error
                 : new ServiceError("Failed to fetch profile details");
         }
-    }
+    };
     // Update user profile
-    async updateUserProfile(userId, data) {
+    updateUserProfile = async (userId, data) => {
         try {
             const user = await this.userRepository.findById(userId);
             if (!user) {
@@ -435,9 +435,9 @@ export class AuthService extends BaseService {
                 ? error
                 : new ServiceError("Failed to update user profile");
         }
-    }
+    };
     //get All User Details
-    async getAllUsers() {
+    getAllUsers = async () => {
         try {
             logger.debug(`Fetching all users`);
             return await this.userRepository.getAllUsers();
@@ -448,9 +448,9 @@ export class AuthService extends BaseService {
                 ? error
                 : new ServiceError("Failed to fetch all users");
         }
-    }
+    };
     //block the given user
-    async blockUser(id) {
+    blockUser = async (id) => {
         try {
             this.checkData(id);
             const user = await this.userRepository.getUserById(id);
@@ -466,9 +466,9 @@ export class AuthService extends BaseService {
                 ? error
                 : new ServiceError(`Failed to block user ${id}`);
         }
-    }
+    };
     //Unblock the given User
-    async unblockUser(id) {
+    unblockUser = async (id) => {
         try {
             this.checkData(id);
             const user = await this.userRepository.getUserById(id);
@@ -484,9 +484,9 @@ export class AuthService extends BaseService {
                 ? error
                 : new ServiceError(`Failed to unblock user ${id}`);
         }
-    }
+    };
     //Change the user Role
-    async changeRole(userId, role) {
+    changeRole = async (userId, role) => {
         try {
             this.checkData({ userId, role });
             const user = await this.userRepository.getUserById(userId);
@@ -506,6 +506,6 @@ export class AuthService extends BaseService {
                 ? error
                 : new ServiceError(`Failed to update role for user ${userId}`);
         }
-    }
+    };
 }
 //# sourceMappingURL=AuthService.js.map

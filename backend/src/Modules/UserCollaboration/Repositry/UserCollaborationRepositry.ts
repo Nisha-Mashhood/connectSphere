@@ -23,7 +23,7 @@ export class UserConnectionRepository extends BaseRepository<IUserConnection> {
     return new Types.ObjectId(idStr);
   }
 
-  async createUserConnection(requesterId: string, recipientId: string): Promise<IUserConnection> {
+   createUserConnection= async(requesterId: string, recipientId: string): Promise<IUserConnection> =>{
     try {
       logger.debug(`Creating user connection: requester=${requesterId}, recipient=${recipientId}`);
       return await this.create({
@@ -41,10 +41,10 @@ export class UserConnectionRepository extends BaseRepository<IUserConnection> {
     }
   }
 
-  async updateUserConnectionStatus(
+   updateUserConnectionStatus = async(
     connectionId: string,
     status: 'Accepted' | 'Rejected'
-  ): Promise<IUserConnection | null> {
+  ): Promise<IUserConnection | null> => {
     try {
       logger.debug(`Updating user connection status: connectionId=${connectionId}, status=${status}`);
       const updateFields: any = {
@@ -64,7 +64,7 @@ export class UserConnectionRepository extends BaseRepository<IUserConnection> {
     }
   }
 
-  async disconnectUserConnection(connectionId: string, reason: string): Promise<IUserConnection | null> {
+   disconnectUserConnection = async(connectionId: string, reason: string): Promise<IUserConnection | null> =>{
     try {
       logger.debug(`Disconnecting user connection: connectionId=${connectionId}`);
       return await this.findByIdAndUpdate(
@@ -83,7 +83,7 @@ export class UserConnectionRepository extends BaseRepository<IUserConnection> {
     }
   }
 
-  async getUserConnections(userId: string): Promise<IUserConnection[]> {
+   getUserConnections = async(userId: string): Promise<IUserConnection[]> =>{
     try {
       logger.debug(`Fetching connections for user: ${userId}`);
       return await this.model
@@ -100,7 +100,7 @@ export class UserConnectionRepository extends BaseRepository<IUserConnection> {
     }
   }
 
-  async getUserRequests(userId: string): Promise<{ sentRequests: IUserConnection[]; receivedRequests: IUserConnection[] }> {
+   getUserRequests= async(userId: string): Promise<{ sentRequests: IUserConnection[]; receivedRequests: IUserConnection[] }> =>{
     try {
       logger.debug(`Fetching sent and received requests for user: ${userId}`);
       const sentRequests = await this.model
@@ -122,7 +122,7 @@ export class UserConnectionRepository extends BaseRepository<IUserConnection> {
     }
   }
 
-  async getAllUserConnections(): Promise<IUserConnection[]> {
+   getAllUserConnections = async(): Promise<IUserConnection[]> =>{
     try {
       logger.debug('Fetching all user connections');
       return await this.model
@@ -136,7 +136,7 @@ export class UserConnectionRepository extends BaseRepository<IUserConnection> {
     }
   }
 
-  async getUserConnectionById(connectionId: string): Promise<IUserConnection | null> {
+   getUserConnectionById = async(connectionId: string): Promise<IUserConnection | null> =>{
     try {
       logger.debug(`Fetching user connection by ID: ${connectionId}`);
       const connection = await this.model
@@ -154,7 +154,7 @@ export class UserConnectionRepository extends BaseRepository<IUserConnection> {
     }
   }
 
-  async findExistingConnection(requesterId: string, recipientId: string): Promise<IUserConnection | null> {
+   findExistingConnection = async(requesterId: string, recipientId: string): Promise<IUserConnection | null> =>{
     try {
       logger.debug(`Checking for existing connection: requester=${requesterId}, recipient=${recipientId}`);
       return await this.model

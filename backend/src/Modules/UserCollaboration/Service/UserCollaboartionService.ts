@@ -15,7 +15,7 @@ export class UserConnectionService extends BaseService {
     this.contactRepo = new ContactRepository();
   }
 
-  async sendUserConnectionRequest(requesterId: string, recipientId: string): Promise<IUserConnection> {
+   sendUserConnectionRequest = async(requesterId: string, recipientId: string): Promise<IUserConnection> =>{
     logger.debug(`Sending connection request: requester=${requesterId}, recipient=${recipientId}`);
     this.checkData({ requesterId, recipientId });
 
@@ -33,7 +33,7 @@ export class UserConnectionService extends BaseService {
     return await this.userConnectionRepo.createUserConnection(requesterId, recipientId);
   }
 
-  async respondToConnectionRequest(connectionId: string, action: 'Accepted' | 'Rejected'): Promise<any> {
+   respondToConnectionRequest =async(connectionId: string, action: 'Accepted' | 'Rejected'): Promise<any> =>{
     logger.debug(`Responding to connection request: connectionId=${connectionId}, action=${action}`);
     this.checkData({ connectionId, action });
 
@@ -66,30 +66,30 @@ export class UserConnectionService extends BaseService {
     return { updatedConnection };
   }
 
-  async disconnectConnection(connectionId: string, reason: string): Promise<IUserConnection | null> {
+   disconnectConnection= async(connectionId: string, reason: string): Promise<IUserConnection | null> =>{
     logger.debug(`Disconnecting connection: connectionId=${connectionId}`);
     this.checkData({ connectionId, reason });
     return await this.userConnectionRepo.disconnectUserConnection(connectionId, reason);
   }
 
-  async fetchUserConnections(userId: string): Promise<IUserConnection[]> {
+   fetchUserConnections = async(userId: string): Promise<IUserConnection[]> => {
     logger.debug(`Fetching connections for user: ${userId}`);
     this.checkData(userId);
     return await this.userConnectionRepo.getUserConnections(userId);
   }
 
-  async fetchUserRequests(userId: string): Promise<{ sentRequests: IUserConnection[]; receivedRequests: IUserConnection[] }> {
+   fetchUserRequests = async(userId: string): Promise<{ sentRequests: IUserConnection[]; receivedRequests: IUserConnection[] }> =>{
     logger.debug(`Fetching user requests for user: ${userId}`);
     this.checkData(userId);
     return await this.userConnectionRepo.getUserRequests(userId);
   }
 
-  async fetchAllUserConnections(): Promise<IUserConnection[]> {
+   fetchAllUserConnections = async(): Promise<IUserConnection[]> =>{
     logger.debug('Fetching all user connections');
     return await this.userConnectionRepo.getAllUserConnections();
   }
 
-  async fetchUserConnectionById(connectionId: string): Promise<IUserConnection  | null> {
+   fetchUserConnectionById = async(connectionId: string): Promise<IUserConnection  | null> =>{
     logger.debug(`Fetching user connection by ID: ${connectionId}`);
     this.checkData(connectionId);
     return await this.userConnectionRepo.getUserConnectionById(connectionId);

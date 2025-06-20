@@ -6,7 +6,7 @@ export class SkillsRepository extends BaseRepository {
     constructor() {
         super(Skill);
     }
-    async createSkill(data) {
+    createSkill = async (data) => {
         try {
             logger.debug(`Creating skill: ${data.name} for subcategory ${data.subcategoryId}`);
             const skill = await this.create(data);
@@ -17,8 +17,8 @@ export class SkillsRepository extends BaseRepository {
             logger.error(`Error creating skill: ${error}`);
             throw new RepositoryError(`Failed to create skill: ${error}`);
         }
-    }
-    async getAllSkills(subcategoryId) {
+    };
+    getAllSkills = async (subcategoryId) => {
         try {
             logger.debug(`Fetching skills for subcategory: ${subcategoryId}`);
             const skills = await this.model
@@ -33,8 +33,8 @@ export class SkillsRepository extends BaseRepository {
             logger.error(`Error fetching skills for subcategory ${subcategoryId}: ${error}`);
             throw new RepositoryError(`Failed to fetch skills: ${error}`);
         }
-    }
-    async getSkillById(id) {
+    };
+    getSkillById = async (id) => {
         try {
             logger.debug(`Fetching skill by ID: ${id}`);
             const skill = await this.model
@@ -54,8 +54,8 @@ export class SkillsRepository extends BaseRepository {
             logger.error(`Error fetching skill by ID ${id}: ${error}`);
             throw new RepositoryError(`Failed to fetch skill: ${error}`);
         }
-    }
-    async updateSkill(id, data) {
+    };
+    updateSkill = async (id, data) => {
         try {
             logger.debug(`Updating skill: ${id}`);
             const skill = await this.findByIdAndUpdate(id, data, { new: true });
@@ -71,8 +71,8 @@ export class SkillsRepository extends BaseRepository {
             logger.error(`Error updating skill ${id}: ${error}`);
             throw new RepositoryError(`Failed to update skill: ${error}`);
         }
-    }
-    async deleteSkill(id) {
+    };
+    deleteSkill = async (id) => {
         try {
             logger.debug(`Deleting skill: ${id}`);
             const skill = await this.findByIdAndDelete(id);
@@ -88,8 +88,8 @@ export class SkillsRepository extends BaseRepository {
             logger.error(`Error deleting skill ${id}: ${error}`);
             throw new RepositoryError(`Failed to delete skill: ${error}`);
         }
-    }
-    async deleteManySkills(categoryId) {
+    };
+    deleteManySkills = async (categoryId) => {
         try {
             logger.debug(`Deleting skills for category: ${categoryId}`);
             const result = await this.model.deleteMany({ categoryId }).exec();
@@ -100,8 +100,8 @@ export class SkillsRepository extends BaseRepository {
             logger.error(`Error deleting skills for category ${categoryId}: ${error}`);
             throw new RepositoryError(`Failed to delete skills: ${error}`);
         }
-    }
-    async deleteManySkillsBySubcategoryId(subcategoryId) {
+    };
+    deleteManySkillsBySubcategoryId = async (subcategoryId) => {
         try {
             logger.debug(`Deleting skills for subcategory: ${subcategoryId}`);
             const result = await this.model.deleteMany({ subcategoryId }).exec();
@@ -112,8 +112,8 @@ export class SkillsRepository extends BaseRepository {
             logger.error(`Error deleting skills for subcategory ${subcategoryId}: ${error}`);
             throw new RepositoryError(`Failed to delete skills: ${error}`);
         }
-    }
-    async getSkills() {
+    };
+    getSkills = async () => {
         try {
             logger.debug("Fetching all skills (name and ID only)");
             const skills = await this.model
@@ -131,6 +131,6 @@ export class SkillsRepository extends BaseRepository {
             logger.error(`Error fetching skills: ${error}`);
             throw new RepositoryError(`Failed to fetch skills: ${error}`);
         }
-    }
+    };
 }
 //# sourceMappingURL=SkillsRepositry.js.map

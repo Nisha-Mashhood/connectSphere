@@ -98,7 +98,7 @@ export class ContactRepository extends BaseRepository<IContact> {
     return new Types.ObjectId(idStr);
   }
 
-  async createContact(contactData: Partial<IContact>): Promise<IContact> {
+   createContact = async(contactData: Partial<IContact>): Promise<IContact> => {
     try {
       logger.debug(`Creating contact for user: ${contactData.userId}`);
       return await this.create({
@@ -115,7 +115,7 @@ export class ContactRepository extends BaseRepository<IContact> {
     }
   }
 
-  async findContactById(contactId: string): Promise<IContact | null> {
+   findContactById = async(contactId: string): Promise<IContact | null> => {
     try {
       logger.debug(`Finding contact by ID: ${contactId}`);
       return await this.findById(this.toObjectId(contactId).toString());
@@ -125,7 +125,7 @@ export class ContactRepository extends BaseRepository<IContact> {
     }
   }
 
-  async findContactByUsers(userId: string, targetUserId: string): Promise<IContact | null> {
+   findContactByUsers = async(userId: string, targetUserId: string): Promise<IContact | null> => {
     try {
       logger.debug(`Finding contact for users: ${userId}, ${targetUserId}`);
       return await this.findOne({
@@ -141,7 +141,10 @@ export class ContactRepository extends BaseRepository<IContact> {
     }
   }
 
-  async findContactsByUserId(userId: string): Promise<PopulatedContact[]> {
+   findContactsByUserId = async(userId?: string): Promise<PopulatedContact[]> => {
+    if (!userId) {
+         throw new RepositoryError('User ID not provided');
+      }
     try {
       logger.debug(`Finding contacts for user: ${userId}`);
       const uId = this.toObjectId(userId);

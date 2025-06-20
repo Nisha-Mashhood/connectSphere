@@ -8,7 +8,7 @@ export class AuthService {
     constructor() {
         this.userRepo = new UserRepository();
     }
-    generateAccessToken(payload, expiresIn = '1h') {
+    generateAccessToken = (payload, expiresIn = '1h') => {
         if (!config.jwtSecret) {
             logger.error('JWT secret is not defined');
             throw new ServiceError('JWT secret is not defined');
@@ -26,14 +26,19 @@ export class AuthService {
             logger.error(`Failed to generate access token: ${error.message}`);
             throw new ServiceError(`Failed to generate access token: ${error.message}`);
         }
-    }
-    verifyAccessToken(token) {
+    };
+    verifyAccessToken = (token) => {
+        logger.info(`Token Received : ${token}`);
         if (!config.jwtSecret) {
             logger.error('JWT secret is not defined');
             throw new ServiceError('JWT secret is not defined');
         }
         try {
             const payload = jwt.verify(token, config.jwtSecret);
+            logger.info(`Payload after verification : ${payload}`);
+            if (!payload) {
+                throw new ServiceError('Payload for JWT not verified');
+            }
             logger.debug(`Verified access token: ${token}`);
             return payload;
         }
@@ -41,8 +46,8 @@ export class AuthService {
             logger.error(`Invalid or expired access token: ${token}`);
             throw new ServiceError('Invalid or expired access token');
         }
-    }
-    generateRefreshToken(payload) {
+    };
+    generateRefreshToken = (payload) => {
         if (!config.jwtSecret) {
             logger.error('JWT secret is not defined');
             throw new ServiceError('JWT secret is not defined');
@@ -60,8 +65,8 @@ export class AuthService {
             logger.error(`Failed to generate refresh token: ${error.message}`);
             throw new ServiceError(`Failed to generate refresh token: ${error.message}`);
         }
-    }
-    verifyRefreshToken(token) {
+    };
+    verifyRefreshToken = (token) => {
         if (!config.jwtSecret) {
             logger.error('JWT secret is not defined');
             throw new ServiceError('JWT secret is not defined');
@@ -75,20 +80,20 @@ export class AuthService {
             logger.error(`Invalid or expired refresh token: ${token}`);
             throw new ServiceError('Invalid or expired refresh token');
         }
-    }
-    setTokensInCookies(res, accessToken, refreshToken) {
+    };
+    setTokensInCookies = (res, accessToken, refreshToken) => {
         const isProduction = config.node_env === 'production';
         try {
             res.cookie('accessToken', accessToken, {
                 httpOnly: true,
                 secure: isProduction,
-                sameSite: 'strict',
+                sameSite: isProduction ? 'none' : 'lax',
                 maxAge: 60 * 60 * 1000, // 1 hour
             });
             res.cookie('refreshToken', refreshToken, {
                 httpOnly: true,
                 secure: isProduction,
-                sameSite: 'strict',
+                sameSite: isProduction ? 'none' : 'lax',
                 maxAge: 7 * 24 * 60 * 60 * 1000, // 7 days
             });
             logger.debug('Set accessToken and refreshToken in cookies');
@@ -97,8 +102,8 @@ export class AuthService {
             logger.error(`Failed to set tokens in cookies: ${error.message}`);
             throw new ServiceError(`Failed to set tokens in cookies: ${error.message}`);
         }
-    }
-    clearCookies(res) {
+    };
+    clearCookies = (res) => {
         try {
             res.clearCookie('accessToken', { httpOnly: true, sameSite: 'strict' });
             res.clearCookie('refreshToken', { httpOnly: true, sameSite: 'strict' });
@@ -108,8 +113,8 @@ export class AuthService {
             logger.error(`Failed to clear cookies: ${error.message}`);
             throw new ServiceError(`Failed to clear cookies: ${error.message}`);
         }
-    }
-    async removeRefreshToken(userEmail) {
+    };
+    removeRefreshToken = async (userEmail) => {
         try {
             const user = await this.userRepo.findUserByEmail(userEmail);
             if (!user) {
@@ -124,6 +129,6 @@ export class AuthService {
             logger.error(`Error removing refresh token for user ${userEmail}: ${error.message}`);
             throw new ServiceError(`Error removing refresh token: ${error.message}`);
         }
-    }
+    };
 }
 //# sourceMappingURL=JWT.js.map

@@ -6,7 +6,7 @@ export class CategoryRepository extends BaseRepository {
     constructor() {
         super(Category);
     }
-    async createCategory(data) {
+    createCategory = async (data) => {
         try {
             logger.debug(`Creating category: ${data.name}`);
             const category = await this.create(data);
@@ -17,8 +17,8 @@ export class CategoryRepository extends BaseRepository {
             logger.error(`Error creating category: ${error}`);
             throw new RepositoryError(`Failed to create category: ${error}`);
         }
-    }
-    async getAllCategories() {
+    };
+    getAllCategories = async () => {
         try {
             logger.debug("Fetching all categories");
             const categories = await this.findAll();
@@ -29,8 +29,8 @@ export class CategoryRepository extends BaseRepository {
             logger.error(`Error fetching categories: ${error}`);
             throw new RepositoryError(`Failed to fetch categories: ${error}`);
         }
-    }
-    async getCategoryById(id) {
+    };
+    getCategoryById = async (id) => {
         try {
             logger.debug(`Fetching category by ID: ${id}`);
             const category = await this.findById(id);
@@ -46,8 +46,8 @@ export class CategoryRepository extends BaseRepository {
             logger.error(`Error fetching category by ID ${id}: ${error}`);
             throw new RepositoryError(`Failed to fetch category: ${error}`);
         }
-    }
-    async updateCategory(id, data) {
+    };
+    updateCategory = async (id, data) => {
         try {
             logger.debug(`Updating category: ${id}`);
             const category = await this.findByIdAndUpdate(id, data, { new: true });
@@ -63,8 +63,8 @@ export class CategoryRepository extends BaseRepository {
             logger.error(`Error updating category ${id}: ${error}`);
             throw new RepositoryError(`Failed to update category: ${error}`);
         }
-    }
-    async deleteCategory(id) {
+    };
+    deleteCategory = async (id) => {
         try {
             logger.debug(`Deleting category: ${id}`);
             const category = await this.findByIdAndDelete(id);
@@ -80,8 +80,8 @@ export class CategoryRepository extends BaseRepository {
             logger.error(`Error deleting category ${id}: ${error}`);
             throw new RepositoryError(`Failed to delete category: ${error}`);
         }
-    }
-    async isDuplicateCategoryName(name, excludeId) {
+    };
+    isDuplicateCategoryName = async (name, excludeId) => {
         try {
             logger.debug(`Checking duplicate category name: ${name}`);
             const filter = { name };
@@ -97,6 +97,6 @@ export class CategoryRepository extends BaseRepository {
             logger.error(`Error checking duplicate category name ${name}: ${error}`);
             throw new RepositoryError(`Failed to check duplicate category name: ${error}`);
         }
-    }
+    };
 }
 //# sourceMappingURL=CategoryRepositry.js.map

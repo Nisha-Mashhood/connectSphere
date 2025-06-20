@@ -39,7 +39,7 @@ export class NotificationRepository extends BaseRepository<IAppNotification> {
     return new Types.ObjectId(idStr);
   }
 
-  async getTasksForNotification(taskId: string): Promise<ITask | null> {
+   getTasksForNotification = async(taskId: string): Promise<ITask | null> =>{
     try {
       logger.debug(`Fetching task for notification: ${taskId}`);
       const now = new Date();
@@ -55,7 +55,7 @@ export class NotificationRepository extends BaseRepository<IAppNotification> {
     }
   }
 
-  async getAllTasksForNotification(): Promise<ITask[]> {
+   getAllTasksForNotification = async(): Promise<ITask[]> => {
     try {
       logger.debug('Fetching all tasks for notification');
       const now = new Date();
@@ -71,7 +71,7 @@ export class NotificationRepository extends BaseRepository<IAppNotification> {
     }
   }
 
-  async getGroupMembers(groupId: string): Promise<Types.ObjectId[]> {
+   getGroupMembers = async(groupId: string): Promise<Types.ObjectId[]> => {
     try {
       logger.debug(`Fetching group members for group: ${groupId}`);
       const group = await Group.findById(this.toObjectId(groupId)).select('members').exec();
@@ -82,7 +82,7 @@ export class NotificationRepository extends BaseRepository<IAppNotification> {
     }
   }
 
-  async getMentorIdAndUserId(collaborationId: string): Promise<UserIds | null> {
+   getMentorIdAndUserId = async(collaborationId: string): Promise<UserIds | null> =>{
     try {
       logger.debug(`Fetching mentor and user IDs for collaboration: ${collaborationId}`);
       const collaborationData = (await Collaboration.findById(this.toObjectId(collaborationId))
@@ -105,7 +105,7 @@ export class NotificationRepository extends BaseRepository<IAppNotification> {
     }
   }
 
-  async getConnectionUserIds(connectionId: string): Promise<{ requester: string; recipient: string } | null> {
+   getConnectionUserIds = async(connectionId: string): Promise<{ requester: string; recipient: string } | null> =>{
     try {
       logger.debug(`Fetching connection user IDs for connection: ${connectionId}`);
       const connection = await UserConnectionModal.findById(this.toObjectId(connectionId))
@@ -125,12 +125,12 @@ export class NotificationRepository extends BaseRepository<IAppNotification> {
     }
   }
 
-  async findTaskNotification(
+   findTaskNotification = async(
     userId: string,
     taskId: string,
     notificationDate?: string,
     notificationTime?: string
-  ): Promise<IAppNotification | null> {
+  ): Promise<IAppNotification | null> => {
     try {
       logger.debug(`Finding task notification for user: ${userId}, task: ${taskId}`);
       return await this.model
@@ -148,7 +148,7 @@ export class NotificationRepository extends BaseRepository<IAppNotification> {
     }
   }
 
-  async updateNotificationStatus(notificationId: string, status: 'unread' | 'read'): Promise<IAppNotification | null> {
+   updateNotificationStatus = async(notificationId: string, status: 'unread' | 'read'): Promise<IAppNotification | null> =>{
     try {
       logger.debug(`Updating notification status: ${notificationId} to ${status}`);
       const notification = await this.model
@@ -164,11 +164,11 @@ export class NotificationRepository extends BaseRepository<IAppNotification> {
     }
   }
 
-  async updateTaskNotifications(
+   updateTaskNotifications = async(
     relatedId: string,
     notificationDate?: Date,
     notificationTime?: string
-  ): Promise<{ modifiedCount: number }> {
+  ): Promise<{ modifiedCount: number }> =>{
     try {
       logger.debug(`Updating task notifications for task: ${relatedId}`);
       const updateData = {
@@ -187,7 +187,7 @@ export class NotificationRepository extends BaseRepository<IAppNotification> {
     }
   }
 
-  async createNotification(notification: Partial<IAppNotification>): Promise<IAppNotification> {
+   createNotification = async(notification: Partial<IAppNotification>): Promise<IAppNotification> => {
     try {
       logger.debug(`Creating notification for user: ${notification.userId}`);
       return await this.create({
@@ -203,7 +203,7 @@ export class NotificationRepository extends BaseRepository<IAppNotification> {
     }
   }
 
-  async findNotificationByUserId(userId: string): Promise<IAppNotification[]> {
+   findNotificationByUserId = async(userId: string): Promise<IAppNotification[]> => {
     try {
       logger.debug(`Fetching notifications for user: ${userId}`);
       return await this.model
@@ -217,7 +217,7 @@ export class NotificationRepository extends BaseRepository<IAppNotification> {
     }
   }
 
-  async findNotificationByCallId(userId: string, callId: string): Promise<IAppNotification | null> {
+   findNotificationByCallId = async(userId: string, callId: string): Promise<IAppNotification | null> =>{
     try {
       logger.debug(`Finding notification by call ID: ${callId} for user: ${userId}`);
       return await this.model
@@ -229,11 +229,11 @@ export class NotificationRepository extends BaseRepository<IAppNotification> {
     }
   }
 
-  async updateNotificationToMissed(
+   updateNotificationToMissed = async(
     userId: string,
     callId: string,
     content: string
-  ): Promise<IAppNotification | null> {
+  ): Promise<IAppNotification | null> => {
     try {
       logger.debug(`Updating notification to missed call for user: ${userId}, call: ${callId}`);
       return await this.model
@@ -249,7 +249,7 @@ export class NotificationRepository extends BaseRepository<IAppNotification> {
     }
   }
 
-  async markNotificationAsRead(notificationId: string): Promise<IAppNotification | null> {
+   markNotificationAsRead = async(notificationId: string): Promise<IAppNotification | null> =>{
     try {
       logger.debug(`Marking notification as read: ${notificationId}`);
       return await this.model
@@ -261,7 +261,7 @@ export class NotificationRepository extends BaseRepository<IAppNotification> {
     }
   }
 
-  async getNotificationUnreadCount(userId: string): Promise<number> {
+   getNotificationUnreadCount = async(userId: string): Promise<number> => {
     try {
       logger.debug(`Counting unread notifications for user: ${userId}`);
       return await this.model.countDocuments({ userId: this.toObjectId(userId), status: 'unread' }).exec();

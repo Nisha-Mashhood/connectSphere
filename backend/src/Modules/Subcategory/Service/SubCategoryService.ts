@@ -16,7 +16,7 @@ export class SubcategoryService extends BaseService {
     this.skillsRepo = new SkillsRepository();
   }
 
-  async createSubcategory(data: Partial<ISubcategory>, imagePath?: string, fileSize?: number): Promise<ISubcategory> {
+   createSubcategory = async(data: Partial<ISubcategory>, imagePath?: string, fileSize?: number): Promise<ISubcategory> =>{
     try {
       this.checkData(data);
       logger.debug(`Creating subcategory: ${data.name} for category ${data.categoryId}`);
@@ -36,7 +36,7 @@ export class SubcategoryService extends BaseService {
     }
   }
 
-  async getAllSubcategories(categoryId: string): Promise<ISubcategory[]> {
+   getAllSubcategories = async(categoryId: string): Promise<ISubcategory[]> =>{
     try {
       logger.debug(`Fetching subcategories for category: ${categoryId}`);
       const subcategories = await this.subcategoryRepo.getAllSubcategories(categoryId);
@@ -48,7 +48,7 @@ export class SubcategoryService extends BaseService {
     }
   }
 
-  async getSubcategoryById(id: string): Promise<ISubcategory | null> {
+   getSubcategoryById = async(id: string): Promise<ISubcategory | null> =>{
     try {
       logger.debug(`Fetching subcategory: ${id}`);
       const subcategory = await this.subcategoryRepo.getSubcategoryById(id);
@@ -64,7 +64,7 @@ export class SubcategoryService extends BaseService {
     }
   }
 
-  async updateSubcategory(id: string, data: Partial<ISubcategory>, imagePath?: string, fileSize?: number): Promise<ISubcategory | null> {
+   updateSubcategory = async(id: string, data: Partial<ISubcategory>, imagePath?: string, fileSize?: number): Promise<ISubcategory | null> =>{
     try {
       this.checkData(data);
       logger.debug(`Updating subcategory: ${id}`);
@@ -88,7 +88,7 @@ export class SubcategoryService extends BaseService {
     }
   }
 
-  async deleteSubcategory(id: string): Promise<ISubcategory | null> {
+   deleteSubcategory = async(id: string): Promise<ISubcategory | null> =>{
     try {
       logger.debug(`Deleting subcategory: ${id}`);
       await this.skillsRepo.deleteManySkillsBySubcategoryId(id);

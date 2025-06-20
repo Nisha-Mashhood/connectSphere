@@ -23,7 +23,7 @@ export class FeedbackRepository extends BaseRepository<IFeedback> {
     return new Types.ObjectId(idStr);
   }
 
-  async createFeedback(feedbackData: Partial<IFeedback>): Promise<IFeedback> {
+   createFeedback = async(feedbackData: Partial<IFeedback>): Promise<IFeedback> => {
     try {
       logger.debug(`Creating feedback for collaboration: ${feedbackData.collaborationId}`);
       return await this.create({
@@ -39,7 +39,7 @@ export class FeedbackRepository extends BaseRepository<IFeedback> {
     }
   }
 
-  async getFeedbacksByMentorId(mentorId: string): Promise<IFeedback[]> {
+   getFeedbacksByMentorId = async(mentorId: string): Promise<IFeedback[]> => {
     try {
       logger.debug(`Fetching feedbacks for mentor: ${mentorId}`);
       return await this.model
@@ -53,7 +53,7 @@ export class FeedbackRepository extends BaseRepository<IFeedback> {
     }
   }
 
-  async getFeedbacksByUserId(userId: string): Promise<IFeedback[]> {
+   getFeedbacksByUserId = async(userId: string): Promise<IFeedback[]> => {
     try {
       logger.debug(`Fetching feedbacks for user: ${userId}`);
       return await this.model
@@ -68,7 +68,7 @@ export class FeedbackRepository extends BaseRepository<IFeedback> {
     }
   }
 
-  async getFeedbackByCollaborationId(collaborationId: string): Promise<IFeedback[]> {
+   getFeedbackByCollaborationId = async(collaborationId: string): Promise<IFeedback[]> => {
     try {
       logger.debug(`Fetching feedbacks for collaboration: ${collaborationId}`);
       return await this.model
@@ -82,7 +82,7 @@ export class FeedbackRepository extends BaseRepository<IFeedback> {
     }
   }
 
-  async getMentorAverageRating(mentorId: string): Promise<number> {
+   getMentorAverageRating = async(mentorId: string): Promise<number> => {
     try {
       logger.debug(`Calculating average rating for mentor: ${mentorId}`);
       const result = await this.model.aggregate([
@@ -104,7 +104,7 @@ export class FeedbackRepository extends BaseRepository<IFeedback> {
     }
   }
 
-  async getFeedbackForProfile(profileId: string, profileType: 'mentor' | 'user'): Promise<IFeedback[]> {
+   getFeedbackForProfile = async(profileId: string, profileType: 'mentor' | 'user'): Promise<IFeedback[]> =>{
     try {
       logger.debug(`Fetching feedbacks for profile: ${profileId}, type: ${profileType}`);
       const query =
@@ -131,7 +131,7 @@ export class FeedbackRepository extends BaseRepository<IFeedback> {
     }
   }
 
-  async toggleIsHidden(feedbackId: string): Promise<IFeedback> {
+   toggleIsHidden = async(feedbackId: string): Promise<IFeedback> =>{
     try {
       logger.debug(`Toggling isHidden for feedback: ${feedbackId}`);
       const feedback = await this.findById(feedbackId);

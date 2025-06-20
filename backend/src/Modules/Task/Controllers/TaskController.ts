@@ -23,7 +23,7 @@ export class TaskController {
     return new Types.ObjectId(id);
   }
 
-  async createTask(req: Request, res: Response): Promise<void> {
+   createTask  = async(req: Request, res: Response): Promise<void> =>{
     try {
       const { id } = req.params;
       const imagePath = req.file?.path;
@@ -46,7 +46,7 @@ export class TaskController {
     }
   }
 
-  async getTasksByContext(req: Request, res: Response): Promise<void> {
+   getTasksByContext  = async(req: Request, res: Response): Promise<void> =>{
     try {
       const { contextType, contextId, userId } = req.params;
       logger.debug(`Fetching tasks for contextType=${contextType}, contextId=${contextId}, userId=${userId}`);
@@ -65,7 +65,7 @@ export class TaskController {
     }
   }
 
-  async updateTaskPriority(req: Request, res: Response): Promise<void> {
+   updateTaskPriority  = async(req: Request, res: Response): Promise<void> =>{
     try {
       const { taskId } = req.params;
       const { priority } = req.body;
@@ -88,7 +88,7 @@ export class TaskController {
     }
   }
 
-  async updateTaskStatus(req: Request, res: Response): Promise<void> {
+   updateTaskStatus  = async(req: Request, res: Response): Promise<void> =>{
     try {
       const { taskId } = req.params;
       const { status } = req.body;
@@ -111,7 +111,7 @@ export class TaskController {
     }
   }
 
-  async editTask(req: Request, res: Response): Promise<void> {
+   editTask  = async(req: Request, res: Response): Promise<void> =>{
     try {
       const { taskId } = req.params;
       const updates: Partial<ITask> = req.body;
@@ -134,7 +134,7 @@ export class TaskController {
     }
   }
 
-  async deleteTask(req: Request, res: Response): Promise<void> {
+   deleteTask  = async(req: Request, res: Response): Promise<void> =>{
     try {
       const { taskId } = req.params;
       logger.debug(`Deleting task: ${taskId}`);

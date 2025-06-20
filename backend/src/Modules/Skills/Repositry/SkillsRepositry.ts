@@ -9,7 +9,7 @@ export class SkillsRepository extends BaseRepository<ISkill> {
     super(Skill);
   }
 
-  async createSkill(data: Partial<ISkill>): Promise<ISkill> {
+   createSkill = async(data: Partial<ISkill>): Promise<ISkill> =>{
     try {
       logger.debug(
         `Creating skill: ${data.name} for subcategory ${data.subcategoryId}`
@@ -23,7 +23,7 @@ export class SkillsRepository extends BaseRepository<ISkill> {
     }
   }
 
-  async getAllSkills(subcategoryId: string): Promise<ISkill[]> {
+   getAllSkills = async(subcategoryId: string): Promise<ISkill[]> =>{
     try {
       logger.debug(`Fetching skills for subcategory: ${subcategoryId}`);
       const skills = await this.model
@@ -43,7 +43,7 @@ export class SkillsRepository extends BaseRepository<ISkill> {
     }
   }
 
-  async getSkillById(id: string): Promise<ISkill | null> {
+   getSkillById = async(id: string): Promise<ISkill | null> =>{
     try {
       logger.debug(`Fetching skill by ID: ${id}`);
       const skill = await this.model
@@ -63,7 +63,7 @@ export class SkillsRepository extends BaseRepository<ISkill> {
     }
   }
 
-  async updateSkill(id: string, data: Partial<ISkill>): Promise<ISkill | null> {
+   updateSkill = async(id: string, data: Partial<ISkill>): Promise<ISkill | null> =>{
     try {
       logger.debug(`Updating skill: ${id}`);
       const skill = await this.findByIdAndUpdate(id, data, { new: true });
@@ -79,7 +79,7 @@ export class SkillsRepository extends BaseRepository<ISkill> {
     }
   }
 
-  async deleteSkill(id: string): Promise<ISkill | null> {
+   deleteSkill = async(id: string): Promise<ISkill | null>=> {
     try {
       logger.debug(`Deleting skill: ${id}`);
       const skill = await this.findByIdAndDelete(id);
@@ -95,9 +95,9 @@ export class SkillsRepository extends BaseRepository<ISkill> {
     }
   }
 
-  async deleteManySkills(
+   deleteManySkills = async(
     categoryId: string
-  ): Promise<{ deletedCount: number }> {
+  ): Promise<{ deletedCount: number }> =>{
     try {
       logger.debug(`Deleting skills for category: ${categoryId}`);
       const result = await this.model.deleteMany({ categoryId }).exec();
@@ -113,9 +113,9 @@ export class SkillsRepository extends BaseRepository<ISkill> {
     }
   }
 
-  async deleteManySkillsBySubcategoryId(
+   deleteManySkillsBySubcategoryId = async(
     subcategoryId: string
-  ): Promise<{ deletedCount: number }> {
+  ): Promise<{ deletedCount: number }> =>{
     try {
       logger.debug(`Deleting skills for subcategory: ${subcategoryId}`);
       const result = await this.model.deleteMany({ subcategoryId }).exec();
@@ -131,7 +131,7 @@ export class SkillsRepository extends BaseRepository<ISkill> {
     }
   }
 
-  async getSkills(): Promise<{ _id: string; name: string }[]> {
+   getSkills = async(): Promise<{ _id: string; name: string }[]> =>{
     try {
       logger.debug("Fetching all skills (name and ID only)");
       const skills = await this.model

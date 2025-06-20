@@ -9,7 +9,7 @@ export const create_task = async (createrId, formData) => {
           "Content-Type": "multipart/form-data",
         },
       });
-      return response.data;
+      return response.data.data;
     } catch (error) {
       handleError(error);
     }
@@ -19,7 +19,7 @@ export const create_task = async (createrId, formData) => {
 export const get_tasks_by_context = async (contextType, contextId, userId) => {
   try {
     const response = await axiosInstance.get(`/task/context/${contextType}/${contextId}/${userId}`);
-    return response.data;
+    return response.data.data;
   } catch (error) {
     handleError(error);
   }
@@ -29,7 +29,7 @@ export const get_tasks_by_context = async (contextType, contextId, userId) => {
 export const update_task_priority = async (taskId, priority) => {
   try {
     const response = await axiosInstance.patch(`/task/updatePriority/${taskId}`, { priority });
-    return response.data;
+    return response.data.data;
   } catch (error) {
     handleError(error);
   }
@@ -39,7 +39,7 @@ export const update_task_priority = async (taskId, priority) => {
 export const update_task_status = async (taskId, status) => {
   try {
     const response = await axiosInstance.patch(`/task/updateStatus/${taskId}`, { status });
-    return response.data;
+    return response.data.data;
   } catch (error) {
     handleError(error);
   }
@@ -49,7 +49,7 @@ export const update_task_status = async (taskId, status) => {
 export const edit_task = async (taskId, updates) => {
   try {
     const response = await axiosInstance.put(`/task/editTask/${taskId}`, updates);
-    return response.data;
+    return response.data.data;
   } catch (error) {
     handleError(error);
   }
@@ -59,7 +59,7 @@ export const edit_task = async (taskId, updates) => {
 export const  delete_task = async(taskId) =>{
   try{
     const response = await axiosInstance.delete(`/task/delete/${taskId}`);
-    return response.data;
+    return response.data.data;
   } catch(error) {
 
   }

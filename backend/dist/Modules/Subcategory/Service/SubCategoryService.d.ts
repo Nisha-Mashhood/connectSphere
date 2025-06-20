@@ -4,10 +4,10 @@ export declare class SubcategoryService extends BaseService {
     private subcategoryRepo;
     private skillsRepo;
     constructor();
-    createSubcategory(data: Partial<ISubcategory>, imagePath?: string, fileSize?: number): Promise<ISubcategory>;
-    getAllSubcategories(categoryId: string): Promise<ISubcategory[]>;
-    getSubcategoryById(id: string): Promise<ISubcategory | null>;
-    updateSubcategory(id: string, data: Partial<ISubcategory>, imagePath?: string, fileSize?: number): Promise<ISubcategory | null>;
-    deleteSubcategory(id: string): Promise<ISubcategory | null>;
+    createSubcategory: (data: Partial<ISubcategory>, imagePath?: string, fileSize?: number) => Promise<ISubcategory>;
+    getAllSubcategories: (categoryId: string) => Promise<ISubcategory[]>;
+    getSubcategoryById: (id: string) => Promise<ISubcategory | null>;
+    updateSubcategory: (id: string, data: Partial<ISubcategory>, imagePath?: string, fileSize?: number) => Promise<ISubcategory | null>;
+    deleteSubcategory: (id: string) => Promise<ISubcategory | null>;
 }
 //# sourceMappingURL=SubCategoryService.d.ts.map

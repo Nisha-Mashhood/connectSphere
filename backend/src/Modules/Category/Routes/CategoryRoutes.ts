@@ -8,10 +8,10 @@ const router = Router();
 const categoryController = new CategoryController();
 const authMiddleware = new AuthMiddleware();
 
-router.post('/categories', [apiLimiter, authMiddleware.verifyToken, authMiddleware.authorize('admin'), upload.single('image')], categoryController.createCategory);
-router.get('/categories', [apiLimiter, authMiddleware.verifyToken, authMiddleware.checkBlockedStatus], categoryController.getAllCategories);
-router.get('/categories/:id', [apiLimiter, authMiddleware.verifyToken, authMiddleware.checkBlockedStatus], categoryController.getCategoryById);
-router.put('/categories/:id', [apiLimiter, authMiddleware.verifyToken, authMiddleware.authorize('admin'), upload.single('image')], categoryController.updateCategory);
-router.delete('/categories/:id', [apiLimiter, authMiddleware.verifyToken, authMiddleware.authorize('admin')], categoryController.deleteCategory);
+router.post('/create-category', [apiLimiter, authMiddleware.verifyToken, authMiddleware.authorize('admin'), upload.single('image')], categoryController.createCategory);
+router.get('/get-categories', [apiLimiter, authMiddleware.verifyToken, authMiddleware.checkBlockedStatus], categoryController.getAllCategories);
+router.get('/get-category/:id', [apiLimiter, authMiddleware.verifyToken, authMiddleware.checkBlockedStatus], categoryController.getCategoryById);
+router.put('/update-category/:id', [apiLimiter, authMiddleware.verifyToken, authMiddleware.authorize('admin'), upload.single('image')], categoryController.updateCategory);
+router.delete('/delete-category/:id', [apiLimiter, authMiddleware.verifyToken, authMiddleware.authorize('admin')], categoryController.deleteCategory);
 
 export default router;

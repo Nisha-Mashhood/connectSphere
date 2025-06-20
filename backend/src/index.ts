@@ -13,7 +13,7 @@ import logger from "./core/Utils/Logger.js";
 import categoryRoutes from "./Modules/Category/Routes/CategoryRoutes.js";
 import subCategoryRoutes from "./Modules/Subcategory/Routes/SubCategoryRoutes.js";
 import skillsRoutes from "./Modules/Skills/Routes/SkillsRoutes.js";
-import userRoutes from "./Modules/Auth/Routes/AuthRoutes.js";//Check this
+import userRoutes from "./routes/user.routes.js";//Check this
 import mentorRoutes from "./Modules/Mentor/Routes/MentorRoutes.js";
 import collaborationRoutes from "./Modules/Collaboration/Routes/CollaborationRoutes.js";
 import groupRoutes from "./Modules/Group/Routes/GroupRoutes.js";
@@ -49,7 +49,7 @@ app.use("/api/auth", authRoutes);
 app.use("/api/category", categoryRoutes);
 app.use("/api/subcategory", subCategoryRoutes);
 app.use("/api/skills", skillsRoutes);
-app.use("/api/users", userRoutes);
+app.use("/api/users", userRoutes);//check this
 app.use("/api/mentors", mentorRoutes);
 app.use("/api/collaboration",collaborationRoutes);
 app.use("/api/group", groupRoutes);
@@ -57,7 +57,7 @@ app.use("/api/feedback", feedbackRoutes);
 app.use("/api/user-userCollab",user_userCollabRoutes);
 app.use("/api/task", taskRoutes);
 app.use("/api/notification", notificationRoutes);
-app.use("/api/admin", adminRoutes);
+app.use("/api/admin", adminRoutes); // check this
 app.use("/api/chat", chatRoutes);
 app.use("/api/contacts", contactsRoutes);
 app.use("/api/reviews", reviewsRoutes);

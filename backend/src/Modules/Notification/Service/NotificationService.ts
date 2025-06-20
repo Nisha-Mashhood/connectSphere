@@ -45,12 +45,12 @@ export class NotificationService extends BaseService {
     logger.info('Notification service initialized with Socket.IO');
   }
 
-  async sendTaskNotification(
+   sendTaskNotification = async(
     taskId: string,
     specificUserId?: string,
     notificationDate?: string,
     notificationTime?: string
-  ): Promise<TaskNotificationPayload[]> {
+  ): Promise<TaskNotificationPayload[]> => {
     try {
       logger.debug(`Sending task notification for task: ${taskId}`);
       const notifications: TaskNotificationPayload[] = [];
@@ -202,7 +202,7 @@ export class NotificationService extends BaseService {
     }
   }
 
-  async checkAndSendNotifications(): Promise<TaskNotificationPayload[]> {
+   checkAndSendNotifications = async(): Promise<TaskNotificationPayload[]> => {
     try {
       logger.debug('Checking and sending notifications');
       const allNotifications: TaskNotificationPayload[] = [];
@@ -229,14 +229,14 @@ export class NotificationService extends BaseService {
     }
   }
 
-  async sendNotification(
+   sendNotification = async(
     userId: string,
     notificationType: IAppNotification['type'],
     senderId: string,
     relatedId: string,
     contentType?: string,
     callId?: string
-  ): Promise<IAppNotification> {
+  ): Promise<IAppNotification> => {
     try {
       logger.debug(`Sending notification to user: ${userId}, type: ${notificationType}`);
       this.checkData({ userId, notificationType, senderId, relatedId });
@@ -304,11 +304,11 @@ export class NotificationService extends BaseService {
     }
   }
 
-  async updateCallNotificationToMissed(
+   updateCallNotificationToMissed = async(
     userId: string,
     callId: string,
     content: string
-  ): Promise<IAppNotification | null> {
+  ): Promise<IAppNotification | null> => {
     try {
       logger.debug(`Updating call notification to missed for user: ${userId}, call: ${callId}`);
       this.checkData({ userId, callId, content });
@@ -339,7 +339,7 @@ export class NotificationService extends BaseService {
     }
   }
 
-  async getNotifications(userId: string): Promise<IAppNotification[]> {
+   getNotifications = async(userId: string): Promise<IAppNotification[]> => {
     try {
       logger.debug(`Fetching notifications for user: ${userId}`);
       this.checkData(userId);
@@ -350,7 +350,7 @@ export class NotificationService extends BaseService {
     }
   }
 
-  async markNotificationAsRead(notificationId: string): Promise<IAppNotification | null> {
+   markNotificationAsRead = async(notificationId: string): Promise<IAppNotification | null> => {
     try {
       logger.debug(`Marking notification as read: ${notificationId}`);
       this.checkData(notificationId);
@@ -361,7 +361,7 @@ export class NotificationService extends BaseService {
     }
   }
 
-  async getUnreadCount(userId: string): Promise<number> {
+   getUnreadCount = async(userId: string): Promise<number> => {
     try {
       logger.debug(`Fetching unread notification count for user: ${userId}`);
       this.checkData(userId);

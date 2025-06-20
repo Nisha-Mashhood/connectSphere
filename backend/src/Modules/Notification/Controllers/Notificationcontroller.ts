@@ -9,7 +9,7 @@ export class NotificationController {
     this.notificationService = new NotificationService();
   }
 
-  async getNotifications(req: Request, res: Response): Promise<void> {
+  getNotifications  = async(req: Request, res: Response): Promise<void> =>{
     try {
       const userId = req.query.userId as string;
       logger.debug(`Fetching notifications for user: ${userId}`);
@@ -32,7 +32,7 @@ export class NotificationController {
     }
   }
 
-  async markAsRead(req: Request, res: Response): Promise<void> {
+  markAsRead  = async(req: Request, res: Response): Promise<void> =>{
     try {
       const { notificationId } = req.params;
       logger.debug(`Marking notification as read: ${notificationId}`);
@@ -59,7 +59,7 @@ export class NotificationController {
     }
   }
 
-  async getUnreadCount(req: Request, res: Response): Promise<void> {
+  getUnreadCount  = async(req: Request, res: Response): Promise<void> =>{
     try {
       const userId = req.query.userId as string;
       logger.debug(`Fetching unread notification count for user: ${userId}`);

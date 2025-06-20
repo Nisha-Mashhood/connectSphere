@@ -8,7 +8,7 @@ export const SendRequsetToMentor = async (data) => {
       "/collaboration/create-mentorprofile",
       data
     );
-    return response.data;
+    return response.data.data;
   } catch (error) {
     handleError(error);
   }
@@ -20,7 +20,7 @@ export const getAllRequest = async (mentorId) => {
     const response = await axiosInstance.get(
       `/collaboration/get-mentor-requests?mentorId=${mentorId}`
     );
-    return response.data;
+    return response.data.data;
   } catch (error) {
     handleError(error);
   }
@@ -32,7 +32,7 @@ export const acceptTheRequest = async (requsetId) => {
     const response = await axiosInstance.post(
       `/collaboration/accept-request/${requsetId}`
     );
-    return response.data;
+    return response.data.data;
   } catch (error) {
     handleError(error);
   }
@@ -44,7 +44,7 @@ export const rejectTheRequest = async (requsetId) => {
     const response = await axiosInstance.post(
       `/collaboration/reject-request/${requsetId}`
     );
-    return response.data;
+    return response.data.data;
   } catch (error) {
     handleError(error);
   }
@@ -56,7 +56,7 @@ export const getTheRequestByUser = async (userId) => {
     const response = await axiosInstance.get(
       `/collaboration/get-user-requests/${userId}`
     );
-    return response.data;
+    return response.data.data;
   } catch (error) {
     handleError(error);
   }
@@ -69,7 +69,7 @@ export const processStripePayment = async (paymentDetails: any) => {
       `/collaboration/process-payment`,
       paymentDetails
     );
-    return response.data;
+    return response.data.data;
   } catch (error) {
     handleError(error);
   }
@@ -81,7 +81,7 @@ export const getCollabDataforUser = async (userId) => {
     const response = await axiosInstance.get(
       `/collaboration/get-collabData-user/${userId}`
     );
-    return response.data;
+    return response.data.data;
   } catch (error) {
     handleError(error);
   }
@@ -93,7 +93,7 @@ export const getCollabDataforMentor = async (mentorId) => {
     const response = await axiosInstance.get(
       `/collaboration/get-collabData-mentor/${mentorId}`
     );
-    return response.data;
+    return response.data.data;
   } catch (error) {
     handleError(error);
   }
@@ -108,7 +108,7 @@ export const cancelCollab = async (collabId, reason) => {
         data: { reason },
       }
     );
-    return response.data;
+    return response.data.data;
   } catch (error) {
     handleError(error);
   }
@@ -120,7 +120,7 @@ export const fetchCollabDetails = async (collabId) => {
     const response = await axiosInstance.get(
       `/collaboration/getCollab/${collabId}`
     );
-    return response.data;
+    return response.data.data;
   } catch (error) {
     handleError(error);
   }
@@ -131,7 +131,7 @@ export const fetchCollabRequsetDetails = async (requestId) => {
     const response = await axiosInstance.get(
       `/collaboration/getCollabRequset/${requestId}`
     );
-    return response.data;
+    return response.data.data;
   } catch (error) {
     handleError(error);
   }
@@ -143,7 +143,7 @@ export const UserToMentorRequset = async (page = 1, limit = 10, search = "") => 
     const response = await axiosInstance.get("/collaboration/getAllRequest", {
       params: { page, limit, search },
     });
-    return response.data;
+    return response.data.data;
   } catch (error) {
     handleError(error);
     return { requests: [], total: 0, pages: 1 }; 
@@ -156,7 +156,7 @@ export const UserToMentorCollab = async (page = 1, limit = 10, search = "") => {
     const response = await axiosInstance.get("/collaboration/getAllCollab", {
       params: { page, limit, search },
     });
-    return response.data;
+    return response.data.data;
   } catch (error) {
     handleError(error);
     return { collabs: [], total: 0, pages: 1 }; 
@@ -170,7 +170,7 @@ export const markDatesUnavailable = async (collabId, data) => {
       `/collaboration/markUnavailable/${collabId}`,
       data
     );
-    return response.data;
+    return response.data.data;
   } catch (error) {
     handleError(error);
   }
@@ -183,7 +183,7 @@ export const updateTimeSlots = async (collabId, data) => {
       `/collaboration/updateTimeslot/${collabId}`,
       data
     );
-    return response.data;
+    return response.data.data;
   } catch (error) {
     handleError(error);
   }
@@ -196,7 +196,7 @@ export const approveTimeSlotRequest = async (collabId, requestId, isApproved, re
       `/collaboration/approveTimeSlot/${collabId}`,
       { requestId, isApproved, requestType }
     );
-    return response.data;
+    return response.data.data;
   } catch (error) {
     handleError(error);
   }
@@ -206,7 +206,7 @@ export const approveTimeSlotRequest = async (collabId, requestId, isApproved, re
 export const getLockedMentorSlot= async (mentorId) => {
   try {
     const response = await axiosInstance.get(`/collaboration/locked-slots/${mentorId}`,);
-    return response.data;
+    return response.data.data;
   } catch (error) {
     handleError(error);
   }

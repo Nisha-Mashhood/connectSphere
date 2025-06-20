@@ -1,22 +1,24 @@
 import logger from '../core/Utils/Logger.js';
 import { ServiceError } from '../core/Utils/ErrorHandler.js';
-import { AuthService } from '../Modules/Auth/Utils/JWT.js';
+import { AuthService as JWTService } from '../Modules/Auth/Utils/JWT.js';
 import { UserRepository } from '../Modules/Auth/Repositry/UserRepositry.js';
 export class AuthMiddleware {
-    authService;
+    jwtService;
     userRepo;
     constructor() {
-        this.authService = new AuthService();
+        this.jwtService = new JWTService();
         this.userRepo = new UserRepository();
     }
-    async verifyToken(req, _res, next) {
+    verifyToken = async (req, _res, next) => {
         const accessToken = req.cookies.accessToken;
+        logger.info(`Access Token: ${accessToken}`);
         if (!accessToken) {
             logger.warn('Access token not found in request');
             throw new ServiceError('Access token not found');
         }
         try {
-            const decoded = this.authService.verifyAccessToken(accessToken);
+            const decoded = this.jwtService.verifyAccessToken(accessToken);
+            logger.info(`Decoded Info: ${JSON.stringify(decoded)}`);
             const user = await this.userRepo.getUserById(decoded.userId);
             logger.debug(`Current user: ${user?._id}`);
             if (!user) {
@@ -30,15 +32,15 @@ export class AuthMiddleware {
             logger.error(`Token verification failed: ${error.message}`);
             throw new ServiceError('Invalid or expired token');
         }
-    }
-    async verifyRefreshToken(req, _res, next) {
+    };
+    verifyRefreshToken = async (req, _res, next) => {
         const refreshToken = req.cookies.refreshToken;
         if (!refreshToken) {
             logger.warn('Refresh token not found in request');
             throw new ServiceError('Refresh token not found');
         }
         try {
-            const decoded = this.authService.verifyRefreshToken(refreshToken);
+            const decoded = this.jwtService.verifyRefreshToken(refreshToken);
             const user = await this.userRepo.getUserById(decoded.userId);
             if (!user || user.refreshToken !== refreshToken) {
                 logger.warn(`Invalid refresh token for user ID: ${decoded.userId}`);
@@ -51,15 +53,15 @@ export class AuthMiddleware {
             logger.error(`Refresh token verification failed: ${error.message}`);
             throw new ServiceError('Invalid or expired refresh token');
         }
-    }
-    async checkBlockedStatus(req, _res, next) {
+    };
+    checkBlockedStatus = async (req, _res, next) => {
         if (req.currentUser?.isBlocked) {
             logger.warn(`Blocked user attempted access: ${req.currentUser._id}`);
             throw new ServiceError('Your account has been blocked. Please contact support.');
         }
         next();
-    }
-    authorize(...allowedRoles) {
+    };
+    authorize = (...allowedRoles) => {
         return (req, _res, next) => {
             if (!req.currentUser) {
                 logger.warn('Authentication required for protected route');
@@ -73,6 +75,6 @@ export class AuthMiddleware {
             logger.debug(`Authorized user ${req.currentUser._id} with role ${userRole}`);
             next();
         };
-    }
+    };
 }
 //# sourceMappingURL=auth.middleware.js.map

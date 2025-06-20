@@ -12,7 +12,7 @@ export class TaskService extends BaseService {
         this.taskRepo = new TaskRepository();
         this.notificationRepo = new NotificationRepository();
     }
-    async createTask(taskData, imagePath, fileSize) {
+    createTask = async (taskData, imagePath, fileSize) => {
         try {
             logger.debug(`Creating task: ${taskData.name}`);
             this.checkData(taskData);
@@ -31,8 +31,8 @@ export class TaskService extends BaseService {
             logger.error(`Error creating task: ${error.message}`);
             throw new ServiceError(`Error creating task: ${error.message}`);
         }
-    }
-    async getTasksByContext(contextType, contextId, userId) {
+    };
+    getTasksByContext = async (contextType, contextId, userId) => {
         try {
             logger.debug(`Fetching tasks for contextType=${contextType}, contextId=${contextId}, userId=${userId}`);
             this.checkData({ contextType, contextId, userId });
@@ -42,8 +42,8 @@ export class TaskService extends BaseService {
             logger.error(`Error fetching tasks by context: ${error.message}`);
             throw new ServiceError(`Error fetching tasks by context: ${error.message}`);
         }
-    }
-    async changeTaskPriority(taskId, priority) {
+    };
+    changeTaskPriority = async (taskId, priority) => {
         try {
             logger.debug(`Changing task priority: taskId=${taskId}, priority=${priority}`);
             this.checkData({ taskId, priority });
@@ -53,8 +53,8 @@ export class TaskService extends BaseService {
             logger.error(`Error changing task priority: ${error.message}`);
             throw new ServiceError(`Error changing task priority: ${error.message}`);
         }
-    }
-    async changeTaskStatus(taskId, status) {
+    };
+    changeTaskStatus = async (taskId, status) => {
         try {
             logger.debug(`Changing task status: taskId=${taskId}, status=${status}`);
             this.checkData({ taskId, status });
@@ -64,8 +64,8 @@ export class TaskService extends BaseService {
             logger.error(`Error changing task status: ${error.message}`);
             throw new ServiceError(`Error changing task status: ${error.message}`);
         }
-    }
-    async editTask(taskId, updates) {
+    };
+    editTask = async (taskId, updates) => {
         try {
             logger.debug(`Editing task: taskId=${taskId}`);
             this.checkData({ taskId, updates });
@@ -85,8 +85,8 @@ export class TaskService extends BaseService {
             logger.error(`Error editing task: ${error.message}`);
             throw new ServiceError(`Error editing task: ${error.message}`);
         }
-    }
-    async deleteTask(taskId) {
+    };
+    deleteTask = async (taskId) => {
         try {
             logger.debug(`Deleting task: ${taskId}`);
             this.checkData(taskId);
@@ -96,6 +96,6 @@ export class TaskService extends BaseService {
             logger.error(`Error deleting task: ${error.message}`);
             throw new ServiceError(`Error deleting task: ${error.message}`);
         }
-    }
+    };
 }
 //# sourceMappingURL=TaskService.js.map

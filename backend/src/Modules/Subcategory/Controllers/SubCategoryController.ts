@@ -21,7 +21,7 @@ export class SubcategoryController extends BaseController {
     this.subcategoryRepo = new SubcategoryRepository();
   }
 
-  async createSubcategory(req: SubcategoryRequest, res: Response): Promise<void> {
+   createSubcategory  = async(req: SubcategoryRequest, res: Response): Promise<void> => {
     try {
       logger.debug(`Creating subcategory: ${req.body.name}`);
       const isDuplicate = await this.subcategoryRepo.findOne({ name: req.body.name, categoryId: req.body.categoryId });
@@ -37,7 +37,7 @@ export class SubcategoryController extends BaseController {
     }
   }
 
-  async getAllSubcategories(req: SubcategoryRequest, res: Response): Promise<void> {
+   getAllSubcategories  = async(req: SubcategoryRequest, res: Response): Promise<void> => {
     try {
       logger.debug(`Fetching subcategories for category: ${req.params.categoryId}`);
       const subcategories = await this.subcategoryService.getAllSubcategories(req.params.categoryId!);
@@ -47,7 +47,7 @@ export class SubcategoryController extends BaseController {
     }
   }
 
-  async getSubcategoryById(req: SubcategoryRequest, res: Response): Promise<void> {
+   getSubcategoryById  = async(req: SubcategoryRequest, res: Response): Promise<void> => {
     try {
       logger.debug(`Fetching subcategory: ${req.params.id}`);
       const subcategory = await this.subcategoryService.getSubcategoryById(req.params.id!);
@@ -60,7 +60,7 @@ export class SubcategoryController extends BaseController {
     }
   }
 
-  async updateSubcategory(req: SubcategoryRequest, res: Response): Promise<void> {
+   updateSubcategory  = async(req: SubcategoryRequest, res: Response): Promise<void> => {
     try {
       logger.debug(`Updating subcategory: ${req.params.id}`);
       const isDuplicate = await this.subcategoryRepo.findOne({
@@ -83,7 +83,7 @@ export class SubcategoryController extends BaseController {
     }
   }
 
-  async deleteSubcategory(req: SubcategoryRequest, res: Response): Promise<void> {
+   deleteSubcategory  = async(req: SubcategoryRequest, res: Response): Promise<void> =>{
     try {
       logger.debug(`Deleting subcategory: ${req.params.id}`);
       const deletedSubcategory = await this.subcategoryService.deleteSubcategory(req.params.id!);

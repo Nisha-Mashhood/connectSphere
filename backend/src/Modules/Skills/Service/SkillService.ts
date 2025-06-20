@@ -13,7 +13,7 @@ export class SkillsService extends BaseService {
     this.skillsRepo = new SkillsRepository();
   }
 
-  async createSkill(data: Partial<ISkill>, imagePath?: string, fileSize?: number): Promise<ISkill> {
+   createSkill = async(data: Partial<ISkill>, imagePath?: string, fileSize?: number): Promise<ISkill> =>{
     try {
       this.checkData(data);
       logger.debug(`Creating skill: ${data.name} for subcategory ${data.subcategoryId}`);
@@ -33,7 +33,7 @@ export class SkillsService extends BaseService {
     }
   }
 
-  async getAllSkills(subcategoryId: string): Promise<ISkill[]> {
+   getAllSkills = async(subcategoryId: string): Promise<ISkill[]> =>{
     try {
       logger.debug(`Fetching skills for subcategory: ${subcategoryId}`);
       const skills = await this.skillsRepo.getAllSkills(subcategoryId);
@@ -45,7 +45,7 @@ export class SkillsService extends BaseService {
     }
   }
 
-  async getSkillById(id: string): Promise<ISkill | null> {
+   getSkillById = async(id: string): Promise<ISkill | null> =>{
     try {
       logger.debug(`Fetching skill: ${id}`);
       const skill = await this.skillsRepo.getSkillById(id);
@@ -61,7 +61,7 @@ export class SkillsService extends BaseService {
     }
   }
 
-  async updateSkill(id: string, data: Partial<ISkill>, imagePath?: string, fileSize?: number): Promise<ISkill | null> {
+   updateSkill = async(id: string, data: Partial<ISkill>, imagePath?: string, fileSize?: number): Promise<ISkill | null> =>{
     try {
       this.checkData(data);
       logger.debug(`Updating skill: ${id}`);
@@ -85,7 +85,7 @@ export class SkillsService extends BaseService {
     }
   }
 
-  async deleteSkill(id: string): Promise<ISkill | null> {
+   deleteSkill = async(id: string): Promise<ISkill | null> => {
     try {
       logger.debug(`Deleting skill: ${id}`);
       const skill = await this.skillsRepo.deleteSkill(id);
@@ -101,7 +101,7 @@ export class SkillsService extends BaseService {
     }
   }
 
-  async getSkills(): Promise<{ _id: string; name: string }[]> {
+   getSkills = async(): Promise<{ _id: string; name: string }[]> =>{
     try {
       logger.debug('Fetching all skills (name and ID only)');
       const skills = await this.skillsRepo.getSkills();

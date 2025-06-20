@@ -11,7 +11,7 @@ export class FeedbackService extends BaseService {
         this.feedbackRepo = new FeedbackRepository();
         this.collabRepo = new CollaborationRepository();
     }
-    async createFeedback(feedbackData) {
+    createFeedback = async (feedbackData) => {
         try {
             logger.debug(`Creating feedback for collaboration: ${feedbackData.collaborationId}`);
             this.checkData(feedbackData);
@@ -36,8 +36,8 @@ export class FeedbackService extends BaseService {
             logger.error(`Error creating feedback: ${error.message}`);
             throw new ServiceError(`Error creating feedback: ${error.message}`);
         }
-    }
-    async getMentorFeedbacks(mentorId) {
+    };
+    getMentorFeedbacks = async (mentorId) => {
         try {
             logger.debug(`Fetching feedbacks for mentor: ${mentorId}`);
             this.checkData(mentorId);
@@ -53,8 +53,8 @@ export class FeedbackService extends BaseService {
             logger.error(`Error fetching mentor feedbacks: ${error.message}`);
             throw new ServiceError(`Error fetching mentor feedbacks: ${error.message}`);
         }
-    }
-    async getUserFeedbacks(userId) {
+    };
+    getUserFeedbacks = async (userId) => {
         try {
             logger.debug(`Fetching feedbacks for user: ${userId}`);
             this.checkData(userId);
@@ -64,8 +64,8 @@ export class FeedbackService extends BaseService {
             logger.error(`Error fetching user feedbacks: ${error.message}`);
             throw new ServiceError(`Error fetching user feedbacks: ${error.message}`);
         }
-    }
-    async getFeedbackForProfile(profileId, profileType) {
+    };
+    getFeedbackForProfile = async (profileId, profileType) => {
         try {
             logger.debug(`Fetching feedbacks for profile: ${profileId}, type: ${profileType}`);
             this.checkData({ profileId, profileType });
@@ -83,8 +83,8 @@ export class FeedbackService extends BaseService {
             logger.error(`Error fetching feedbacks for profile: ${error.message}`);
             throw new ServiceError(`Error fetching feedbacks for profile: ${error.message}`);
         }
-    }
-    async getFeedbackByCollaborationId(collabId) {
+    };
+    getFeedbackByCollaborationId = async (collabId) => {
         try {
             logger.debug(`Fetching feedbacks for collaboration: ${collabId}`);
             this.checkData(collabId);
@@ -94,8 +94,8 @@ export class FeedbackService extends BaseService {
             logger.error(`Error fetching feedbacks by collaboration ID: ${error.message}`);
             throw new ServiceError(`Error fetching feedbacks by collaboration ID: ${error.message}`);
         }
-    }
-    async toggleFeedback(feedbackId) {
+    };
+    toggleFeedback = async (feedbackId) => {
         try {
             logger.debug(`Toggling feedback visibility: ${feedbackId}`);
             this.checkData(feedbackId);
@@ -105,8 +105,8 @@ export class FeedbackService extends BaseService {
             logger.error(`Error toggling feedback visibility: ${error.message}`);
             throw new ServiceError(`Error toggling feedback visibility: ${error.message}`);
         }
-    }
-    async getFeedbackByMentorId(mentorId) {
+    };
+    getFeedbackByMentorId = async (mentorId) => {
         try {
             logger.debug(`Fetching feedbacks by mentor ID: ${mentorId}`);
             this.checkData(mentorId);
@@ -116,6 +116,6 @@ export class FeedbackService extends BaseService {
             logger.error(`Error fetching feedbacks by mentor ID: ${error.message}`);
             throw new ServiceError(`Error fetching feedbacks by mentor ID: ${error.message}`);
         }
-    }
+    };
 }
 //# sourceMappingURL=Feedbackservice.js.map

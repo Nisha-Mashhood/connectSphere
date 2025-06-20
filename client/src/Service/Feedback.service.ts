@@ -5,7 +5,7 @@ import { handleError } from "./ErrorHandler";
 export const sendFeedBack = async (feedbackData: any) => {
     try {
       const response = await axiosInstance.post("/feedback/send-feedback", feedbackData);
-      return response.data;
+      return response.data.data;
     } catch (error) {
       handleError(error);
     }
@@ -15,7 +15,7 @@ export const sendFeedBack = async (feedbackData: any) => {
   export const getFeedBack = async (data) => {
     try {
       const response = await axiosInstance.get("/feedback/get-feedback",{data});
-      return response.data;
+      return response.data.data;
     } catch (error) {
       handleError(error);
     }

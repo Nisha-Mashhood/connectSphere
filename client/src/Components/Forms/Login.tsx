@@ -65,7 +65,10 @@ const Login = () => {
 
       dispatch(signinSuccess({ user, needsReviewPrompt }));
 
+      
       dispatch(unsetIsAdmin());
+      //add a slight time to set cookies
+      await new Promise((resolve) => setTimeout(resolve, 500));
 
       let mentorDetails = null;
       // Fetch profile data based on user role

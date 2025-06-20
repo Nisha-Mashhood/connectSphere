@@ -28,7 +28,7 @@ export class CleanupScheduler {
                 throw new RepositoryError(`Daily cleanup task failed: ${error.message}`);
             }
         });
-        logger.info('✅ Node-cron cleanup scheduler started.');
+        logger.info('✅ Cleanup scheduler started.');
     }
 }
 //# sourceMappingURL=NotificationSchdduler.js.map

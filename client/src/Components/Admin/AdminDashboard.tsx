@@ -43,7 +43,7 @@ const AdminDashboard = () => {
 
   useEffect(() => {
     fetchDashboardData();
-  }, [timeRange, timeFormat]);
+  }, []);
 
   const fetchDashboardData = async () => {
     setIsLoading(true);

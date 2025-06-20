@@ -19,7 +19,7 @@ export class UserConnectionRepository extends BaseRepository {
         }
         return new Types.ObjectId(idStr);
     }
-    async createUserConnection(requesterId, recipientId) {
+    createUserConnection = async (requesterId, recipientId) => {
         try {
             logger.debug(`Creating user connection: requester=${requesterId}, recipient=${recipientId}`);
             return await this.create({
@@ -36,8 +36,8 @@ export class UserConnectionRepository extends BaseRepository {
             logger.error(`Error creating user connection: ${error.message}`);
             throw new RepositoryError(`Error creating user connection: ${error.message}`);
         }
-    }
-    async updateUserConnectionStatus(connectionId, status) {
+    };
+    updateUserConnectionStatus = async (connectionId, status) => {
         try {
             logger.debug(`Updating user connection status: connectionId=${connectionId}, status=${status}`);
             const updateFields = {
@@ -57,8 +57,8 @@ export class UserConnectionRepository extends BaseRepository {
             logger.error(`Error updating user connection status: ${error.message}`);
             throw new RepositoryError(`Error updating user connection status: ${error.message}`);
         }
-    }
-    async disconnectUserConnection(connectionId, reason) {
+    };
+    disconnectUserConnection = async (connectionId, reason) => {
         try {
             logger.debug(`Disconnecting user connection: connectionId=${connectionId}`);
             return await this.findByIdAndUpdate(this.toObjectId(connectionId).toString(), {
@@ -72,8 +72,8 @@ export class UserConnectionRepository extends BaseRepository {
             logger.error(`Error disconnecting user connection: ${error.message}`);
             throw new RepositoryError(`Error disconnecting user connection: ${error.message}`);
         }
-    }
-    async getUserConnections(userId) {
+    };
+    getUserConnections = async (userId) => {
         try {
             logger.debug(`Fetching connections for user: ${userId}`);
             return await this.model
@@ -89,8 +89,8 @@ export class UserConnectionRepository extends BaseRepository {
             logger.error(`Error fetching user connections: ${error.message}`);
             throw new RepositoryError(`Error fetching user connections: ${error.message}`);
         }
-    }
-    async getUserRequests(userId) {
+    };
+    getUserRequests = async (userId) => {
         try {
             logger.debug(`Fetching sent and received requests for user: ${userId}`);
             const sentRequests = await this.model
@@ -109,8 +109,8 @@ export class UserConnectionRepository extends BaseRepository {
             logger.error(`Error fetching user requests: ${error.message}`);
             throw new RepositoryError(`Error fetching user requests: ${error.message}`);
         }
-    }
-    async getAllUserConnections() {
+    };
+    getAllUserConnections = async () => {
         try {
             logger.debug('Fetching all user connections');
             return await this.model
@@ -123,8 +123,8 @@ export class UserConnectionRepository extends BaseRepository {
             logger.error(`Error fetching all user connections: ${error.message}`);
             throw new RepositoryError(`Error fetching all user connections: ${error.message}`);
         }
-    }
-    async getUserConnectionById(connectionId) {
+    };
+    getUserConnectionById = async (connectionId) => {
         try {
             logger.debug(`Fetching user connection by ID: ${connectionId}`);
             const connection = await this.model
@@ -141,8 +141,8 @@ export class UserConnectionRepository extends BaseRepository {
             logger.error(`Error retrieving user connection: ${error.message}`);
             throw new RepositoryError(`Error retrieving user connection: ${error.message}`);
         }
-    }
-    async findExistingConnection(requesterId, recipientId) {
+    };
+    findExistingConnection = async (requesterId, recipientId) => {
         try {
             logger.debug(`Checking for existing connection: requester=${requesterId}, recipient=${recipientId}`);
             return await this.model
@@ -157,6 +157,6 @@ export class UserConnectionRepository extends BaseRepository {
             logger.error(`Error checking existing connection: ${error.message}`);
             throw new RepositoryError(`Error checking existing connection: ${error.message}`);
         }
-    }
+    };
 }
 //# sourceMappingURL=UserCollaborationRepositry.js.map

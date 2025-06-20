@@ -17,7 +17,7 @@ export class TaskController {
         }
         return new Types.ObjectId(id);
     }
-    async createTask(req, res) {
+    createTask = async (req, res) => {
         try {
             const { id } = req.params;
             const imagePath = req.file?.path;
@@ -39,8 +39,8 @@ export class TaskController {
                 message: error.message || 'Error creating task',
             });
         }
-    }
-    async getTasksByContext(req, res) {
+    };
+    getTasksByContext = async (req, res) => {
         try {
             const { contextType, contextId, userId } = req.params;
             logger.debug(`Fetching tasks for contextType=${contextType}, contextId=${contextId}, userId=${userId}`);
@@ -58,8 +58,8 @@ export class TaskController {
                 message: error.message || 'Error fetching tasks',
             });
         }
-    }
-    async updateTaskPriority(req, res) {
+    };
+    updateTaskPriority = async (req, res) => {
         try {
             const { taskId } = req.params;
             const { priority } = req.body;
@@ -81,8 +81,8 @@ export class TaskController {
                 message: error.message || 'Error updating task priority',
             });
         }
-    }
-    async updateTaskStatus(req, res) {
+    };
+    updateTaskStatus = async (req, res) => {
         try {
             const { taskId } = req.params;
             const { status } = req.body;
@@ -104,8 +104,8 @@ export class TaskController {
                 message: error.message || 'Error updating task status',
             });
         }
-    }
-    async editTask(req, res) {
+    };
+    editTask = async (req, res) => {
         try {
             const { taskId } = req.params;
             const updates = req.body;
@@ -127,8 +127,8 @@ export class TaskController {
                 message: error.message || 'Error editing task',
             });
         }
-    }
-    async deleteTask(req, res) {
+    };
+    deleteTask = async (req, res) => {
         try {
             const { taskId } = req.params;
             logger.debug(`Deleting task: ${taskId}`);
@@ -146,6 +146,6 @@ export class TaskController {
                 message: error.message || 'Error deleting task',
             });
         }
-    }
+    };
 }
 //# sourceMappingURL=TaskController.js.map

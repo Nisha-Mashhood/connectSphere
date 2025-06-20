@@ -15,7 +15,7 @@ interface ReplyData {
 export const sendContactMessage = async (data: ContactMessage) => {
   try {
     const response = await axiosInstance.post(`/contactUs/contact`, data);
-    return response.data;
+    return response.data.data;
   } catch (error: any) {
    handleError(error);
   }

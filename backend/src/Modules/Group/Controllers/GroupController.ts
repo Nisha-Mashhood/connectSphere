@@ -12,7 +12,7 @@ export class GroupController {
     this.groupService = new GroupService();
   }
 
-  async createGroup(req: Request, res: Response): Promise<void> {
+    createGroup  = async(req: Request, res: Response): Promise<void> =>{
     try {
       logger.debug('Creating group');
       const groupData: GroupFormData = req.body;
@@ -31,7 +31,7 @@ export class GroupController {
     }
   }
 
-  async getGroupDetails(req: Request, res: Response): Promise<void> {
+    getGroupDetails  = async(req: Request, res: Response): Promise<void> =>{
     try {
       const { adminId } = req.params;
       logger.debug(`Fetching groups for admin: ${adminId}`);
@@ -51,7 +51,7 @@ export class GroupController {
     }
   }
 
-  async getGroupById(req: Request, res: Response): Promise<void> {
+    getGroupById  = async(req: Request, res: Response): Promise<void> =>{
     try {
       const { groupId } = req.params;
       logger.debug(`Fetching group by ID: ${groupId}`);
@@ -71,7 +71,7 @@ export class GroupController {
     }
   }
 
-  async getAllGroups(_req: Request, res: Response): Promise<void> {
+    getAllGroups = async(_req: Request, res: Response): Promise<void> =>{
     try {
       logger.debug('Fetching all groups');
       const groups = await this.groupService.getAllGroups();
@@ -90,7 +90,7 @@ export class GroupController {
     }
   }
 
-  async sendGroupRequest(req: Request, res: Response): Promise<void> {
+    sendGroupRequest  = async(req: Request, res: Response): Promise<void> =>{
     try {
       const { groupId, userId } = req.body;
       logger.debug(`Sending group request for group: ${groupId}, user: ${userId}`);
@@ -106,7 +106,7 @@ export class GroupController {
     }
   }
 
-  async getGroupRequestsByGroupId(req: Request, res: Response): Promise<void> {
+    getGroupRequestsByGroupId  = async(req: Request, res: Response): Promise<void> =>{
     try {
       const { groupId } = req.params;
       logger.debug(`Fetching group requests for group: ${groupId}`);
@@ -122,7 +122,7 @@ export class GroupController {
     }
   }
 
-  async getGroupRequestsByAdminId(req: Request, res: Response): Promise<void> {
+    getGroupRequestsByAdminId  = async(req: Request, res: Response): Promise<void> =>{
     try {
       const { adminId } = req.params;
       logger.debug(`Fetching group requests for admin: ${adminId}`);
@@ -138,7 +138,7 @@ export class GroupController {
     }
   }
 
-  async getGroupRequestsByUserId(req: Request, res: Response): Promise<void> {
+    getGroupRequestsByUserId  = async(req: Request, res: Response): Promise<void> =>{
     try {
       const { userId } = req.params;
       logger.debug(`Fetching group requests for user: ${userId}`);
@@ -154,7 +154,7 @@ export class GroupController {
     }
   }
 
-  async updateGroupRequest(req: Request, res: Response): Promise<void> {
+    updateGroupRequest  = async(req: Request, res: Response): Promise<void> =>{
     try {
       const { requestId, status } = req.body;
       logger.debug(`Updating group request: ${requestId} to ${status}`);
@@ -170,7 +170,7 @@ export class GroupController {
     }
   }
 
-  async makeStripePayment(req: Request, res: Response): Promise<void> {
+    makeStripePayment  = async(req: Request, res: Response): Promise<void> =>{
     try {
       const { paymentMethodId, amount, requestId, email, groupRequestData, returnUrl } = req.body;
       logger.debug(`Processing payment for group request: ${requestId}`);
@@ -207,7 +207,7 @@ export class GroupController {
     }
   }
 
-  async removeGroupMember(req: Request, res: Response): Promise<void> {
+    removeGroupMember  = async(req: Request, res: Response): Promise<void> =>{
     try {
       const { groupId, userId } = req.body;
       logger.debug(`Removing user ${userId} from group ${groupId}`);
@@ -223,7 +223,7 @@ export class GroupController {
     }
   }
 
-  async deleteGroup(req: Request, res: Response): Promise<void> {
+    deleteGroup  = async(req: Request, res: Response): Promise<void> =>{
     try {
       const { groupId } = req.params;
       logger.debug(`Deleting group: ${groupId}`);
@@ -239,7 +239,7 @@ export class GroupController {
     }
   }
 
-  async updateGroupImage(req: Request, res: Response): Promise<void> {
+    updateGroupImage  = async(req: Request, res: Response): Promise<void> =>{
     try {
       const { groupId } = req.params;
       logger.debug(`Updating group image for group: ${groupId}`);
@@ -277,7 +277,7 @@ export class GroupController {
     }
   }
 
-  async getGroupDetailsForMembers(req: Request, res: Response): Promise<void> {
+    getGroupDetailsForMembers  = async(req: Request, res: Response): Promise<void> =>{
     try {
       const { userid } = req.params;
       logger.debug(`Fetching group details for member: ${userid}`);
@@ -293,7 +293,7 @@ export class GroupController {
     }
   }
 
-  async getAllGroupRequests(_req: Request, res: Response): Promise<void> {
+    getAllGroupRequests = async(_req: Request, res: Response): Promise<void> =>{
     try {
       logger.debug('Fetching all group requests');
       const requests = await this.groupService.getAllGroupRequests();
@@ -308,7 +308,7 @@ export class GroupController {
     }
   }
 
-  async getGroupRequestById(req: Request, res: Response): Promise<void> {
+    getGroupRequestById  = async(req: Request, res: Response): Promise<void> =>{
     try {
       const { requestId } = req.params;
       logger.debug(`Fetching group request by ID: ${requestId}`);

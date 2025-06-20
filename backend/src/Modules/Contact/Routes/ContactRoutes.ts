@@ -7,6 +7,6 @@ const router = Router();
 const contactController = new ContactController();
 const authMiddleware = new AuthMiddleware();
 
-router.get('/contacts', [apiLimiter, authMiddleware.verifyToken, authMiddleware.checkBlockedStatus], contactController.getUserContacts);
+router.get('/user', [apiLimiter, authMiddleware.verifyToken, authMiddleware.checkBlockedStatus], contactController.getUserContacts);
 
 export default router;

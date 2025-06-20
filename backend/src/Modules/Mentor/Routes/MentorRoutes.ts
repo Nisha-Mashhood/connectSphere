@@ -8,15 +8,15 @@ const router = Router();
 const mentorController = new MentorController();
 const authMiddleware = new AuthMiddleware();
 
-router.post('/mentors', [apiLimiter, authMiddleware.verifyToken, authMiddleware.checkBlockedStatus, upload.array('certificates', 2)], mentorController.createMentor);
-router.get('/mentors/check/:id', [apiLimiter, authMiddleware.verifyToken, authMiddleware.checkBlockedStatus], mentorController.checkMentorStatus);
-router.get('/mentors/requests', [apiLimiter, authMiddleware.verifyToken, authMiddleware.authorize('admin')], mentorController.getAllMentorRequests);
-router.put('/mentors/approve/:id', [apiLimiter, authMiddleware.verifyToken, authMiddleware.authorize('admin')], mentorController.approveMentorRequest);
-router.put('/mentors/reject/:id', [apiLimiter, authMiddleware.verifyToken, authMiddleware.authorize('admin')], mentorController.rejectMentorRequest);
-router.put('/mentors/cancel/:mentorId', [apiLimiter, authMiddleware.verifyToken, authMiddleware.authorize('admin')], mentorController.cancelMentorship);
-router.get('/mentors/:mentorId', [apiLimiter, authMiddleware.verifyToken, authMiddleware.checkBlockedStatus], mentorController.getMentorDetails);
-router.put('/mentors/:mentorId', [apiLimiter, authMiddleware.verifyToken, authMiddleware.checkBlockedStatus], mentorController.updateMentorProfile);
-router.get('/mentors', [apiLimiter, authMiddleware.verifyToken, authMiddleware.checkBlockedStatus], mentorController.getAllMentors);
-router.get('/mentors/user/:userId', [apiLimiter, authMiddleware.verifyToken, authMiddleware.checkBlockedStatus], mentorController.getMentorByUserId);
+router.post('/create-mentorprofile', [apiLimiter, authMiddleware.verifyToken, authMiddleware.checkBlockedStatus, upload.array('certificates', 2)], mentorController.createMentor);
+router.get('/check-mentor/:id', [apiLimiter, authMiddleware.verifyToken, authMiddleware.checkBlockedStatus], mentorController.checkMentorStatus);
+router.get('/getallmentorrequest', [apiLimiter, authMiddleware.verifyToken, authMiddleware.authorize('admin')], mentorController.getAllMentorRequests);
+router.put('/approvementorrequest/:id', [apiLimiter, authMiddleware.verifyToken, authMiddleware.authorize('admin')], mentorController.approveMentorRequest);
+router.put('/rejectmentorrequest/:id', [apiLimiter, authMiddleware.verifyToken, authMiddleware.authorize('admin')], mentorController.rejectMentorRequest);
+router.put('/cancelmentorship/:mentorId', [apiLimiter, authMiddleware.verifyToken, authMiddleware.authorize('admin')], mentorController.cancelMentorship);
+router.get('/getmentorDetails/:mentorId', [apiLimiter, authMiddleware.verifyToken, authMiddleware.checkBlockedStatus], mentorController.getMentorDetails);
+router.put('/update-mentor/:mentorId', [apiLimiter, authMiddleware.verifyToken, authMiddleware.checkBlockedStatus], mentorController.updateMentorProfile);
+router.get('/getAllMentors', [apiLimiter, authMiddleware.verifyToken, authMiddleware.checkBlockedStatus], mentorController.getAllMentors);
+router.get('/user/:userId', [apiLimiter, authMiddleware.verifyToken, authMiddleware.checkBlockedStatus], mentorController.getMentorByUserId);
 
 export default router;

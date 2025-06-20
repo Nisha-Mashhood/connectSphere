@@ -46,7 +46,7 @@ export class CollaborationRepository extends BaseRepository<ICollaboration> {
     return new Types.ObjectId(idStr);
   }
 
-  async createTemporaryRequest(data: Partial<IMentorRequest>): Promise<IMentorRequest> {
+   createTemporaryRequest = async(data: Partial<IMentorRequest>): Promise<IMentorRequest> =>{
     try {
       logger.debug(`Creating temporary request for user: ${data.userId}`);
       return await this.mentorRequestModel.create({
@@ -62,7 +62,7 @@ export class CollaborationRepository extends BaseRepository<ICollaboration> {
     }
   }
 
-  async getMentorRequestsByMentorId(mentorId: string): Promise<IMentorRequest[]> {
+   getMentorRequestsByMentorId = async(mentorId: string): Promise<IMentorRequest[]> => {
     try {
       logger.debug(`Fetching mentor requests for mentor: ${mentorId}`);
       return await this.mentorRequestModel
@@ -75,7 +75,7 @@ export class CollaborationRepository extends BaseRepository<ICollaboration> {
     }
   }
 
-  async findMentorRequestById(id: string): Promise<IMentorRequest | null> {
+   findMentorRequestById = async(id: string): Promise<IMentorRequest | null> => {
     try {
       logger.debug(`Finding mentor request by ID: ${id}`);
       return await this.mentorRequestModel.findById(this.toObjectId(id)).exec();
@@ -85,7 +85,7 @@ export class CollaborationRepository extends BaseRepository<ICollaboration> {
     }
   }
 
-  async updateMentorRequestStatus(id: string, status: string): Promise<IMentorRequest | null> {
+   updateMentorRequestStatus = async(id: string, status: string): Promise<IMentorRequest | null> => {
     try {
       logger.debug(`Updating mentor request status for ID: ${id} to ${status}`);
       return await this.mentorRequestModel
@@ -97,7 +97,7 @@ export class CollaborationRepository extends BaseRepository<ICollaboration> {
     }
   }
 
-  async getRequestByUserId(userId: string): Promise<IMentorRequest[]> {
+   getRequestByUserId = async(userId: string): Promise<IMentorRequest[]> => {
     try {
       logger.debug(`Fetching requests for user: ${userId}`);
       return await this.mentorRequestModel
@@ -116,7 +116,7 @@ export class CollaborationRepository extends BaseRepository<ICollaboration> {
     }
   }
 
-  async createCollaboration(collaborationData: Partial<ICollaboration>): Promise<ICollaboration> {
+   createCollaboration = async(collaborationData: Partial<ICollaboration>): Promise<ICollaboration> => {
     try {
       logger.debug(`Creating collaboration for user: ${collaborationData.userId}`);
       return await this.create({
@@ -130,7 +130,7 @@ export class CollaborationRepository extends BaseRepository<ICollaboration> {
     }
   }
 
-  async deleteMentorRequest(requestId: string): Promise<void> {
+   deleteMentorRequest = async(requestId: string): Promise<void> => {
     try {
       logger.debug(`Deleting mentor request: ${requestId}`);
       await this.mentorRequestModel.findByIdAndDelete(this.toObjectId(requestId)).exec();
@@ -140,7 +140,7 @@ export class CollaborationRepository extends BaseRepository<ICollaboration> {
     }
   }
 
-  async findCollabById(collabId: string): Promise<ICollaboration | null> {
+   findCollabById = async(collabId: string): Promise<ICollaboration | null> => {
     try {
       logger.debug(`Finding collaboration by ID: ${collabId}`);
       return await this.model
@@ -164,7 +164,7 @@ export class CollaborationRepository extends BaseRepository<ICollaboration> {
     }
   }
 
-  async deleteCollabById(collabId: string): Promise<ICollaboration | null> {
+   deleteCollabById = async(collabId: string): Promise<ICollaboration | null> => {
     try {
       logger.debug(`Deleting collaboration: ${collabId}`);
       return await this.findByIdAndDelete(this.toObjectId(collabId).toString());
@@ -174,7 +174,7 @@ export class CollaborationRepository extends BaseRepository<ICollaboration> {
     }
   }
 
-  async markCollabAsCancelled(collabId: string): Promise<ICollaboration | null> {
+   markCollabAsCancelled = async(collabId: string): Promise<ICollaboration | null> => {
     try {
       logger.debug(`Marking collaboration as cancelled: ${collabId}`);
       return await this.findByIdAndUpdate(
@@ -188,7 +188,7 @@ export class CollaborationRepository extends BaseRepository<ICollaboration> {
     }
   }
 
-  async updateCollabFeedback(collabId: string): Promise<ICollaboration | null> {
+   updateCollabFeedback = async(collabId: string): Promise<ICollaboration | null> => {
     try {
       logger.debug(`Updating collaboration feedback for ID: ${collabId}`);
       return await this.findByIdAndUpdate(
@@ -202,7 +202,7 @@ export class CollaborationRepository extends BaseRepository<ICollaboration> {
     }
   }
 
-  async getCollabDataForUser(userId: string): Promise<ICollaboration[]> {
+   getCollabDataForUser = async(userId: string): Promise<ICollaboration[]> => {
     try {
       logger.debug(`Fetching collaboration data for user: ${userId}`);
       return await this.model
@@ -221,7 +221,7 @@ export class CollaborationRepository extends BaseRepository<ICollaboration> {
     }
   }
 
-  async getCollabDataForMentor(mentorId: string): Promise<ICollaboration[]> {
+   getCollabDataForMentor = async(mentorId: string): Promise<ICollaboration[]> => {
     try {
       logger.debug(`Fetching collaboration data for mentor: ${mentorId}`);
       const mentor = await Mentor.findById(this.toObjectId(mentorId)).select('userId');
@@ -250,7 +250,7 @@ export class CollaborationRepository extends BaseRepository<ICollaboration> {
     }
   }
 
-  async findMentorRequest({ page, limit, search }: { page: number; limit: number; search: string }): Promise<{ requests: IMentorRequest[]; total: number; page: number; pages: number }> {
+   findMentorRequest = async({ page, limit, search }: { page: number; limit: number; search: string }): Promise<{ requests: IMentorRequest[]; total: number; page: number; pages: number }> => {
     try {
       logger.debug(`Fetching mentor requests with page: ${page}, limit: ${limit}, search: ${search}`);
       const query = search
@@ -289,7 +289,7 @@ export class CollaborationRepository extends BaseRepository<ICollaboration> {
     }
   }
 
-  async findCollab({ page, limit, search }: { page: number; limit: number; search: string }): Promise<{ collabs: ICollaboration[]; total: number; page: number; pages: number }> {
+   findCollab = async({ page, limit, search }: { page: number; limit: number; search: string }): Promise<{ collabs: ICollaboration[]; total: number; page: number; pages: number }> => {
     try {
       logger.debug(`Fetching collaborations with page: ${page}, limit: ${limit}, search: ${search}`);
       const query = search
@@ -328,7 +328,7 @@ export class CollaborationRepository extends BaseRepository<ICollaboration> {
     }
   }
 
-  async fetchMentorRequestDetails(requestId: string): Promise<IMentorRequest | null> {
+   fetchMentorRequestDetails = async(requestId: string): Promise<IMentorRequest | null> => {
     try {
       logger.debug(`Fetching mentor request details for ID: ${requestId}`);
       return await this.mentorRequestModel
@@ -352,7 +352,7 @@ export class CollaborationRepository extends BaseRepository<ICollaboration> {
     }
   }
 
-  async findCollabDetails(collabId: string): Promise<ICollaboration | null> {
+   findCollabDetails = async(collabId: string): Promise<ICollaboration | null> =>{
     try {
       logger.debug(`Fetching collaboration details for ID: ${collabId}`);
       return await this.findCollabById(collabId);
@@ -362,7 +362,7 @@ export class CollaborationRepository extends BaseRepository<ICollaboration> {
     }
   }
 
-  async updateUnavailableDays(
+   updateUnavailableDays = async(
     collabId: string,
     updateData: {
       datesAndReasons: { date: Date; reason: string }[];
@@ -371,7 +371,7 @@ export class CollaborationRepository extends BaseRepository<ICollaboration> {
       approvedById: string;
       isApproved: 'pending' | 'approved' | 'rejected';
     }
-  ): Promise<ICollaboration | null> {
+  ): Promise<ICollaboration | null> => {
     try {
       logger.debug(`Updating unavailable days for collaboration: ${collabId}`);
       return await this.findByIdAndUpdate(
@@ -395,7 +395,7 @@ export class CollaborationRepository extends BaseRepository<ICollaboration> {
     }
   }
 
-  async updateTemporarySlotChanges(
+   updateTemporarySlotChanges = async(
     collabId: string,
     updateData: {
       datesAndNewSlots: { date: Date; newTimeSlots: string[] }[];
@@ -404,7 +404,7 @@ export class CollaborationRepository extends BaseRepository<ICollaboration> {
       approvedById: string;
       isApproved: 'pending' | 'approved' | 'rejected';
     }
-  ): Promise<ICollaboration | null> {
+  ): Promise<ICollaboration | null> => {
     try {
       logger.debug(`Updating temporary slot changes for collaboration: ${collabId}`);
       return await this.findByIdAndUpdate(
@@ -428,13 +428,13 @@ export class CollaborationRepository extends BaseRepository<ICollaboration> {
     }
   }
 
-  async updateRequestStatus(
+   updateRequestStatus = async(
     collabId: string,
     requestId: string,
     requestType: 'unavailable' | 'timeSlot',
     status: 'approved' | 'rejected',
     newEndDate?: Date
-  ): Promise<ICollaboration | null> {
+  ): Promise<ICollaboration | null> => {
     try {
       logger.debug(`Updating request status for collaboration: ${collabId}, request: ${requestId}`);
       const updateField = requestType === 'unavailable' ? 'unavailableDays' : 'temporarySlotChanges';
@@ -474,7 +474,7 @@ export class CollaborationRepository extends BaseRepository<ICollaboration> {
     }
   }
 
-  async getLockedSlotsByMentorId(mentorId: string): Promise<LockedSlot[]> {
+   getLockedSlotsByMentorId = async(mentorId: string): Promise<LockedSlot[]> => {
     try {
       logger.debug(`Fetching locked slots for mentor: ${mentorId}`);
       const currentDate = new Date();

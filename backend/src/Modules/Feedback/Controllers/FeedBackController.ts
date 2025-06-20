@@ -10,7 +10,7 @@ export class FeedbackController {
     this.feedbackService = new FeedbackService();
   }
 
-  async createFeedback(req: Request, res: Response): Promise<void> {
+    createFeedback = async(req: Request, res: Response): Promise<void> =>{
     try {
       const feedbackData: Partial<IFeedback> = {
         userId: req.body.userId,
@@ -44,7 +44,7 @@ export class FeedbackController {
     }
   }
 
-  async getMentorFeedbacks(req: Request, res: Response): Promise<void> {
+    getMentorFeedbacks = async(req: Request, res: Response): Promise<void> =>{
     try {
       const { mentorId } = req.params;
       logger.debug(`Fetching feedbacks for mentor: ${mentorId}`);
@@ -63,7 +63,7 @@ export class FeedbackController {
     }
   }
 
-  async getUserFeedbacks(req: Request, res: Response): Promise<void> {
+    getUserFeedbacks = async(req: Request, res: Response): Promise<void> =>{
     try {
       const { userId } = req.params;
       logger.debug(`Fetching feedbacks for user: ${userId}`);
@@ -82,7 +82,7 @@ export class FeedbackController {
     }
   }
 
-  async getFeedbackForProfile(req: Request, res: Response): Promise<void> {
+    getFeedbackForProfile = async(req: Request, res: Response): Promise<void> =>{
     try {
       const { profileId, profileType } = req.params;
       logger.debug(`Fetching feedbacks for profile: ${profileId}, type: ${profileType}`);
@@ -105,7 +105,7 @@ export class FeedbackController {
     }
   }
 
-  async getFeedbackByCollaborationId(req: Request, res: Response): Promise<void> {
+    getFeedbackByCollaborationId = async(req: Request, res: Response): Promise<void> =>{
     try {
       const { collabId } = req.params;
       logger.debug(`Fetching feedbacks for collaboration: ${collabId}`);
@@ -124,7 +124,7 @@ export class FeedbackController {
     }
   }
 
-  async toggleFeedback(req: Request, res: Response): Promise<void> {
+    toggleFeedback= async(req: Request, res: Response): Promise<void> =>{
     try {
       const { feedbackId } = req.params;
       logger.debug(`Toggling feedback visibility: ${feedbackId}`);
@@ -143,7 +143,7 @@ export class FeedbackController {
     }
   }
 
-  async getFeedbackByMentorId(req: Request, res: Response): Promise<void> {
+    getFeedbackByMentorId = async(req: Request, res: Response): Promise<void> =>{
     try {
       const { mentorId } = req.params;
       logger.debug(`Fetching feedbacks by mentor ID: ${mentorId}`);

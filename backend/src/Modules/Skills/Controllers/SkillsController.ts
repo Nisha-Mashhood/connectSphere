@@ -20,7 +20,7 @@ export class SkillsController extends BaseController {
     this.skillsRepo = new SkillsRepository();
   }
 
-  async createSkill(req: SkillRequest, res: Response): Promise<void> {
+   createSkill  = async(req: SkillRequest, res: Response): Promise<void> => {
     try {
       logger.debug(`Creating skill: ${req.body.name}`);
       const isDuplicate = await this.skillsRepo.findOne({
@@ -39,7 +39,7 @@ export class SkillsController extends BaseController {
     }
   }
 
-  async getAllSkills(req: SkillRequest, res: Response): Promise<void> {
+   getAllSkills  = async(req: SkillRequest, res: Response): Promise<void> => {
     try {
       logger.debug(`Fetching skills for subcategory: ${req.params.subcategoryId}`);
       const skills = await this.skillsService.getAllSkills(req.params.subcategoryId!);
@@ -49,7 +49,7 @@ export class SkillsController extends BaseController {
     }
   }
 
-  async getSkillById(req: SkillRequest, res: Response): Promise<void> {
+   getSkillById  = async(req: SkillRequest, res: Response): Promise<void> => {
     try {
       logger.debug(`Fetching skill: ${req.params.id}`);
       const skill = await this.skillsService.getSkillById(req.params.id!);
@@ -62,7 +62,7 @@ export class SkillsController extends BaseController {
     }
   }
 
-  async updateSkill(req: SkillRequest, res: Response): Promise<void> {
+   updateSkill  = async(req: SkillRequest, res: Response): Promise<void> => {
     try {
       logger.debug(`Updating skill: ${req.params.id}`);
       const isDuplicate = await this.skillsRepo.findOne({
@@ -85,7 +85,7 @@ export class SkillsController extends BaseController {
     }
   }
 
-  async deleteSkill(req: SkillRequest, res: Response): Promise<void> {
+   deleteSkill  = async(req: SkillRequest, res: Response): Promise<void> => {
     try {
       logger.debug(`Deleting skill: ${req.params.id}`);
       const deletedSkill = await this.skillsService.deleteSkill(req.params.id!);
@@ -98,7 +98,7 @@ export class SkillsController extends BaseController {
     }
   }
 
-  async getSkills(_req: Request, res: Response): Promise<void> {
+   getSkills = async(_req: Request, res: Response): Promise<void> => {
     try {
       logger.debug('Fetching all skills (name and ID only)');
       const skills = await this.skillsService.getSkills();

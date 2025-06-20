@@ -4,7 +4,7 @@ import { HttpError, RepositoryError, ServiceError } from '../Utils/ErrorHandler.
 import logger from '../Utils/Logger.js';
 
 export abstract class BaseController implements IBaseController {
-  sendSuccess(res: Response, data: any, message: string = 'Success', statusCode: number = 200): void {
+  sendSuccess = (res: Response, data: any, message: string = 'Success', statusCode: number = 200): void => {
     logger.info(`Sending response: ${message}`);
     res.status(statusCode).json({
       status: 'success',
@@ -13,7 +13,7 @@ export abstract class BaseController implements IBaseController {
     });
   }
 
-  sendCreated(res: Response, data: any, message: string = 'Created'): void {
+  sendCreated = (res: Response, data: any, message: string = 'Created'): void => {
     logger.info(`Sending created response: ${message}`);
     res.status(201).json({
       status: 'success',
@@ -22,12 +22,12 @@ export abstract class BaseController implements IBaseController {
     });
   }
 
-  sendNoContent(res: Response, message: string = 'Deleted'): void {
+  sendNoContent = (res: Response, message: string = 'Deleted'): void => {
     logger.info(`Sending no content response: ${message}`);
     res.status(204).send();
   }
 
-  handleError(error: any, res: Response): void {
+  handleError = (error: any, res: Response): void => {
     if (error instanceof HttpError) {
       logger.warn(`HTTP error: ${error.message} [${error.statusCode}]`);
       res.status(error.statusCode).json({
@@ -49,7 +49,7 @@ export abstract class BaseController implements IBaseController {
     }
   }
 
-  throwError(statusCode: number, message: string): never {
+  throwError = (statusCode: number, message: string): never => {
     logger.warn(`Throwing HTTP error: ${message} [${statusCode}]`);
     throw new HttpError(statusCode, message);
   }

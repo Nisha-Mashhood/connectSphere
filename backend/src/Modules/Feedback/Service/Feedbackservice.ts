@@ -15,7 +15,7 @@ export class FeedbackService extends BaseService {
     this.collabRepo = new CollaborationRepository();
   }
 
-  async createFeedback(feedbackData: Partial<IFeedback>): Promise<IFeedback> {
+   createFeedback = async(feedbackData: Partial<IFeedback>): Promise<IFeedback> => {
     try {
       logger.debug(`Creating feedback for collaboration: ${feedbackData.collaborationId}`);
       this.checkData(feedbackData);
@@ -45,7 +45,7 @@ export class FeedbackService extends BaseService {
     }
   }
 
-  async getMentorFeedbacks(mentorId: string): Promise<{ feedbacks: IFeedback[]; averageRating: number; totalFeedbacks: number }> {
+   getMentorFeedbacks = async(mentorId: string): Promise<{ feedbacks: IFeedback[]; averageRating: number; totalFeedbacks: number }> => {
     try {
       logger.debug(`Fetching feedbacks for mentor: ${mentorId}`);
       this.checkData(mentorId);
@@ -64,7 +64,7 @@ export class FeedbackService extends BaseService {
     }
   }
 
-  async getUserFeedbacks(userId: string): Promise<IFeedback[]> {
+   getUserFeedbacks = async(userId: string): Promise<IFeedback[]> => {
     try {
       logger.debug(`Fetching feedbacks for user: ${userId}`);
       this.checkData(userId);
@@ -75,7 +75,7 @@ export class FeedbackService extends BaseService {
     }
   }
 
-  async getFeedbackForProfile(profileId: string, profileType: 'mentor' | 'user'): Promise<{ feedbacks: IFeedback[]; totalFeedbacks: number }> {
+   getFeedbackForProfile = async(profileId: string, profileType: 'mentor' | 'user'): Promise<{ feedbacks: IFeedback[]; totalFeedbacks: number }>=> {
     try {
       logger.debug(`Fetching feedbacks for profile: ${profileId}, type: ${profileType}`);
       this.checkData({ profileId, profileType });
@@ -96,7 +96,7 @@ export class FeedbackService extends BaseService {
     }
   }
 
-  async getFeedbackByCollaborationId(collabId: string): Promise<IFeedback[]> {
+   getFeedbackByCollaborationId = async(collabId: string): Promise<IFeedback[]> => {
     try {
       logger.debug(`Fetching feedbacks for collaboration: ${collabId}`);
       this.checkData(collabId);
@@ -107,7 +107,7 @@ export class FeedbackService extends BaseService {
     }
   }
 
-  async toggleFeedback(feedbackId: string): Promise<IFeedback> {
+   toggleFeedback = async(feedbackId: string): Promise<IFeedback> => {
     try {
       logger.debug(`Toggling feedback visibility: ${feedbackId}`);
       this.checkData(feedbackId);
@@ -118,7 +118,7 @@ export class FeedbackService extends BaseService {
     }
   }
 
-  async getFeedbackByMentorId(mentorId: string): Promise<IFeedback[]> {
+   getFeedbackByMentorId = async(mentorId: string): Promise<IFeedback[]> => {
     try {
       logger.debug(`Fetching feedbacks by mentor ID: ${mentorId}`);
       this.checkData(mentorId);

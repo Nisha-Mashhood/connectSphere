@@ -36,7 +36,7 @@ export class CollaborationRepository extends BaseRepository {
         }
         return new Types.ObjectId(idStr);
     }
-    async createTemporaryRequest(data) {
+    createTemporaryRequest = async (data) => {
         try {
             logger.debug(`Creating temporary request for user: ${data.userId}`);
             return await this.mentorRequestModel.create({
@@ -51,8 +51,8 @@ export class CollaborationRepository extends BaseRepository {
             logger.error(`Error creating temporary request: ${error.message}`);
             throw new RepositoryError(`Error creating temporary request: ${error.message}`);
         }
-    }
-    async getMentorRequestsByMentorId(mentorId) {
+    };
+    getMentorRequestsByMentorId = async (mentorId) => {
         try {
             logger.debug(`Fetching mentor requests for mentor: ${mentorId}`);
             return await this.mentorRequestModel
@@ -64,8 +64,8 @@ export class CollaborationRepository extends BaseRepository {
             logger.error(`Error fetching mentor requests: ${error.message}`);
             throw new RepositoryError(`Error fetching mentor requests: ${error.message}`);
         }
-    }
-    async findMentorRequestById(id) {
+    };
+    findMentorRequestById = async (id) => {
         try {
             logger.debug(`Finding mentor request by ID: ${id}`);
             return await this.mentorRequestModel.findById(this.toObjectId(id)).exec();
@@ -74,8 +74,8 @@ export class CollaborationRepository extends BaseRepository {
             logger.error(`Error finding mentor request by ID: ${error.message}`);
             throw new RepositoryError(`Error finding mentor request by ID: ${error.message}`);
         }
-    }
-    async updateMentorRequestStatus(id, status) {
+    };
+    updateMentorRequestStatus = async (id, status) => {
         try {
             logger.debug(`Updating mentor request status for ID: ${id} to ${status}`);
             return await this.mentorRequestModel
@@ -86,8 +86,8 @@ export class CollaborationRepository extends BaseRepository {
             logger.error(`Error updating mentor request status: ${error.message}`);
             throw new RepositoryError(`Error updating mentor request status: ${error.message}`);
         }
-    }
-    async getRequestByUserId(userId) {
+    };
+    getRequestByUserId = async (userId) => {
         try {
             logger.debug(`Fetching requests for user: ${userId}`);
             return await this.mentorRequestModel
@@ -105,8 +105,8 @@ export class CollaborationRepository extends BaseRepository {
             logger.error(`Error fetching requests by user ID: ${error.message}`);
             throw new RepositoryError(`Error fetching requests by user ID: ${error.message}`);
         }
-    }
-    async createCollaboration(collaborationData) {
+    };
+    createCollaboration = async (collaborationData) => {
         try {
             logger.debug(`Creating collaboration for user: ${collaborationData.userId}`);
             return await this.create({
@@ -119,8 +119,8 @@ export class CollaborationRepository extends BaseRepository {
             logger.error(`Error creating collaboration: ${error.message}`);
             throw new RepositoryError(`Error creating collaboration: ${error.message}`);
         }
-    }
-    async deleteMentorRequest(requestId) {
+    };
+    deleteMentorRequest = async (requestId) => {
         try {
             logger.debug(`Deleting mentor request: ${requestId}`);
             await this.mentorRequestModel.findByIdAndDelete(this.toObjectId(requestId)).exec();
@@ -129,8 +129,8 @@ export class CollaborationRepository extends BaseRepository {
             logger.error(`Error deleting mentor request: ${error.message}`);
             throw new RepositoryError(`Error deleting mentor request: ${error.message}`);
         }
-    }
-    async findCollabById(collabId) {
+    };
+    findCollabById = async (collabId) => {
         try {
             logger.debug(`Finding collaboration by ID: ${collabId}`);
             return await this.model
@@ -153,8 +153,8 @@ export class CollaborationRepository extends BaseRepository {
             logger.error(`Error finding collaboration: ${error.message}`);
             throw new RepositoryError(`Error finding collaboration: ${error.message}`);
         }
-    }
-    async deleteCollabById(collabId) {
+    };
+    deleteCollabById = async (collabId) => {
         try {
             logger.debug(`Deleting collaboration: ${collabId}`);
             return await this.findByIdAndDelete(this.toObjectId(collabId).toString());
@@ -163,8 +163,8 @@ export class CollaborationRepository extends BaseRepository {
             logger.error(`Error deleting collaboration: ${error.message}`);
             throw new RepositoryError(`Error deleting collaboration: ${error.message}`);
         }
-    }
-    async markCollabAsCancelled(collabId) {
+    };
+    markCollabAsCancelled = async (collabId) => {
         try {
             logger.debug(`Marking collaboration as cancelled: ${collabId}`);
             return await this.findByIdAndUpdate(this.toObjectId(collabId).toString(), { isCancelled: true }, { new: true });
@@ -173,8 +173,8 @@ export class CollaborationRepository extends BaseRepository {
             logger.error(`Error marking collaboration as cancelled: ${error.message}`);
             throw new RepositoryError(`Error marking collaboration as cancelled: ${error.message}`);
         }
-    }
-    async updateCollabFeedback(collabId) {
+    };
+    updateCollabFeedback = async (collabId) => {
         try {
             logger.debug(`Updating collaboration feedback for ID: ${collabId}`);
             return await this.findByIdAndUpdate(this.toObjectId(collabId).toString(), { feedbackGiven: true }, { new: true });
@@ -183,8 +183,8 @@ export class CollaborationRepository extends BaseRepository {
             logger.error(`Error updating collaboration feedback: ${error.message}`);
             throw new RepositoryError(`Error updating collaboration feedback: ${error.message}`);
         }
-    }
-    async getCollabDataForUser(userId) {
+    };
+    getCollabDataForUser = async (userId) => {
         try {
             logger.debug(`Fetching collaboration data for user: ${userId}`);
             return await this.model
@@ -202,8 +202,8 @@ export class CollaborationRepository extends BaseRepository {
             logger.error(`Error fetching collaboration data for user: ${error.message}`);
             throw new RepositoryError(`Error fetching collaboration data for user: ${error.message}`);
         }
-    }
-    async getCollabDataForMentor(mentorId) {
+    };
+    getCollabDataForMentor = async (mentorId) => {
         try {
             logger.debug(`Fetching collaboration data for mentor: ${mentorId}`);
             const mentor = await Mentor.findById(this.toObjectId(mentorId)).select('userId');
@@ -231,8 +231,8 @@ export class CollaborationRepository extends BaseRepository {
             logger.error(`Error fetching collaboration data for mentor: ${error.message}`);
             throw new RepositoryError(`Error fetching collaboration data for mentor: ${error.message}`);
         }
-    }
-    async findMentorRequest({ page, limit, search }) {
+    };
+    findMentorRequest = async ({ page, limit, search }) => {
         try {
             logger.debug(`Fetching mentor requests with page: ${page}, limit: ${limit}, search: ${search}`);
             const query = search
@@ -270,8 +270,8 @@ export class CollaborationRepository extends BaseRepository {
             logger.error(`Error fetching mentor requests: ${error.message}`);
             throw new RepositoryError(`Error fetching mentor requests: ${error.message}`);
         }
-    }
-    async findCollab({ page, limit, search }) {
+    };
+    findCollab = async ({ page, limit, search }) => {
         try {
             logger.debug(`Fetching collaborations with page: ${page}, limit: ${limit}, search: ${search}`);
             const query = search
@@ -309,8 +309,8 @@ export class CollaborationRepository extends BaseRepository {
             logger.error(`Error fetching collaborations: ${error.message}`);
             throw new RepositoryError(`Error fetching collaborations: ${error.message}`);
         }
-    }
-    async fetchMentorRequestDetails(requestId) {
+    };
+    fetchMentorRequestDetails = async (requestId) => {
         try {
             logger.debug(`Fetching mentor request details for ID: ${requestId}`);
             return await this.mentorRequestModel
@@ -333,8 +333,8 @@ export class CollaborationRepository extends BaseRepository {
             logger.error(`Error fetching mentor request details: ${error.message}`);
             throw new RepositoryError(`Error fetching mentor request details: ${error.message}`);
         }
-    }
-    async findCollabDetails(collabId) {
+    };
+    findCollabDetails = async (collabId) => {
         try {
             logger.debug(`Fetching collaboration details for ID: ${collabId}`);
             return await this.findCollabById(collabId);
@@ -343,8 +343,8 @@ export class CollaborationRepository extends BaseRepository {
             logger.error(`Error fetching collaboration details: ${error.message}`);
             throw new RepositoryError(`Error fetching collaboration details: ${error.message}`);
         }
-    }
-    async updateUnavailableDays(collabId, updateData) {
+    };
+    updateUnavailableDays = async (collabId, updateData) => {
         try {
             logger.debug(`Updating unavailable days for collaboration: ${collabId}`);
             return await this.findByIdAndUpdate(this.toObjectId(collabId).toString(), {
@@ -363,8 +363,8 @@ export class CollaborationRepository extends BaseRepository {
             logger.error(`Error updating unavailable days: ${error.message}`);
             throw new RepositoryError(`Error updating unavailable days: ${error.message}`);
         }
-    }
-    async updateTemporarySlotChanges(collabId, updateData) {
+    };
+    updateTemporarySlotChanges = async (collabId, updateData) => {
         try {
             logger.debug(`Updating temporary slot changes for collaboration: ${collabId}`);
             return await this.findByIdAndUpdate(this.toObjectId(collabId).toString(), {
@@ -383,8 +383,8 @@ export class CollaborationRepository extends BaseRepository {
             logger.error(`Error updating temporary slot changes: ${error.message}`);
             throw new RepositoryError(`Error updating temporary slot changes: ${error.message}`);
         }
-    }
-    async updateRequestStatus(collabId, requestId, requestType, status, newEndDate) {
+    };
+    updateRequestStatus = async (collabId, requestId, requestType, status, newEndDate) => {
         try {
             logger.debug(`Updating request status for collaboration: ${collabId}, request: ${requestId}`);
             const updateField = requestType === 'unavailable' ? 'unavailableDays' : 'temporarySlotChanges';
@@ -419,8 +419,8 @@ export class CollaborationRepository extends BaseRepository {
             logger.error(`Error updating request status: ${error.message}`);
             throw new RepositoryError(`Error updating request status: ${error.message}`);
         }
-    }
-    async getLockedSlotsByMentorId(mentorId) {
+    };
+    getLockedSlotsByMentorId = async (mentorId) => {
         try {
             logger.debug(`Fetching locked slots for mentor: ${mentorId}`);
             const currentDate = new Date();
@@ -474,6 +474,6 @@ export class CollaborationRepository extends BaseRepository {
             logger.error(`Error fetching locked slots: ${error.message}`);
             throw new RepositoryError(`Error fetching locked slots: ${error.message}`);
         }
-    }
+    };
 }
 //# sourceMappingURL=CollaborationRepositry.js.map

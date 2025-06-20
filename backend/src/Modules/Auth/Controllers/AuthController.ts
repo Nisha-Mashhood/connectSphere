@@ -73,7 +73,7 @@ export class AuthController extends BaseController {
   }
 
   // Handle user signup
-  async signup(req: Request<{}, {}, SignupRequestBody>, res: Response) {
+   signup = async(req: Request<{}, {}, SignupRequestBody>, res: Response) =>{
     try {
       const { name, email, password } = req.body;
       logger.debug(`Signup attempt for email: ${email}`);
@@ -90,7 +90,7 @@ export class AuthController extends BaseController {
   }
 
   // Handle user login
-  async login(req: Request<{}, {}, LoginRequestBody>, res: Response) {
+   login = async(req: Request<{}, {}, LoginRequestBody>, res: Response) =>{
     try {
       const { email, password } = req.body;
       logger.debug(`Login attempt for email: ${email}`);
@@ -98,6 +98,7 @@ export class AuthController extends BaseController {
         this.throwError(400, 'Email and password are required');
       }
       const { user, accessToken, refreshToken, needsReviewPrompt } = await this.authService.login(email, password);
+      // logger.info(`User details : ${user}`)
       this.jwtService.setTokensInCookies(res, accessToken, refreshToken);
       this.sendSuccess(res, { user, needsReviewPrompt }, 'Login successful');
       logger.info(`User logged in: ${user.userId} (${email})`);
@@ -108,7 +109,7 @@ export class AuthController extends BaseController {
   }
 
   // Handle Google signup
-  async googleSignup(req: Request<{}, {}, OAuthRequestBody>, res: Response) {
+   googleSignup = async(req: Request<{}, {}, OAuthRequestBody>, res: Response) =>{
     try {
       const { code } = req.body;
       logger.debug(`Google signup attempt with code: ${code}`);
@@ -125,7 +126,7 @@ export class AuthController extends BaseController {
   }
 
   // Handle Google login
-  async googleLogin(req: Request<{}, {}, OAuthRequestBody>, res: Response) {
+   googleLogin= async(req: Request<{}, {}, OAuthRequestBody>, res: Response) =>{
     try {
       const { code } = req.body;
       logger.debug(`Google login attempt with code: ${code}`);
@@ -143,7 +144,7 @@ export class AuthController extends BaseController {
   }
 
   // Handle GitHub signup
-  async githubSignup(req: Request<{}, {}, OAuthRequestBody>, res: Response) {
+   githubSignup = async(req: Request<{}, {}, OAuthRequestBody>, res: Response)=>{
     try {
       const { code } = req.body;
       logger.debug(`GitHub signup attempt with code: ${code}`);
@@ -160,7 +161,7 @@ export class AuthController extends BaseController {
   }
 
   // Handle GitHub login
-  async githubLogin(req: Request<{}, {}, OAuthRequestBody>, res: Response) {
+   githubLogin=async(req: Request<{}, {}, OAuthRequestBody>, res: Response)=>{
     try {
       const { code } = req.body;
       logger.debug(`GitHub login attempt with code: ${code}`);
@@ -178,7 +179,7 @@ export class AuthController extends BaseController {
   }
 
   // Handle refresh token
-  async refreshToken(req: Request<{}, {}, RefreshTokenRequestBody>, res: Response) {
+   refreshToken=async(req: Request<{}, {}, RefreshTokenRequestBody>, res: Response)=>{
     try {
       const { refreshToken } = req.body;
       logger.debug(`Refresh token attempt`);
@@ -195,7 +196,7 @@ export class AuthController extends BaseController {
   }
 
   // Check profile completion
-  async checkProfile(req: Request<{ id: string }>, res: Response) {
+   checkProfile=async(req: Request<{ id: string }>, res: Response)=>{
     try {
       const userId = req.params.id;
       logger.debug(`Checking profile completion for userId: ${userId}`);
@@ -212,7 +213,7 @@ export class AuthController extends BaseController {
   }
 
   // Get profile details
-  async getProfileDetails(req: Request<{ id: string }>, res: Response) {
+   getProfileDetails=async(req: Request<{ id: string }>, res: Response) =>{
     try {
       const userId = req.params.id;
       logger.debug(`Fetching profile details for userId: ${userId}`);
@@ -229,7 +230,7 @@ export class AuthController extends BaseController {
   }
 
   // Update user profile
-  async updateUserDetails(req: Request<{ id: string }, {}, UpdateProfileRequestBody>, res: Response) {
+   updateUserDetails=async(req: Request<{ id: string }, {}, UpdateProfileRequestBody>, res: Response) =>{
     try {
       const userId = req.params.id;
       logger.debug(`Updating profile for userId: ${userId}`);
@@ -251,7 +252,7 @@ export class AuthController extends BaseController {
   }
 
   // Handle logout
-  async logout(req: Request<{}, {}, LogoutRequestBody>, res: Response) {
+   logout = async(req: Request<{}, {}, LogoutRequestBody>, res: Response) =>{
     try {
       const { email } = req.body;
       logger.debug(`Logout attempt for email: ${email}`);
@@ -269,7 +270,7 @@ export class AuthController extends BaseController {
   }
 
   // Handle forgot password
-  async handleForgotPassword(req: Request<{}, {}, ForgotPasswordRequestBody>, res: Response) {
+   handleForgotPassword=async(req: Request<{}, {}, ForgotPasswordRequestBody>, res: Response) =>{
     try {
       const { email } = req.body;
       logger.debug(`Forgot password request for email: ${email}`);
@@ -286,7 +287,7 @@ export class AuthController extends BaseController {
   }
 
   // Handle verify OTP
-  async handleVerifyOTP(req: Request<{}, {}, VerifyOTPRequestBody>, res: Response) {
+   handleVerifyOTP=async(req: Request<{}, {}, VerifyOTPRequestBody>, res: Response) =>{
     try {
       const { email, otp } = req.body;
       logger.debug(`Verify OTP attempt for email: ${email}`);
@@ -303,7 +304,7 @@ export class AuthController extends BaseController {
   }
 
   // Handle reset password
-  async handleResetPassword(req: Request<{}, {}, ResetPasswordRequestBody>, res: Response) {
+   handleResetPassword=async(req: Request<{}, {}, ResetPasswordRequestBody>, res: Response) =>{
     try {
       const { email, newPassword } = req.body;
       logger.debug(`Reset password attempt for email: ${email}`);
@@ -320,7 +321,7 @@ export class AuthController extends BaseController {
   }
 
   // Verify admin passkey
-  async verifyPasskey(req: Request<{}, {}, VerifyPasskeyRequestBody>, res: Response) {
+   verifyPasskey=async(req: Request<{}, {}, VerifyPasskeyRequestBody>, res: Response) =>{
     try {
       const { passkey } = req.body;
       logger.debug(`Verify admin passkey attempt`);
@@ -337,7 +338,7 @@ export class AuthController extends BaseController {
   }
 
   //get all User Details
-  async getAllUsers(_req: Request, res: Response) {
+   getAllUsers = async(_req: Request, res: Response) =>{
     try {
       logger.debug(`Fetching all users`);
       const users = await this.authService.getAllUsers();
@@ -350,7 +351,7 @@ export class AuthController extends BaseController {
   }
 
   //get user Deatils by Id
-  async getUserById(req: Request<{ id: string }>, res: Response) {
+   getUserById=async(req: Request<{ id: string }>, res: Response)=>{
     try {
       const { id } = req.params;
       logger.debug(`Fetching user by ID: ${id}`);
@@ -367,7 +368,7 @@ export class AuthController extends BaseController {
   }
 
   //Block teh given User
-  async blockUser(req: Request<{ id: string }>, res: Response) {
+   blockUser=async(req: Request<{ id: string }>, res: Response) =>{
     try {
       const { id } = req.params;
       logger.debug(`Blocking user: ${id}`);
@@ -384,7 +385,7 @@ export class AuthController extends BaseController {
   }
 
   //Unblock the given user
-  async unblockUser(req: Request<{ id: string }>, res: Response) {
+   unblockUser=async(req: Request<{ id: string }>, res: Response) =>{
     try {
       const { id } = req.params;
       logger.debug(`Unblocking user: ${id}`);
@@ -401,7 +402,7 @@ export class AuthController extends BaseController {
   }
 
   //Change the user role
-  async changeRole(req: Request<{ id: string }, {}, { role: string }>, res: Response) {
+   changeRole=async(req: Request<{ id: string }, {}, { role: string }>, res: Response) =>{
     try {
       const { id } = req.params;
       const { role } = req.body;

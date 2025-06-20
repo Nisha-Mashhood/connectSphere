@@ -16,7 +16,7 @@ export class TaskService extends BaseService {
     this.notificationRepo = new NotificationRepository();
   }
 
-  async createTask(taskData: Partial<ITask>, imagePath?: string, fileSize?: number): Promise<ITask> {
+   createTask = async(taskData: Partial<ITask>, imagePath?: string, fileSize?: number): Promise<ITask> =>{
     try {
       logger.debug(`Creating task: ${taskData.name}`);
       this.checkData(taskData);
@@ -39,7 +39,7 @@ export class TaskService extends BaseService {
     }
   }
 
-  async getTasksByContext(contextType: string, contextId: string, userId: string): Promise<ITask[]> {
+   getTasksByContext = async(contextType: string, contextId: string, userId: string): Promise<ITask[]> =>{
     try {
       logger.debug(`Fetching tasks for contextType=${contextType}, contextId=${contextId}, userId=${userId}`);
       this.checkData({ contextType, contextId, userId });
@@ -50,7 +50,7 @@ export class TaskService extends BaseService {
     }
   }
 
-  async changeTaskPriority(taskId: string, priority: 'low' | 'medium' | 'high'): Promise<ITask | null> {
+   changeTaskPriority = async(taskId: string, priority: 'low' | 'medium' | 'high'): Promise<ITask | null> =>{
     try {
       logger.debug(`Changing task priority: taskId=${taskId}, priority=${priority}`);
       this.checkData({ taskId, priority });
@@ -61,7 +61,7 @@ export class TaskService extends BaseService {
     }
   }
 
-  async changeTaskStatus(taskId: string, status: 'pending' | 'in-progress' | 'completed' | 'not-completed'): Promise<ITask | null> {
+   changeTaskStatus = async(taskId: string, status: 'pending' | 'in-progress' | 'completed' | 'not-completed'): Promise<ITask | null> =>{
     try {
       logger.debug(`Changing task status: taskId=${taskId}, status=${status}`);
       this.checkData({ taskId, status });
@@ -72,7 +72,7 @@ export class TaskService extends BaseService {
     }
   }
 
-  async editTask(taskId: string, updates: Partial<ITask>): Promise<ITask | null> {
+   editTask = async(taskId: string, updates: Partial<ITask>): Promise<ITask | null> =>{
     try {
       logger.debug(`Editing task: taskId=${taskId}`);
       this.checkData({ taskId, updates });
@@ -96,7 +96,7 @@ export class TaskService extends BaseService {
     }
   }
 
-  async deleteTask(taskId: string): Promise<void> {
+   deleteTask = async(taskId: string): Promise<void> =>{
     try {
       logger.debug(`Deleting task: ${taskId}`);
       this.checkData(taskId);

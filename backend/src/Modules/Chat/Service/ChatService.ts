@@ -4,6 +4,7 @@ import { ChatRepository } from '../Repositry/ChatRepositry.js';
 import { IChatMessage } from '../../../Interfaces/models/IChatMessage.js';
 import { ContactRepository } from '../../Contact/Repositry/ContactRepositry.js';
 import logger from '../../../core/Utils/Logger.js';
+import { IContact } from '../../../Interfaces/models/IContact.js';
 
 export class ChatService extends BaseService {
 private chatRepo: ChatRepository;
@@ -14,12 +15,12 @@ private contactRepo: ContactRepository;
         this.contactRepo = new ContactRepository();
       }
 
-  async getChatMessages(
+   getChatMessages = async(
     contactId?: string,
     groupId?: string,
     page: number = 1,
     limit: number = 10
-  ): Promise<{ messages: IChatMessage[]; total: number }> {
+  ): Promise<{ messages: IChatMessage[]; total: number }> => {
     logger.debug(`Fetching chat messages for contact: ${contactId}, group: ${groupId}, page: ${page}, limit: ${limit}`);
     if (!contactId && !groupId) {
       this.throwError('Contact ID or Group ID is required to fetch chat messages');
@@ -37,15 +38,16 @@ private contactRepo: ContactRepository;
       total = await this.chatRepo.countMessagesByGroupId(groupId);
     } else if (contactId) {
       this.checkData(contactId);
-      const contact = await this.contactRepo.findContactById(contactId);
+      // const contact = await this.contactRepo.findContactById(contactId);
+      const contact: IContact | null = await this.contactRepo.findContactById(contactId);
       if (!contact) {
         this.throwError('Invalid contact');
       }
 
-      if (contact.type === 'user-mentor' && contact.collaborationId) {
+      if (contact?.type === 'user-mentor' && contact?.collaborationId) {
         messages = await this.chatRepo.findChatMessagesByCollaborationId(contact.collaborationId.toString(), page, limit);
         total = await this.chatRepo.countMessagesByCollaborationId(contact.collaborationId.toString());
-      } else if (contact.type === 'user-user' && contact.userConnectionId) {
+      } else if (contact?.type === 'user-user' && contact.userConnectionId) {
         messages = await this.chatRepo.findChatMessagesByUserConnectionId(contact.userConnectionId.toString(), page, limit);
         total = await this.chatRepo.countMessagesByUserConnectionId(contact.userConnectionId.toString());
       } else {
@@ -56,7 +58,7 @@ private contactRepo: ContactRepository;
     return { messages: messages.reverse(), total };
   }
 
-  async getUnreadMessageCounts(userId: string): Promise<{ [key: string]: number }> {
+   getUnreadMessageCounts = async(userId: string): Promise<{ [key: string]: number }> => {
     logger.debug(`Fetching unread message counts for user: ${userId}`);
     this.checkData(userId);
     if (!Types.ObjectId.isValid(userId)) {

@@ -8,8 +8,8 @@ const router = Router();
 const chatController = new ChatController();
 const authMiddleware = new AuthMiddleware();
 
-router.get('/chat/messages', [apiLimiter, authMiddleware.verifyToken, authMiddleware.checkBlockedStatus, authMiddleware.authorize('user')], chatController.getChatMessages);
-router.post('/chat/messages', [apiLimiter, authMiddleware.verifyToken, authMiddleware.checkBlockedStatus, authMiddleware.authorize('user'), upload.single('file')], chatController.uploadAndSaveMessage);
-router.get('/chat/unread', [apiLimiter, authMiddleware.verifyToken, authMiddleware.checkBlockedStatus, authMiddleware.authorize('user')], chatController.getUnreadMessageCounts);
+router.get('/messages', [apiLimiter, authMiddleware.verifyToken, authMiddleware.checkBlockedStatus, authMiddleware.authorize('user')], chatController.getChatMessages);
+router.post('/upload', [apiLimiter, authMiddleware.verifyToken, authMiddleware.checkBlockedStatus, authMiddleware.authorize('user'), upload.single('file')], chatController.uploadAndSaveMessage);
+router.get('/unread', [apiLimiter, authMiddleware.verifyToken, authMiddleware.checkBlockedStatus, authMiddleware.authorize('user')], chatController.getUnreadMessageCounts);
 
 export default router;

@@ -19,7 +19,7 @@ export class FeedbackRepository extends BaseRepository {
         }
         return new Types.ObjectId(idStr);
     }
-    async createFeedback(feedbackData) {
+    createFeedback = async (feedbackData) => {
         try {
             logger.debug(`Creating feedback for collaboration: ${feedbackData.collaborationId}`);
             return await this.create({
@@ -34,8 +34,8 @@ export class FeedbackRepository extends BaseRepository {
             logger.error(`Error creating feedback: ${error.message}`);
             throw new RepositoryError(`Error creating feedback: ${error.message}`);
         }
-    }
-    async getFeedbacksByMentorId(mentorId) {
+    };
+    getFeedbacksByMentorId = async (mentorId) => {
         try {
             logger.debug(`Fetching feedbacks for mentor: ${mentorId}`);
             return await this.model
@@ -48,8 +48,8 @@ export class FeedbackRepository extends BaseRepository {
             logger.error(`Error fetching feedbacks by mentor ID: ${error.message}`);
             throw new RepositoryError(`Error fetching feedbacks by mentor ID: ${error.message}`);
         }
-    }
-    async getFeedbacksByUserId(userId) {
+    };
+    getFeedbacksByUserId = async (userId) => {
         try {
             logger.debug(`Fetching feedbacks for user: ${userId}`);
             return await this.model
@@ -63,8 +63,8 @@ export class FeedbackRepository extends BaseRepository {
             logger.error(`Error fetching feedbacks by user ID: ${error.message}`);
             throw new RepositoryError(`Error fetching feedbacks by user ID: ${error.message}`);
         }
-    }
-    async getFeedbackByCollaborationId(collaborationId) {
+    };
+    getFeedbackByCollaborationId = async (collaborationId) => {
         try {
             logger.debug(`Fetching feedbacks for collaboration: ${collaborationId}`);
             return await this.model
@@ -77,8 +77,8 @@ export class FeedbackRepository extends BaseRepository {
             logger.error(`Error fetching feedbacks by collaboration ID: ${error.message}`);
             throw new RepositoryError(`Error fetching feedbacks by collaboration ID: ${error.message}`);
         }
-    }
-    async getMentorAverageRating(mentorId) {
+    };
+    getMentorAverageRating = async (mentorId) => {
         try {
             logger.debug(`Calculating average rating for mentor: ${mentorId}`);
             const result = await this.model.aggregate([
@@ -99,8 +99,8 @@ export class FeedbackRepository extends BaseRepository {
             logger.error(`Error calculating mentor average rating: ${error.message}`);
             throw new RepositoryError(`Error calculating mentor average rating: ${error.message}`);
         }
-    }
-    async getFeedbackForProfile(profileId, profileType) {
+    };
+    getFeedbackForProfile = async (profileId, profileType) => {
         try {
             logger.debug(`Fetching feedbacks for profile: ${profileId}, type: ${profileType}`);
             const query = profileType === 'mentor'
@@ -124,8 +124,8 @@ export class FeedbackRepository extends BaseRepository {
             logger.error(`Error fetching feedbacks for profile: ${error.message}`);
             throw new RepositoryError(`Error fetching feedbacks for profile: ${error.message}`);
         }
-    }
-    async toggleIsHidden(feedbackId) {
+    };
+    toggleIsHidden = async (feedbackId) => {
         try {
             logger.debug(`Toggling isHidden for feedback: ${feedbackId}`);
             const feedback = await this.findById(feedbackId);
@@ -140,6 +140,6 @@ export class FeedbackRepository extends BaseRepository {
             logger.error(`Error toggling isHidden for feedback: ${error.message}`);
             throw new RepositoryError(`Error toggling isHidden for feedback: ${error.message}`);
         }
-    }
+    };
 }
 //# sourceMappingURL=FeedBackRepositry.js.map

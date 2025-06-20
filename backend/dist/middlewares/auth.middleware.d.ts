@@ -8,12 +8,12 @@ declare global {
     }
 }
 export declare class AuthMiddleware {
-    private authService;
+    private jwtService;
     private userRepo;
     constructor();
-    verifyToken(req: Request, _res: Response, next: NextFunction): Promise<void>;
-    verifyRefreshToken(req: Request, _res: Response, next: NextFunction): Promise<void>;
-    checkBlockedStatus(req: Request, _res: Response, next: NextFunction): Promise<void>;
-    authorize(...allowedRoles: string[]): (req: Request, _res: Response, next: NextFunction) => void;
+    verifyToken: (req: Request, _res: Response, next: NextFunction) => Promise<void>;
+    verifyRefreshToken: (req: Request, _res: Response, next: NextFunction) => Promise<void>;
+    checkBlockedStatus: (req: Request, _res: Response, next: NextFunction) => Promise<void>;
+    authorize: (...allowedRoles: string[]) => (req: Request, _res: Response, next: NextFunction) => void;
 }
 //# sourceMappingURL=auth.middleware.d.ts.map

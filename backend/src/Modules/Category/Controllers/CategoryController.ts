@@ -17,7 +17,7 @@ export class CategoryController extends BaseController {
     this.categoryService = new CategoryService();
   }
 
-  async createCategory(req: CategoryRequest, res: Response): Promise<void> {
+   createCategory = async(req: CategoryRequest, res: Response): Promise<void> => {
     try {
       logger.debug(`Creating category: ${req.body.name}`);
       if (!req.body.name) {
@@ -36,7 +36,7 @@ export class CategoryController extends BaseController {
     }
   }
 
-  async getAllCategories(_req: Request, res: Response): Promise<void> {
+   getAllCategories = async(_req: Request, res: Response): Promise<void> => {
     try {
       logger.debug('Fetching all categories');
       const categories = await this.categoryService.getAllCategories();
@@ -46,7 +46,7 @@ export class CategoryController extends BaseController {
     }
   }
 
-  async getCategoryById(req: CategoryRequest, res: Response): Promise<void> {
+   getCategoryById = async(req: CategoryRequest, res: Response): Promise<void> => {
     try {
       logger.debug(`Fetching category: ${req.params.id}`);
       const category = await this.categoryService.getCategoryById(req.params.id!);
@@ -59,7 +59,7 @@ export class CategoryController extends BaseController {
     }
   }
 
-  async updateCategory(req: CategoryRequest, res: Response): Promise<void> {
+   updateCategory = async(req: CategoryRequest, res: Response): Promise<void> => {
     try {
       logger.debug(`Updating category: ${req.params.id}`);
       if (!req.body.name) {
@@ -81,7 +81,7 @@ export class CategoryController extends BaseController {
     }
   }
 
-  async deleteCategory(req: CategoryRequest, res: Response): Promise<void> {
+   deleteCategory = async(req: CategoryRequest, res: Response): Promise<void> => {
     try {
       logger.debug(`Deleting category: ${req.params.id}`);
       const deletedCategory = await this.categoryService.deleteCategory(req.params.id!);

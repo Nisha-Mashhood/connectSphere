@@ -4,7 +4,7 @@ import { IBaseService } from '../Interfaces/IBaseService.js';
 
 export abstract class BaseService implements IBaseService {
   // Check if data is provided
-  checkData(data: any): void {
+  checkData = (data: any): void => {
     if (!data) {
       logger.error('No data provided');
       throw new ServiceError('No data provided');
@@ -12,7 +12,7 @@ export abstract class BaseService implements IBaseService {
     logger.debug('Data checked successfully');
   }
 
-  throwError(message: string): never {
+  throwError = (message: string): never => {
     logger.error(`Service error: ${message}`);
     throw new ServiceError(message);
   }

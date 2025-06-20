@@ -10,11 +10,11 @@ interface CategoryRequest extends Request {
 export declare class CategoryController extends BaseController {
     private categoryService;
     constructor();
-    createCategory(req: CategoryRequest, res: Response): Promise<void>;
-    getAllCategories(_req: Request, res: Response): Promise<void>;
-    getCategoryById(req: CategoryRequest, res: Response): Promise<void>;
-    updateCategory(req: CategoryRequest, res: Response): Promise<void>;
-    deleteCategory(req: CategoryRequest, res: Response): Promise<void>;
+    createCategory: (req: CategoryRequest, res: Response) => Promise<void>;
+    getAllCategories: (_req: Request, res: Response) => Promise<void>;
+    getCategoryById: (req: CategoryRequest, res: Response) => Promise<void>;
+    updateCategory: (req: CategoryRequest, res: Response) => Promise<void>;
+    deleteCategory: (req: CategoryRequest, res: Response) => Promise<void>;
 }
 export {};
 //# sourceMappingURL=CategoryController.d.ts.map

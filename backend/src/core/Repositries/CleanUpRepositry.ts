@@ -5,7 +5,7 @@ import MentorRequest from '../../models/mentorRequset.js';
 
 export class CleanupRepository {
   
-  async deleteOldGroupRequests(cutoffDate: Date): Promise<number> {
+  deleteOldGroupRequests = async(cutoffDate: Date): Promise<number> => {
     try {
       logger.debug(`Deleting GroupRequest documents older than ${cutoffDate}`);
       const result = await GroupRequest.deleteMany({
@@ -19,7 +19,7 @@ export class CleanupRepository {
     }
   }
 
-  async deleteOldMentorRequests(cutoffDate: Date): Promise<number> {
+  deleteOldMentorRequests = async(cutoffDate: Date): Promise<number> => {
     try {
       logger.debug(`Deleting MentorRequest documents older than ${cutoffDate}`);
       const result = await MentorRequest.deleteMany({

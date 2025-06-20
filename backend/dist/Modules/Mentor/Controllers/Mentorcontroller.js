@@ -13,7 +13,7 @@ export class MentorController extends BaseController {
         this.authService = new AuthService();
         this.userRepo = new UserRepository();
     }
-    async checkMentorStatus(req, res) {
+    checkMentorStatus = async (req, res) => {
         try {
             const { id } = req.params;
             const mentor = await this.mentorService.getMentorByUserId(id);
@@ -22,8 +22,8 @@ export class MentorController extends BaseController {
         catch (error) {
             this.handleError(error, res);
         }
-    }
-    async getMentorDetails(req, res) {
+    };
+    getMentorDetails = async (req, res) => {
         try {
             const { mentorId } = req.params;
             const mentor = await this.mentorService.getMentorByMentorId(mentorId);
@@ -35,15 +35,15 @@ export class MentorController extends BaseController {
         catch (error) {
             this.handleError(error, res);
         }
-    }
-    async createMentor(req, res) {
+    };
+    createMentor = async (req, res) => {
         try {
             const { userId, specialization, bio, price, skills, availableSlots, timePeriod } = req.body;
             const user = await this.userRepo.getUserById(userId);
             if (!user) {
                 this.throwError(404, 'User not found');
             }
-            if (user.role !== 'mentor') {
+            if (user?.role !== 'mentor') {
                 await this.authService.changeRole(userId, 'mentor');
             }
             const existingMentor = await this.mentorService.getMentorByUserId(userId);
@@ -74,8 +74,8 @@ export class MentorController extends BaseController {
         catch (error) {
             this.handleError(error, res);
         }
-    }
-    async getAllMentorRequests(req, res) {
+    };
+    getAllMentorRequests = async (req, res) => {
         try {
             const { page = '1', limit = '10', search = '', status = '', sort = 'desc' } = req.query;
             const mentorRequests = await this.mentorService.getAllMentorRequests(parseInt(page), parseInt(limit), search, status, sort);
@@ -89,8 +89,8 @@ export class MentorController extends BaseController {
         catch (error) {
             this.handleError(error, res);
         }
-    }
-    async getAllMentors(_req, res) {
+    };
+    getAllMentors = async (_req, res) => {
         try {
             const mentors = await this.mentorService.getAllMentors();
             this.sendSuccess(res, mentors, 'Mentors retrieved successfully');
@@ -98,8 +98,8 @@ export class MentorController extends BaseController {
         catch (error) {
             this.handleError(error, res);
         }
-    }
-    async getMentorByUserId(req, res) {
+    };
+    getMentorByUserId = async (req, res) => {
         try {
             const { userId } = req.params;
             const mentor = await this.mentorService.getMentorByUserId(userId);
@@ -111,8 +111,8 @@ export class MentorController extends BaseController {
         catch (error) {
             this.handleError(error, res);
         }
-    }
-    async approveMentorRequest(req, res) {
+    };
+    approveMentorRequest = async (req, res) => {
         try {
             const { id } = req.params;
             await this.mentorService.approveMentorRequest(id);
@@ -121,8 +121,8 @@ export class MentorController extends BaseController {
         catch (error) {
             this.handleError(error, res);
         }
-    }
-    async rejectMentorRequest(req, res) {
+    };
+    rejectMentorRequest = async (req, res) => {
         try {
             const { id } = req.params;
             const { reason } = req.body;
@@ -135,8 +135,8 @@ export class MentorController extends BaseController {
         catch (error) {
             this.handleError(error, res);
         }
-    }
-    async cancelMentorship(req, res) {
+    };
+    cancelMentorship = async (req, res) => {
         try {
             const { mentorId } = req.params;
             await this.mentorService.cancelMentorship(mentorId);
@@ -145,8 +145,8 @@ export class MentorController extends BaseController {
         catch (error) {
             this.handleError(error, res);
         }
-    }
-    async updateMentorProfile(req, res) {
+    };
+    updateMentorProfile = async (req, res) => {
         try {
             const { mentorId } = req.params;
             const updateData = req.body;
@@ -156,6 +156,6 @@ export class MentorController extends BaseController {
         catch (error) {
             this.handleError(error, res);
         }
-    }
+    };
 }
 //# sourceMappingURL=Mentorcontroller.js.map

@@ -16,7 +16,7 @@ export class ChatController extends BaseController {
     this.chatRepo = new ChatRepository();
   }
 
-  async getChatMessages(req: Request, res: Response): Promise<void> {
+  getChatMessages = async(req: Request, res: Response): Promise<void> =>{
     try {
       const { contactId, groupId, page = '1', limit = '10' } = req.query;
       const messages = await this.chatService.getChatMessages(
@@ -31,21 +31,24 @@ export class ChatController extends BaseController {
     }
   }
 
-  async uploadAndSaveMessage(req: Request, res: Response): Promise<void> {
+  uploadAndSaveMessage = async(req: Request, res: Response): Promise<void> => {
     try {
       const { senderId, targetId, type, collaborationId, userConnectionId, groupId } = req.body;
       if (!req.file || !senderId || !targetId || !type) {
         this.throwError(400, 'Missing required fields');
       }
 
-      const filePath = req.file.path;
+      const filePath = req.file?.path;
+      if(!filePath){
+        this.throwError(400, 'Missing File Path');
+      }
       const folder = type === 'group' ? 'group_chat_media' : 'chat_media';
-      const contentType = req.file.mimetype.startsWith('image/')
+      const contentType = req.file?.mimetype.startsWith('image/')
         ? 'image'
-        : req.file.mimetype.startsWith('video/')
+        : req.file?.mimetype.startsWith('video/')
         ? 'video'
         : 'file';
-      const { url, thumbnailUrl } = await uploadMedia(filePath, folder, req.file.size, contentType);
+      const { url, thumbnailUrl } = await uploadMedia(filePath as string, folder, req.file?.size, contentType);
 
       const message = await this.chatRepo.saveChatMessage({
         senderId,
@@ -56,9 +59,9 @@ export class ChatController extends BaseController {
         ...(type === 'user-user' && { userConnectionId }),
         ...(type === 'group' && { groupId }),
         fileMetadata: {
-          fileName: req.file.originalname,
-          fileSize: req.file.size,
-          mimeType: req.file.mimetype,
+          fileName: req.file?.originalname,
+          fileSize: req.file?.size,
+          mimeType: req.file?.mimetype,
         },
         timestamp: new Date(),
       });
@@ -74,7 +77,7 @@ export class ChatController extends BaseController {
     }
   }
 
-  async getUnreadMessageCounts(req: Request, res: Response): Promise<void> {
+  getUnreadMessageCounts = async(req: Request, res: Response): Promise<void> => {
     try {
       const { userId } = req.query;
       if (!userId) {

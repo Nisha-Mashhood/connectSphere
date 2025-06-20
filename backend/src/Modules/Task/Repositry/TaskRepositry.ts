@@ -23,7 +23,7 @@ export class TaskRepository extends BaseRepository<ITask> {
     return new Types.ObjectId(idStr);
   }
 
-  async createTask(taskData: Partial<ITask>): Promise<ITask> {
+   createTask = async(taskData: Partial<ITask>): Promise<ITask> =>{
     try {
       logger.debug(`Creating task: ${taskData.name}`);
       return await this.create({
@@ -41,7 +41,7 @@ export class TaskRepository extends BaseRepository<ITask> {
     }
   }
 
-  async findTaskById(taskId: string): Promise<ITask | null> {
+   findTaskById = async(taskId: string): Promise<ITask | null> =>{
     try {
       logger.debug(`Fetching task by ID: ${taskId}`);
       return await this.findById(this.toObjectId(taskId).toString());
@@ -51,7 +51,7 @@ export class TaskRepository extends BaseRepository<ITask> {
     }
   }
 
-  async updateTask(taskId: string, updates: Partial<ITask>): Promise<ITask | null> {
+   updateTask = async(taskId: string, updates: Partial<ITask>): Promise<ITask | null> =>{
     try {
       logger.debug(`Updating task: ${taskId}`);
       const updateData = {
@@ -69,7 +69,7 @@ export class TaskRepository extends BaseRepository<ITask> {
     }
   }
 
-  async deleteTask(taskId: string): Promise<void> {
+   deleteTask = async(taskId: string): Promise<void> =>{
     try {
       logger.debug(`Deleting task: ${taskId}`);
       const result = await this.delete(this.toObjectId(taskId).toString());
@@ -82,7 +82,7 @@ export class TaskRepository extends BaseRepository<ITask> {
     }
   }
 
-  async findTasksByContext(contextType: string, contextId: string, userId: string): Promise<ITask[]> {
+   findTasksByContext = async(contextType: string, contextId: string, userId: string): Promise<ITask[]> =>{
     try {
       logger.debug(`Fetching tasks for contextType=${contextType}, contextId=${contextId}, userId=${userId}`);
       let query: FilterQuery<ITask>;
@@ -125,7 +125,7 @@ export class TaskRepository extends BaseRepository<ITask> {
     }
   }
 
-  async updateTaskPriority(taskId: string, priority: 'low' | 'medium' | 'high'): Promise<ITask | null> {
+   updateTaskPriority = async(taskId: string, priority: 'low' | 'medium' | 'high'): Promise<ITask | null> =>{
     try {
       logger.debug(`Updating task priority: taskId=${taskId}, priority=${priority}`);
       return await this.findByIdAndUpdate(this.toObjectId(taskId).toString(), { priority }, { new: true });
@@ -135,7 +135,7 @@ export class TaskRepository extends BaseRepository<ITask> {
     }
   }
 
-  async updateTaskStatus(taskId: string, status: 'pending' | 'in-progress' | 'completed' | 'not-completed'): Promise<ITask | null> {
+   updateTaskStatus = async(taskId: string, status: 'pending' | 'in-progress' | 'completed' | 'not-completed'): Promise<ITask | null> =>{
     try {
       logger.debug(`Updating task status: taskId=${taskId}, status=${status}`);
       return await this.findByIdAndUpdate(this.toObjectId(taskId).toString(), { status }, { new: true });

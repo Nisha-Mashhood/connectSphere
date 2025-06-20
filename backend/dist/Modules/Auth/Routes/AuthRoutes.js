@@ -19,16 +19,16 @@ router.post('/github-login', authLimiter, authController.githubLogin.bind(authCo
 // Protected routes
 router.post('/verify-admin-passkey', [authLimiter, authMiddleware.verifyToken, authMiddleware.authorize('admin')], authController.verifyPasskey.bind(authController));
 router.post('/refresh-token', [apiLimiter, authMiddleware.verifyRefreshToken], authController.refreshToken.bind(authController));
-router.post('/logout', [apiLimiter, authMiddleware.verifyToken], authController.logout.bind(authController));
+router.post('/logout', [apiLimiter], authController.logout.bind(authController));
 // Protected user routes
 router.get('/check-profile/:id', [apiLimiter, authMiddleware.verifyToken, authMiddleware.checkBlockedStatus], authController.checkProfile.bind(authController));
 router.get('/profiledetails/:id', [apiLimiter, authMiddleware.verifyToken, authMiddleware.checkBlockedStatus], authController.getProfileDetails.bind(authController));
 router.put('/updateUserDetails/:id', [apiLimiter, authMiddleware.verifyToken, authMiddleware.checkBlockedStatus, upload.fields([{ name: 'profilePic', maxCount: 1 }, { name: 'coverPic', maxCount: 1 }])], authController.updateUserDetails.bind(authController));
-router.get('/users', [apiLimiter, authMiddleware.verifyToken], authController.getAllUsers.bind(authController));
-router.get('/users/:id', [apiLimiter, authMiddleware.verifyToken], authController.getUserById.bind(authController));
+router.get('/getallusers', [apiLimiter, authMiddleware.verifyToken], authController.getAllUsers.bind(authController));
+router.get('/getuser/:id', [apiLimiter, authMiddleware.verifyToken], authController.getUserById.bind(authController));
 router.put('/users/:id', [apiLimiter, authMiddleware.verifyToken, authMiddleware.checkBlockedStatus, upload.fields([{ name: 'profilePhoto', maxCount: 1 }, { name: 'coverPhoto', maxCount: 1 }])], authController.updateUserDetails.bind(authController));
-router.put('/users/block/:id', [apiLimiter, authMiddleware.verifyToken, authMiddleware.authorize('admin')], authController.blockUser.bind(authController));
-router.put('/users/unblock/:id', [apiLimiter, authMiddleware.verifyToken, authMiddleware.authorize('admin')], authController.unblockUser.bind(authController));
-router.put('/users/role/:id', [apiLimiter, authMiddleware.verifyToken, authMiddleware.authorize('admin')], authController.changeRole.bind(authController));
+router.put('/blockuser/:id', [apiLimiter, authMiddleware.verifyToken, authMiddleware.authorize('admin')], authController.blockUser.bind(authController));
+router.put('/unblockuser/:id', [apiLimiter, authMiddleware.verifyToken, authMiddleware.authorize('admin')], authController.unblockUser.bind(authController));
+router.put('/changerole/:id', [apiLimiter, authMiddleware.verifyToken, authMiddleware.authorize('admin')], authController.changeRole.bind(authController));
 export default router;
 //# sourceMappingURL=AuthRoutes.js.map

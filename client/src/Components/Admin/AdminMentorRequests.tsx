@@ -61,7 +61,7 @@ const AdminMentorRequests: React.FC = () => {
 
   useEffect(() => {
     fetchMentorRequests();
-  }, [page, search, statusFilter]);
+  }, []);
 
   const handleViewDetails = (mentor: MentorRequest) => {
     setSelectedMentor(mentor);

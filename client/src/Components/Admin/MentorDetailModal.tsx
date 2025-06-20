@@ -111,7 +111,7 @@ const MentorDetailModal: React.FC<MentorDetailModalProps> = ({ mentor, onClose }
   // Fetch feedback on mount
   useEffect(() => {
     fetchFeedback();
-  }, [mentor._id]);
+  }, []);
 
 
   const approveMentor = async () => {
@@ -131,6 +131,7 @@ const MentorDetailModal: React.FC<MentorDetailModalProps> = ({ mentor, onClose }
       toast.success("Mentorship canceled successfully.");
       onClose();
     } catch (error) {
+      console.log(error)
       toast.error("Failed to cancel mentorship.");
     }
   };

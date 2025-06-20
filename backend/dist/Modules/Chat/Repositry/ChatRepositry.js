@@ -19,7 +19,7 @@ export class ChatRepository extends BaseRepository {
         }
         return new Types.ObjectId(idStr);
     }
-    async saveChatMessage(messageData) {
+    saveChatMessage = async (messageData) => {
         try {
             logger.debug(`Saving chat message for sender: ${messageData.senderId}`);
             return await this.create({
@@ -34,11 +34,11 @@ export class ChatRepository extends BaseRepository {
             logger.error(`Error saving chat message: ${error.message}`);
             throw new RepositoryError(`Error saving chat message: ${error.message}`);
         }
-    }
-    async findChatMessageById(messageId) {
+    };
+    findChatMessageById = async (messageId) => {
         return await this.findById(messageId);
-    }
-    async findChatMessagesByCollaborationId(collaborationId, page, limit) {
+    };
+    findChatMessagesByCollaborationId = async (collaborationId, page, limit) => {
         try {
             logger.debug(`Finding messages for collaboration: ${collaborationId}`);
             const id = this.toObjectId(collaborationId);
@@ -53,8 +53,8 @@ export class ChatRepository extends BaseRepository {
             logger.error(`Error finding messages by collaboration ID: ${error.message}`);
             throw new RepositoryError(`Error finding chat messages by collaboration ID: ${error.message}`);
         }
-    }
-    async findChatMessagesByUserConnectionId(userConnectionId, page, limit) {
+    };
+    findChatMessagesByUserConnectionId = async (userConnectionId, page, limit) => {
         try {
             logger.debug(`Finding messages for user connection: ${userConnectionId}`);
             const id = this.toObjectId(userConnectionId);
@@ -69,8 +69,8 @@ export class ChatRepository extends BaseRepository {
             logger.error(`Error finding messages by user connection ID: ${error.message}`);
             throw new RepositoryError(`Error finding chat messages by user connection ID: ${error.message}`);
         }
-    }
-    async findChatMessagesByGroupId(groupId, page, limit) {
+    };
+    findChatMessagesByGroupId = async (groupId, page, limit) => {
         try {
             logger.debug(`Finding messages for group: ${groupId}`);
             const id = this.toObjectId(groupId);
@@ -85,8 +85,8 @@ export class ChatRepository extends BaseRepository {
             logger.error(`Error finding messages by group ID: ${error.message}`);
             throw new RepositoryError(`Error finding chat messages by group ID: ${error.message}`);
         }
-    }
-    async countMessagesByCollaborationId(collaborationId) {
+    };
+    countMessagesByCollaborationId = async (collaborationId) => {
         try {
             logger.debug(`Counting messages for collaboration: ${collaborationId}`);
             const id = this.toObjectId(collaborationId);
@@ -96,8 +96,8 @@ export class ChatRepository extends BaseRepository {
             logger.error(`Error counting messages by collaboration ID: ${error.message}`);
             throw new RepositoryError(`Error counting messages by collaboration ID: ${error.message}`);
         }
-    }
-    async countMessagesByUserConnectionId(userConnectionId) {
+    };
+    countMessagesByUserConnectionId = async (userConnectionId) => {
         try {
             logger.debug(`Counting messages for user connection: ${userConnectionId}`);
             const id = this.toObjectId(userConnectionId);
@@ -107,8 +107,8 @@ export class ChatRepository extends BaseRepository {
             logger.error(`Error counting messages by user connection ID: ${error.message}`);
             throw new RepositoryError(`Error counting messages by user connection ID: ${error.message}`);
         }
-    }
-    async countMessagesByGroupId(groupId) {
+    };
+    countMessagesByGroupId = async (groupId) => {
         try {
             logger.debug(`Counting messages for group: ${groupId}`);
             const id = this.toObjectId(groupId);
@@ -118,8 +118,8 @@ export class ChatRepository extends BaseRepository {
             logger.error(`Error counting messages by group ID: ${error.message}`);
             throw new RepositoryError(`Error counting messages by group ID: ${error.message}`);
         }
-    }
-    async countUnreadMessagesByGroupId(groupId, userId) {
+    };
+    countUnreadMessagesByGroupId = async (groupId, userId) => {
         try {
             logger.debug(`Counting unread messages for group: ${groupId}, user: ${userId}`);
             const gId = this.toObjectId(groupId);
@@ -136,8 +136,8 @@ export class ChatRepository extends BaseRepository {
             logger.error(`Error counting unread messages by group ID: ${error.message}`);
             throw new RepositoryError(`Error counting unread messages by group ID: ${error.message}`);
         }
-    }
-    async countUnreadMessagesByCollaborationId(collaborationId, userId) {
+    };
+    countUnreadMessagesByCollaborationId = async (collaborationId, userId) => {
         try {
             logger.debug(`Counting unread messages for collaboration: ${collaborationId}, user: ${userId}`);
             const cId = this.toObjectId(collaborationId);
@@ -154,8 +154,8 @@ export class ChatRepository extends BaseRepository {
             logger.error(`Error counting unread messages by collaboration ID: ${error.message}`);
             throw new RepositoryError(`Error counting unread messages by collaboration ID: ${error.message}`);
         }
-    }
-    async countUnreadMessagesByUserConnectionId(userConnectionId, userId) {
+    };
+    countUnreadMessagesByUserConnectionId = async (userConnectionId, userId) => {
         try {
             logger.debug(`Counting unread messages for user connection: ${userConnectionId}, user: ${userId}`);
             const ucId = this.toObjectId(userConnectionId);
@@ -172,8 +172,8 @@ export class ChatRepository extends BaseRepository {
             logger.error(`Error counting unread messages by user connection ID: ${error.message}`);
             throw new RepositoryError(`Error counting unread messages by user connection ID: ${error.message}`);
         }
-    }
-    async markMessagesAsRead(chatKey, userId, type) {
+    };
+    markMessagesAsRead = async (chatKey, userId, type) => {
         try {
             logger.debug(`Marking messages as read: ${chatKey}, user: ${userId}, type: ${type}`);
             const filter = { isRead: false, senderId: { $ne: this.toObjectId(userId) } };
@@ -198,6 +198,6 @@ export class ChatRepository extends BaseRepository {
             logger.error(`Error marking messages as read: ${error.message}`);
             throw new RepositoryError(`Error marking messages as read: ${error.message}`);
         }
-    }
+    };
 }
 //# sourceMappingURL=ChatRepositry.js.map

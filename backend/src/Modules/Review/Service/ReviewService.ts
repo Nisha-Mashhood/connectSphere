@@ -15,7 +15,7 @@ export class ReviewService extends BaseService {
     this.userRepo = new UserRepository();
   }
 
-  async submitReview(userId: string, rating: number, comment: string): Promise<IReview> {
+   submitReview = async(userId: string, rating: number, comment: string): Promise<IReview> =>{
     try {
       logger.debug(`Submitting review for user: ${userId}`);
       this.checkData({ userId, rating, comment });
@@ -43,7 +43,7 @@ export class ReviewService extends BaseService {
     }
   }
 
-  async skipReview(userId: string): Promise<void> {
+   skipReview = async(userId: string): Promise<void> => {
     try {
       logger.debug(`Skipping review for user: ${userId}`);
       this.checkData(userId);
@@ -60,7 +60,7 @@ export class ReviewService extends BaseService {
     }
   }
 
-  async getAllReviews(): Promise<IReview[]> {
+   getAllReviews = async(): Promise<IReview[]> =>{
     try {
       logger.debug('Fetching all reviews');
       const reviews = await this.reviewRepo.getAllReviews();
@@ -71,12 +71,12 @@ export class ReviewService extends BaseService {
     }
   }
 
-  async approveReview(reviewId: string): Promise<IReview | null> {
+   approveReview = async(reviewId: string): Promise<IReview | null> =>{
     try {
       logger.debug(`Approving review: ${reviewId}`);
       this.checkData(reviewId);
 
-      const review = await this.reviewRepo.findById(reviewId);
+      const review = await this.reviewRepo.findReviewById(reviewId);
       if (!review) {
         logger.error(`Review not found: ${reviewId}`);
         throw new ServiceError('Review not found');
@@ -88,12 +88,12 @@ export class ReviewService extends BaseService {
     }
   }
 
-  async selectReview(reviewId: string): Promise<IReview | null> {
+   selectReview = async(reviewId: string): Promise<IReview | null> =>{
     try {
       logger.debug(`Selecting review: ${reviewId}`);
       this.checkData(reviewId);
 
-      const review = await this.reviewRepo.findById(reviewId);
+      const review = await this.reviewRepo.findReviewById(reviewId);
       if (!review) {
         logger.error(`Review not found: ${reviewId}`);
         throw new ServiceError('Review not found');
@@ -109,12 +109,12 @@ export class ReviewService extends BaseService {
     }
   }
 
-  async cancelApproval(reviewId: string): Promise<IReview | null> {
+   cancelApproval = async(reviewId: string): Promise<IReview | null> => {
     try {
       logger.debug(`Canceling approval for review: ${reviewId}`);
       this.checkData(reviewId);
 
-      const review = await this.reviewRepo.findById(reviewId);
+      const review = await this.reviewRepo.findReviewById(reviewId);
       if (!review) {
         logger.error(`Review not found: ${reviewId}`);
         throw new ServiceError('Review not found');
@@ -126,12 +126,12 @@ export class ReviewService extends BaseService {
     }
   }
 
-  async deselectReview(reviewId: string): Promise<IReview | null> {
+   deselectReview = async(reviewId: string): Promise<IReview | null> =>{
     try {
       logger.debug(`Deselecting review: ${reviewId}`);
       this.checkData(reviewId);
 
-      const review = await this.reviewRepo.findById(reviewId);
+      const review = await this.reviewRepo.findReviewById(reviewId);
       if (!review) {
         logger.error(`Review not found: ${reviewId}`);
         throw new ServiceError('Review not found');
@@ -147,7 +147,7 @@ export class ReviewService extends BaseService {
     }
   }
 
-  async getSelectedReviews(): Promise<IReview[]> {
+   getSelectedReviews = async(): Promise<IReview[]> => {
     try {
       logger.debug('Fetching selected reviews');
       const reviews = await this.reviewRepo.getSelectedReviews();

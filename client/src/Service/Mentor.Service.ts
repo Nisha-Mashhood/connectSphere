@@ -4,7 +4,8 @@ import { handleError } from "./ErrorHandler";
 // Fetch mentor requests
 export const createMentorProfile = async (formdata:FormData) => {
   try {
-    await axiosInstance.post("/mentors/create-mentorprofile",formdata);
+    const response = await axiosInstance.post("/mentors/create-mentorprofile",formdata);
+    return response.data.data;
   } catch (error) {
     handleError(error)
   }
@@ -80,7 +81,7 @@ export const rejectMentor = async (mentorId:string, rejectionReason) => {
 export const checkMentorProfile = async (userId) => {
   try {
     const response = await axiosInstance.get(`/mentors/check-mentor/${userId}`);
-    return response.data;
+    return response.data.data;
   } catch (error) {
     handleError(error)
   }
@@ -89,7 +90,7 @@ export const checkMentorProfile = async (userId) => {
 export const getAllMentorProfile = async (userId) => {
   try {
     const response = await axiosInstance.get(`/auth/check-profile/${userId}`);
-    return response.data;
+    return response.data.data;
   } catch (error) {
     handleError(error)
   }
@@ -99,7 +100,7 @@ export const getAllMentorProfile = async (userId) => {
 export const updateMentorProfile = async(mentorId, mentorInfo) =>{
   try {
     const response = await axiosInstance.put(`/mentors/update-mentor/${mentorId}`,mentorInfo);
-    return response.data;
+    return response.data.data;
   } catch (error) {
     handleError(error)
   }

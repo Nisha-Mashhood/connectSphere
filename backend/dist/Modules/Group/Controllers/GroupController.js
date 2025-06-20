@@ -7,7 +7,7 @@ export class GroupController {
     constructor() {
         this.groupService = new GroupService();
     }
-    async createGroup(req, res) {
+    createGroup = async (req, res) => {
         try {
             logger.debug('Creating group');
             const groupData = req.body;
@@ -25,8 +25,8 @@ export class GroupController {
                 message: error.message || 'Internal server error',
             });
         }
-    }
-    async getGroupDetails(req, res) {
+    };
+    getGroupDetails = async (req, res) => {
         try {
             const { adminId } = req.params;
             logger.debug(`Fetching groups for admin: ${adminId}`);
@@ -45,8 +45,8 @@ export class GroupController {
             logger.error(`Error in getGroupDetails: ${error.message}`);
             res.status(500).json({ success: false, message: error.message });
         }
-    }
-    async getGroupById(req, res) {
+    };
+    getGroupById = async (req, res) => {
         try {
             const { groupId } = req.params;
             logger.debug(`Fetching group by ID: ${groupId}`);
@@ -65,8 +65,8 @@ export class GroupController {
             logger.error(`Error in getGroupById: ${error.message}`);
             res.status(500).json({ success: false, message: error.message });
         }
-    }
-    async getAllGroups(_req, res) {
+    };
+    getAllGroups = async (_req, res) => {
         try {
             logger.debug('Fetching all groups');
             const groups = await this.groupService.getAllGroups();
@@ -84,8 +84,8 @@ export class GroupController {
             logger.error(`Error in getAllGroups: ${error.message}`);
             res.status(500).json({ success: false, message: error.message });
         }
-    }
-    async sendGroupRequest(req, res) {
+    };
+    sendGroupRequest = async (req, res) => {
         try {
             const { groupId, userId } = req.body;
             logger.debug(`Sending group request for group: ${groupId}, user: ${userId}`);
@@ -100,8 +100,8 @@ export class GroupController {
             logger.error(`Error in sendGroupRequest: ${error.message}`);
             res.status(500).json({ success: false, message: error.message });
         }
-    }
-    async getGroupRequestsByGroupId(req, res) {
+    };
+    getGroupRequestsByGroupId = async (req, res) => {
         try {
             const { groupId } = req.params;
             logger.debug(`Fetching group requests for group: ${groupId}`);
@@ -116,8 +116,8 @@ export class GroupController {
             logger.error(`Error in getGroupRequestsByGroupId: ${error.message}`);
             res.status(500).json({ success: false, message: error.message });
         }
-    }
-    async getGroupRequestsByAdminId(req, res) {
+    };
+    getGroupRequestsByAdminId = async (req, res) => {
         try {
             const { adminId } = req.params;
             logger.debug(`Fetching group requests for admin: ${adminId}`);
@@ -132,8 +132,8 @@ export class GroupController {
             logger.error(`Error in getGroupRequestsByAdminId: ${error.message}`);
             res.status(500).json({ success: false, message: error.message });
         }
-    }
-    async getGroupRequestsByUserId(req, res) {
+    };
+    getGroupRequestsByUserId = async (req, res) => {
         try {
             const { userId } = req.params;
             logger.debug(`Fetching group requests for user: ${userId}`);
@@ -148,8 +148,8 @@ export class GroupController {
             logger.error(`Error in getGroupRequestsByUserId: ${error.message}`);
             res.status(500).json({ success: false, message: error.message });
         }
-    }
-    async updateGroupRequest(req, res) {
+    };
+    updateGroupRequest = async (req, res) => {
         try {
             const { requestId, status } = req.body;
             logger.debug(`Updating group request: ${requestId} to ${status}`);
@@ -164,8 +164,8 @@ export class GroupController {
             logger.error(`Error in updateGroupRequest: ${error.message}`);
             res.status(500).json({ success: false, message: error.message });
         }
-    }
-    async makeStripePayment(req, res) {
+    };
+    makeStripePayment = async (req, res) => {
         try {
             const { paymentMethodId, amount, requestId, email, groupRequestData, returnUrl } = req.body;
             logger.debug(`Processing payment for group request: ${requestId}`);
@@ -196,8 +196,8 @@ export class GroupController {
             logger.error(`Error in makeStripePayment: ${error.message}`);
             res.status(500).json({ success: false, message: error.message });
         }
-    }
-    async removeGroupMember(req, res) {
+    };
+    removeGroupMember = async (req, res) => {
         try {
             const { groupId, userId } = req.body;
             logger.debug(`Removing user ${userId} from group ${groupId}`);
@@ -212,8 +212,8 @@ export class GroupController {
             logger.error(`Error in removeGroupMember: ${error.message}`);
             res.status(500).json({ success: false, message: error.message });
         }
-    }
-    async deleteGroup(req, res) {
+    };
+    deleteGroup = async (req, res) => {
         try {
             const { groupId } = req.params;
             logger.debug(`Deleting group: ${groupId}`);
@@ -228,8 +228,8 @@ export class GroupController {
             logger.error(`Error in deleteGroup: ${error.message}`);
             res.status(500).json({ success: false, message: error.message });
         }
-    }
-    async updateGroupImage(req, res) {
+    };
+    updateGroupImage = async (req, res) => {
         try {
             const { groupId } = req.params;
             logger.debug(`Updating group image for group: ${groupId}`);
@@ -266,8 +266,8 @@ export class GroupController {
             logger.error(`Error in updateGroupImage: ${error.message}`);
             res.status(500).json({ success: false, message: error.message });
         }
-    }
-    async getGroupDetailsForMembers(req, res) {
+    };
+    getGroupDetailsForMembers = async (req, res) => {
         try {
             const { userid } = req.params;
             logger.debug(`Fetching group details for member: ${userid}`);
@@ -282,8 +282,8 @@ export class GroupController {
             logger.error(`Error in getGroupDetailsForMembers: ${error.message}`);
             res.status(500).json({ success: false, message: error.message });
         }
-    }
-    async getAllGroupRequests(_req, res) {
+    };
+    getAllGroupRequests = async (_req, res) => {
         try {
             logger.debug('Fetching all group requests');
             const requests = await this.groupService.getAllGroupRequests();
@@ -297,8 +297,8 @@ export class GroupController {
             logger.error(`Error in getAllGroupRequests: ${error.message}`);
             res.status(500).json({ success: false, message: error.message });
         }
-    }
-    async getGroupRequestById(req, res) {
+    };
+    getGroupRequestById = async (req, res) => {
         try {
             const { requestId } = req.params;
             logger.debug(`Fetching group request by ID: ${requestId}`);
@@ -317,6 +317,6 @@ export class GroupController {
             logger.error(`Error in getGroupRequestById: ${error.message}`);
             res.status(500).json({ success: false, message: error.message });
         }
-    }
+    };
 }
 //# sourceMappingURL=GroupController.js.map

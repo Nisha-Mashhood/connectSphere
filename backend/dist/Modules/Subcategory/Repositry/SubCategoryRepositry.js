@@ -6,7 +6,7 @@ export class SubcategoryRepository extends BaseRepository {
     constructor() {
         super(Subcategory);
     }
-    async createSubcategory(data) {
+    createSubcategory = async (data) => {
         try {
             logger.debug(`Creating subcategory: ${data.name} for category ${data.categoryId}`);
             const subcategory = await this.create(data);
@@ -17,8 +17,8 @@ export class SubcategoryRepository extends BaseRepository {
             logger.error(`Error creating subcategory: ${error}`);
             throw new RepositoryError(`Failed to create subcategory: ${error}`);
         }
-    }
-    async getAllSubcategories(categoryId) {
+    };
+    getAllSubcategories = async (categoryId) => {
         try {
             logger.debug(`Fetching subcategories for category: ${categoryId}`);
             const subcategories = await this.model
@@ -32,8 +32,8 @@ export class SubcategoryRepository extends BaseRepository {
             logger.error(`Error fetching subcategories for category ${categoryId}: ${error}`);
             throw new RepositoryError(`Failed to fetch subcategories: ${error}`);
         }
-    }
-    async getSubcategoryById(id) {
+    };
+    getSubcategoryById = async (id) => {
         try {
             logger.debug(`Fetching subcategory by ID: ${id}`);
             const subcategory = await this.model
@@ -52,8 +52,8 @@ export class SubcategoryRepository extends BaseRepository {
             logger.error(`Error fetching subcategory by ID ${id}: ${error}`);
             throw new RepositoryError(`Failed to fetch subcategory: ${error}`);
         }
-    }
-    async updateSubcategory(id, data) {
+    };
+    updateSubcategory = async (id, data) => {
         try {
             logger.debug(`Updating subcategory: ${id}`);
             const subcategory = await this.findByIdAndUpdate(id, data, { new: true });
@@ -69,8 +69,8 @@ export class SubcategoryRepository extends BaseRepository {
             logger.error(`Error updating subcategory ${id}: ${error}`);
             throw new RepositoryError(`Failed to update subcategory: ${error}`);
         }
-    }
-    async deleteSubcategory(id) {
+    };
+    deleteSubcategory = async (id) => {
         try {
             logger.debug(`Deleting subcategory: ${id}`);
             const subcategory = await this.findByIdAndDelete(id);
@@ -86,8 +86,8 @@ export class SubcategoryRepository extends BaseRepository {
             logger.error(`Error deleting subcategory ${id}: ${error}`);
             throw new RepositoryError(`Failed to delete subcategory: ${error}`);
         }
-    }
-    async deleteManySubcategories(categoryId) {
+    };
+    deleteManySubcategories = async (categoryId) => {
         try {
             logger.debug(`Deleting subcategories for category: ${categoryId}`);
             const result = await this.model.deleteMany({ categoryId }).exec();
@@ -98,6 +98,6 @@ export class SubcategoryRepository extends BaseRepository {
             logger.error(`Error deleting subcategories for category ${categoryId}: ${error}`);
             throw new RepositoryError(`Failed to delete subcategories: ${error}`);
         }
-    }
+    };
 }
 //# sourceMappingURL=SubCategoryRepositry.js.map

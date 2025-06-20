@@ -9,7 +9,7 @@ export class ReviewController {
     this.reviewService = new ReviewService();
   }
 
-  async submitReview(req: Request, res: Response): Promise<void> {
+   submitReview  = async(req: Request, res: Response): Promise<void> => {
     try {
       const { userId, rating, comment } = req.body;
       logger.debug(`Submitting review for user: ${userId}`);
@@ -32,7 +32,7 @@ export class ReviewController {
     }
   }
 
-  async skipReview(req: Request, res: Response): Promise<void> {
+   skipReview  = async(req: Request, res: Response): Promise<void> => {
     try {
       const { userId } = req.body;
       logger.debug(`Skipping review for user: ${userId}`);
@@ -55,7 +55,7 @@ export class ReviewController {
     }
   }
 
-  async getAllReviews(_req: Request, res: Response): Promise<void> {
+   getAllReviews = async(_req: Request, res: Response): Promise<void> =>{
     try {
       logger.debug('Fetching all reviews');
       const reviews = await this.reviewService.getAllReviews();
@@ -73,7 +73,7 @@ export class ReviewController {
     }
   }
 
-  async approveReview(req: Request, res: Response): Promise<void> {
+   approveReview  = async(req: Request, res: Response): Promise<void> => {
     try {
       const { reviewId } = req.params;
       logger.debug(`Approving review: ${reviewId}`);
@@ -92,7 +92,7 @@ export class ReviewController {
     }
   }
 
-  async selectReview(req: Request, res: Response): Promise<void> {
+   selectReview  = async(req: Request, res: Response): Promise<void> => {
     try {
       const { reviewId } = req.params;
       logger.debug(`Selecting review: ${reviewId}`);
@@ -111,7 +111,7 @@ export class ReviewController {
     }
   }
 
-  async cancelApproval(req: Request, res: Response): Promise<void> {
+   cancelApproval  = async(req: Request, res: Response): Promise<void> => {
     try {
       const { reviewId } = req.params;
       logger.debug(`Canceling approval for review: ${reviewId}`);
@@ -130,7 +130,7 @@ export class ReviewController {
     }
   }
 
-  async deselectReview(req: Request, res: Response): Promise<void> {
+   deselectReview  = async(req: Request, res: Response): Promise<void> => {
     try {
       const { reviewId } = req.params;
       logger.debug(`Deselecting review: ${reviewId}`);
@@ -149,7 +149,7 @@ export class ReviewController {
     }
   }
 
-  async getSelectedReviews(_req: Request, res: Response): Promise<void> {
+   getSelectedReviews = async(_req: Request, res: Response): Promise<void> => {
     try {
       logger.debug('Fetching selected reviews');
       const reviews = await this.reviewService.getSelectedReviews();

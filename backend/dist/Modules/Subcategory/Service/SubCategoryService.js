@@ -12,7 +12,7 @@ export class SubcategoryService extends BaseService {
         this.subcategoryRepo = new SubcategoryRepository();
         this.skillsRepo = new SkillsRepository();
     }
-    async createSubcategory(data, imagePath, fileSize) {
+    createSubcategory = async (data, imagePath, fileSize) => {
         try {
             this.checkData(data);
             logger.debug(`Creating subcategory: ${data.name} for category ${data.categoryId}`);
@@ -31,8 +31,8 @@ export class SubcategoryService extends BaseService {
             logger.error(`Error creating subcategory: ${error}`);
             throw new ServiceError(`Failed to create subcategory: ${error}`);
         }
-    }
-    async getAllSubcategories(categoryId) {
+    };
+    getAllSubcategories = async (categoryId) => {
         try {
             logger.debug(`Fetching subcategories for category: ${categoryId}`);
             const subcategories = await this.subcategoryRepo.getAllSubcategories(categoryId);
@@ -43,8 +43,8 @@ export class SubcategoryService extends BaseService {
             logger.error(`Error fetching subcategories for category ${categoryId}: ${error}`);
             throw new ServiceError(`Failed to fetch subcategories: ${error}`);
         }
-    }
-    async getSubcategoryById(id) {
+    };
+    getSubcategoryById = async (id) => {
         try {
             logger.debug(`Fetching subcategory: ${id}`);
             const subcategory = await this.subcategoryRepo.getSubcategoryById(id);
@@ -60,8 +60,8 @@ export class SubcategoryService extends BaseService {
             logger.error(`Error fetching subcategory ${id}: ${error}`);
             throw new ServiceError(`Failed to fetch subcategory: ${error}`);
         }
-    }
-    async updateSubcategory(id, data, imagePath, fileSize) {
+    };
+    updateSubcategory = async (id, data, imagePath, fileSize) => {
         try {
             this.checkData(data);
             logger.debug(`Updating subcategory: ${id}`);
@@ -84,8 +84,8 @@ export class SubcategoryService extends BaseService {
             logger.error(`Error updating subcategory ${id}: ${error}`);
             throw new ServiceError(`Failed to update subcategory: ${error}`);
         }
-    }
-    async deleteSubcategory(id) {
+    };
+    deleteSubcategory = async (id) => {
         try {
             logger.debug(`Deleting subcategory: ${id}`);
             await this.skillsRepo.deleteManySkillsBySubcategoryId(id);
@@ -102,6 +102,6 @@ export class SubcategoryService extends BaseService {
             logger.error(`Error deleting subcategory ${id}: ${error}`);
             throw new ServiceError(`Failed to delete subcategory and related data: ${error}`);
         }
-    }
+    };
 }
 //# sourceMappingURL=SubCategoryService.js.map

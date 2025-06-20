@@ -8,9 +8,9 @@ export interface IMessage extends Document {
   content: string;
   contentType: "text" | "image" | "file";
   fileMetadata?: {
-    fileName: string;
-    fileSize: number;
-    mimeType: string;
+    fileName: string | undefined;
+    fileSize: number | undefined;
+    mimeType: string | undefined;
   };
   isRead: boolean;
   createdAt: Date;

@@ -5,7 +5,7 @@ export class FeedbackController {
     constructor() {
         this.feedbackService = new FeedbackService();
     }
-    async createFeedback(req, res) {
+    createFeedback = async (req, res) => {
         try {
             const feedbackData = {
                 userId: req.body.userId,
@@ -38,8 +38,8 @@ export class FeedbackController {
                 message: error.message || 'Error creating feedback',
             });
         }
-    }
-    async getMentorFeedbacks(req, res) {
+    };
+    getMentorFeedbacks = async (req, res) => {
         try {
             const { mentorId } = req.params;
             logger.debug(`Fetching feedbacks for mentor: ${mentorId}`);
@@ -57,8 +57,8 @@ export class FeedbackController {
                 message: error.message || 'Error fetching mentor feedbacks',
             });
         }
-    }
-    async getUserFeedbacks(req, res) {
+    };
+    getUserFeedbacks = async (req, res) => {
         try {
             const { userId } = req.params;
             logger.debug(`Fetching feedbacks for user: ${userId}`);
@@ -76,8 +76,8 @@ export class FeedbackController {
                 message: error.message || 'Error fetching user feedbacks',
             });
         }
-    }
-    async getFeedbackForProfile(req, res) {
+    };
+    getFeedbackForProfile = async (req, res) => {
         try {
             const { profileId, profileType } = req.params;
             logger.debug(`Fetching feedbacks for profile: ${profileId}, type: ${profileType}`);
@@ -99,8 +99,8 @@ export class FeedbackController {
                 message: error.message || 'Error fetching profile feedbacks',
             });
         }
-    }
-    async getFeedbackByCollaborationId(req, res) {
+    };
+    getFeedbackByCollaborationId = async (req, res) => {
         try {
             const { collabId } = req.params;
             logger.debug(`Fetching feedbacks for collaboration: ${collabId}`);
@@ -118,8 +118,8 @@ export class FeedbackController {
                 message: error.message || 'Error fetching collaboration feedbacks',
             });
         }
-    }
-    async toggleFeedback(req, res) {
+    };
+    toggleFeedback = async (req, res) => {
         try {
             const { feedbackId } = req.params;
             logger.debug(`Toggling feedback visibility: ${feedbackId}`);
@@ -137,8 +137,8 @@ export class FeedbackController {
                 message: error.message || 'Error toggling feedback visibility',
             });
         }
-    }
-    async getFeedbackByMentorId(req, res) {
+    };
+    getFeedbackByMentorId = async (req, res) => {
         try {
             const { mentorId } = req.params;
             logger.debug(`Fetching feedbacks by mentor ID: ${mentorId}`);
@@ -156,6 +156,6 @@ export class FeedbackController {
                 message: error.message || 'Error fetching feedbacks by mentor ID',
             });
         }
-    }
+    };
 }
 //# sourceMappingURL=FeedBackController.js.map

@@ -7,20 +7,20 @@ export class ContactController extends BaseController {
         super();
         this.contactService = new ContactService();
     }
-    async getUserContacts(req, res) {
+    getUserContacts = async (req, res) => {
         try {
             const userId = req.currentUser?._id;
             const userRole = req.currentUser?.role;
             if (!userId || !userRole) {
                 this.throwError(400, 'User ID or role not provided');
             }
-            const contacts = await this.contactService.getUserContacts(userId.toString());
+            const contacts = await this.contactService.getUserContacts(userId?.toString());
             this.sendSuccess(res, contacts, 'Contacts retrieved successfully');
         }
         catch (error) {
             logger.error(`Error in getUserContacts: ${error.message}`);
             this.handleError(error, res);
         }
-    }
+    };
 }
 //# sourceMappingURL=ContactController.js.map

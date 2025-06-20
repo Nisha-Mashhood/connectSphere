@@ -24,12 +24,12 @@ export declare class NotificationService extends BaseService {
     private userRepo;
     constructor();
     initializeSocket(_io: Server): void;
-    sendTaskNotification(taskId: string, specificUserId?: string, notificationDate?: string, notificationTime?: string): Promise<TaskNotificationPayload[]>;
-    checkAndSendNotifications(): Promise<TaskNotificationPayload[]>;
-    sendNotification(userId: string, notificationType: IAppNotification['type'], senderId: string, relatedId: string, contentType?: string, callId?: string): Promise<IAppNotification>;
-    updateCallNotificationToMissed(userId: string, callId: string, content: string): Promise<IAppNotification | null>;
-    getNotifications(userId: string): Promise<IAppNotification[]>;
-    markNotificationAsRead(notificationId: string): Promise<IAppNotification | null>;
-    getUnreadCount(userId: string): Promise<number>;
+    sendTaskNotification: (taskId: string, specificUserId?: string, notificationDate?: string, notificationTime?: string) => Promise<TaskNotificationPayload[]>;
+    checkAndSendNotifications: () => Promise<TaskNotificationPayload[]>;
+    sendNotification: (userId: string, notificationType: IAppNotification["type"], senderId: string, relatedId: string, contentType?: string, callId?: string) => Promise<IAppNotification>;
+    updateCallNotificationToMissed: (userId: string, callId: string, content: string) => Promise<IAppNotification | null>;
+    getNotifications: (userId: string) => Promise<IAppNotification[]>;
+    markNotificationAsRead: (notificationId: string) => Promise<IAppNotification | null>;
+    getUnreadCount: (userId: string) => Promise<number>;
 }
 //# sourceMappingURL=NotificationService.d.ts.map

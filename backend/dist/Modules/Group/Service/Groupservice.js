@@ -17,7 +17,7 @@ export class GroupService extends BaseService {
         this.contactRepo = new ContactRepository();
         this.userRepo = new UserRepository();
     }
-    async createGroup(groupData) {
+    createGroup = async (groupData) => {
         logger.debug(`Creating group: ${groupData.name}`);
         this.checkData(groupData);
         if (!groupData.name || !groupData.bio || !groupData.adminId || !groupData.startDate) {
@@ -39,47 +39,47 @@ export class GroupService extends BaseService {
             type: 'group',
         });
         return newGroup;
-    }
-    async getGroupDetails(adminId) {
+    };
+    getGroupDetails = async (adminId) => {
         logger.debug(`Fetching groups for admin: ${adminId}`);
         this.checkData(adminId);
         return await this.groupRepo.getGroupsByAdminId(adminId);
-    }
-    async getGroupById(groupId) {
+    };
+    getGroupById = async (groupId) => {
         logger.debug(`Fetching group by ID: ${groupId}`);
         this.checkData(groupId);
         return await this.groupRepo.getGroupById(groupId);
-    }
-    async getAllGroups() {
+    };
+    getAllGroups = async () => {
         logger.debug('Fetching all groups');
         return await this.groupRepo.getAllGroups();
-    }
-    async requestToJoinGroup(groupId, userId) {
+    };
+    requestToJoinGroup = async (groupId, userId) => {
         logger.debug(`Creating group request for group: ${groupId}, user: ${userId}`);
         this.checkData({ groupId, userId });
         return await this.groupRepo.createGroupRequest({ groupId, userId });
-    }
-    async getGroupRequestsByGroupId(groupId) {
+    };
+    getGroupRequestsByGroupId = async (groupId) => {
         logger.debug(`Fetching group requests for group: ${groupId}`);
         this.checkData(groupId);
         return await this.groupRepo.getGroupRequestsByGroupId(groupId);
-    }
-    async getGroupRequestsByAdminId(adminId) {
+    };
+    getGroupRequestsByAdminId = async (adminId) => {
         logger.debug(`Fetching group requests for admin: ${adminId}`);
         this.checkData(adminId);
         return await this.groupRepo.getGroupRequestsByAdminId(adminId);
-    }
-    async getGroupRequestsByUserId(userId) {
+    };
+    getGroupRequestsByUserId = async (userId) => {
         logger.debug(`Fetching group requests for user: ${userId}`);
         this.checkData(userId);
         return await this.groupRepo.getGroupRequestsByUserId(userId);
-    }
-    async getGroupRequestById(requestId) {
+    };
+    getGroupRequestById = async (requestId) => {
         logger.debug(`Fetching group request by ID: ${requestId}`);
         this.checkData(requestId);
         return await this.groupRepo.findGroupRequestById(requestId);
-    }
-    async modifyGroupRequestStatus(requestId, status) {
+    };
+    modifyGroupRequestStatus = async (requestId, status) => {
         logger.debug(`Modifying group request status: ${requestId} to ${status}`);
         this.checkData({ requestId, status });
         const request = await this.groupRepo.findGroupRequestById(requestId);
@@ -117,8 +117,8 @@ export class GroupService extends BaseService {
             await this.groupRepo.updateGroupRequestStatus(requestId, 'Rejected');
             return { message: 'Request rejected successfully' };
         }
-    }
-    async processGroupPayment(paymentMethodId, amount, requestId, email, groupRequestData, returnUrl) {
+    };
+    processGroupPayment = async (paymentMethodId, amount, requestId, email, groupRequestData, returnUrl) => {
         logger.debug(`Processing payment for group request: ${requestId}`);
         this.checkData({ paymentMethodId, amount, requestId, email, groupRequestData, returnUrl });
         const request = await this.groupRepo.findGroupRequestById(requestId);
@@ -168,8 +168,8 @@ export class GroupService extends BaseService {
             await this.groupRepo.deleteGroupRequest(requestId);
         }
         return { paymentIntent };
-    }
-    async removeGroupMember(groupId, userId) {
+    };
+    removeGroupMember = async (groupId, userId) => {
         logger.debug(`Removing user ${userId} from group ${groupId}`);
         this.checkData({ groupId, userId });
         const group = await this.groupRepo.getGroupById(groupId);
@@ -189,8 +189,8 @@ export class GroupService extends BaseService {
         await sendEmail(user.email, subject, text);
         logger.info(`Removal email sent to: ${user.email}`);
         return updatedGroup;
-    }
-    async deleteGroup(groupId) {
+    };
+    deleteGroup = async (groupId) => {
         logger.debug(`Deleting group: ${groupId}`);
         this.checkData(groupId);
         const group = await this.groupRepo.getGroupById(groupId);
@@ -199,8 +199,8 @@ export class GroupService extends BaseService {
         }
         await this.groupRepo.deleteGroupRequestsByGroupId(groupId);
         return await this.groupRepo.deleteGroupById(groupId);
-    }
-    async updateGroupImage(groupId, profilePic, coverPic) {
+    };
+    updateGroupImage = async (groupId, profilePic, coverPic) => {
         logger.debug(`Updating group image for group: ${groupId}`);
         this.checkData(groupId);
         const updateData = {};
@@ -212,8 +212,8 @@ export class GroupService extends BaseService {
             throw new ServiceError('No image data provided');
         }
         return await this.groupRepo.updateGroupImage(groupId, updateData);
-    }
-    async getGroupDetailsForMembers(userId) {
+    };
+    getGroupDetailsForMembers = async (userId) => {
         logger.debug(`Fetching group details for member: ${userId}`);
         this.checkData(userId);
         const groups = await this.groupRepo.getGroupDetailsByUserId(userId);
@@ -221,10 +221,10 @@ export class GroupService extends BaseService {
             throw new ServiceError('User is not a member of any groups');
         }
         return groups;
-    }
-    async getAllGroupRequests() {
+    };
+    getAllGroupRequests = async () => {
         logger.debug('Fetching all group requests');
         return await this.groupRepo.getAllGroupRequests();
-    }
+    };
 }
 //# sourceMappingURL=Groupservice.js.map

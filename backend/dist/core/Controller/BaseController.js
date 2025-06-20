@@ -1,27 +1,27 @@
 import { HttpError, RepositoryError, ServiceError } from '../Utils/ErrorHandler.js';
 import logger from '../Utils/Logger.js';
 export class BaseController {
-    sendSuccess(res, data, message = 'Success', statusCode = 200) {
+    sendSuccess = (res, data, message = 'Success', statusCode = 200) => {
         logger.info(`Sending response: ${message}`);
         res.status(statusCode).json({
             status: 'success',
             message,
             data,
         });
-    }
-    sendCreated(res, data, message = 'Created') {
+    };
+    sendCreated = (res, data, message = 'Created') => {
         logger.info(`Sending created response: ${message}`);
         res.status(201).json({
             status: 'success',
             message,
             data,
         });
-    }
-    sendNoContent(res, message = 'Deleted') {
+    };
+    sendNoContent = (res, message = 'Deleted') => {
         logger.info(`Sending no content response: ${message}`);
         res.status(204).send();
-    }
-    handleError(error, res) {
+    };
+    handleError = (error, res) => {
         if (error instanceof HttpError) {
             logger.warn(`HTTP error: ${error.message} [${error.statusCode}]`);
             res.status(error.statusCode).json({
@@ -43,10 +43,10 @@ export class BaseController {
                 message: 'Internal Server Error',
             });
         }
-    }
-    throwError(statusCode, message) {
+    };
+    throwError = (statusCode, message) => {
         logger.warn(`Throwing HTTP error: ${message} [${statusCode}]`);
         throw new HttpError(statusCode, message);
-    }
+    };
 }
 //# sourceMappingURL=BaseController.js.map

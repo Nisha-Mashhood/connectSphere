@@ -11,7 +11,7 @@ export class UserConnectionService extends BaseService {
         this.userConnectionRepo = new UserConnectionRepository();
         this.contactRepo = new ContactRepository();
     }
-    async sendUserConnectionRequest(requesterId, recipientId) {
+    sendUserConnectionRequest = async (requesterId, recipientId) => {
         logger.debug(`Sending connection request: requester=${requesterId}, recipient=${recipientId}`);
         this.checkData({ requesterId, recipientId });
         if (requesterId === recipientId) {
@@ -24,8 +24,8 @@ export class UserConnectionService extends BaseService {
             throw new ServiceError('A pending request already exists for this user');
         }
         return await this.userConnectionRepo.createUserConnection(requesterId, recipientId);
-    }
-    async respondToConnectionRequest(connectionId, action) {
+    };
+    respondToConnectionRequest = async (connectionId, action) => {
         logger.debug(`Responding to connection request: connectionId=${connectionId}, action=${action}`);
         this.checkData({ connectionId, action });
         const updatedConnection = await this.userConnectionRepo.updateUserConnectionStatus(connectionId, action);
@@ -53,30 +53,30 @@ export class UserConnectionService extends BaseService {
             return { updatedConnection, contacts: [contact1, contact2] };
         }
         return { updatedConnection };
-    }
-    async disconnectConnection(connectionId, reason) {
+    };
+    disconnectConnection = async (connectionId, reason) => {
         logger.debug(`Disconnecting connection: connectionId=${connectionId}`);
         this.checkData({ connectionId, reason });
         return await this.userConnectionRepo.disconnectUserConnection(connectionId, reason);
-    }
-    async fetchUserConnections(userId) {
+    };
+    fetchUserConnections = async (userId) => {
         logger.debug(`Fetching connections for user: ${userId}`);
         this.checkData(userId);
         return await this.userConnectionRepo.getUserConnections(userId);
-    }
-    async fetchUserRequests(userId) {
+    };
+    fetchUserRequests = async (userId) => {
         logger.debug(`Fetching user requests for user: ${userId}`);
         this.checkData(userId);
         return await this.userConnectionRepo.getUserRequests(userId);
-    }
-    async fetchAllUserConnections() {
+    };
+    fetchAllUserConnections = async () => {
         logger.debug('Fetching all user connections');
         return await this.userConnectionRepo.getAllUserConnections();
-    }
-    async fetchUserConnectionById(connectionId) {
+    };
+    fetchUserConnectionById = async (connectionId) => {
         logger.debug(`Fetching user connection by ID: ${connectionId}`);
         this.checkData(connectionId);
         return await this.userConnectionRepo.getUserConnectionById(connectionId);
-    }
+    };
 }
 //# sourceMappingURL=UserCollaboartionService.js.map

@@ -1,9 +1,8 @@
 import { Document, Types } from "mongoose";
-import { UserInterface } from "./IUser.js";
 export interface IMentor extends Document {
     _id: Types.ObjectId;
     mentorId: string;
-    userId: string | UserInterface | Types.ObjectId;
+    userId: Types.ObjectId;
     isApproved?: string;
     rejectionReason?: string;
     skills?: string[];

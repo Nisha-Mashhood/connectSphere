@@ -40,7 +40,7 @@ const GroupDetails = () => {
 
   useEffect(() => {
     fetchDetails();
-  }, [groupId, requestId]);
+  }, []);
 
   const formatDate = (dateString) => {
     return new Date(dateString).toLocaleDateString("en-US", {
@@ -66,6 +66,7 @@ const GroupDetails = () => {
       toast.success("Group deleted successfully!");
       navigate("/admin/groupManagemnt");
     } catch (err: any) {
+      console.log(err);
       toast.error("Failed to delete group");
     }
   };

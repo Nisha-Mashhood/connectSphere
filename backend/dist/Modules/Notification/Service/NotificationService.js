@@ -18,7 +18,7 @@ export class NotificationService extends BaseService {
         io = _io;
         logger.info('Notification service initialized with Socket.IO');
     }
-    async sendTaskNotification(taskId, specificUserId, notificationDate, notificationTime) {
+    sendTaskNotification = async (taskId, specificUserId, notificationDate, notificationTime) => {
         try {
             logger.debug(`Sending task notification for task: ${taskId}`);
             const notifications = [];
@@ -151,8 +151,8 @@ export class NotificationService extends BaseService {
             logger.error(`Error sending task notification: ${error.message}`);
             throw new ServiceError(`Error sending task notification: ${error.message}`);
         }
-    }
-    async checkAndSendNotifications() {
+    };
+    checkAndSendNotifications = async () => {
         try {
             logger.debug('Checking and sending notifications');
             const allNotifications = [];
@@ -171,8 +171,8 @@ export class NotificationService extends BaseService {
             logger.error(`Error checking and sending notifications: ${error.message}`);
             throw new ServiceError(`Error checking and sending notifications: ${error.message}`);
         }
-    }
-    async sendNotification(userId, notificationType, senderId, relatedId, contentType, callId) {
+    };
+    sendNotification = async (userId, notificationType, senderId, relatedId, contentType, callId) => {
         try {
             logger.debug(`Sending notification to user: ${userId}, type: ${notificationType}`);
             this.checkData({ userId, notificationType, senderId, relatedId });
@@ -237,8 +237,8 @@ export class NotificationService extends BaseService {
             logger.error(`Error sending notification: ${error.message}`);
             throw new ServiceError(`Error sending notification: ${error.message}`);
         }
-    }
-    async updateCallNotificationToMissed(userId, callId, content) {
+    };
+    updateCallNotificationToMissed = async (userId, callId, content) => {
         try {
             logger.debug(`Updating call notification to missed for user: ${userId}, call: ${callId}`);
             this.checkData({ userId, callId, content });
@@ -267,8 +267,8 @@ export class NotificationService extends BaseService {
             logger.error(`Error updating call notification to missed: ${error.message}`);
             throw new ServiceError(`Error updating call notification to missed: ${error.message}`);
         }
-    }
-    async getNotifications(userId) {
+    };
+    getNotifications = async (userId) => {
         try {
             logger.debug(`Fetching notifications for user: ${userId}`);
             this.checkData(userId);
@@ -278,8 +278,8 @@ export class NotificationService extends BaseService {
             logger.error(`Error fetching notifications: ${error.message}`);
             throw new ServiceError(`Error fetching notifications: ${error.message}`);
         }
-    }
-    async markNotificationAsRead(notificationId) {
+    };
+    markNotificationAsRead = async (notificationId) => {
         try {
             logger.debug(`Marking notification as read: ${notificationId}`);
             this.checkData(notificationId);
@@ -289,8 +289,8 @@ export class NotificationService extends BaseService {
             logger.error(`Error marking notification as read: ${error.message}`);
             throw new ServiceError(`Error marking notification as read: ${error.message}`);
         }
-    }
-    async getUnreadCount(userId) {
+    };
+    getUnreadCount = async (userId) => {
         try {
             logger.debug(`Fetching unread notification count for user: ${userId}`);
             this.checkData(userId);
@@ -300,6 +300,6 @@ export class NotificationService extends BaseService {
             logger.error(`Error fetching unread notification count: ${error.message}`);
             throw new ServiceError(`Error fetching unread notification count: ${error.message}`);
         }
-    }
+    };
 }
 //# sourceMappingURL=NotificationService.js.map

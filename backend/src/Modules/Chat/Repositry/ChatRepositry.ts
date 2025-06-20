@@ -23,7 +23,7 @@ export class ChatRepository extends BaseRepository<IChatMessage> {
     return new Types.ObjectId(idStr);
   }
 
-  async saveChatMessage(messageData: Partial<IChatMessage>): Promise<IChatMessage> {
+   saveChatMessage = async(messageData: Partial<IChatMessage>): Promise<IChatMessage> => {
     try {
       logger.debug(`Saving chat message for sender: ${messageData.senderId}`);
       return await this.create({
@@ -39,11 +39,11 @@ export class ChatRepository extends BaseRepository<IChatMessage> {
     }
   }
 
-  async findChatMessageById(messageId: string): Promise<IChatMessage | null> {
+   findChatMessageById = async(messageId: string): Promise<IChatMessage | null> => {
     return await this.findById(messageId);
   }
 
-  async findChatMessagesByCollaborationId(collaborationId: string, page: number, limit: number): Promise<IChatMessage[]> {
+   findChatMessagesByCollaborationId = async(collaborationId: string, page: number, limit: number): Promise<IChatMessage[]> => {
     try {
       logger.debug(`Finding messages for collaboration: ${collaborationId}`);
       const id = this.toObjectId(collaborationId);
@@ -59,7 +59,7 @@ export class ChatRepository extends BaseRepository<IChatMessage> {
     }
   }
 
-  async findChatMessagesByUserConnectionId(userConnectionId: string, page: number, limit: number): Promise<IChatMessage[]> {
+   findChatMessagesByUserConnectionId = async(userConnectionId: string, page: number, limit: number): Promise<IChatMessage[]> => {
     try {
       logger.debug(`Finding messages for user connection: ${userConnectionId}`);
       const id = this.toObjectId(userConnectionId);
@@ -75,7 +75,7 @@ export class ChatRepository extends BaseRepository<IChatMessage> {
     }
   }
 
-  async findChatMessagesByGroupId(groupId: string, page: number, limit: number): Promise<IChatMessage[]> {
+   findChatMessagesByGroupId = async(groupId: string, page: number, limit: number): Promise<IChatMessage[]> => {
     try {
       logger.debug(`Finding messages for group: ${groupId}`);
       const id = this.toObjectId(groupId);
@@ -91,7 +91,7 @@ export class ChatRepository extends BaseRepository<IChatMessage> {
     }
   }
 
-  async countMessagesByCollaborationId(collaborationId: string): Promise<number> {
+   countMessagesByCollaborationId = async(collaborationId: string): Promise<number> => {
     try {
       logger.debug(`Counting messages for collaboration: ${collaborationId}`);
       const id = this.toObjectId(collaborationId);
@@ -102,7 +102,7 @@ export class ChatRepository extends BaseRepository<IChatMessage> {
     }
   }
 
-  async countMessagesByUserConnectionId(userConnectionId: string): Promise<number> {
+   countMessagesByUserConnectionId = async(userConnectionId: string): Promise<number> => {
     try {
       logger.debug(`Counting messages for user connection: ${userConnectionId}`);
       const id = this.toObjectId(userConnectionId);
@@ -113,7 +113,7 @@ export class ChatRepository extends BaseRepository<IChatMessage> {
     }
   }
 
-  async countMessagesByGroupId(groupId: string): Promise<number> {
+   countMessagesByGroupId = async(groupId: string): Promise<number> => {
     try {
       logger.debug(`Counting messages for group: ${groupId}`);
       const id = this.toObjectId(groupId);
@@ -124,7 +124,7 @@ export class ChatRepository extends BaseRepository<IChatMessage> {
     }
   }
 
-  async countUnreadMessagesByGroupId(groupId: string, userId: string): Promise<number> {
+   countUnreadMessagesByGroupId = async(groupId: string, userId: string): Promise<number> => {
     try {
       logger.debug(`Counting unread messages for group: ${groupId}, user: ${userId}`);
       const gId = this.toObjectId(groupId);
@@ -142,7 +142,7 @@ export class ChatRepository extends BaseRepository<IChatMessage> {
     }
   }
 
-  async countUnreadMessagesByCollaborationId(collaborationId: string, userId: string): Promise<number> {
+   countUnreadMessagesByCollaborationId = async(collaborationId: string, userId: string): Promise<number> => {
     try {
       logger.debug(`Counting unread messages for collaboration: ${collaborationId}, user: ${userId}`);
       const cId = this.toObjectId(collaborationId);
@@ -160,7 +160,7 @@ export class ChatRepository extends BaseRepository<IChatMessage> {
     }
   }
 
-  async countUnreadMessagesByUserConnectionId(userConnectionId: string, userId: string): Promise<number> {
+   countUnreadMessagesByUserConnectionId = async(userConnectionId: string, userId: string): Promise<number> => {
     try {
       logger.debug(`Counting unread messages for user connection: ${userConnectionId}, user: ${userId}`);
       const ucId = this.toObjectId(userConnectionId);
@@ -178,7 +178,7 @@ export class ChatRepository extends BaseRepository<IChatMessage> {
     }
   }
 
-  async markMessagesAsRead(chatKey: string, userId: string, type: 'group' | 'user-mentor' | 'user-user'): Promise<string[]> {
+   markMessagesAsRead = async(chatKey: string, userId: string, type: 'group' | 'user-mentor' | 'user-user'): Promise<string[]> => {
     try {
       logger.debug(`Marking messages as read: ${chatKey}, user: ${userId}, type: ${type}`);
       const filter: any = { isRead: false, senderId: { $ne: this.toObjectId(userId) } };

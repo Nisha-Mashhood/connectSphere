@@ -5,7 +5,7 @@ export class UserConnectionController {
     constructor() {
         this.userConnectionService = new UserConnectionService();
     }
-    async sendRequest(req, res) {
+    sendRequest = async (req, res) => {
         try {
             const { id: requesterId } = req.params;
             const { recipientId } = req.body;
@@ -24,8 +24,8 @@ export class UserConnectionController {
                 message: error.message || 'Failed to send connection request',
             });
         }
-    }
-    async respondToRequest(req, res) {
+    };
+    respondToRequest = async (req, res) => {
         try {
             const { connectionId } = req.params;
             const { action } = req.body;
@@ -44,8 +44,8 @@ export class UserConnectionController {
                 message: error.message || 'Failed to respond to connection request',
             });
         }
-    }
-    async disconnectConnection(req, res) {
+    };
+    disconnectConnection = async (req, res) => {
         try {
             const { connectionId } = req.params;
             const { reason } = req.body;
@@ -64,8 +64,8 @@ export class UserConnectionController {
                 message: error.message || 'Failed to disconnect connection',
             });
         }
-    }
-    async getUserConnections(req, res) {
+    };
+    getUserConnections = async (req, res) => {
         try {
             const { userId } = req.params;
             logger.debug(`Fetching connections for user: ${userId}`);
@@ -83,8 +83,8 @@ export class UserConnectionController {
                 message: error.message || 'Failed to fetch connections',
             });
         }
-    }
-    async getUserRequests(req, res) {
+    };
+    getUserRequests = async (req, res) => {
         try {
             const { userId } = req.params;
             logger.debug(`Fetching user requests for user: ${userId}`);
@@ -102,8 +102,8 @@ export class UserConnectionController {
                 message: error.message || 'Failed to fetch user requests',
             });
         }
-    }
-    async getAllUserConnections(_req, res) {
+    };
+    getAllUserConnections = async (_req, res) => {
         try {
             logger.debug('Fetching all user connections');
             const connections = await this.userConnectionService.fetchAllUserConnections();
@@ -120,8 +120,8 @@ export class UserConnectionController {
                 message: error.message || 'Failed to fetch all user connections',
             });
         }
-    }
-    async getUserConnectionById(req, res) {
+    };
+    getUserConnectionById = async (req, res) => {
         try {
             const { connectionId } = req.params;
             logger.debug(`Fetching user connection by ID: ${connectionId}`);
@@ -139,6 +139,6 @@ export class UserConnectionController {
                 message: error.message || 'Failed to fetch user connection',
             });
         }
-    }
+    };
 }
 //# sourceMappingURL=userCollaborationController.js.map

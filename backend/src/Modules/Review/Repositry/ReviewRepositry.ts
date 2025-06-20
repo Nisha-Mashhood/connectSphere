@@ -23,7 +23,7 @@ export class ReviewRepository extends BaseRepository<IReview> {
     return new Types.ObjectId(idStr);
   }
 
-  async createReview(data: { userId: string; rating: number; comment: string }): Promise<IReview> {
+   createReview = async(data: { userId: string; rating: number; comment: string }): Promise<IReview> => {
     try {
       logger.debug(`Creating review for user: ${data.userId}`);
       return await this.create({
@@ -40,7 +40,7 @@ export class ReviewRepository extends BaseRepository<IReview> {
     }
   }
 
-  async findById(reviewId: string): Promise<IReview | null> {
+   findReviewById = async(reviewId: string): Promise<IReview | null> => {
     try {
       logger.debug(`Fetching review by ID: ${reviewId}`);
       return await this.model
@@ -53,7 +53,7 @@ export class ReviewRepository extends BaseRepository<IReview> {
     }
   }
 
-  async getAllReviews(): Promise<IReview[]> {
+   getAllReviews = async(): Promise<IReview[]> => {
     try {
       logger.debug('Fetching all reviews');
       return await this.model
@@ -67,7 +67,7 @@ export class ReviewRepository extends BaseRepository<IReview> {
     }
   }
 
-  async updateReview(reviewId: string, updates: { isApproved?: boolean; isSelect?: boolean }): Promise<IReview | null> {
+   updateReview = async(reviewId: string, updates: { isApproved?: boolean; isSelect?: boolean }): Promise<IReview | null> => {
     try {
       logger.debug(`Updating review: ${reviewId}`);
       const review = await this.model
@@ -85,7 +85,7 @@ export class ReviewRepository extends BaseRepository<IReview> {
     }
   }
 
-  async getSelectedReviews(): Promise<IReview[]> {
+   getSelectedReviews = async(): Promise<IReview[]> => {
     try {
       logger.debug('Fetching selected and approved reviews');
       return await this.model

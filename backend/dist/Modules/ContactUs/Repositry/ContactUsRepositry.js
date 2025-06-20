@@ -6,7 +6,7 @@ export class ContactMessageRepository extends BaseRepository {
     constructor() {
         super(ContactMessage);
     }
-    async createContactMessage(data) {
+    createContactMessage = async (data) => {
         try {
             logger.debug(`Creating contact message from: ${data.email}`);
             return await this.create({
@@ -19,8 +19,8 @@ export class ContactMessageRepository extends BaseRepository {
             logger.error(`Error creating contact message: ${error.message}`);
             throw new RepositoryError(`Failed to save contact message: ${error.message}`);
         }
-    }
-    async getAllContactMessages() {
+    };
+    getAllContactMessages = async () => {
         try {
             logger.debug('Fetching all contact messages');
             return await this.model.find().sort({ createdAt: -1 }).exec();
@@ -29,8 +29,8 @@ export class ContactMessageRepository extends BaseRepository {
             logger.error(`Error fetching contact messages: ${error.message}`);
             throw new RepositoryError(`Failed to fetch contact messages: ${error.message}`);
         }
-    }
-    async updateReplyStatus(contactMessageId) {
+    };
+    updateReplyStatus = async (contactMessageId) => {
         try {
             logger.debug(`Updating reply status for contact message: ${contactMessageId}`);
             const message = await this.model
@@ -46,6 +46,6 @@ export class ContactMessageRepository extends BaseRepository {
             logger.error(`Error updating reply status: ${error.message}`);
             throw new RepositoryError(`Failed to update reply status: ${error.message}`);
         }
-    }
+    };
 }
 //# sourceMappingURL=ContactUsRepositry.js.map

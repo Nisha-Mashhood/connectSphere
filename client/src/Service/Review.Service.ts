@@ -9,7 +9,7 @@ export const submit_review = async (userId: string, rating: number, comment: str
       rating,
       comment,
     });
-    return response.data;
+    return response.data.data;
   } catch (error) {
     handleError(error);
   }
@@ -19,7 +19,7 @@ export const submit_review = async (userId: string, rating: number, comment: str
 export const skip_review = async (userId: string) => {
   try {
     const response = await axiosInstance.post(`/reviews/skip`, { userId });
-    return response.data;
+    return response.data.data;
   } catch (error) {
     handleError(error);
   }
@@ -29,7 +29,7 @@ export const skip_review = async (userId: string) => {
 export const get_all_reviews = async () => {
   try {
     const response = await axiosInstance.get(`/reviews/all`);
-    return response.data;
+    return response.data.data;
   } catch (error) {
     handleError(error);
   }
@@ -39,7 +39,7 @@ export const get_all_reviews = async () => {
 export const get_selected_reviews = async () => {
   try {
     const response = await axiosInstance.get(`/reviews/selected`);
-    return response.data;
+    return response.data.data;
   } catch (error) {
     handleError(error);
   }
@@ -49,7 +49,7 @@ export const get_selected_reviews = async () => {
 export const approve_review = async (reviewId: string) => {
   try {
     const response = await axiosInstance.patch(`/reviews/approve/${reviewId}`);
-    return response.data;
+    return response.data.data;
   } catch (error) {
     handleError(error);
   }
@@ -59,7 +59,7 @@ export const approve_review = async (reviewId: string) => {
 export const select_review = async (reviewId: string) => {
   try {
     const response = await axiosInstance.patch(`/reviews/select/${reviewId}`);
-    return response.data;
+    return response.data.data;
   } catch (error) {
     handleError(error);
   }
@@ -69,7 +69,7 @@ export const select_review = async (reviewId: string) => {
 export const cancel_approval = async (reviewId: string) => {
   try {
     const response = await axiosInstance.patch(`/reviews/cancel/${reviewId}`);
-    return response.data;
+    return response.data.data;
   } catch (error) {
     handleError(error);
   }
@@ -79,7 +79,7 @@ export const cancel_approval = async (reviewId: string) => {
 export const deselect_review = async (reviewId: string) => {
   try {
     const response = await axiosInstance.patch(`/reviews/deselect/${reviewId}`);
-    return response.data;
+    return response.data.data;
   } catch (error) {
     handleError(error);
   }

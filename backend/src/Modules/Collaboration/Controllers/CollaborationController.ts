@@ -2,6 +2,7 @@ import { Request, Response } from 'express';
 import { BaseController } from '../../../core/Controller/BaseController.js';
 import { CollaborationService } from '../Service/CollaborationService.js';
 import MentorRequest from '../../../models/mentorRequset.js';
+import { IMentorRequest } from '../../../Interfaces/models/IMentorRequest.js';
 // import logger from '../../../core/utils/Logger.js';
 
 export class CollaborationController extends BaseController {
@@ -13,7 +14,7 @@ export class CollaborationController extends BaseController {
   }
 
 
-  async TemporaryRequestController(req: Request, res: Response): Promise<void> {
+  TemporaryRequestController = async (req: Request, res: Response): Promise<void> =>{
     try {
       const { mentorId, userId, selectedSlot, price, timePeriod } = req.body;
       if (!mentorId || !userId || !selectedSlot || !price || !timePeriod) {
@@ -27,7 +28,7 @@ export class CollaborationController extends BaseController {
     }
   }
 
-  async getMentorRequestsController(req: Request, res: Response): Promise<void> {
+  getMentorRequestsController =async(req: Request, res: Response): Promise<void> =>{
     try {
       const mentorId = req.query.mentorId as string;
       if (!mentorId) {
@@ -40,7 +41,7 @@ export class CollaborationController extends BaseController {
     }
   }
 
-  async acceptRequestController(req: Request, res: Response): Promise<void> {
+  acceptRequestController = async(req: Request, res: Response): Promise<void> =>{
     try {
       const { id } = req.params;
       const request = await this.collabService.acceptRequest(id);
@@ -50,7 +51,7 @@ export class CollaborationController extends BaseController {
     }
   }
 
-  async rejectRequestController(req: Request, res: Response): Promise<void> {
+  rejectRequestController = async (req: Request, res: Response): Promise<void> =>{
     try {
       const { id } = req.params;
       const request = await this.collabService.rejectRequest(id);
@@ -60,7 +61,7 @@ export class CollaborationController extends BaseController {
     }
   }
 
-  async getRequestForUserController(req: Request, res: Response): Promise<void> {
+  getRequestForUserController = async (req: Request, res: Response): Promise<void> =>{
     try {
       const { id } = req.params;
       const userRequest = await this.collabService.getRequestForUser(id);
@@ -70,7 +71,7 @@ export class CollaborationController extends BaseController {
     }
   }
 
-  async makeStripePaymentController(req: Request, res: Response): Promise<void> {
+  makeStripePaymentController = async(req: Request, res: Response): Promise<void> =>{
     try {
       const { paymentMethodId, amount, requestId, email, returnUrl } = req.body;
       if (!returnUrl) {
@@ -84,7 +85,7 @@ export class CollaborationController extends BaseController {
         paymentMethodId,
         amount,
         requestId,
-        mentorRequestData,
+        mentorRequestData as Partial<IMentorRequest>,
         email,
         returnUrl
       );
@@ -101,7 +102,7 @@ export class CollaborationController extends BaseController {
     }
   }
 
-  async getCollabDataForUserController(req: Request, res: Response): Promise<void> {
+  getCollabDataForUserController = async (req: Request, res: Response): Promise<void> =>{
     try {
       const { id } = req.params;
       const collabData = await this.collabService.getCollabDataForUserService(id);
@@ -111,7 +112,7 @@ export class CollaborationController extends BaseController {
     }
   }
 
-  async getCollabDataForMentorController(req: Request, res: Response): Promise<void> {
+  getCollabDataForMentorController = async(req: Request, res: Response): Promise<void> =>{
     try {
       const { id } = req.params;
       const collabData = await this.collabService.getCollabDataForMentorService(id);
@@ -121,7 +122,7 @@ export class CollaborationController extends BaseController {
     }
   }
 
-  async deleteCollab(req: Request, res: Response): Promise<void> {
+  deleteCollab = async (req: Request, res: Response): Promise<void> =>{
     try {
       const { collabId } = req.params;
       const { reason } = req.body;
@@ -132,7 +133,7 @@ export class CollaborationController extends BaseController {
     }
   }
 
-  async getAllMentorRequests(req: Request, res: Response): Promise<void> {
+  getAllMentorRequests = async(req: Request, res: Response): Promise<void> =>{
     try {
       const { page = '1', limit = '10', search = '' } = req.query;
       const mentorRequests = await this.collabService.getMentorRequestsService({
@@ -146,7 +147,7 @@ export class CollaborationController extends BaseController {
     }
   }
 
-  async getAllCollabs(req: Request, res: Response): Promise<void> {
+  getAllCollabs = async (req: Request, res: Response): Promise<void> =>{
     try {
       const { page = '1', limit = '10', search = '' } = req.query;
       const collaborations = await this.collabService.getCollabsService({
@@ -160,7 +161,7 @@ export class CollaborationController extends BaseController {
     }
   }
 
-  async getCollabDetailsByCollabId(req: Request, res: Response): Promise<void> {
+  getCollabDetailsByCollabId = async (req: Request, res: Response): Promise<void> =>{
     try {
       const { collabId } = req.params;
       const collabDetails = await this.collabService.fetchCollabById(collabId);
@@ -170,7 +171,7 @@ export class CollaborationController extends BaseController {
     }
   }
 
-  async getRequestDetailsByRequestId(req: Request, res: Response): Promise<void> {
+  getRequestDetailsByRequestId = async(req: Request, res: Response): Promise<void> =>{
     try {
       const { requestId } = req.params;
       const requestDetails = await this.collabService.fetchRequestById(requestId);
@@ -180,7 +181,7 @@ export class CollaborationController extends BaseController {
     }
   }
 
-  async markUnavailableDays(req: Request, res: Response): Promise<void> {
+  markUnavailableDays= async(req: Request, res: Response): Promise<void> =>{
     try {
       const { collabId } = req.params;
       const { datesAndReasons, requestedBy, requesterId, approvedById, isApproved } = req.body;
@@ -197,7 +198,7 @@ export class CollaborationController extends BaseController {
     }
   }
 
-  async updateTemporarySlotChanges(req: Request, res: Response): Promise<void> {
+  updateTemporarySlotChanges = async(req: Request, res: Response): Promise<void> =>{
     try {
       const { collabId } = req.params;
       const { datesAndNewSlots, requestedBy, requesterId, approvedById, isApproved } = req.body;
@@ -214,7 +215,7 @@ export class CollaborationController extends BaseController {
     }
   }
 
-  async approveTimeSlotRequest(req: Request, res: Response): Promise<void> {
+  approveTimeSlotRequest = async(req: Request, res: Response): Promise<void> =>{
     try {
       const { collabId } = req.params;
       const { requestId, isApproved, requestType } = req.body;
@@ -230,7 +231,7 @@ export class CollaborationController extends BaseController {
     }
   }
 
-  async getMentorLockedSlotsController(req: Request, res: Response): Promise<void> {
+  getMentorLockedSlotsController = async (req: Request, res: Response): Promise<void> =>{
     try {
       const { mentorId } = req.params;
       if (!mentorId) {

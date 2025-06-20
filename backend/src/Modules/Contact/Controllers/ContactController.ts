@@ -11,7 +11,7 @@ export class ContactController extends BaseController {
     this.contactService = new ContactService();
   }
 
-  async getUserContacts(req: Request, res: Response): Promise<void> {
+    getUserContacts = async(req: Request, res: Response): Promise<void> =>{
     try {
       const userId = req.currentUser?._id;
       const userRole = req.currentUser?.role;
@@ -19,7 +19,7 @@ export class ContactController extends BaseController {
         this.throwError(400, 'User ID or role not provided');
       }
 
-      const contacts = await this.contactService.getUserContacts(userId.toString());
+      const contacts = await this.contactService.getUserContacts(userId?.toString());
       this.sendSuccess(res, contacts, 'Contacts retrieved successfully');
     } catch (error: any) {
       logger.error(`Error in getUserContacts: ${error.message}`);

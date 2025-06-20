@@ -32,7 +32,7 @@ export class MentorRepository extends BaseRepository {
         }
         return new Types.ObjectId(idStr);
     }
-    async submitMentorRequest(data) {
+    submitMentorRequest = async (data) => {
         try {
             logger.debug(`Submitting mentor request for user: ${data.userId}`);
             return await this.create({
@@ -44,8 +44,8 @@ export class MentorRepository extends BaseRepository {
             logger.error(`Error submitting mentor request: ${error.message}`);
             throw new RepositoryError(`Error submitting mentor request: ${error.message}`);
         }
-    }
-    async getAllMentorRequests(page = 1, limit = 10, search = "", status = "", sort = "desc") {
+    };
+    getAllMentorRequests = async (page = 1, limit = 10, search = "", status = "", sort = "desc") => {
         try {
             logger.debug(`Fetching mentor requests with page: ${page}, limit: ${limit}, search: ${search}`);
             const query = {};
@@ -72,8 +72,8 @@ export class MentorRepository extends BaseRepository {
             logger.error(`Error fetching mentor requests: ${error.message}`);
             throw new RepositoryError(`Error fetching mentor requests: ${error.message}`);
         }
-    }
-    async getAllMentors() {
+    };
+    getAllMentors = async () => {
         try {
             logger.debug(`Fetching all approved mentors`);
             return await this.model
@@ -86,8 +86,8 @@ export class MentorRepository extends BaseRepository {
             logger.error(`Error fetching mentors: ${error.message}`);
             throw new RepositoryError(`Error fetching mentors: ${error.message}`);
         }
-    }
-    async getMentorDetails(id) {
+    };
+    getMentorDetails = async (id) => {
         try {
             logger.debug(`Fetching mentor details for ID: ${id}`);
             return await this.model
@@ -100,38 +100,44 @@ export class MentorRepository extends BaseRepository {
             logger.error(`Error fetching mentor details: ${error.message}`);
             throw new RepositoryError(`Error fetching mentor details: ${error.message}`);
         }
-    }
-    async approveMentorRequest(id) {
+    };
+    approveMentorRequest = async (id) => {
         try {
             logger.debug(`Approving mentor request: ${id}`);
-            return await this.findByIdAndUpdate(id, { isApproved: "Completed" }, { new: true });
+            return await this.model
+                .findByIdAndUpdate(this.toObjectId(id), { isApproved: "Completed" }, { new: true })
+                .lean();
         }
         catch (error) {
             logger.error(`Error approving mentor request: ${error.message}`);
             throw new RepositoryError(`Error approving mentor request: ${error.message}`);
         }
-    }
-    async rejectMentorRequest(id) {
+    };
+    rejectMentorRequest = async (id) => {
         try {
             logger.debug(`Rejecting mentor request: ${id}`);
-            return await this.findByIdAndUpdate(id, { isApproved: "Rejected" }, { new: true });
+            return await this.model
+                .findByIdAndUpdate(this.toObjectId(id), { isApproved: "Rejected" }, { new: true })
+                .lean();
         }
         catch (error) {
             logger.error(`Error rejecting mentor request: ${error.message}`);
             throw new RepositoryError(`Error rejecting mentor request: ${error.message}`);
         }
-    }
-    async cancelMentorship(id) {
+    };
+    cancelMentorship = async (id) => {
         try {
             logger.debug(`Cancelling mentorship: ${id}`);
-            return await this.findByIdAndUpdate(id, { isApproved: "Processing" }, { new: true });
+            return await this.model
+                .findByIdAndUpdate(this.toObjectId(id), { isApproved: "Processing" }, { new: true })
+                .lean();
         }
         catch (error) {
             logger.error(`Error cancelling mentorship: ${error.message}`);
             throw new RepositoryError(`Error cancelling mentorship: ${error.message}`);
         }
-    }
-    async getMentorById(id) {
+    };
+    getMentorById = async (id) => {
         try {
             logger.debug(`Fetching mentor by ID: ${id}`);
             return await this.model
@@ -144,8 +150,8 @@ export class MentorRepository extends BaseRepository {
             logger.error(`Error fetching mentor by ID: ${error.message}`);
             throw new RepositoryError(`Error fetching mentor by ID: ${error.message}`);
         }
-    }
-    async getMentorByUserId(userId) {
+    };
+    getMentorByUserId = async (userId) => {
         try {
             logger.debug(`Fetching mentor by user ID: ${userId}`);
             return await this.model
@@ -158,8 +164,8 @@ export class MentorRepository extends BaseRepository {
             logger.error(`Error fetching mentor by user ID: ${error.message}`);
             throw new RepositoryError(`Error fetching mentor by user ID: ${error.message}`);
         }
-    }
-    async updateMentorById(mentorId, updateData) {
+    };
+    updateMentorById = async (mentorId, updateData) => {
         try {
             logger.debug(`Updating mentor: ${mentorId}`);
             return await this.findByIdAndUpdate(mentorId, updateData, { new: true });
@@ -168,8 +174,8 @@ export class MentorRepository extends BaseRepository {
             logger.error(`Error updating mentor: ${error.message}`);
             throw new RepositoryError(`Error updating mentor: ${error.message}`);
         }
-    }
-    async saveMentorRequest(data) {
+    };
+    saveMentorRequest = async (data) => {
         try {
             logger.debug(`Saving mentor request for user: ${data.userId}`);
             return await this.create({
@@ -181,6 +187,6 @@ export class MentorRepository extends BaseRepository {
             logger.error(`Error saving mentor request: ${error.message}`);
             throw new RepositoryError(`Error saving mentor request: ${error.message}`);
         }
-    }
+    };
 }
 //# sourceMappingURL=MentorRepositry.js.map

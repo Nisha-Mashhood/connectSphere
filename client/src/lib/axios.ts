@@ -47,14 +47,14 @@ export const setupInterceptors = (navigate) => {
       config.signal = controller.signal;
 
       // Add auth token
-      const token = document.cookie
-        .split("; ")
-        .find((row) => row.startsWith("accessToken="))
-        ?.split("=")[1];
+      // const token = document.cookie
+      //   .split("; ")
+      //   .find((row) => row.startsWith("accessToken="))
+      //   ?.split("=")[1];
 
-      if (token) {
-        config.headers.Authorization = `Bearer ${token}`;
-      }
+      // if (token) {
+      //   config.headers.Authorization = `Bearer ${token}`;
+      // }
 
       return config;
     },
@@ -102,9 +102,9 @@ export const setupInterceptors = (navigate) => {
       if (error.response?.status === 401 && !originalRequest._retry) {
         originalRequest._retry = true;
         try {
-          const response = await axiosInstance.post("/auth/refresh-token");
-          const { newAccessToken } = response.data;
-          originalRequest.headers.Authorization = `Bearer ${newAccessToken}`;
+          await axiosInstance.post("/auth/refresh-token");
+          // const { newAccessToken } = response.data;
+          // originalRequest.headers.Authorization = `Bearer ${newAccessToken}`;
           return axiosInstance(originalRequest);
         } catch (refreshError) {
           store.dispatch(signOut());

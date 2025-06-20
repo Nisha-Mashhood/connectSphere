@@ -10,9 +10,9 @@ export interface IChatMessage extends Document {
     groupId?: Types.ObjectId;
     contentType: "text" | "image" | "video" | "file";
     fileMetadata?: {
-        fileName: string;
-        fileSize: number;
-        mimeType: string;
+        fileName: string | undefined;
+        fileSize: number | undefined;
+        mimeType: string | undefined;
     };
     isRead: boolean;
     status: "pending" | "sent" | "read";

@@ -10,7 +10,7 @@ export class ContactMessageService extends BaseService {
         super();
         this.contactMessageRepo = new ContactMessageRepository();
     }
-    async createContactMessage(data) {
+    createContactMessage = async (data) => {
         try {
             logger.debug(`Creating contact message from: ${data.email}`);
             this.checkData(data);
@@ -28,8 +28,8 @@ export class ContactMessageService extends BaseService {
             logger.error(`Error processing contact message: ${error.message}`);
             throw new ServiceError(`Error processing contact message: ${error.message}`);
         }
-    }
-    async getAllContactMessages() {
+    };
+    getAllContactMessages = async () => {
         try {
             logger.debug('Fetching all contact messages');
             return await this.contactMessageRepo.getAllContactMessages();
@@ -38,8 +38,8 @@ export class ContactMessageService extends BaseService {
             logger.error(`Error fetching contact messages: ${error.message}`);
             throw new ServiceError(`Error fetching contact messages: ${error.message}`);
         }
-    }
-    async sendReply(contactMessageId, replyData) {
+    };
+    sendReply = async (contactMessageId, replyData) => {
         try {
             logger.debug(`Sending reply for contact message: ${contactMessageId}`);
             this.checkData({ contactMessageId, ...replyData });
@@ -51,6 +51,6 @@ export class ContactMessageService extends BaseService {
             logger.error(`Error sending reply: ${error.message}`);
             throw new ServiceError(`Error sending reply: ${error.message}`);
         }
-    }
+    };
 }
 //# sourceMappingURL=ContactUsService.js.map

@@ -12,7 +12,7 @@ export class ChatController extends BaseController {
         this.chatService = new ChatService();
         this.chatRepo = new ChatRepository();
     }
-    async getChatMessages(req, res) {
+    getChatMessages = async (req, res) => {
         try {
             const { contactId, groupId, page = '1', limit = '10' } = req.query;
             const messages = await this.chatService.getChatMessages(contactId, groupId, parseInt(page), parseInt(limit));
@@ -21,21 +21,24 @@ export class ChatController extends BaseController {
         catch (error) {
             this.handleError(error, res);
         }
-    }
-    async uploadAndSaveMessage(req, res) {
+    };
+    uploadAndSaveMessage = async (req, res) => {
         try {
             const { senderId, targetId, type, collaborationId, userConnectionId, groupId } = req.body;
             if (!req.file || !senderId || !targetId || !type) {
                 this.throwError(400, 'Missing required fields');
             }
-            const filePath = req.file.path;
+            const filePath = req.file?.path;
+            if (!filePath) {
+                this.throwError(400, 'Missing File Path');
+            }
             const folder = type === 'group' ? 'group_chat_media' : 'chat_media';
-            const contentType = req.file.mimetype.startsWith('image/')
+            const contentType = req.file?.mimetype.startsWith('image/')
                 ? 'image'
-                : req.file.mimetype.startsWith('video/')
+                : req.file?.mimetype.startsWith('video/')
                     ? 'video'
                     : 'file';
-            const { url, thumbnailUrl } = await uploadMedia(filePath, folder, req.file.size, contentType);
+            const { url, thumbnailUrl } = await uploadMedia(filePath, folder, req.file?.size, contentType);
             const message = await this.chatRepo.saveChatMessage({
                 senderId,
                 content: url,
@@ -45,9 +48,9 @@ export class ChatController extends BaseController {
                 ...(type === 'user-user' && { userConnectionId }),
                 ...(type === 'group' && { groupId }),
                 fileMetadata: {
-                    fileName: req.file.originalname,
-                    fileSize: req.file.size,
-                    mimeType: req.file.mimetype,
+                    fileName: req.file?.originalname,
+                    fileSize: req.file?.size,
+                    mimeType: req.file?.mimetype,
                 },
                 timestamp: new Date(),
             });
@@ -62,8 +65,8 @@ export class ChatController extends BaseController {
                 this.handleError(error, res);
             }
         }
-    }
-    async getUnreadMessageCounts(req, res) {
+    };
+    getUnreadMessageCounts = async (req, res) => {
         try {
             const { userId } = req.query;
             if (!userId) {
@@ -75,6 +78,6 @@ export class ChatController extends BaseController {
         catch (error) {
             this.handleError(error, res);
         }
-    }
+    };
 }
 //# sourceMappingURL=ChatController.js.map

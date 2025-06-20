@@ -19,7 +19,7 @@ export class CategoryService extends BaseService {
     this.skillsRepo = new SkillsRepository();
   }
 
-  async isDuplicateCategoryName(name: string, excludeId?: string): Promise<boolean> {
+   isDuplicateCategoryName = async(name?: string, excludeId?: string): Promise<boolean> => {
     try {
       logger.debug(`Checking duplicate category name: ${name}`);
       return await this.categoryRepo.isDuplicateCategoryName(name, excludeId);
@@ -29,7 +29,7 @@ export class CategoryService extends BaseService {
     }
   }
 
-  async createCategory(data: Partial<ICategory>, imagePath?: string, fileSize?: number): Promise<ICategory> {
+   createCategory = async(data: Partial<ICategory>, imagePath?: string, fileSize?: number): Promise<ICategory> => {
     try {
       this.checkData(data);
       logger.debug(`Creating category with name: ${data.name}`);
@@ -49,7 +49,7 @@ export class CategoryService extends BaseService {
     }
   }
 
-  async getAllCategories(): Promise<ICategory[]> {
+   getAllCategories = async(): Promise<ICategory[]> =>{
     try {
       logger.debug('Fetching all categories');
       const categories = await this.categoryRepo.getAllCategories();
@@ -61,7 +61,7 @@ export class CategoryService extends BaseService {
     }
   }
 
-  async getCategoryById(id: string): Promise<ICategory | null> {
+   getCategoryById = async(id: string): Promise<ICategory | null> => {
     try {
       logger.debug(`Fetching category: ${id}`);
       const category = await this.categoryRepo.getCategoryById(id);
@@ -77,7 +77,7 @@ export class CategoryService extends BaseService {
     }
   }
 
-  async updateCategory(id: string, data: Partial<ICategory>, imagePath?: string, fileSize?: number): Promise<ICategory | null> {
+   updateCategory = async(id: string, data: Partial<ICategory>, imagePath?: string, fileSize?: number): Promise<ICategory | null> => {
     try {
       this.checkData(data);
       logger.debug(`Updating category: ${id}`);
@@ -101,7 +101,7 @@ export class CategoryService extends BaseService {
     }
   }
 
-  async deleteCategory(id: string): Promise<ICategory | null> {
+   deleteCategory = async(id: string): Promise<ICategory | null> => {
     try {
       logger.debug(`Deleting category: ${id}`);
       await this.subcategoryRepo.deleteManySubcategories(id);

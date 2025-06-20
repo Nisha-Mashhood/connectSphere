@@ -7,41 +7,41 @@ export declare class CollaborationService extends BaseService {
     private contactRepo;
     private mentorRepo;
     constructor();
-    TemporaryRequestService(requestData: Partial<IMentorRequest>): Promise<IMentorRequest>;
-    getMentorRequests(mentorId: string): Promise<IMentorRequest[]>;
-    acceptRequest(requestId: string): Promise<IMentorRequest | null>;
-    rejectRequest(requestId: string): Promise<IMentorRequest | null>;
-    getRequestForUser(userId: string): Promise<IMentorRequest[]>;
-    processPaymentService(paymentMethodId: string, amount: number, requestId: string, mentorRequestData: Partial<IMentorRequest>, email: string, returnUrl: string): Promise<{
+    TemporaryRequestService: (requestData: Partial<IMentorRequest>) => Promise<IMentorRequest>;
+    getMentorRequests: (mentorId: string) => Promise<IMentorRequest[]>;
+    acceptRequest: (requestId: string) => Promise<IMentorRequest | null>;
+    rejectRequest: (requestId: string) => Promise<IMentorRequest | null>;
+    getRequestForUser: (userId: string) => Promise<IMentorRequest[]>;
+    processPaymentService: (paymentMethodId: string, amount: number, requestId: string, mentorRequestData: Partial<IMentorRequest>, email: string, returnUrl: string) => Promise<{
         paymentIntent: any;
         contacts?: any[];
     }>;
-    getCollabDataForUserService(userId: string): Promise<ICollaboration[]>;
-    getCollabDataForMentorService(mentorId: string): Promise<ICollaboration[]>;
-    removeCollab(collabId: string, reason: string): Promise<ICollaboration | null>;
-    getMentorRequestsService({ page, limit, search, }: {
+    getCollabDataForUserService: (userId: string) => Promise<ICollaboration[]>;
+    getCollabDataForMentorService: (mentorId: string) => Promise<ICollaboration[]>;
+    removeCollab: (collabId: string, reason: string) => Promise<ICollaboration | null>;
+    getMentorRequestsService: ({ page, limit, search, }: {
         page: number;
         limit: number;
         search: string;
-    }): Promise<{
+    }) => Promise<{
         requests: IMentorRequest[];
         total: number;
         page: number;
         pages: number;
     }>;
-    getCollabsService({ page, limit, search, }: {
+    getCollabsService: ({ page, limit, search, }: {
         page: number;
         limit: number;
         search: string;
-    }): Promise<{
+    }) => Promise<{
         collabs: ICollaboration[];
         total: number;
         page: number;
         pages: number;
     }>;
-    fetchCollabById(collabId: string): Promise<ICollaboration | null>;
-    fetchRequestById(requestId: string): Promise<IMentorRequest | null>;
-    markUnavailableDaysService(collabId: string, updateData: {
+    fetchCollabById: (collabId: string) => Promise<ICollaboration | null>;
+    fetchRequestById: (requestId: string) => Promise<IMentorRequest | null>;
+    markUnavailableDaysService: (collabId: string, updateData: {
         datesAndReasons: {
             date: Date;
             reason: string;
@@ -50,8 +50,8 @@ export declare class CollaborationService extends BaseService {
         requesterId: string;
         approvedById: string;
         isApproved: "pending" | "approved" | "rejected";
-    }): Promise<ICollaboration | null>;
-    updateTemporarySlotChangesService(collabId: string, updateData: {
+    }) => Promise<ICollaboration | null>;
+    updateTemporarySlotChangesService: (collabId: string, updateData: {
         datesAndNewSlots: {
             date: Date;
             newTimeSlots: string[];
@@ -60,9 +60,9 @@ export declare class CollaborationService extends BaseService {
         requesterId: string;
         approvedById: string;
         isApproved: "pending" | "approved" | "rejected";
-    }): Promise<ICollaboration | null>;
-    processTimeSlotRequest(collabId: string, requestId: string, isApproved: boolean, requestType: "unavailable" | "timeSlot"): Promise<ICollaboration | null>;
-    getMentorLockedSlots(mentorId: string): Promise<LockedSlot[]>;
+    }) => Promise<ICollaboration | null>;
+    processTimeSlotRequest: (collabId: string, requestId: string, isApproved: boolean, requestType: "unavailable" | "timeSlot") => Promise<ICollaboration | null>;
+    getMentorLockedSlots: (mentorId: string) => Promise<LockedSlot[]>;
     private calculateNewEndDate;
 }
 //# sourceMappingURL=CollaborationService.d.ts.map

@@ -1,4 +1,4 @@
-export declare const uploadMedia: (filePath: string, folder: string, fileSize?: number, contentType?: "image" | "video" | "file") => Promise<{
+export declare const uploadMedia: (filePath: string, folder?: string, fileSize?: number, contentType?: "image" | "video" | "file") => Promise<{
     url: string;
     thumbnailUrl: string | undefined;
 }>;

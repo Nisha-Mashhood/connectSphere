@@ -10,7 +10,7 @@ export class ContactMessageRepository extends BaseRepository<IContactMessage> {
     super(ContactMessage as Model<IContactMessage>);
   }
 
-  async createContactMessage(data: { name: string; email: string; message: string }): Promise<IContactMessage> {
+   createContactMessage = async(data: { name: string; email: string; message: string }): Promise<IContactMessage> => {
     try {
       logger.debug(`Creating contact message from: ${data.email}`);
       return await this.create({
@@ -24,7 +24,7 @@ export class ContactMessageRepository extends BaseRepository<IContactMessage> {
     }
   }
 
-  async getAllContactMessages(): Promise<IContactMessage[]> {
+   getAllContactMessages = async(): Promise<IContactMessage[]> => {
     try {
       logger.debug('Fetching all contact messages');
       return await this.model.find().sort({ createdAt: -1 }).exec();
@@ -34,7 +34,7 @@ export class ContactMessageRepository extends BaseRepository<IContactMessage> {
     }
   }
 
-  async updateReplyStatus(contactMessageId: string): Promise<IContactMessage> {
+   updateReplyStatus = async(contactMessageId: string): Promise<IContactMessage> => {
     try {
       logger.debug(`Updating reply status for contact message: ${contactMessageId}`);
       const message = await this.model

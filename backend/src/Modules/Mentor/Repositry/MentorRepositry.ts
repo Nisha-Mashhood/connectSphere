@@ -34,7 +34,7 @@ export class MentorRepository extends BaseRepository<IMentor> {
     return new Types.ObjectId(idStr);
   }
 
-  async submitMentorRequest(data: Partial<IMentor>): Promise<IMentor> {
+   submitMentorRequest = async(data: Partial<IMentor>): Promise<IMentor> => {
     try {
       logger.debug(`Submitting mentor request for user: ${data.userId}`);
       return await this.create({
@@ -49,7 +49,7 @@ export class MentorRepository extends BaseRepository<IMentor> {
     }
   }
 
-  async getAllMentorRequests(
+   getAllMentorRequests = async(
     page: number = 1,
     limit: number = 10,
     search: string = "",
@@ -60,7 +60,7 @@ export class MentorRepository extends BaseRepository<IMentor> {
     total: number;
     page: number;
     pages: number;
-  }> {
+  }> => {
     try {
       logger.debug(
         `Fetching mentor requests with page: ${page}, limit: ${limit}, search: ${search}`
@@ -91,7 +91,7 @@ export class MentorRepository extends BaseRepository<IMentor> {
     }
   }
 
-  async getAllMentors(): Promise<IMentor[]> {
+   getAllMentors = async(): Promise<IMentor[]> => {
     try {
       logger.debug(`Fetching all approved mentors`);
       return await this.model
@@ -105,7 +105,7 @@ export class MentorRepository extends BaseRepository<IMentor> {
     }
   }
 
-  async getMentorDetails(id: string): Promise<IMentor | null> {
+   getMentorDetails = async(id: string): Promise<IMentor | null> => {
     try {
       logger.debug(`Fetching mentor details for ID: ${id}`);
       return await this.model
@@ -121,14 +121,16 @@ export class MentorRepository extends BaseRepository<IMentor> {
     }
   }
 
-  async approveMentorRequest(id: string): Promise<IMentor | null> {
+   approveMentorRequest = async(id: string): Promise<IMentor | null> => {
     try {
       logger.debug(`Approving mentor request: ${id}`);
-      return await this.findByIdAndUpdate(
-        id,
-        { isApproved: "Completed" },
-        { new: true }
-      );
+      return await this.model
+        .findByIdAndUpdate(
+          this.toObjectId(id),
+          { isApproved: "Completed" },
+          { new: true }
+        )
+        .lean();
     } catch (error: any) {
       logger.error(`Error approving mentor request: ${error.message}`);
       throw new RepositoryError(
@@ -137,14 +139,16 @@ export class MentorRepository extends BaseRepository<IMentor> {
     }
   }
 
-  async rejectMentorRequest(id: string): Promise<IMentor | null> {
+   rejectMentorRequest = async(id: string): Promise<IMentor | null> => {
     try {
       logger.debug(`Rejecting mentor request: ${id}`);
-      return await this.findByIdAndUpdate(
-        id,
-        { isApproved: "Rejected" },
-        { new: true }
-      );
+      return await this.model
+        .findByIdAndUpdate(
+          this.toObjectId(id),
+          { isApproved: "Rejected" },
+          { new: true }
+        )
+        .lean();
     } catch (error: any) {
       logger.error(`Error rejecting mentor request: ${error.message}`);
       throw new RepositoryError(
@@ -153,14 +157,16 @@ export class MentorRepository extends BaseRepository<IMentor> {
     }
   }
 
-  async cancelMentorship(id: string): Promise<IMentor | null> {
+   cancelMentorship = async(id: string): Promise<IMentor | null> => {
     try {
       logger.debug(`Cancelling mentorship: ${id}`);
-      return await this.findByIdAndUpdate(
-        id,
-        { isApproved: "Processing" },
-        { new: true }
-      );
+      return await this.model
+        .findByIdAndUpdate(
+          this.toObjectId(id),
+          { isApproved: "Processing" },
+          { new: true }
+        )
+        .lean();
     } catch (error: any) {
       logger.error(`Error cancelling mentorship: ${error.message}`);
       throw new RepositoryError(
@@ -169,7 +175,7 @@ export class MentorRepository extends BaseRepository<IMentor> {
     }
   }
 
-  async getMentorById(id: string): Promise<IMentor | null> {
+   getMentorById = async(id: string): Promise<IMentor | null> => {
     try {
       logger.debug(`Fetching mentor by ID: ${id}`);
       return await this.model
@@ -185,7 +191,7 @@ export class MentorRepository extends BaseRepository<IMentor> {
     }
   }
 
-  async getMentorByUserId(userId: string): Promise<IMentor | null> {
+   getMentorByUserId = async(userId: string): Promise<IMentor | null> => {
     try {
       logger.debug(`Fetching mentor by user ID: ${userId}`);
       return await this.model
@@ -201,10 +207,10 @@ export class MentorRepository extends BaseRepository<IMentor> {
     }
   }
 
-  async updateMentorById(
+   updateMentorById = async(
     mentorId: string,
     updateData: Partial<IMentor>
-  ): Promise<IMentor | null> {
+  ): Promise<IMentor | null> =>{
     try {
       logger.debug(`Updating mentor: ${mentorId}`);
       return await this.findByIdAndUpdate(mentorId, updateData, { new: true });
@@ -214,7 +220,16 @@ export class MentorRepository extends BaseRepository<IMentor> {
     }
   }
 
-  async saveMentorRequest(data: Partial<IMentor>): Promise<IMentor> {
+   saveMentorRequest = async(data: {
+    userId: string;
+    skills: string[];
+    specialization: string;
+    bio: string;
+    price: number;
+    availableSlots: object[];
+    timePeriod: number;
+    certifications: string[];
+  }): Promise<IMentor> =>{
     try {
       logger.debug(`Saving mentor request for user: ${data.userId}`);
       return await this.create({

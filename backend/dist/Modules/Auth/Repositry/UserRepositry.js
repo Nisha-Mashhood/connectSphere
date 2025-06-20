@@ -8,7 +8,7 @@ export class UserRepository extends BaseRepository {
         super(User);
     }
     // Create a new user
-    async createUser(userData) {
+    createUser = async (userData) => {
         try {
             return await this.create(userData);
         }
@@ -16,9 +16,9 @@ export class UserRepository extends BaseRepository {
             logger.error(`Error creating user: ${error}`);
             throw new RepositoryError("Failed to create user");
         }
-    }
+    };
     // Find a user by email
-    async findUserByEmail(email) {
+    findUserByEmail = async (email) => {
         try {
             return await this.findOne({ email });
         }
@@ -26,9 +26,12 @@ export class UserRepository extends BaseRepository {
             logger.error(`Error finding user by email ${email}: ${error}`);
             throw new RepositoryError(`Failed to find user by email ${email}`);
         }
-    }
+    };
     //Find a User By id
-    async getUserById(id) {
+    getUserById = async (id) => {
+        if (!id) {
+            throw new RepositoryError("id is not provided");
+        }
         try {
             return await this.findById(id);
         }
@@ -36,9 +39,9 @@ export class UserRepository extends BaseRepository {
             logger.error(`Error finding user by id ${id}: ${error}`);
             throw new RepositoryError(`Failed to find user by id ${id}`);
         }
-    }
+    };
     // Find or create a user by OAuth profile
-    async findOrCreateUser(profile, provider) {
+    findOrCreateUser = async (profile, provider) => {
         try {
             const email = profile.email;
             let user = await this.findUserByEmail(email);
@@ -59,9 +62,9 @@ export class UserRepository extends BaseRepository {
             logger.error(`Error in findOrCreateUser for ${profile.email}: ${error}`);
             throw new RepositoryError(`Failed to find or create user for ${profile.email}`);
         }
-    }
+    };
     // Update user password
-    async updatePassword(id, password) {
+    updatePassword = async (id, password) => {
         try {
             return await this.update(id, { password });
         }
@@ -69,9 +72,9 @@ export class UserRepository extends BaseRepository {
             logger.error(`Error updating password for user ${id}: ${error}`);
             throw new RepositoryError(`Failed to update password for user ${id}`);
         }
-    }
+    };
     // Increment login count
-    async incrementLoginCount(userId) {
+    incrementLoginCount = async (userId) => {
         try {
             return await this.findByIdAndUpdate(userId, { $inc: { loginCount: 1 } });
         }
@@ -79,9 +82,9 @@ export class UserRepository extends BaseRepository {
             logger.error(`Error incrementing login count for user ${userId}: ${error}`);
             throw new RepositoryError(`Failed to increment login count for user ${userId}`);
         }
-    }
+    };
     // Update refresh token
-    async updateRefreshToken(userId, refreshToken) {
+    updateRefreshToken = async (userId, refreshToken) => {
         try {
             return await this.update(userId, { refreshToken });
         }
@@ -89,9 +92,9 @@ export class UserRepository extends BaseRepository {
             logger.error(`Error updating refresh token for user ${userId}: ${error}`);
             throw new RepositoryError(`Failed to update refresh token for user ${userId}`);
         }
-    }
+    };
     // Remove refresh token
-    async removeRefreshToken(email) {
+    removeRefreshToken = async (email) => {
         try {
             await this.model.updateOne({ email }, { $unset: { refreshToken: "" } });
             logger.info(`Removed refresh token for user with email: ${email}`);
@@ -100,9 +103,9 @@ export class UserRepository extends BaseRepository {
             logger.error(`Error removing refresh token for email ${email}: ${error}`);
             throw new RepositoryError(`Failed to remove refresh token for email ${email}`);
         }
-    }
+    };
     // Check if profile is complete
-    async isProfileComplete(user) {
+    isProfileComplete = async (user) => {
         try {
             const requiredFields = [
                 "phone",
@@ -122,9 +125,9 @@ export class UserRepository extends BaseRepository {
             logger.error(`Error checking profile completion for user ${user._id}: ${error}`);
             throw new RepositoryError(`Failed to check profile completion for user ${user._id}`);
         }
-    }
+    };
     //Fetch All User Details
-    async getAllUsers() {
+    getAllUsers = async () => {
         try {
             logger.debug(`Fetching all users`);
             return await this.model.find({ role: { $ne: "admin" } }).exec();
@@ -133,9 +136,9 @@ export class UserRepository extends BaseRepository {
             logger.error(`Error fetching all users: ${error}`);
             throw new RepositoryError("Failed to fetch all users");
         }
-    }
+    };
     //Update The User Profile
-    async updateUserProfile(id, data) {
+    updateUserProfile = async (id, data) => {
         try {
             logger.debug(`Updating user profile for ID: ${id}`);
             return await this.findByIdAndUpdate(id, data, { new: true });
@@ -144,9 +147,9 @@ export class UserRepository extends BaseRepository {
             logger.error(`Error updating user profile for ID ${id}: ${error}`);
             throw new RepositoryError(`Failed to update user profile for ID ${id}`);
         }
-    }
+    };
     //Block the given User
-    async blockUser(id) {
+    blockUser = async (id) => {
         try {
             logger.debug(`Blocking user: ${id}`);
             await this.findByIdAndUpdate(id, { isBlocked: true });
@@ -155,9 +158,9 @@ export class UserRepository extends BaseRepository {
             logger.error(`Error blocking user ${id}: ${error}`);
             throw new RepositoryError(`Failed to block user ${id}`);
         }
-    }
+    };
     //Unblock the given user
-    async unblockUser(id) {
+    unblockUser = async (id) => {
         try {
             logger.debug(`Unblocking user: ${id}`);
             await this.findByIdAndUpdate(id, { isBlocked: false });
@@ -166,9 +169,9 @@ export class UserRepository extends BaseRepository {
             logger.error(`Error unblocking user ${id}: ${error}`);
             throw new RepositoryError(`Failed to unblock user ${id}`);
         }
-    }
+    };
     //Update The user Role
-    async updateUserRole(userId, role) {
+    updateUserRole = async (userId, role) => {
         try {
             logger.debug(`Updating role for user: ${userId} to ${role}`);
             return await this.findByIdAndUpdate(userId, { role }, { new: true });
@@ -177,6 +180,6 @@ export class UserRepository extends BaseRepository {
             logger.error(`Error updating role for user ${userId}: ${error}`);
             throw new RepositoryError(`Failed to update role for user ${userId}`);
         }
-    }
+    };
 }
 //# sourceMappingURL=UserRepositry.js.map

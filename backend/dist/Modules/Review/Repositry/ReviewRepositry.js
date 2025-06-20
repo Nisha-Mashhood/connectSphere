@@ -19,7 +19,7 @@ export class ReviewRepository extends BaseRepository {
         }
         return new Types.ObjectId(idStr);
     }
-    async createReview(data) {
+    createReview = async (data) => {
         try {
             logger.debug(`Creating review for user: ${data.userId}`);
             return await this.create({
@@ -35,8 +35,8 @@ export class ReviewRepository extends BaseRepository {
             logger.error(`Error creating review: ${error.message}`);
             throw new RepositoryError(`Error creating review: ${error.message}`);
         }
-    }
-    async findById(reviewId) {
+    };
+    findReviewById = async (reviewId) => {
         try {
             logger.debug(`Fetching review by ID: ${reviewId}`);
             return await this.model
@@ -48,8 +48,8 @@ export class ReviewRepository extends BaseRepository {
             logger.error(`Error fetching review by ID: ${error.message}`);
             throw new RepositoryError(`Error fetching review by ID: ${error.message}`);
         }
-    }
-    async getAllReviews() {
+    };
+    getAllReviews = async () => {
         try {
             logger.debug('Fetching all reviews');
             return await this.model
@@ -62,8 +62,8 @@ export class ReviewRepository extends BaseRepository {
             logger.error(`Error fetching all reviews: ${error.message}`);
             throw new RepositoryError(`Error fetching all reviews: ${error.message}`);
         }
-    }
-    async updateReview(reviewId, updates) {
+    };
+    updateReview = async (reviewId, updates) => {
         try {
             logger.debug(`Updating review: ${reviewId}`);
             const review = await this.model
@@ -80,8 +80,8 @@ export class ReviewRepository extends BaseRepository {
             logger.error(`Error updating review: ${error.message}`);
             throw new RepositoryError(`Error updating review: ${error.message}`);
         }
-    }
-    async getSelectedReviews() {
+    };
+    getSelectedReviews = async () => {
         try {
             logger.debug('Fetching selected and approved reviews');
             return await this.model
@@ -93,6 +93,6 @@ export class ReviewRepository extends BaseRepository {
             logger.error(`Error fetching selected reviews: ${error.message}`);
             throw new RepositoryError(`Error fetching selected reviews: ${error.message}`);
         }
-    }
+    };
 }
 //# sourceMappingURL=ReviewRepositry.js.map

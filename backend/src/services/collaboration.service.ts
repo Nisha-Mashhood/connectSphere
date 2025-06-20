@@ -163,12 +163,12 @@ export const processPaymentService = async (
       const [contact1, contact2] = await Promise.all([
         createContact({
           userId: mentorRequestData.userId,
-          targetUserId: mentor.userId as string,
+          targetUserId: mentor.userId ,
           collaborationId: collaboration?._id,
           type: "user-mentor",
         }),
         createContact({
-          userId: mentor.userId as string,
+          userId: mentor.userId ,
           targetUserId: mentorRequestData.userId,
           collaborationId: collaboration?._id,
           type: "user-mentor",

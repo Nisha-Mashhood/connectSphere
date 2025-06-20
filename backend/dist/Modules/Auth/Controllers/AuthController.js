@@ -12,7 +12,7 @@ export class AuthController extends BaseController {
         this.jwtService = new JWTService();
     }
     // Handle user signup
-    async signup(req, res) {
+    signup = async (req, res) => {
         try {
             const { name, email, password } = req.body;
             logger.debug(`Signup attempt for email: ${email}`);
@@ -27,9 +27,9 @@ export class AuthController extends BaseController {
             logger.error(`Error in signup for email ${req.body.email || 'unknown'}: ${error}`);
             this.handleError(error, res);
         }
-    }
+    };
     // Handle user login
-    async login(req, res) {
+    login = async (req, res) => {
         try {
             const { email, password } = req.body;
             logger.debug(`Login attempt for email: ${email}`);
@@ -37,6 +37,7 @@ export class AuthController extends BaseController {
                 this.throwError(400, 'Email and password are required');
             }
             const { user, accessToken, refreshToken, needsReviewPrompt } = await this.authService.login(email, password);
+            // logger.info(`User details : ${user}`)
             this.jwtService.setTokensInCookies(res, accessToken, refreshToken);
             this.sendSuccess(res, { user, needsReviewPrompt }, 'Login successful');
             logger.info(`User logged in: ${user.userId} (${email})`);
@@ -45,9 +46,9 @@ export class AuthController extends BaseController {
             logger.error(`Error in login for email ${req.body.email || 'unknown'}: ${error}`);
             this.handleError(error, res);
         }
-    }
+    };
     // Handle Google signup
-    async googleSignup(req, res) {
+    googleSignup = async (req, res) => {
         try {
             const { code } = req.body;
             logger.debug(`Google signup attempt with code: ${code}`);
@@ -62,9 +63,9 @@ export class AuthController extends BaseController {
             logger.error(`Error in Google signup: ${error}`);
             this.handleError(error, res);
         }
-    }
+    };
     // Handle Google login
-    async googleLogin(req, res) {
+    googleLogin = async (req, res) => {
         try {
             const { code } = req.body;
             logger.debug(`Google login attempt with code: ${code}`);
@@ -80,9 +81,9 @@ export class AuthController extends BaseController {
             logger.error(`Error in Google login: ${error}`);
             this.handleError(error, res);
         }
-    }
+    };
     // Handle GitHub signup
-    async githubSignup(req, res) {
+    githubSignup = async (req, res) => {
         try {
             const { code } = req.body;
             logger.debug(`GitHub signup attempt with code: ${code}`);
@@ -97,9 +98,9 @@ export class AuthController extends BaseController {
             logger.error(`Error in GitHub signup: ${error}`);
             this.handleError(error, res);
         }
-    }
+    };
     // Handle GitHub login
-    async githubLogin(req, res) {
+    githubLogin = async (req, res) => {
         try {
             const { code } = req.body;
             logger.debug(`GitHub login attempt with code: ${code}`);
@@ -115,9 +116,9 @@ export class AuthController extends BaseController {
             logger.error(`Error in GitHub login: ${error}`);
             this.handleError(error, res);
         }
-    }
+    };
     // Handle refresh token
-    async refreshToken(req, res) {
+    refreshToken = async (req, res) => {
         try {
             const { refreshToken } = req.body;
             logger.debug(`Refresh token attempt`);
@@ -132,9 +133,9 @@ export class AuthController extends BaseController {
             logger.error(`Error in refresh token: ${error}`);
             this.handleError(error, res);
         }
-    }
+    };
     // Check profile completion
-    async checkProfile(req, res) {
+    checkProfile = async (req, res) => {
         try {
             const userId = req.params.id;
             logger.debug(`Checking profile completion for userId: ${userId}`);
@@ -149,9 +150,9 @@ export class AuthController extends BaseController {
             logger.error(`Error checking profile for userId ${req.params.id || 'unknown'}: ${error}`);
             this.handleError(error, res);
         }
-    }
+    };
     // Get profile details
-    async getProfileDetails(req, res) {
+    getProfileDetails = async (req, res) => {
         try {
             const userId = req.params.id;
             logger.debug(`Fetching profile details for userId: ${userId}`);
@@ -166,9 +167,9 @@ export class AuthController extends BaseController {
             logger.error(`Error fetching profile details for userId ${req.params.id || 'unknown'}: ${error}`);
             this.handleError(error, res);
         }
-    }
+    };
     // Update user profile
-    async updateUserDetails(req, res) {
+    updateUserDetails = async (req, res) => {
         try {
             const userId = req.params.id;
             logger.debug(`Updating profile for userId: ${userId}`);
@@ -190,9 +191,9 @@ export class AuthController extends BaseController {
             logger.error(`Error updating profile for userId ${req.params.id || 'unknown'}: ${error}`);
             this.handleError(error, res);
         }
-    }
+    };
     // Handle logout
-    async logout(req, res) {
+    logout = async (req, res) => {
         try {
             const { email } = req.body;
             logger.debug(`Logout attempt for email: ${email}`);
@@ -208,9 +209,9 @@ export class AuthController extends BaseController {
             logger.error(`Error in logout for email ${req.body.email || 'unknown'}: ${error}`);
             this.handleError(error, res);
         }
-    }
+    };
     // Handle forgot password
-    async handleForgotPassword(req, res) {
+    handleForgotPassword = async (req, res) => {
         try {
             const { email } = req.body;
             logger.debug(`Forgot password request for email: ${email}`);
@@ -225,9 +226,9 @@ export class AuthController extends BaseController {
             logger.error(`Error in forgot password for email ${req.body.email || 'unknown'}: ${error}`);
             this.handleError(error, res);
         }
-    }
+    };
     // Handle verify OTP
-    async handleVerifyOTP(req, res) {
+    handleVerifyOTP = async (req, res) => {
         try {
             const { email, otp } = req.body;
             logger.debug(`Verify OTP attempt for email: ${email}`);
@@ -242,9 +243,9 @@ export class AuthController extends BaseController {
             logger.error(`Error verifying OTP for email ${req.body.email || 'unknown'}: ${error}`);
             this.handleError(error, res);
         }
-    }
+    };
     // Handle reset password
-    async handleResetPassword(req, res) {
+    handleResetPassword = async (req, res) => {
         try {
             const { email, newPassword } = req.body;
             logger.debug(`Reset password attempt for email: ${email}`);
@@ -259,9 +260,9 @@ export class AuthController extends BaseController {
             logger.error(`Error resetting password for email ${req.body.email || 'unknown'}: ${error}`);
             this.handleError(error, res);
         }
-    }
+    };
     // Verify admin passkey
-    async verifyPasskey(req, res) {
+    verifyPasskey = async (req, res) => {
         try {
             const { passkey } = req.body;
             logger.debug(`Verify admin passkey attempt`);
@@ -276,9 +277,9 @@ export class AuthController extends BaseController {
             logger.error(`Error verifying admin passkey: ${error}`);
             this.handleError(error, res);
         }
-    }
+    };
     //get all User Details
-    async getAllUsers(_req, res) {
+    getAllUsers = async (_req, res) => {
         try {
             logger.debug(`Fetching all users`);
             const users = await this.authService.getAllUsers();
@@ -289,9 +290,9 @@ export class AuthController extends BaseController {
             logger.error(`Error fetching all users: ${error}`);
             this.handleError(error, res);
         }
-    }
+    };
     //get user Deatils by Id
-    async getUserById(req, res) {
+    getUserById = async (req, res) => {
         try {
             const { id } = req.params;
             logger.debug(`Fetching user by ID: ${id}`);
@@ -306,9 +307,9 @@ export class AuthController extends BaseController {
             logger.error(`Error fetching user ${req.params.id || 'unknown'}: ${error}`);
             this.handleError(error, res);
         }
-    }
+    };
     //Block teh given User
-    async blockUser(req, res) {
+    blockUser = async (req, res) => {
         try {
             const { id } = req.params;
             logger.debug(`Blocking user: ${id}`);
@@ -323,9 +324,9 @@ export class AuthController extends BaseController {
             logger.error(`Error blocking user ${req.params.id || 'unknown'}: ${error}`);
             this.handleError(error, res);
         }
-    }
+    };
     //Unblock the given user
-    async unblockUser(req, res) {
+    unblockUser = async (req, res) => {
         try {
             const { id } = req.params;
             logger.debug(`Unblocking user: ${id}`);
@@ -340,9 +341,9 @@ export class AuthController extends BaseController {
             logger.error(`Error unblocking user ${req.params.id || 'unknown'}: ${error}`);
             this.handleError(error, res);
         }
-    }
+    };
     //Change the user role
-    async changeRole(req, res) {
+    changeRole = async (req, res) => {
         try {
             const { id } = req.params;
             const { role } = req.body;
@@ -358,6 +359,6 @@ export class AuthController extends BaseController {
             logger.error(`Error changing role for user ${req.params.id || 'unknown'}: ${error}`);
             this.handleError(error, res);
         }
-    }
+    };
 }
 //# sourceMappingURL=AuthController.js.map

@@ -9,7 +9,7 @@ cloudinary.config({
 });
 
 export const uploadMedia = async (filePath: string, 
-  folder: string, 
+  folder?: string, 
   fileSize: number = 0,
   contentType?: "image" | "video" | "file"
 ) => {

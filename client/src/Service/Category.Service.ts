@@ -2,16 +2,19 @@ import { axiosInstance } from "../lib/axios";
 import { handleError } from "./ErrorHandler";
 
 export const createCategory = async (formData) => {
-    try {
-        await axiosInstance.post("category/create-category",formData);
-    } catch (error) {
-      handleError(error)
-    }
-  };
+  try {
+    const response = await axiosInstance.post("category/create-category", formData);
+    return response.data.data; 
+  } catch (error) {
+    handleError(error);
+    throw error;
+  }
+};
 
   export const createSubCategory = async (formData) => {
     try {
-         await axiosInstance.post("subcategory/create-subcategory", formData);
+         const response = await axiosInstance.post("subcategory/create-subcategory", formData);
+return response.data.data
     } catch (error) {
       handleError(error) 
     }
@@ -19,7 +22,8 @@ export const createCategory = async (formData) => {
 
   export const createSkill = async (formData) => {
     try {
-        await axiosInstance.post("skills/create-skill", formData);
+        const response = await axiosInstance.post("skills/create-skill", formData);
+        return response.data.data
     } catch (error) {
       handleError(error) 
     }
@@ -29,8 +33,8 @@ export const createCategory = async (formData) => {
   //Fetch categories
   export const fetchCategoriesService = async (): Promise<any[]> => {
     try {
-      const { data } = await axiosInstance.get("category/get-categories");
-      return data;
+      const response = await axiosInstance.get("category/get-categories");
+      return response.data.data;
     } catch (error) {
       handleError(error)
     }
@@ -43,7 +47,7 @@ export const updateCategory = async (editingCategoryId: string, formData: any) =
         `category/update-category/${editingCategoryId}`,
         formData
       );
-      return response.data;
+      return response.data.data;
     } catch (error) {
       handleError(error)
     }
@@ -55,7 +59,7 @@ export const updateCategory = async (editingCategoryId: string, formData: any) =
       const response = await axiosInstance.delete(
         `category/delete-category/${id}`
       );
-      return response.data;
+      return response.data.data;
     } catch (error) {
       handleError(error)
     }
@@ -64,10 +68,10 @@ export const updateCategory = async (editingCategoryId: string, formData: any) =
   // Fetch subcategories
 export const fetchSubCategoriesService = async (categoryId: string): Promise<any[]> => {
     try {
-      const { data } = await axiosInstance.get(
+      const response = await axiosInstance.get(
         `subcategory/get-subcategories/${categoryId}`
       );
-      return data;
+      return response.data.data;
     } catch (error) {
       handleError(error)
     }
@@ -80,7 +84,7 @@ export const fetchSubCategoriesService = async (categoryId: string): Promise<any
         `subcategory/update-subcategory/${editingSubCategoryId}`,
         formData
       );
-      return response.data;
+      return response.data.data;
     } catch (error) {
       handleError(error)
     }
@@ -101,10 +105,10 @@ export const fetchSubCategoriesService = async (categoryId: string): Promise<any
   // Fetch skills
   export const fetchSkillsService = async (subcategoryId: string): Promise<any[]> => {
     try {
-      const { data } = await axiosInstance.get(
+      const response = await axiosInstance.get(
         `skills/get-skills/${subcategoryId}`
       );
-      return data;
+      return response.data.data;
     } catch (error) {
       handleError(error)
     }
@@ -117,7 +121,7 @@ export const fetchSubCategoriesService = async (categoryId: string): Promise<any
         `skills/update-skill/${editingSkillId}`,
         formData
       );
-      return response.data;
+      return response.data.data;
     } catch (error) {
       handleError(error)
     }
@@ -129,7 +133,7 @@ export const fetchSubCategoriesService = async (categoryId: string): Promise<any
       const response = await axiosInstance.delete(
         `skills/delete-skill/${id}`
       );
-      return response.data;
+      return response.data.data;
     } catch (error) {
       handleError(error)
     }
@@ -142,7 +146,7 @@ export const fetchSubCategoriesService = async (categoryId: string): Promise<any
       const response = await axiosInstance.get(
         `/skills/get-allSkills`
       );
-      return response.data;
+      return response.data.data;
     } catch (error) {
       handleError(error)
     }

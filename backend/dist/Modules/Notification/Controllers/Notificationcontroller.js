@@ -5,7 +5,7 @@ export class NotificationController {
     constructor() {
         this.notificationService = new NotificationService();
     }
-    async getNotifications(req, res) {
+    getNotifications = async (req, res) => {
         try {
             const userId = req.query.userId;
             logger.debug(`Fetching notifications for user: ${userId}`);
@@ -27,8 +27,8 @@ export class NotificationController {
                 message: error.message || 'Failed to fetch notifications',
             });
         }
-    }
-    async markAsRead(req, res) {
+    };
+    markAsRead = async (req, res) => {
         try {
             const { notificationId } = req.params;
             logger.debug(`Marking notification as read: ${notificationId}`);
@@ -54,8 +54,8 @@ export class NotificationController {
                 message: error.message || 'Failed to mark notification as read',
             });
         }
-    }
-    async getUnreadCount(req, res) {
+    };
+    getUnreadCount = async (req, res) => {
         try {
             const userId = req.query.userId;
             logger.debug(`Fetching unread notification count for user: ${userId}`);
@@ -77,6 +77,6 @@ export class NotificationController {
                 message: error.message || 'Failed to fetch unread notification count',
             });
         }
-    }
+    };
 }
 //# sourceMappingURL=Notificationcontroller.js.map

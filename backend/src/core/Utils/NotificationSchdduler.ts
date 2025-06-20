@@ -34,6 +34,6 @@ export class CleanupScheduler {
       }
     });
 
-    logger.info('✅ Node-cron cleanup scheduler started.');
+    logger.info('✅ Cleanup scheduler started.');
   }
 }

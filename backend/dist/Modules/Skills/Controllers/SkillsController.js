@@ -10,7 +10,7 @@ export class SkillsController extends BaseController {
         this.skillsService = new SkillsService();
         this.skillsRepo = new SkillsRepository();
     }
-    async createSkill(req, res) {
+    createSkill = async (req, res) => {
         try {
             logger.debug(`Creating skill: ${req.body.name}`);
             const isDuplicate = await this.skillsRepo.findOne({
@@ -28,8 +28,8 @@ export class SkillsController extends BaseController {
         catch (error) {
             this.handleError(error, res);
         }
-    }
-    async getAllSkills(req, res) {
+    };
+    getAllSkills = async (req, res) => {
         try {
             logger.debug(`Fetching skills for subcategory: ${req.params.subcategoryId}`);
             const skills = await this.skillsService.getAllSkills(req.params.subcategoryId);
@@ -38,8 +38,8 @@ export class SkillsController extends BaseController {
         catch (error) {
             this.handleError(error, res);
         }
-    }
-    async getSkillById(req, res) {
+    };
+    getSkillById = async (req, res) => {
         try {
             logger.debug(`Fetching skill: ${req.params.id}`);
             const skill = await this.skillsService.getSkillById(req.params.id);
@@ -51,8 +51,8 @@ export class SkillsController extends BaseController {
         catch (error) {
             this.handleError(error, res);
         }
-    }
-    async updateSkill(req, res) {
+    };
+    updateSkill = async (req, res) => {
         try {
             logger.debug(`Updating skill: ${req.params.id}`);
             const isDuplicate = await this.skillsRepo.findOne({
@@ -74,8 +74,8 @@ export class SkillsController extends BaseController {
         catch (error) {
             this.handleError(error, res);
         }
-    }
-    async deleteSkill(req, res) {
+    };
+    deleteSkill = async (req, res) => {
         try {
             logger.debug(`Deleting skill: ${req.params.id}`);
             const deletedSkill = await this.skillsService.deleteSkill(req.params.id);
@@ -87,8 +87,8 @@ export class SkillsController extends BaseController {
         catch (error) {
             this.handleError(error, res);
         }
-    }
-    async getSkills(_req, res) {
+    };
+    getSkills = async (_req, res) => {
         try {
             logger.debug('Fetching all skills (name and ID only)');
             const skills = await this.skillsService.getSkills();
@@ -98,6 +98,6 @@ export class SkillsController extends BaseController {
             logger.error(`Error fetching skills: ${error}`);
             this.handleError(error, res);
         }
-    }
+    };
 }
 //# sourceMappingURL=SkillsController.js.map

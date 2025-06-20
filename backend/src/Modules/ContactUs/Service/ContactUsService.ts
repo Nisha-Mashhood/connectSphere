@@ -14,7 +14,7 @@ export class ContactMessageService extends BaseService {
     this.contactMessageRepo = new ContactMessageRepository();
   }
 
-  async createContactMessage(data: { name: string; email: string; message: string }): Promise<IContactMessage> {
+   createContactMessage = async(data: { name: string; email: string; message: string }): Promise<IContactMessage> => {
     try {
       logger.debug(`Creating contact message from: ${data.email}`);
       this.checkData(data);
@@ -37,7 +37,7 @@ export class ContactMessageService extends BaseService {
     }
   }
 
-  async getAllContactMessages(): Promise<IContactMessage[]> {
+   getAllContactMessages = async(): Promise<IContactMessage[]> => {
     try {
       logger.debug('Fetching all contact messages');
       return await this.contactMessageRepo.getAllContactMessages();
@@ -47,7 +47,7 @@ export class ContactMessageService extends BaseService {
     }
   }
 
-  async sendReply(contactMessageId: string, replyData: { email: string; replyMessage: string }): Promise<IContactMessage> {
+   sendReply = async(contactMessageId: string, replyData: { email: string; replyMessage: string }): Promise<IContactMessage> => {
     try {
       logger.debug(`Sending reply for contact message: ${contactMessageId}`);
       this.checkData({ contactMessageId, ...replyData });

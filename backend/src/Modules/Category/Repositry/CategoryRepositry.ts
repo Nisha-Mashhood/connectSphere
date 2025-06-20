@@ -9,7 +9,7 @@ export class CategoryRepository extends BaseRepository<ICategory> {
     super(Category);
   }
 
-  async createCategory(data: Partial<ICategory>): Promise<ICategory> {
+   createCategory = async(data: Partial<ICategory>): Promise<ICategory> => {
     try {
       logger.debug(`Creating category: ${data.name}`);
       const category = await this.create(data);
@@ -21,7 +21,7 @@ export class CategoryRepository extends BaseRepository<ICategory> {
     }
   }
 
-  async getAllCategories(): Promise<ICategory[]> {
+   getAllCategories = async(): Promise<ICategory[]> => {
     try {
       logger.debug("Fetching all categories");
       const categories = await this.findAll();
@@ -33,7 +33,7 @@ export class CategoryRepository extends BaseRepository<ICategory> {
     }
   }
 
-  async getCategoryById(id: string): Promise<ICategory | null> {
+   getCategoryById = async(id: string): Promise<ICategory | null> => {
     try {
       logger.debug(`Fetching category by ID: ${id}`);
       const category = await this.findById(id);
@@ -49,10 +49,10 @@ export class CategoryRepository extends BaseRepository<ICategory> {
     }
   }
 
-  async updateCategory(
+   updateCategory = async(
     id: string,
     data: Partial<ICategory>
-  ): Promise<ICategory | null> {
+  ): Promise<ICategory | null> => {
     try {
       logger.debug(`Updating category: ${id}`);
       const category = await this.findByIdAndUpdate(id, data, { new: true });
@@ -68,7 +68,7 @@ export class CategoryRepository extends BaseRepository<ICategory> {
     }
   }
 
-  async deleteCategory(id: string): Promise<ICategory | null> {
+   deleteCategory = async(id: string): Promise<ICategory | null> => {
     try {
       logger.debug(`Deleting category: ${id}`);
       const category = await this.findByIdAndDelete(id);
@@ -84,10 +84,10 @@ export class CategoryRepository extends BaseRepository<ICategory> {
     }
   }
 
-  async isDuplicateCategoryName(
-    name: string,
+   isDuplicateCategoryName = async(
+    name?: string,
     excludeId?: string
-  ): Promise<boolean> {
+  ): Promise<boolean> => {
     try {
       logger.debug(`Checking duplicate category name: ${name}`);
       const filter: any = { name };

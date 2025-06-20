@@ -5,7 +5,7 @@ export class ContactMessageController {
     constructor() {
         this.contactMessageService = new ContactMessageService();
     }
-    async createContactMessage(req, res) {
+    createContactMessage = async (req, res) => {
         try {
             const { name, email, message } = req.body;
             logger.debug(`Creating contact message from: ${email}`);
@@ -27,8 +27,8 @@ export class ContactMessageController {
                 message: error.message || 'Failed to process contact message',
             });
         }
-    }
-    async getAllContactMessages(_req, res) {
+    };
+    getAllContactMessages = async (_req, res) => {
         try {
             logger.debug('Fetching all contact messages');
             const messages = await this.contactMessageService.getAllContactMessages();
@@ -45,8 +45,8 @@ export class ContactMessageController {
                 message: error.message || 'Failed to fetch contact messages',
             });
         }
-    }
-    async sendReply(req, res) {
+    };
+    sendReply = async (req, res) => {
         try {
             const { contactMessageId } = req.params;
             const { email, replyMessage } = req.body;
@@ -69,6 +69,6 @@ export class ContactMessageController {
                 message: error.message || 'Failed to send reply',
             });
         }
-    }
+    };
 }
 //# sourceMappingURL=ContactUsController.js.map

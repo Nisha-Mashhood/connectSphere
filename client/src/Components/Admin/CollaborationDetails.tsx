@@ -51,7 +51,7 @@ const CollaborationDetails = () => {
 
   useEffect(() => {
     fetchDetails();
-  }, [id, type]);
+  }, []);
 
   const handleCancelMentorship = async () => {
     setShowCancelDialog(false);

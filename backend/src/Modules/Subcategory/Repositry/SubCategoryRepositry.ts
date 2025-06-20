@@ -9,7 +9,7 @@ export class SubcategoryRepository extends BaseRepository<ISubcategory> {
     super(Subcategory);
   }
 
-  async createSubcategory(data: Partial<ISubcategory>): Promise<ISubcategory> {
+   createSubcategory = async(data: Partial<ISubcategory>): Promise<ISubcategory> => {
     try {
       logger.debug(
         `Creating subcategory: ${data.name} for category ${data.categoryId}`
@@ -25,7 +25,7 @@ export class SubcategoryRepository extends BaseRepository<ISubcategory> {
     }
   }
 
-  async getAllSubcategories(categoryId: string): Promise<ISubcategory[]> {
+   getAllSubcategories = async(categoryId: string): Promise<ISubcategory[]> =>{
     try {
       logger.debug(`Fetching subcategories for category: ${categoryId}`);
       const subcategories = await this.model
@@ -44,7 +44,7 @@ export class SubcategoryRepository extends BaseRepository<ISubcategory> {
     }
   }
 
-  async getSubcategoryById(id: string): Promise<ISubcategory | null> {
+   getSubcategoryById = async(id: string): Promise<ISubcategory | null> =>{
     try {
       logger.debug(`Fetching subcategory by ID: ${id}`);
       const subcategory = await this.model
@@ -63,10 +63,10 @@ export class SubcategoryRepository extends BaseRepository<ISubcategory> {
     }
   }
 
-  async updateSubcategory(
+   updateSubcategory = async(
     id: string,
     data: Partial<ISubcategory>
-  ): Promise<ISubcategory | null> {
+  ): Promise<ISubcategory | null> =>{
     try {
       logger.debug(`Updating subcategory: ${id}`);
       const subcategory = await this.findByIdAndUpdate(id, data, { new: true });
@@ -82,7 +82,7 @@ export class SubcategoryRepository extends BaseRepository<ISubcategory> {
     }
   }
 
-  async deleteSubcategory(id: string): Promise<ISubcategory | null> {
+   deleteSubcategory = async(id: string): Promise<ISubcategory | null> =>{
     try {
       logger.debug(`Deleting subcategory: ${id}`);
       const subcategory = await this.findByIdAndDelete(id);
@@ -98,9 +98,9 @@ export class SubcategoryRepository extends BaseRepository<ISubcategory> {
     }
   }
 
-  async deleteManySubcategories(
+   deleteManySubcategories = async(
     categoryId: string
-  ): Promise<{ deletedCount: number }> {
+  ): Promise<{ deletedCount: number }> =>{
     try {
       logger.debug(`Deleting subcategories for category: ${categoryId}`);
       const result = await this.model.deleteMany({ categoryId }).exec();

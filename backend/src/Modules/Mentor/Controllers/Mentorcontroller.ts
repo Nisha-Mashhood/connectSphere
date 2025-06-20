@@ -18,7 +18,7 @@ export class MentorController extends BaseController {
     this.userRepo = new UserRepository();
   }
 
-  async checkMentorStatus(req: Request, res: Response): Promise<void> {
+   checkMentorStatus  = async(req: Request, res: Response): Promise<void> =>{
     try {
       const { id } = req.params;
       const mentor = await this.mentorService.getMentorByUserId(id);
@@ -28,7 +28,7 @@ export class MentorController extends BaseController {
     }
   }
 
-  async getMentorDetails(req: Request, res: Response): Promise<void> {
+   getMentorDetails  = async(req: Request, res: Response): Promise<void> =>{
     try {
       const { mentorId } = req.params;
       const mentor = await this.mentorService.getMentorByMentorId(mentorId);
@@ -41,7 +41,7 @@ export class MentorController extends BaseController {
     }
   }
 
-  async createMentor(req: Request, res: Response): Promise<void> {
+   createMentor  = async(req: Request, res: Response): Promise<void> =>{
     try {
       const { userId, specialization, bio, price, skills, availableSlots, timePeriod } = req.body;
 
@@ -50,7 +50,7 @@ export class MentorController extends BaseController {
         this.throwError(404, 'User not found');
       }
 
-      if (user.role !== 'mentor') {
+      if (user?.role !== 'mentor') {
         await this.authService.changeRole(userId, 'mentor');
       }
 
@@ -87,7 +87,7 @@ export class MentorController extends BaseController {
     }
   }
 
-  async getAllMentorRequests(req: Request, res: Response): Promise<void> {
+   getAllMentorRequests  = async(req: Request, res: Response): Promise<void> =>{
     try {
       const { page = '1', limit = '10', search = '', status = '', sort = 'desc' } = req.query;
       const mentorRequests = await this.mentorService.getAllMentorRequests(
@@ -108,7 +108,7 @@ export class MentorController extends BaseController {
     }
   }
 
-  async getAllMentors(_req: Request, res: Response): Promise<void> {
+   getAllMentors = async(_req: Request, res: Response): Promise<void> =>{
     try {
       const mentors = await this.mentorService.getAllMentors();
       this.sendSuccess(res, mentors, 'Mentors retrieved successfully');
@@ -117,7 +117,7 @@ export class MentorController extends BaseController {
     }
   }
 
-  async getMentorByUserId(req: Request, res: Response): Promise<void> {
+   getMentorByUserId  = async(req: Request, res: Response): Promise<void> =>{
     try {
       const { userId } = req.params;
       const mentor = await this.mentorService.getMentorByUserId(userId);
@@ -130,7 +130,7 @@ export class MentorController extends BaseController {
     }
   }
 
-  async approveMentorRequest(req: Request, res: Response): Promise<void> {
+   approveMentorRequest  = async(req: Request, res: Response): Promise<void> =>{
     try {
       const { id } = req.params;
       await this.mentorService.approveMentorRequest(id);
@@ -140,7 +140,7 @@ export class MentorController extends BaseController {
     }
   }
 
-  async rejectMentorRequest(req: Request, res: Response): Promise<void> {
+   rejectMentorRequest  = async(req: Request, res: Response): Promise<void> =>{
     try {
       const { id } = req.params;
       const { reason } = req.body;
@@ -154,7 +154,7 @@ export class MentorController extends BaseController {
     }
   }
 
-  async cancelMentorship(req: Request, res: Response): Promise<void> {
+   cancelMentorship  = async(req: Request, res: Response): Promise<void> =>{
     try {
       const { mentorId } = req.params;
       await this.mentorService.cancelMentorship(mentorId);
@@ -164,7 +164,7 @@ export class MentorController extends BaseController {
     }
   }
 
-  async updateMentorProfile(req: Request, res: Response): Promise<void> {
+   updateMentorProfile  = async(req: Request, res: Response): Promise<void> =>{
     try {
       const { mentorId } = req.params;
       const updateData = req.body;

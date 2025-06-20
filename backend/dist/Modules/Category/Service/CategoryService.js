@@ -15,7 +15,7 @@ export class CategoryService extends BaseService {
         this.subcategoryRepo = new SubcategoryRepository();
         this.skillsRepo = new SkillsRepository();
     }
-    async isDuplicateCategoryName(name, excludeId) {
+    isDuplicateCategoryName = async (name, excludeId) => {
         try {
             logger.debug(`Checking duplicate category name: ${name}`);
             return await this.categoryRepo.isDuplicateCategoryName(name, excludeId);
@@ -24,8 +24,8 @@ export class CategoryService extends BaseService {
             logger.error(`Error checking duplicate category name ${name}: ${error}`);
             throw new ServiceError(`Failed to check duplicate category name: ${error}`);
         }
-    }
-    async createCategory(data, imagePath, fileSize) {
+    };
+    createCategory = async (data, imagePath, fileSize) => {
         try {
             this.checkData(data);
             logger.debug(`Creating category with name: ${data.name}`);
@@ -44,8 +44,8 @@ export class CategoryService extends BaseService {
             logger.error(`Error creating category: ${error}`);
             throw new ServiceError(`Failed to create category: ${error}`);
         }
-    }
-    async getAllCategories() {
+    };
+    getAllCategories = async () => {
         try {
             logger.debug('Fetching all categories');
             const categories = await this.categoryRepo.getAllCategories();
@@ -56,8 +56,8 @@ export class CategoryService extends BaseService {
             logger.error(`Error fetching categories: ${error}`);
             throw new ServiceError(`Failed to fetch categories: ${error}`);
         }
-    }
-    async getCategoryById(id) {
+    };
+    getCategoryById = async (id) => {
         try {
             logger.debug(`Fetching category: ${id}`);
             const category = await this.categoryRepo.getCategoryById(id);
@@ -73,8 +73,8 @@ export class CategoryService extends BaseService {
             logger.error(`Error fetching category ${id}: ${error}`);
             throw new ServiceError(`Failed to fetch category: ${error}`);
         }
-    }
-    async updateCategory(id, data, imagePath, fileSize) {
+    };
+    updateCategory = async (id, data, imagePath, fileSize) => {
         try {
             this.checkData(data);
             logger.debug(`Updating category: ${id}`);
@@ -97,8 +97,8 @@ export class CategoryService extends BaseService {
             logger.error(`Error updating category ${id}: ${error}`);
             throw new ServiceError(`Failed to update category: ${error}`);
         }
-    }
-    async deleteCategory(id) {
+    };
+    deleteCategory = async (id) => {
         try {
             logger.debug(`Deleting category: ${id}`);
             await this.subcategoryRepo.deleteManySubcategories(id);
@@ -117,6 +117,6 @@ export class CategoryService extends BaseService {
             logger.error(`Error deleting category ${id}: ${error}`);
             throw new ServiceError(`Failed to delete category and related data: ${error}`);
         }
-    }
+    };
 }
 //# sourceMappingURL=CategoryService.js.map

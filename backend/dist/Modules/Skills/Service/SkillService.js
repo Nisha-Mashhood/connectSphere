@@ -9,7 +9,7 @@ export class SkillsService extends BaseService {
         super();
         this.skillsRepo = new SkillsRepository();
     }
-    async createSkill(data, imagePath, fileSize) {
+    createSkill = async (data, imagePath, fileSize) => {
         try {
             this.checkData(data);
             logger.debug(`Creating skill: ${data.name} for subcategory ${data.subcategoryId}`);
@@ -28,8 +28,8 @@ export class SkillsService extends BaseService {
             logger.error(`Error creating skill: ${error}`);
             throw new ServiceError(`Failed to create skill: ${error}`);
         }
-    }
-    async getAllSkills(subcategoryId) {
+    };
+    getAllSkills = async (subcategoryId) => {
         try {
             logger.debug(`Fetching skills for subcategory: ${subcategoryId}`);
             const skills = await this.skillsRepo.getAllSkills(subcategoryId);
@@ -40,8 +40,8 @@ export class SkillsService extends BaseService {
             logger.error(`Error fetching skills for subcategory ${subcategoryId}: ${error}`);
             throw new ServiceError(`Failed to fetch skills: ${error}`);
         }
-    }
-    async getSkillById(id) {
+    };
+    getSkillById = async (id) => {
         try {
             logger.debug(`Fetching skill: ${id}`);
             const skill = await this.skillsRepo.getSkillById(id);
@@ -57,8 +57,8 @@ export class SkillsService extends BaseService {
             logger.error(`Error fetching skill ${id}: ${error}`);
             throw new ServiceError(`Failed to fetch skill: ${error}`);
         }
-    }
-    async updateSkill(id, data, imagePath, fileSize) {
+    };
+    updateSkill = async (id, data, imagePath, fileSize) => {
         try {
             this.checkData(data);
             logger.debug(`Updating skill: ${id}`);
@@ -81,8 +81,8 @@ export class SkillsService extends BaseService {
             logger.error(`Error updating skill ${id}: ${error}`);
             throw new ServiceError(`Failed to update skill: ${error}`);
         }
-    }
-    async deleteSkill(id) {
+    };
+    deleteSkill = async (id) => {
         try {
             logger.debug(`Deleting skill: ${id}`);
             const skill = await this.skillsRepo.deleteSkill(id);
@@ -97,8 +97,8 @@ export class SkillsService extends BaseService {
             logger.error(`Error deleting skill ${id}: ${error}`);
             throw new ServiceError(`Failed to delete skill: ${error}`);
         }
-    }
-    async getSkills() {
+    };
+    getSkills = async () => {
         try {
             logger.debug('Fetching all skills (name and ID only)');
             const skills = await this.skillsRepo.getSkills();
@@ -109,6 +109,6 @@ export class SkillsService extends BaseService {
             logger.error(`Error fetching skills: ${error}`);
             throw new ServiceError(`Failed to fetch skills: ${error}`);
         }
-    }
+    };
 }
 //# sourceMappingURL=SkillService.js.map

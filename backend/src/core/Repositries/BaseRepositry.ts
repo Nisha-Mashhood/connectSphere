@@ -14,7 +14,7 @@ export abstract class BaseRepository<T extends Document> implements IBaseReposit
   }
 
   // Create a new entity
-  async create(data: Partial<T>): Promise<T> {
+  create = async(data: Partial<T>): Promise<T> => {
     try {
       const entity = new this.model(data);
       const result = await entity.save();
@@ -27,7 +27,7 @@ export abstract class BaseRepository<T extends Document> implements IBaseReposit
   }
 
   // Find an entity by ID
-  async findById(id: string): Promise<T | null> {
+  findById = async(id?: string): Promise<T | null> => {
     try {
       const result = await this.model.findById(id).exec();
       logger.debug(`Found entity in ${this.model.modelName} by ID: ${id}`);
@@ -39,7 +39,7 @@ export abstract class BaseRepository<T extends Document> implements IBaseReposit
   }
 
   // Find one entity matching the query
-  async findOne(query: FilterQuery<T>): Promise<T | null> {
+  findOne = async(query: FilterQuery<T>): Promise<T | null> => {
     try {
       const result = await this.model.findOne(query).exec();
       logger.debug(`Found entity in ${this.model.modelName} with query: ${JSON.stringify(query)}`);
@@ -51,7 +51,7 @@ export abstract class BaseRepository<T extends Document> implements IBaseReposit
   }
 
   // Find all entities
-  async findAll(): Promise<T[]> {
+  findAll = async(): Promise<T[]> => {
     try {
       const result = await this.model.find().exec();
       logger.debug(`Retrieved ${result.length} entities from ${this.model.modelName}`);
@@ -63,7 +63,7 @@ export abstract class BaseRepository<T extends Document> implements IBaseReposit
   }
 
   // Update an entity by ID
-  async update(id: string, data: Partial<T>): Promise<T | null> {
+  update = async(id: string, data: Partial<T>): Promise<T | null> => {
     try {
       const result = await this.model.findByIdAndUpdate(id, data, { new: true }).exec();
       logger.info(`Updated entity in ${this.model.modelName}: ${id}`);
@@ -75,7 +75,7 @@ export abstract class BaseRepository<T extends Document> implements IBaseReposit
   }
 
   // Delete an entity by ID
-  async delete(id: string): Promise<boolean> {
+  delete = async(id: string): Promise<boolean> => {
     try {
       const result = await this.model.findByIdAndDelete(id).exec();
       logger.info(`Deleted entity in ${this.model.modelName}: ${id}`);
@@ -87,7 +87,7 @@ export abstract class BaseRepository<T extends Document> implements IBaseReposit
   }
 
   // Update an entity by ID 
-  async findByIdAndUpdate(id: string, update: any, options: { new?: boolean } = { new: true }): Promise<T | null> {
+  findByIdAndUpdate = async (id: string, update: any, options: { new?: boolean } = { new: true }): Promise<T | null> => {
     try {
       const result = await this.model.findByIdAndUpdate(id, update, options).exec();
       logger.info(`Updated entity in ${this.model.modelName} with ID ${id}`);
@@ -99,7 +99,7 @@ export abstract class BaseRepository<T extends Document> implements IBaseReposit
   }
 
   //Delete an entity by Id
-  async findByIdAndDelete(id: string): Promise<T | null> {
+  findByIdAndDelete = async(id: string): Promise<T | null> => {
     try {
       const result = await this.model.findByIdAndDelete(id).exec();
       logger.info(`Deleted entity in ${this.model.modelName}: ${id}`);

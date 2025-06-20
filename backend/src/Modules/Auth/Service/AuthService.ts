@@ -40,7 +40,7 @@ export class AuthService extends BaseService {
   }
 
   //  user signup
-  async signup(data: SignupData): Promise<IUser> {
+   signup = async(data: SignupData): Promise<IUser> =>{
     try {
       const { name, email, password } = data;
       const userExists = await this.userRepository.findUserByEmail(email);
@@ -62,7 +62,7 @@ export class AuthService extends BaseService {
   }
 
   //  user login
-  async login(
+   login = async(
     email: string,
     password: string
   ): Promise<{
@@ -70,7 +70,7 @@ export class AuthService extends BaseService {
     accessToken: string;
     refreshToken: string;
     needsReviewPrompt: boolean;
-  }> {
+  }> =>{
     try {
       const user = await this.userRepository.findUserByEmail(email);
       if (!user) {
@@ -127,7 +127,7 @@ export class AuthService extends BaseService {
   }
 
   //  Google signup
-  async googleSignup(code: string): Promise<IUser> {
+   googleSignup = async(code: string): Promise<IUser> =>{
     try {
       const { tokens } = await OAuth2Client.getToken(code);
       OAuth2Client.setCredentials(tokens);
@@ -156,14 +156,14 @@ export class AuthService extends BaseService {
   }
 
   //  Google login
-  async googleLogin(
+   googleLogin = async(
     code: string
   ): Promise<{
     user: IUser;
     accessToken: string;
     refreshToken: string;
     needsReviewPrompt: boolean;
-  }> {
+  }> =>{
     try {
       const { tokens } = await OAuth2Client.getToken(code);
       OAuth2Client.setCredentials(tokens);
@@ -216,7 +216,7 @@ export class AuthService extends BaseService {
   }
 
   //  GitHub signup
-  async githubSignup(code: string): Promise<IUser> {
+   githubSignup = async(code: string): Promise<IUser> =>{
     try {
       const tokenResponse = await axios.post(
         "https://github.com/login/oauth/access_token",
@@ -266,14 +266,14 @@ export class AuthService extends BaseService {
   }
 
   //  GitHub login
-  async githubLogin(
+   githubLogin = async(
     code: string
   ): Promise<{
     user: IUser;
     accessToken: string;
     refreshToken: string;
     needsReviewPrompt: boolean;
-  }> {
+  }> =>{
     try {
       const tokenResponse = await axios.post(
         "https://github.com/login/oauth/access_token",
@@ -347,9 +347,9 @@ export class AuthService extends BaseService {
   }
 
   //  refresh token
-  async refreshToken(
+   refreshToken = async(
     refreshToken: string
-  ): Promise<{ newAccessToken: string }> {
+  ): Promise<{ newAccessToken: string }> =>{
     try {
       const decoded = this.jwtservice.verifyRefreshToken(refreshToken);
       const newAccessToken = this.jwtservice.generateAccessToken({ userId: decoded.userId });
@@ -362,7 +362,7 @@ export class AuthService extends BaseService {
   }
 
   //  forgot password
-  async forgotPassword(email: string): Promise<string> {
+   forgotPassword = async(email: string): Promise<string> =>{
     try {
       const user = await this.userRepository.findUserByEmail(email);
       if (!user) {
@@ -382,7 +382,7 @@ export class AuthService extends BaseService {
   }
 
   //  verify OTP
-  async verifyOTP(email: string, otp: string): Promise<string> {
+   verifyOTP = async(email: string, otp: string): Promise<string> =>{
     try {
       if (otpStore[email] !== otp) {
         throw new ServiceError("Invalid or expired OTP");
@@ -400,7 +400,7 @@ export class AuthService extends BaseService {
   }
 
   //  reset password
-  async resetPassword(email: string, newPassword: string): Promise<void> {
+   resetPassword = async(email: string, newPassword: string): Promise<void> =>{
     try {
       const user = await this.userRepository.findUserByEmail(email);
       if (!user) {
@@ -426,7 +426,7 @@ export class AuthService extends BaseService {
   }
 
   //  logout
-  async logout(email: string): Promise<void> {
+   logout = async(email: string): Promise<void> =>{
     try {
       await this.userRepository.removeRefreshToken(email);
       logger.info(`User ${email} logged out`);
@@ -437,7 +437,7 @@ export class AuthService extends BaseService {
   }
 
   // Verify admin passkey
-  async verifyAdminPasskey(passkey: string): Promise<boolean> {
+   verifyAdminPasskey = async(passkey: string): Promise<boolean> => {
     try {
       if (passkey !== config.adminpasscode) {
         throw new ServiceError("Invalid admin passkey");
@@ -453,7 +453,7 @@ export class AuthService extends BaseService {
   }
 
   // Check profile completion
-  async checkProfileCompletion(userId: string): Promise<boolean> {
+   checkProfileCompletion = async(userId: string): Promise<boolean> => {
     try {
       const user = await this.userRepository.findById(userId);
       if (!user) {
@@ -475,7 +475,7 @@ export class AuthService extends BaseService {
   }
 
   // Get profile details
-  async profileDetails(userId: string): Promise<IUser> {
+   profileDetails = async(userId: string): Promise<IUser> => {
     try {
       const user = await this.userRepository.findById(userId);
       if (!user) {
@@ -494,10 +494,10 @@ export class AuthService extends BaseService {
   }
 
   // Update user profile
-  async updateUserProfile(
+   updateUserProfile = async(
     userId: string,
     data: ProfileUpdateData
-  ): Promise<IUser> {
+  ): Promise<IUser> => {
     try {
       const user = await this.userRepository.findById(userId);
       if (!user) {
@@ -549,7 +549,7 @@ export class AuthService extends BaseService {
   }
 
   //get All User Details
-  async getAllUsers(): Promise<IUser[]> {
+   getAllUsers = async(): Promise<IUser[]> => {
     try {
       logger.debug(`Fetching all users`);
       return await this.userRepository.getAllUsers();
@@ -562,7 +562,7 @@ export class AuthService extends BaseService {
   }
 
   //block the given user
-  async blockUser(id: string): Promise<void> {
+   blockUser = async(id: string): Promise<void> => {
     try {
       this.checkData(id);
       const user = await this.userRepository.getUserById(id);
@@ -580,7 +580,7 @@ export class AuthService extends BaseService {
   }
 
   //Unblock the given User
-  async unblockUser(id: string): Promise<void> {
+   unblockUser = async(id: string): Promise<void> => {
     try {
       this.checkData(id);
       const user = await this.userRepository.getUserById(id);
@@ -598,7 +598,7 @@ export class AuthService extends BaseService {
   }
 
   //Change the user Role
-  async changeRole(userId: string, role: string): Promise<IUser> {
+   changeRole = async(userId: string, role: string): Promise<IUser | null> => {
     try {
       this.checkData({ userId, role });
       const user = await this.userRepository.getUserById(userId);

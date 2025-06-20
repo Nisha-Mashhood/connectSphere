@@ -20,7 +20,7 @@ export interface Notification {
     try {
       const response = await axiosInstance.get(`/notification/getNotification?userId=${userId}`);
       console.log("Fetched notifications:", response.data);
-      return response.data;
+      return response.data.data;
     } catch (error) {
       console.error("Error fetching notifications:", error);
       toast.error("Failed to fetch notifications.");
@@ -33,7 +33,7 @@ export interface Notification {
     try {
       const response = await axiosInstance.patch(`/notification/${notificationId}/read`, { userId });
       console.log(`Notification ${notificationId} marked as read:`, response.data);
-      return response.data;
+      return response.data.data;
     } catch (error) {
       console.error("Error marking notification as read:", error);
       toast.error("Failed to mark notification as read.");
@@ -46,7 +46,7 @@ export interface Notification {
     try {
       const response = await axiosInstance.get(`/notification/unread-count?userId=${userId}`);
       console.log("Fetched unread count:", response.data.count);
-      return response.data.count;
+      return response.data.data.count;
     } catch (error) {
       console.error("Error fetching unread count:", error);
       toast.error("Failed to fetch unread count.");

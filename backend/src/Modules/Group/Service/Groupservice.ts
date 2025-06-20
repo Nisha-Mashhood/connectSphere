@@ -22,7 +22,7 @@ export class GroupService extends BaseService {
     this.userRepo = new UserRepository();
   }
 
-  async createGroup(groupData: GroupFormData): Promise<GroupDocument> {
+   createGroup = async(groupData: GroupFormData): Promise<GroupDocument> =>{
     logger.debug(`Creating group: ${groupData.name}`);
     this.checkData(groupData);
     if (!groupData.name || !groupData.bio || !groupData.adminId || !groupData.startDate) {
@@ -46,57 +46,57 @@ export class GroupService extends BaseService {
     return newGroup;
   }
 
-  async getGroupDetails(adminId: string): Promise<GroupDocument[]> {
+   getGroupDetails = async(adminId: string): Promise<GroupDocument[]> => {
     logger.debug(`Fetching groups for admin: ${adminId}`);
     this.checkData(adminId);
     return await this.groupRepo.getGroupsByAdminId(adminId);
   }
 
-  async getGroupById(groupId: string): Promise<GroupDocument | null> {
+   getGroupById = async(groupId: string): Promise<GroupDocument | null> => {
     logger.debug(`Fetching group by ID: ${groupId}`);
     this.checkData(groupId);
     return await this.groupRepo.getGroupById(groupId);
   }
 
-  async getAllGroups(): Promise<GroupDocument[]> {
+   getAllGroups = async(): Promise<GroupDocument[]> => {
     logger.debug('Fetching all groups');
     return await this.groupRepo.getAllGroups();
   }
 
-  async requestToJoinGroup(groupId: string, userId: string): Promise<GroupRequestDocument> {
+   requestToJoinGroup = async(groupId: string, userId: string): Promise<GroupRequestDocument> =>{
     logger.debug(`Creating group request for group: ${groupId}, user: ${userId}`);
     this.checkData({ groupId, userId });
     return await this.groupRepo.createGroupRequest({ groupId, userId });
   }
 
-  async getGroupRequestsByGroupId(groupId: string): Promise<GroupRequestDocument[]> {
+   getGroupRequestsByGroupId = async(groupId: string): Promise<GroupRequestDocument[]> => {
     logger.debug(`Fetching group requests for group: ${groupId}`);
     this.checkData(groupId);
     return await this.groupRepo.getGroupRequestsByGroupId(groupId);
   }
 
-  async getGroupRequestsByAdminId(adminId: string): Promise<GroupRequestDocument[]> {
+   getGroupRequestsByAdminId = async(adminId: string): Promise<GroupRequestDocument[]> => {
     logger.debug(`Fetching group requests for admin: ${adminId}`);
     this.checkData(adminId);
     return await this.groupRepo.getGroupRequestsByAdminId(adminId);
   }
 
-  async getGroupRequestsByUserId(userId: string): Promise<GroupRequestDocument[]> {
+   getGroupRequestsByUserId = async(userId: string): Promise<GroupRequestDocument[]> => {
     logger.debug(`Fetching group requests for user: ${userId}`);
     this.checkData(userId);
     return await this.groupRepo.getGroupRequestsByUserId(userId);
   }
 
-  async getGroupRequestById(requestId: string): Promise<GroupRequestDocument | null> {
+   getGroupRequestById = async(requestId: string): Promise<GroupRequestDocument | null> => {
     logger.debug(`Fetching group request by ID: ${requestId}`);
     this.checkData(requestId);
     return await this.groupRepo.findGroupRequestById(requestId);
   }
 
-  async modifyGroupRequestStatus(
+   modifyGroupRequestStatus = async(
     requestId: string,
     status: 'Accepted' | 'Rejected'
-  ): Promise<{ message: string }> {
+  ): Promise<{ message: string }> => {
     logger.debug(`Modifying group request status: ${requestId} to ${status}`);
     this.checkData({ requestId, status });
     const request = await this.groupRepo.findGroupRequestById(requestId);
@@ -136,14 +136,14 @@ export class GroupService extends BaseService {
     }
   }
 
-  async processGroupPayment(
+   processGroupPayment = async(
     paymentMethodId: string | { id: string },
     amount: number,
     requestId: string,
     email: string,
     groupRequestData: { groupId: string; userId: string },
     returnUrl: string
-  ): Promise<{ paymentIntent: any }> {
+  ): Promise<{ paymentIntent: any }> => {
     logger.debug(`Processing payment for group request: ${requestId}`);
     this.checkData({ paymentMethodId, amount, requestId, email, groupRequestData, returnUrl });
 
@@ -206,7 +206,7 @@ export class GroupService extends BaseService {
     return { paymentIntent };
   }
 
-  async removeGroupMember(groupId: string, userId: string): Promise<GroupDocument> {
+   removeGroupMember = async(groupId: string, userId: string): Promise<GroupDocument> => {
     logger.debug(`Removing user ${userId} from group ${groupId}`);
     this.checkData({ groupId, userId });
     const group = await this.groupRepo.getGroupById(groupId);
@@ -228,7 +228,7 @@ export class GroupService extends BaseService {
     return updatedGroup;
   }
 
-  async deleteGroup(groupId: string): Promise<GroupDocument | null> {
+   deleteGroup = async(groupId: string): Promise<GroupDocument | null> => {
     logger.debug(`Deleting group: ${groupId}`);
     this.checkData(groupId);
     const group = await this.groupRepo.getGroupById(groupId);
@@ -239,11 +239,11 @@ export class GroupService extends BaseService {
     return await this.groupRepo.deleteGroupById(groupId);
   }
 
-  async updateGroupImage(
+   updateGroupImage = async(
     groupId: string,
     profilePic?: string,
     coverPic?: string
-  ): Promise<GroupDocument | null> {
+  ): Promise<GroupDocument | null> => {
     logger.debug(`Updating group image for group: ${groupId}`);
     this.checkData(groupId);
     const updateData: { profilePic?: string; coverPic?: string } = {};
@@ -255,7 +255,7 @@ export class GroupService extends BaseService {
     return await this.groupRepo.updateGroupImage(groupId, updateData);
   }
 
-  async getGroupDetailsForMembers(userId: string): Promise<GroupDocument[]> {
+   getGroupDetailsForMembers = async(userId: string): Promise<GroupDocument[]> =>{
     logger.debug(`Fetching group details for member: ${userId}`);
     this.checkData(userId);
     const groups = await this.groupRepo.getGroupDetailsByUserId(userId);
@@ -265,7 +265,7 @@ export class GroupService extends BaseService {
     return groups;
   }
 
-  async getAllGroupRequests(): Promise<GroupRequestDocument[]> {
+   getAllGroupRequests = async(): Promise<GroupRequestDocument[]> => {
     logger.debug('Fetching all group requests');
     return await this.groupRepo.getAllGroupRequests();
   }

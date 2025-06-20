@@ -16,7 +16,7 @@ export class AuthService {
     this.userRepo = new UserRepository();
   }
 
-  public generateAccessToken(payload: JwtPayload, expiresIn: string = '1h'): string {
+  public generateAccessToken = (payload: JwtPayload, expiresIn: string = '1h'): string => {
     if (!config.jwtSecret) {
       logger.error('JWT secret is not defined');
       throw new ServiceError('JWT secret is not defined');
@@ -35,13 +35,18 @@ export class AuthService {
     }
   }
 
-  public verifyAccessToken(token: string): JwtPayload {
+  public verifyAccessToken = (token: string): JwtPayload => {
+    logger.info(`Token Received : ${token}`);
     if (!config.jwtSecret) {
       logger.error('JWT secret is not defined');
       throw new ServiceError('JWT secret is not defined');
     }
     try {
       const payload = jwt.verify(token, config.jwtSecret) as JwtPayload;
+      logger.info(`Payload after verification : ${payload}`);
+      if(!payload){
+        throw new ServiceError('Payload for JWT not verified');
+      }
       logger.debug(`Verified access token: ${token}`);
       return payload;
     } catch (error) {
@@ -50,7 +55,7 @@ export class AuthService {
     }
   }
 
-  public generateRefreshToken(payload: JwtPayload): string {
+  public generateRefreshToken = (payload: JwtPayload): string => {
     if (!config.jwtSecret) {
       logger.error('JWT secret is not defined');
       throw new ServiceError('JWT secret is not defined');
@@ -69,7 +74,7 @@ export class AuthService {
     }
   }
 
-  public verifyRefreshToken(token: string): JwtPayload {
+  public verifyRefreshToken = (token: string): JwtPayload => {
     if (!config.jwtSecret) {
       logger.error('JWT secret is not defined');
       throw new ServiceError('JWT secret is not defined');
@@ -84,19 +89,19 @@ export class AuthService {
     }
   }
 
-  public setTokensInCookies(res: Response, accessToken: string, refreshToken: string): void {
+  public setTokensInCookies = (res: Response, accessToken: string, refreshToken: string): void => {
     const isProduction = config.node_env === 'production';
     try {
       res.cookie('accessToken', accessToken, {
         httpOnly: true,
         secure: isProduction,
-        sameSite: 'strict',
+        sameSite: isProduction ? 'none' : 'lax',
         maxAge: 60 * 60 * 1000, // 1 hour
       });
       res.cookie('refreshToken', refreshToken, {
         httpOnly: true,
         secure: isProduction,
-        sameSite: 'strict',
+        sameSite: isProduction ? 'none' : 'lax',
         maxAge: 7 * 24 * 60 * 60 * 1000, // 7 days
       });
       logger.debug('Set accessToken and refreshToken in cookies');
@@ -106,7 +111,7 @@ export class AuthService {
     }
   }
 
-  public clearCookies(res: Response): void {
+  public clearCookies = (res: Response): void => {
     try {
       res.clearCookie('accessToken', { httpOnly: true, sameSite: 'strict' });
       res.clearCookie('refreshToken', { httpOnly: true, sameSite: 'strict' });
@@ -117,7 +122,7 @@ export class AuthService {
     }
   }
 
-  public async removeRefreshToken(userEmail: string): Promise<{ message: string }> {
+  public removeRefreshToken = async(userEmail: string): Promise<{ message: string }> => {
     try {
       const user = await this.userRepo.findUserByEmail(userEmail);
       if (!user) {

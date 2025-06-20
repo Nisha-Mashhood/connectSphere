@@ -25,9 +25,9 @@ export class CollaborationService extends BaseService {
     this.mentorRepo = new MentorRepository();
   }
 
-  async TemporaryRequestService(
+   TemporaryRequestService = async(
     requestData: Partial<IMentorRequest>
-  ): Promise<IMentorRequest> {
+  ): Promise<IMentorRequest> => {
     logger.debug(`Creating temporary request`);
     this.checkData(requestData);
     return await this.collabRepo.createTemporaryRequest({
@@ -37,13 +37,13 @@ export class CollaborationService extends BaseService {
     });
   }
 
-  async getMentorRequests(mentorId: string): Promise<IMentorRequest[]> {
+   getMentorRequests = async(mentorId: string): Promise<IMentorRequest[]> => {
     logger.debug(`Fetching mentor requests for mentor: ${mentorId}`);
     this.checkData(mentorId);
     return await this.collabRepo.getMentorRequestsByMentorId(mentorId);
   }
 
-  async acceptRequest(requestId: string): Promise<IMentorRequest | null> {
+   acceptRequest = async(requestId: string): Promise<IMentorRequest | null> => {
     logger.debug(`Accepting mentor request: ${requestId}`);
     this.checkData(requestId);
     return await this.collabRepo.updateMentorRequestStatus(
@@ -52,7 +52,7 @@ export class CollaborationService extends BaseService {
     );
   }
 
-  async rejectRequest(requestId: string): Promise<IMentorRequest | null> {
+   rejectRequest = async(requestId: string): Promise<IMentorRequest | null> => {
     logger.debug(`Rejecting mentor request: ${requestId}`);
     this.checkData(requestId);
     return await this.collabRepo.updateMentorRequestStatus(
@@ -61,20 +61,20 @@ export class CollaborationService extends BaseService {
     );
   }
 
-  async getRequestForUser(userId: string): Promise<IMentorRequest[]> {
+   getRequestForUser = async(userId: string): Promise<IMentorRequest[]> =>{
     logger.debug(`Fetching requests for user: ${userId}`);
     this.checkData(userId);
     return await this.collabRepo.getRequestByUserId(userId);
   }
 
-  async processPaymentService(
+   processPaymentService = async(
     paymentMethodId: string,
     amount: number,
     requestId: string,
     mentorRequestData: Partial<IMentorRequest>,
     email: string,
     returnUrl: string
-  ): Promise<{ paymentIntent: any; contacts?: any[] }> {
+  ): Promise<{ paymentIntent: any; contacts?: any[] }> => {
     logger.debug(`Processing payment for request: ${requestId}`);
     this.checkData({ paymentMethodId, amount, requestId, email, returnUrl });
 
@@ -156,12 +156,12 @@ export class CollaborationService extends BaseService {
           userId: this.collabRepo["toObjectId"](
             mentorRequestData.userId
           ).toString(),
-          targetUserId: mentor.userId as string,
+          targetUserId: mentor.userId,
           collaborationId: collaboration._id,
           type: "user-mentor",
         }),
         this.contactRepo.createContact({
-          userId: mentor.userId as string,
+          userId: mentor.userId,
           targetUserId: this.collabRepo["toObjectId"](
             mentorRequestData.userId
           ).toString(),
@@ -177,24 +177,24 @@ export class CollaborationService extends BaseService {
     return { paymentIntent };
   }
 
-  async getCollabDataForUserService(userId: string): Promise<ICollaboration[]> {
+   getCollabDataForUserService = async(userId: string): Promise<ICollaboration[]> => {
     logger.debug(`Fetching collaboration data for user: ${userId}`);
     this.checkData(userId);
     return await this.collabRepo.getCollabDataForUser(userId);
   }
 
-  async getCollabDataForMentorService(
+   getCollabDataForMentorService = async(
     mentorId: string
-  ): Promise<ICollaboration[]> {
+  ): Promise<ICollaboration[]> => {
     logger.debug(`Fetching collaboration data for mentor: ${mentorId}`);
     this.checkData(mentorId);
     return await this.collabRepo.getCollabDataForMentor(mentorId);
   }
 
-  async removeCollab(
+   removeCollab = async(
     collabId: string,
     reason: string
-  ): Promise<ICollaboration | null> {
+  ): Promise<ICollaboration | null> => {
     logger.debug(`Removing collaboration: ${collabId}`);
     this.checkData({ collabId, reason });
     const collab = await this.collabRepo.findCollabById(collabId);
@@ -218,7 +218,7 @@ export class CollaborationService extends BaseService {
     return await this.collabRepo.markCollabAsCancelled(collabId);
   }
 
-  async getMentorRequestsService({
+   getMentorRequestsService = async({
     page,
     limit,
     search,
@@ -231,12 +231,12 @@ export class CollaborationService extends BaseService {
     total: number;
     page: number;
     pages: number;
-  }> {
+  }> => {
     logger.debug(`Fetching mentor requests for admin`);
     return await this.collabRepo.findMentorRequest({ page, limit, search });
   }
 
-  async getCollabsService({
+   getCollabsService = async({
     page,
     limit,
     search,
@@ -249,24 +249,24 @@ export class CollaborationService extends BaseService {
     total: number;
     page: number;
     pages: number;
-  }> {
+  }> => {
     logger.debug(`Fetching collaborations for admin`);
     return await this.collabRepo.findCollab({ page, limit, search });
   }
 
-  async fetchCollabById(collabId: string): Promise<ICollaboration | null> {
+   fetchCollabById = async(collabId: string): Promise<ICollaboration | null> => {
     logger.debug(`Fetching collaboration by ID: ${collabId}`);
     this.checkData(collabId);
     return await this.collabRepo.findCollabDetails(collabId);
   }
 
-  async fetchRequestById(requestId: string): Promise<IMentorRequest | null> {
+   fetchRequestById = async(requestId: string): Promise<IMentorRequest | null> => {
     logger.debug(`Fetching request by ID: ${requestId}`);
     this.checkData(requestId);
     return await this.collabRepo.fetchMentorRequestDetails(requestId);
   }
 
-  async markUnavailableDaysService(
+   markUnavailableDaysService = async(
     collabId: string,
     updateData: {
       datesAndReasons: { date: Date; reason: string }[];
@@ -275,13 +275,13 @@ export class CollaborationService extends BaseService {
       approvedById: string;
       isApproved: "pending" | "approved" | "rejected";
     }
-  ): Promise<ICollaboration | null> {
+  ): Promise<ICollaboration | null> => {
     logger.debug(`Marking unavailable days for collaboration: ${collabId}`);
     this.checkData({ collabId, updateData });
     return await this.collabRepo.updateUnavailableDays(collabId, updateData);
   }
 
-  async updateTemporarySlotChangesService(
+   updateTemporarySlotChangesService = async(
     collabId: string,
     updateData: {
       datesAndNewSlots: { date: Date; newTimeSlots: string[] }[];
@@ -290,7 +290,7 @@ export class CollaborationService extends BaseService {
       approvedById: string;
       isApproved: "pending" | "approved" | "rejected";
     }
-  ): Promise<ICollaboration | null> {
+  ): Promise<ICollaboration | null> => {
     logger.debug(
       `Updating temporary slot changes for collaboration: ${collabId}`
     );
@@ -301,12 +301,12 @@ export class CollaborationService extends BaseService {
     );
   }
 
-  async processTimeSlotRequest(
+   processTimeSlotRequest = async(
     collabId: string,
     requestId: string,
     isApproved: boolean,
     requestType: "unavailable" | "timeSlot"
-  ): Promise<ICollaboration | null> {
+  ): Promise<ICollaboration | null> => {
     logger.debug(`Processing time slot request for collaboration: ${collabId}`);
     this.checkData({ collabId, requestId, requestType });
     const status = isApproved ? "approved" : "rejected";
@@ -399,7 +399,7 @@ export class CollaborationService extends BaseService {
     return updatedCollaboration;
   }
 
-  async getMentorLockedSlots(mentorId: string): Promise<LockedSlot[]> {
+   getMentorLockedSlots = async(mentorId: string): Promise<LockedSlot[]> => {
     logger.debug(`Fetching locked slots for mentor: ${mentorId}`);
     this.checkData(mentorId);
     return await this.collabRepo.getLockedSlotsByMentorId(mentorId);

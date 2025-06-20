@@ -10,7 +10,7 @@ export class SubcategoryController extends BaseController {
         this.subcategoryService = new SubcategoryService();
         this.subcategoryRepo = new SubcategoryRepository();
     }
-    async createSubcategory(req, res) {
+    createSubcategory = async (req, res) => {
         try {
             logger.debug(`Creating subcategory: ${req.body.name}`);
             const isDuplicate = await this.subcategoryRepo.findOne({ name: req.body.name, categoryId: req.body.categoryId });
@@ -25,8 +25,8 @@ export class SubcategoryController extends BaseController {
         catch (error) {
             this.handleError(error, res);
         }
-    }
-    async getAllSubcategories(req, res) {
+    };
+    getAllSubcategories = async (req, res) => {
         try {
             logger.debug(`Fetching subcategories for category: ${req.params.categoryId}`);
             const subcategories = await this.subcategoryService.getAllSubcategories(req.params.categoryId);
@@ -35,8 +35,8 @@ export class SubcategoryController extends BaseController {
         catch (error) {
             this.handleError(error, res);
         }
-    }
-    async getSubcategoryById(req, res) {
+    };
+    getSubcategoryById = async (req, res) => {
         try {
             logger.debug(`Fetching subcategory: ${req.params.id}`);
             const subcategory = await this.subcategoryService.getSubcategoryById(req.params.id);
@@ -48,8 +48,8 @@ export class SubcategoryController extends BaseController {
         catch (error) {
             this.handleError(error, res);
         }
-    }
-    async updateSubcategory(req, res) {
+    };
+    updateSubcategory = async (req, res) => {
         try {
             logger.debug(`Updating subcategory: ${req.params.id}`);
             const isDuplicate = await this.subcategoryRepo.findOne({
@@ -71,8 +71,8 @@ export class SubcategoryController extends BaseController {
         catch (error) {
             this.handleError(error, res);
         }
-    }
-    async deleteSubcategory(req, res) {
+    };
+    deleteSubcategory = async (req, res) => {
         try {
             logger.debug(`Deleting subcategory: ${req.params.id}`);
             const deletedSubcategory = await this.subcategoryService.deleteSubcategory(req.params.id);
@@ -84,6 +84,6 @@ export class SubcategoryController extends BaseController {
         catch (error) {
             this.handleError(error, res);
         }
-    }
+    };
 }
 //# sourceMappingURL=SubCategoryController.js.map

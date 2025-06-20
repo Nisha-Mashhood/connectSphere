@@ -9,7 +9,7 @@ export class BaseRepository {
         logger.debug(`Initialized repository for model: ${model.modelName}`);
     }
     // Create a new entity
-    async create(data) {
+    create = async (data) => {
         try {
             const entity = new this.model(data);
             const result = await entity.save();
@@ -20,9 +20,9 @@ export class BaseRepository {
             logger.error(`Error creating entity in ${this.model.modelName}: ${error}`);
             throw new RepositoryError(`Failed to create entity in ${this.model.modelName}`);
         }
-    }
+    };
     // Find an entity by ID
-    async findById(id) {
+    findById = async (id) => {
         try {
             const result = await this.model.findById(id).exec();
             logger.debug(`Found entity in ${this.model.modelName} by ID: ${id}`);
@@ -32,9 +32,9 @@ export class BaseRepository {
             logger.error(`Error finding entity in ${this.model.modelName} by ID ${id}: ${error}`);
             throw new RepositoryError(`Failed to find entity by ID ${id} in ${this.model.modelName}`);
         }
-    }
+    };
     // Find one entity matching the query
-    async findOne(query) {
+    findOne = async (query) => {
         try {
             const result = await this.model.findOne(query).exec();
             logger.debug(`Found entity in ${this.model.modelName} with query: ${JSON.stringify(query)}`);
@@ -44,9 +44,9 @@ export class BaseRepository {
             logger.error(`Error finding entity in ${this.model.modelName} with query ${JSON.stringify(query)}: ${error}`);
             throw new RepositoryError(`Failed to find entity with query in ${this.model.modelName}`);
         }
-    }
+    };
     // Find all entities
-    async findAll() {
+    findAll = async () => {
         try {
             const result = await this.model.find().exec();
             logger.debug(`Retrieved ${result.length} entities from ${this.model.modelName}`);
@@ -56,9 +56,9 @@ export class BaseRepository {
             logger.error(`Error retrieving entities from ${this.model.modelName}: ${error}`);
             throw new RepositoryError(`Failed to retrieve entities from ${this.model.modelName}`);
         }
-    }
+    };
     // Update an entity by ID
-    async update(id, data) {
+    update = async (id, data) => {
         try {
             const result = await this.model.findByIdAndUpdate(id, data, { new: true }).exec();
             logger.info(`Updated entity in ${this.model.modelName}: ${id}`);
@@ -68,9 +68,9 @@ export class BaseRepository {
             logger.error(`Error updating entity in ${this.model.modelName} with ID ${id}: ${error}`);
             throw new RepositoryError(`Failed to update entity with ID ${id} in ${this.model.modelName}`);
         }
-    }
+    };
     // Delete an entity by ID
-    async delete(id) {
+    delete = async (id) => {
         try {
             const result = await this.model.findByIdAndDelete(id).exec();
             logger.info(`Deleted entity in ${this.model.modelName}: ${id}`);
@@ -80,9 +80,9 @@ export class BaseRepository {
             logger.error(`Error deleting entity in ${this.model.modelName} with ID ${id}: ${error}`);
             throw new RepositoryError(`Failed to delete entity with ID ${id} in ${this.model.modelName}`);
         }
-    }
+    };
     // Update an entity by ID 
-    async findByIdAndUpdate(id, update, options = { new: true }) {
+    findByIdAndUpdate = async (id, update, options = { new: true }) => {
         try {
             const result = await this.model.findByIdAndUpdate(id, update, options).exec();
             logger.info(`Updated entity in ${this.model.modelName} with ID ${id}`);
@@ -92,9 +92,9 @@ export class BaseRepository {
             logger.error(`Error updating entity in ${this.model.modelName} with ID ${id}: ${error}`);
             throw new RepositoryError(`Failed to update entity with ID ${id} in ${this.model.modelName}`);
         }
-    }
+    };
     //Delete an entity by Id
-    async findByIdAndDelete(id) {
+    findByIdAndDelete = async (id) => {
         try {
             const result = await this.model.findByIdAndDelete(id).exec();
             logger.info(`Deleted entity in ${this.model.modelName}: ${id}`);
@@ -104,6 +104,6 @@ export class BaseRepository {
             logger.error(`Error deleting entity in ${this.model.modelName} with ID ${id}: ${error}`);
             throw new RepositoryError(`Failed to delete entity with ID ${id} in ${this.model.modelName}`);
         }
-    }
+    };
 }
 //# sourceMappingURL=BaseRepositry.js.map

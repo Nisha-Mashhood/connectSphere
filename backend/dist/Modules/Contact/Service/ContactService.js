@@ -7,7 +7,10 @@ export class ContactService extends BaseService {
         super();
         this.contactRepo = new ContactRepository();
     }
-    async getUserContacts(userId) {
+    getUserContacts = async (userId) => {
+        if (!userId) {
+            this.throwError('User ID or role not provided');
+        }
         logger.debug(`Fetching contacts for user: ${userId}`);
         this.checkData(userId);
         const contacts = await this.contactRepo.findContactsByUserId(userId);
@@ -112,6 +115,6 @@ export class ContactService extends BaseService {
         const validContacts = formattedContacts.filter((contact) => contact.userId === userId && contact.userId !== contact.targetId && contact.targetId !== '');
         logger.info(`Retrieved ${validContacts.length} valid contacts for user: ${userId}`);
         return validContacts;
-    }
+    };
 }
 //# sourceMappingURL=ContactService.js.map

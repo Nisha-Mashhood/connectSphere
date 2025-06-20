@@ -58,7 +58,7 @@ interface FormattedContact {
 export declare class ContactService extends BaseService {
     private contactRepo;
     constructor();
-    getUserContacts(userId: string): Promise<FormattedContact[]>;
+    getUserContacts: (userId?: string) => Promise<FormattedContact[]>;
 }
 export {};
 //# sourceMappingURL=ContactService.d.ts.map

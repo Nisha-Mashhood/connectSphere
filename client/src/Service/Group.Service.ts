@@ -5,7 +5,7 @@ import { handleError } from "./ErrorHandler";
 export const createGroup = async (groupData: any) => {
   try {
     const response = await axiosInstance.post("/group/create-group", groupData);
-    return response.data;
+    return response.data.data;
   } catch (error) {
     handleError(error);
   }
@@ -15,7 +15,7 @@ export const createGroup = async (groupData: any) => {
 export const groupDetailsWithAdminId = async (id: any) => {
   try {
     const response = await axiosInstance.get(`/group/fetch-groups/${id}`);
-    return response.data;
+    return response.data.data;
   } catch (error) {
     handleError(error);
   }
@@ -25,7 +25,7 @@ export const groupDetailsWithAdminId = async (id: any) => {
 export const groupDetails = async () => {
   try {
     const response = await axiosInstance.get(`/group/group-details`);
-    return response.data;
+    return response.data.data;
   } catch (error) {
     handleError(error);
   }
@@ -35,7 +35,7 @@ export const groupDetails = async () => {
 export const sendRequsettoGroup = async (data) => {
   try {
     const response = await axiosInstance.post("/group/send-groupRequest", data);
-    return response.data;
+    return response.data.data;
   } catch (error) {
     handleError(error);
   }
@@ -46,7 +46,7 @@ export const getGroupRequestsByUser = async (userId: string) => {
     const response = await axiosInstance.get(
       `/group/group-requset-details-UI/${userId}`
     );
-    return response.data;
+    return response.data.data;
   } catch (error: any) {
     throw new Error(
       error.response?.data?.message || "Failed to fetch group requests"
@@ -59,7 +59,7 @@ export const getGroupDetails = async (groupId: string) => {
     const response = await axiosInstance.get(
       `/group/group-details/${groupId}`
     );
-    return response.data;
+    return response.data.data;
   } catch (error: any) {
     throw new Error(
       error.response?.data?.message || "Failed to fetch group details"
@@ -73,7 +73,7 @@ export const getGroupRequestsByGroupId = async (groupId: string) => {
     const response = await axiosInstance.get(
       `/group/group-request-details-GI/${groupId}`
     );
-    return response.data;
+    return response.data.data;
   } catch (error: any) {
     throw new Error(
       error.response?.data?.message || "Failed to fetch admin requests"
@@ -87,7 +87,7 @@ export const updateGroupRequest = async (requestId: string, status: string) => {
       requestId,
       status,
     });
-    return response.data;
+    return response.data.data;
   } catch (error: any) {
     throw new Error(
       error.response?.data?.message || "Failed to update request"
@@ -102,7 +102,7 @@ export const processStripePaymentForGroups = async (paymentDetails: any) => {
       `/group/process-payment`,
       paymentDetails
     );
-    return response.data;
+    return response.data.data;
   } catch (error) {
     handleError(error);
   }
@@ -111,7 +111,8 @@ export const processStripePaymentForGroups = async (paymentDetails: any) => {
 //Remove mebers from group
 export const removeUserFromGroup = async (data) => {
   try {
-    await axiosInstance.delete(`/group/remove-member`, {data});
+    const response = await axiosInstance.delete(`/group/remove-member`, {data});
+    return response.data.data
   } catch (error) {
     handleError(error);
   }
@@ -120,7 +121,8 @@ export const removeUserFromGroup = async (data) => {
 //Remove group
 export const removeGroup = async (groupId) => {
   try {
-    await axiosInstance.delete(`/group/remove-group/${groupId}`);
+    const response = await axiosInstance.delete(`/group/remove-group/${groupId}`);
+    return response.data.data
   } catch (error) {
     handleError(error);
   }
@@ -131,7 +133,7 @@ export const removeGroup = async (groupId) => {
 export const uploadGroupPicture = async (groupId, formData) => {
   try {
     const response = await axiosInstance.put(`/group/upload-group-picture/${groupId}`,formData);
-    return response.data;
+    return response.data.data;
   } catch (error) {
     handleError(error);
   }
@@ -141,7 +143,7 @@ export const uploadGroupPicture = async (groupId, formData) => {
 export const groupDetailsForMembers = async (userid) => {
   try {
     const response = await axiosInstance.get(`/group/get-group-details-members/${userid}`);
-    return response.data;
+    return response.data.data;
   } catch (error) {
     handleError(error);
   }
@@ -153,7 +155,7 @@ export const getAllGroupRequests = async () => {
     const response = await axiosInstance.get(
       `/group/group-requests`
     );
-    return response.data;
+    return response.data.data;
   } catch (error: any) {
     throw new Error(
       error.response?.data?.message || "Failed to fetch group requsts"
@@ -167,7 +169,7 @@ export const getGroupRequestDetails = async (requestId: string) => {
     const response = await axiosInstance.get(
       `/group/group-requests/${requestId}`
     );
-    return response.data;
+    return response.data.data;
   } catch (error: any) {
     throw new Error(
       error.response?.data?.message || "Failed to fetch group requst Details"

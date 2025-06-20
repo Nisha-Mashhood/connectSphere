@@ -9,7 +9,11 @@ const transporter = nodemailer.createTransport({
   },
 });
 
-export const sendEmail = async (to: string, subject: string, text: string) => {
+export const sendEmail = async (to: string | undefined, subject: string, text: string) => {
+
+  if(!to){
+    throw new Error(' To address is undefined Failed to send Email');
+  }
   try {
     await transporter.sendMail({
       from:config.emailUser,

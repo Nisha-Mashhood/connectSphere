@@ -4,7 +4,7 @@ import { handleError } from "./ErrorHandler";
 export const register = async (data) => {
   try {
     const response = await axiosInstance.post("/auth/register/signup", data);
-    return response.data;
+    return response.data.data;
   } catch (error) {
    handleError(error)
   }
@@ -13,7 +13,8 @@ export const register = async (data) => {
 export const login = async (data) => {
   try {
     const response = await axiosInstance.post("/auth/login", data);
-    return response.data;
+    console.log("Response from backend ", response);
+    return response.data.data;
   } catch (error) {
     handleError(error)
   }
@@ -30,7 +31,7 @@ export const logout = async (email) => {
 export const checkProfile = async (userId) => {
   try {
     const response = await axiosInstance.get(`/auth/check-profile/${userId}`);
-    return response.data;
+    return response.data.data;
   } catch (error) {
     handleError(error);
   }
@@ -39,7 +40,7 @@ export const checkProfile = async (userId) => {
 export const fetchUserDetails = async (userId) => {
   try {
     const response = await axiosInstance.get(`/auth/profiledetails/${userId}`);
-    return response.data;
+    return response.data.data;
   } catch (error) {
     handleError(error)
   }
@@ -54,7 +55,7 @@ export const updateUserDetails = async (userId: string, formData: FormData) => {
         headers: { "Content-Type": "multipart/form-data" },
       }
     );
-    return response.data;
+    return response.data.data;
   } catch (error) {
     handleError(error)
   }
@@ -74,7 +75,7 @@ export const verifyOTP = async (data) => {
       "/auth/register/verify-otp",
       data
     );
-    return response;
+    return response.data;
   } catch (error) {
     handleError(error)
   }
@@ -92,7 +93,7 @@ export const resetPassword = async (data) => {
 export const googleSignup = async (code: any) => {
   try {
     const response = await axiosInstance.post('/auth/google-signup', {code});
-    return response.data;
+    return response.data.data;
   } catch (error) {
     console.log(error)
     handleError(error);
@@ -102,7 +103,7 @@ export const googleSignup = async (code: any) => {
 export const googleLogin = async (code: string) => {
   try {
     const response = await axiosInstance.post('/auth/google-login', { code });
-    return response.data;
+    return response.data.data;
   } catch (error) {
     console.error('Google Login Error:', error);
     handleError(error);
@@ -114,7 +115,7 @@ export const githubSignup = async (code: string) => {
   try {
     console.log("Calling github signup with code:", code);
     const response = await axiosInstance.post('/auth/github-signup', { code });
-    return response.data; 
+    return response.data.data; 
   } catch (error) {
     if (error.response?.data?.message === "Email already registered.") {
       throw new Error("Email already registered. Please login instead.");
@@ -129,7 +130,7 @@ export const githubLogin = async (code: string) => {
   try {
     console.log("Calling github login with code:", code);
     const response = await axiosInstance.post('/auth/github-login', { code });
-    return response.data; 
+    return response.data.data; 
   } catch (error) {
     console.error("Error during GitHub login:", error);
     throw error;

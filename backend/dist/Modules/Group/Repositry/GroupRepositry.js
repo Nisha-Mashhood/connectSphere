@@ -22,7 +22,7 @@ export class GroupRepository extends BaseRepository {
         }
         return new Types.ObjectId(idStr);
     }
-    async createGroup(groupData) {
+    createGroup = async (groupData) => {
         try {
             logger.debug(`Creating group: ${groupData.name}`);
             return await this.create({
@@ -43,8 +43,8 @@ export class GroupRepository extends BaseRepository {
             logger.error(`Error creating group: ${error.message}`);
             throw new RepositoryError(`Error creating group: ${error.message}`);
         }
-    }
-    async getGroupsByAdminId(adminId) {
+    };
+    getGroupsByAdminId = async (adminId) => {
         try {
             logger.debug(`Fetching groups for admin: ${adminId}`);
             return await this.model
@@ -57,8 +57,8 @@ export class GroupRepository extends BaseRepository {
             logger.error(`Error fetching groups by adminId: ${error.message}`);
             throw new RepositoryError(`Error fetching groups: ${error.message}`);
         }
-    }
-    async getGroupById(groupId) {
+    };
+    getGroupById = async (groupId) => {
         try {
             logger.debug(`Fetching group by ID: ${groupId}`);
             return await this.model
@@ -71,8 +71,8 @@ export class GroupRepository extends BaseRepository {
             logger.error(`Error fetching group by ID: ${error.message}`);
             throw new RepositoryError(`Error fetching group by ID: ${error.message}`);
         }
-    }
-    async getAllGroups() {
+    };
+    getAllGroups = async () => {
         try {
             logger.debug('Fetching all groups');
             return await this.model
@@ -85,8 +85,8 @@ export class GroupRepository extends BaseRepository {
             logger.error(`Error fetching all groups: ${error.message}`);
             throw new RepositoryError(`Error fetching all groups: ${error.message}`);
         }
-    }
-    async createGroupRequest(data) {
+    };
+    createGroupRequest = async (data) => {
         try {
             logger.debug(`Creating group request for group: ${data.groupId}, user: ${data.userId}`);
             return await this.groupRequestModel.create({
@@ -100,8 +100,8 @@ export class GroupRepository extends BaseRepository {
             logger.error(`Error creating group request: ${error.message}`);
             throw new RepositoryError(`Error creating group request: ${error.message}`);
         }
-    }
-    async getGroupRequestsByGroupId(groupId) {
+    };
+    getGroupRequestsByGroupId = async (groupId) => {
         try {
             logger.debug(`Fetching group requests for group: ${groupId}`);
             return await this.groupRequestModel
@@ -121,8 +121,8 @@ export class GroupRepository extends BaseRepository {
             logger.error(`Error fetching group requests by groupId: ${error.message}`);
             throw new RepositoryError(`Error fetching group requests: ${error.message}`);
         }
-    }
-    async getGroupRequestsByAdminId(adminId) {
+    };
+    getGroupRequestsByAdminId = async (adminId) => {
         try {
             logger.debug(`Fetching group requests for admin: ${adminId}`);
             return await this.groupRequestModel
@@ -144,8 +144,8 @@ export class GroupRepository extends BaseRepository {
             logger.error(`Error fetching group requests by adminId: ${error.message}`);
             throw new RepositoryError(`Error fetching group requests: ${error.message}`);
         }
-    }
-    async getGroupRequestsByUserId(userId) {
+    };
+    getGroupRequestsByUserId = async (userId) => {
         try {
             logger.debug(`Fetching group requests for user: ${userId}`);
             return await this.groupRequestModel
@@ -165,8 +165,8 @@ export class GroupRepository extends BaseRepository {
             logger.error(`Error fetching group requests by userId: ${error.message}`);
             throw new RepositoryError(`Error fetching group requests: ${error.message}`);
         }
-    }
-    async findGroupRequestById(requestId) {
+    };
+    findGroupRequestById = async (requestId) => {
         try {
             logger.debug(`Fetching group request by ID: ${requestId}`);
             return await this.groupRequestModel
@@ -193,8 +193,8 @@ export class GroupRepository extends BaseRepository {
             logger.error(`Error fetching group request by ID: ${error.message}`);
             throw new RepositoryError(`Error fetching group request by ID: ${error.message}`);
         }
-    }
-    async updateGroupRequestStatus(requestId, status) {
+    };
+    updateGroupRequestStatus = async (requestId, status) => {
         try {
             logger.debug(`Updating group request status for ID: ${requestId} to ${status}`);
             return await this.groupRequestModel
@@ -205,8 +205,8 @@ export class GroupRepository extends BaseRepository {
             logger.error(`Error updating group request status: ${error.message}`);
             throw new RepositoryError(`Error updating group request status: ${error.message}`);
         }
-    }
-    async updateGroupPaymentStatus(requestId, amountPaid) {
+    };
+    updateGroupPaymentStatus = async (requestId, amountPaid) => {
         try {
             logger.debug(`Updating group payment status for request: ${requestId}`);
             return await this.groupRequestModel
@@ -217,8 +217,8 @@ export class GroupRepository extends BaseRepository {
             logger.error(`Error updating group payment status: ${error.message}`);
             throw new RepositoryError(`Error updating group payment status: ${error.message}`);
         }
-    }
-    async addMemberToGroup(groupId, userId) {
+    };
+    addMemberToGroup = async (groupId, userId) => {
         try {
             logger.debug(`Adding user ${userId} to group ${groupId}`);
             const group = await this.model.findById(this.toObjectId(groupId)).exec();
@@ -237,8 +237,8 @@ export class GroupRepository extends BaseRepository {
             logger.error(`Error adding member to group: ${error.message}`);
             throw new RepositoryError(`Error adding member to group: ${error.message}`);
         }
-    }
-    async deleteGroupRequest(requestId) {
+    };
+    deleteGroupRequest = async (requestId) => {
         try {
             logger.debug(`Deleting group request: ${requestId}`);
             await this.groupRequestModel.findByIdAndDelete(this.toObjectId(requestId)).exec();
@@ -247,8 +247,8 @@ export class GroupRepository extends BaseRepository {
             logger.error(`Error deleting group request: ${error.message}`);
             throw new RepositoryError(`Error deleting group request: ${error.message}`);
         }
-    }
-    async removeGroupMember(groupId, userId) {
+    };
+    removeGroupMember = async (groupId, userId) => {
         try {
             logger.debug(`Removing user ${userId} from group ${groupId}`);
             const group = await this.model.findById(this.toObjectId(groupId)).exec();
@@ -266,8 +266,8 @@ export class GroupRepository extends BaseRepository {
             logger.error(`Error removing group member: ${error.message}`);
             throw new RepositoryError(`Error removing group member: ${error.message}`);
         }
-    }
-    async deleteGroupById(groupId) {
+    };
+    deleteGroupById = async (groupId) => {
         try {
             logger.debug(`Deleting group: ${groupId}`);
             return await this.findByIdAndDelete(this.toObjectId(groupId).toString());
@@ -276,8 +276,8 @@ export class GroupRepository extends BaseRepository {
             logger.error(`Error deleting group: ${error.message}`);
             throw new RepositoryError(`Error deleting group: ${error.message}`);
         }
-    }
-    async deleteGroupRequestsByGroupId(groupId) {
+    };
+    deleteGroupRequestsByGroupId = async (groupId) => {
         try {
             logger.debug(`Deleting group requests for group: ${groupId}`);
             await this.groupRequestModel.deleteMany({ groupId: this.toObjectId(groupId) }).exec();
@@ -286,8 +286,8 @@ export class GroupRepository extends BaseRepository {
             logger.error(`Error deleting group requests: ${error.message}`);
             throw new RepositoryError(`Error deleting group requests: ${error.message}`);
         }
-    }
-    async updateGroupImage(groupId, updateData) {
+    };
+    updateGroupImage = async (groupId, updateData) => {
         try {
             logger.debug(`Updating group image for group: ${groupId}`);
             return await this.findByIdAndUpdate(this.toObjectId(groupId).toString(), updateData, { new: true });
@@ -296,8 +296,8 @@ export class GroupRepository extends BaseRepository {
             logger.error(`Error updating group image: ${error.message}`);
             throw new RepositoryError(`Error updating group image: ${error.message}`);
         }
-    }
-    async getGroupDetailsByUserId(userId) {
+    };
+    getGroupDetailsByUserId = async (userId) => {
         try {
             logger.debug(`Fetching group details for user: ${userId}`);
             return await this.model
@@ -310,8 +310,8 @@ export class GroupRepository extends BaseRepository {
             logger.error(`Error fetching group details by userId: ${error.message}`);
             throw new RepositoryError(`Error fetching group details: ${error.message}`);
         }
-    }
-    async getAllGroupRequests() {
+    };
+    getAllGroupRequests = async () => {
         try {
             logger.debug('Fetching all group requests');
             return await this.groupRequestModel
@@ -331,8 +331,8 @@ export class GroupRepository extends BaseRepository {
             logger.error(`Error fetching all group requests: ${error.message}`);
             throw new RepositoryError(`Error fetching all group requests: ${error.message}`);
         }
-    }
-    async isUserInGroup(groupId, userId) {
+    };
+    isUserInGroup = async (groupId, userId) => {
         try {
             logger.debug(`Checking if user ${userId} is in group ${groupId}`);
             const group = await this.model
@@ -344,6 +344,6 @@ export class GroupRepository extends BaseRepository {
             logger.error(`Error checking group membership: ${error.message}`);
             throw new RepositoryError(`Error checking group membership: ${error.message}`);
         }
-    }
+    };
 }
 //# sourceMappingURL=GroupRepositry.js.map

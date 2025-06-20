@@ -11,7 +11,7 @@ export class ChatService extends BaseService {
         this.chatRepo = new ChatRepository();
         this.contactRepo = new ContactRepository();
     }
-    async getChatMessages(contactId, groupId, page = 1, limit = 10) {
+    getChatMessages = async (contactId, groupId, page = 1, limit = 10) => {
         logger.debug(`Fetching chat messages for contact: ${contactId}, group: ${groupId}, page: ${page}, limit: ${limit}`);
         if (!contactId && !groupId) {
             this.throwError('Contact ID or Group ID is required to fetch chat messages');
@@ -28,15 +28,16 @@ export class ChatService extends BaseService {
         }
         else if (contactId) {
             this.checkData(contactId);
+            // const contact = await this.contactRepo.findContactById(contactId);
             const contact = await this.contactRepo.findContactById(contactId);
             if (!contact) {
                 this.throwError('Invalid contact');
             }
-            if (contact.type === 'user-mentor' && contact.collaborationId) {
+            if (contact?.type === 'user-mentor' && contact?.collaborationId) {
                 messages = await this.chatRepo.findChatMessagesByCollaborationId(contact.collaborationId.toString(), page, limit);
                 total = await this.chatRepo.countMessagesByCollaborationId(contact.collaborationId.toString());
             }
-            else if (contact.type === 'user-user' && contact.userConnectionId) {
+            else if (contact?.type === 'user-user' && contact.userConnectionId) {
                 messages = await this.chatRepo.findChatMessagesByUserConnectionId(contact.userConnectionId.toString(), page, limit);
                 total = await this.chatRepo.countMessagesByUserConnectionId(contact.userConnectionId.toString());
             }
@@ -45,8 +46,8 @@ export class ChatService extends BaseService {
             }
         }
         return { messages: messages.reverse(), total };
-    }
-    async getUnreadMessageCounts(userId) {
+    };
+    getUnreadMessageCounts = async (userId) => {
         logger.debug(`Fetching unread message counts for user: ${userId}`);
         this.checkData(userId);
         if (!Types.ObjectId.isValid(userId)) {
@@ -88,6 +89,6 @@ export class ChatService extends BaseService {
         }
         logger.info(`Unread message counts: ${JSON.stringify(unreadCounts)}`);
         return unreadCounts;
-    }
+    };
 }
 //# sourceMappingURL=ChatService.js.map

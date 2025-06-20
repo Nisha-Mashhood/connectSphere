@@ -9,7 +9,7 @@ export class UserConnectionController {
     this.userConnectionService = new UserConnectionService();
   }
 
-  async sendRequest(req: Request, res: Response): Promise<void> {
+   sendRequest  = async(req: Request, res: Response): Promise<void> => {
     try {
       const { id: requesterId } = req.params;
       const { recipientId } = req.body;
@@ -29,7 +29,7 @@ export class UserConnectionController {
     }
   }
 
-  async respondToRequest(req: Request, res: Response): Promise<void> {
+   respondToRequest  = async(req: Request, res: Response): Promise<void> =>{
     try {
       const { connectionId } = req.params;
       const { action } = req.body;
@@ -49,7 +49,7 @@ export class UserConnectionController {
     }
   }
 
-  async disconnectConnection(req: Request, res: Response): Promise<void> {
+   disconnectConnection  = async(req: Request, res: Response): Promise<void> =>{
     try {
       const { connectionId } = req.params;
       const { reason } = req.body;
@@ -69,7 +69,7 @@ export class UserConnectionController {
     }
   }
 
-  async getUserConnections(req: Request, res: Response): Promise<void> {
+   getUserConnections  = async(req: Request, res: Response): Promise<void> => {
     try {
       const { userId } = req.params;
       logger.debug(`Fetching connections for user: ${userId}`);
@@ -88,7 +88,7 @@ export class UserConnectionController {
     }
   }
 
-  async getUserRequests(req: Request, res: Response): Promise<void> {
+   getUserRequests  = async(req: Request, res: Response): Promise<void> => {
     try {
       const { userId } = req.params;
       logger.debug(`Fetching user requests for user: ${userId}`);
@@ -107,7 +107,7 @@ export class UserConnectionController {
     }
   }
 
-  async getAllUserConnections(_req: Request, res: Response): Promise<void> {
+   getAllUserConnections = async(_req: Request, res: Response): Promise<void> => {
     try {
       logger.debug('Fetching all user connections');
       const connections = await this.userConnectionService.fetchAllUserConnections();
@@ -125,7 +125,7 @@ export class UserConnectionController {
     }
   }
 
-  async getUserConnectionById(req: Request, res: Response): Promise<void> {
+   getUserConnectionById  = async(req: Request, res: Response): Promise<void> =>{
     try {
       const { connectionId } = req.params;
       logger.debug(`Fetching user connection by ID: ${connectionId}`);

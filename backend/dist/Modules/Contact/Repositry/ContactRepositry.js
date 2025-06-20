@@ -19,7 +19,7 @@ export class ContactRepository extends BaseRepository {
         }
         return new Types.ObjectId(idStr);
     }
-    async createContact(contactData) {
+    createContact = async (contactData) => {
         try {
             logger.debug(`Creating contact for user: ${contactData.userId}`);
             return await this.create({
@@ -35,8 +35,8 @@ export class ContactRepository extends BaseRepository {
             logger.error(`Error creating contact: ${error.message}`);
             throw new RepositoryError(`Error creating contact: ${error.message}`);
         }
-    }
-    async findContactById(contactId) {
+    };
+    findContactById = async (contactId) => {
         try {
             logger.debug(`Finding contact by ID: ${contactId}`);
             return await this.findById(this.toObjectId(contactId).toString());
@@ -45,8 +45,8 @@ export class ContactRepository extends BaseRepository {
             logger.error(`Error finding contact by ID: ${error.message}`);
             throw new RepositoryError(`Error finding contact by ID: ${error.message}`);
         }
-    }
-    async findContactByUsers(userId, targetUserId) {
+    };
+    findContactByUsers = async (userId, targetUserId) => {
         try {
             logger.debug(`Finding contact for users: ${userId}, ${targetUserId}`);
             return await this.findOne({
@@ -61,8 +61,11 @@ export class ContactRepository extends BaseRepository {
             logger.error(`Error finding contact by user IDs: ${error.message}`);
             throw new RepositoryError(`Error finding contact by user IDs: ${error.message}`);
         }
-    }
-    async findContactsByUserId(userId) {
+    };
+    findContactsByUserId = async (userId) => {
+        if (!userId) {
+            throw new RepositoryError('User ID not provided');
+        }
         try {
             logger.debug(`Finding contacts for user: ${userId}`);
             const uId = this.toObjectId(userId);
@@ -114,6 +117,6 @@ export class ContactRepository extends BaseRepository {
             logger.error(`Error finding contacts by user ID: ${error.message}`);
             throw new RepositoryError(`Error finding contacts by user ID: ${error.message}`);
         }
-    }
+    };
 }
 //# sourceMappingURL=ContactRepositry.js.map

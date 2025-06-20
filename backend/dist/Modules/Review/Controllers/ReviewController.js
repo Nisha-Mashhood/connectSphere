@@ -5,7 +5,7 @@ export class ReviewController {
     constructor() {
         this.reviewService = new ReviewService();
     }
-    async submitReview(req, res) {
+    submitReview = async (req, res) => {
         try {
             const { userId, rating, comment } = req.body;
             logger.debug(`Submitting review for user: ${userId}`);
@@ -27,8 +27,8 @@ export class ReviewController {
                 message: error.message || 'Error submitting review',
             });
         }
-    }
-    async skipReview(req, res) {
+    };
+    skipReview = async (req, res) => {
         try {
             const { userId } = req.body;
             logger.debug(`Skipping review for user: ${userId}`);
@@ -50,8 +50,8 @@ export class ReviewController {
                 message: error.message || 'Error skipping review',
             });
         }
-    }
-    async getAllReviews(_req, res) {
+    };
+    getAllReviews = async (_req, res) => {
         try {
             logger.debug('Fetching all reviews');
             const reviews = await this.reviewService.getAllReviews();
@@ -68,8 +68,8 @@ export class ReviewController {
                 message: error.message || 'Error fetching reviews',
             });
         }
-    }
-    async approveReview(req, res) {
+    };
+    approveReview = async (req, res) => {
         try {
             const { reviewId } = req.params;
             logger.debug(`Approving review: ${reviewId}`);
@@ -87,8 +87,8 @@ export class ReviewController {
                 message: error.message || 'Error approving review',
             });
         }
-    }
-    async selectReview(req, res) {
+    };
+    selectReview = async (req, res) => {
         try {
             const { reviewId } = req.params;
             logger.debug(`Selecting review: ${reviewId}`);
@@ -106,8 +106,8 @@ export class ReviewController {
                 message: error.message || 'Error selecting review',
             });
         }
-    }
-    async cancelApproval(req, res) {
+    };
+    cancelApproval = async (req, res) => {
         try {
             const { reviewId } = req.params;
             logger.debug(`Canceling approval for review: ${reviewId}`);
@@ -125,8 +125,8 @@ export class ReviewController {
                 message: error.message || 'Error canceling approval',
             });
         }
-    }
-    async deselectReview(req, res) {
+    };
+    deselectReview = async (req, res) => {
         try {
             const { reviewId } = req.params;
             logger.debug(`Deselecting review: ${reviewId}`);
@@ -144,8 +144,8 @@ export class ReviewController {
                 message: error.message || 'Error deselecting review',
             });
         }
-    }
-    async getSelectedReviews(_req, res) {
+    };
+    getSelectedReviews = async (_req, res) => {
         try {
             logger.debug('Fetching selected reviews');
             const reviews = await this.reviewService.getSelectedReviews();
@@ -162,6 +162,6 @@ export class ReviewController {
                 message: error.message || 'Error fetching selected reviews',
             });
         }
-    }
+    };
 }
 //# sourceMappingURL=ReviewController.js.map
