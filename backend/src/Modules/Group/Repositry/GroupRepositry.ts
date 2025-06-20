@@ -6,21 +6,8 @@ import Group from '../../../models/group.model.js';
 import GroupRequest from '../../../models/groupRequest.model.js';
 import { GroupDocument } from '../../../Interfaces/models/GroupDocument.js';
 import { GroupRequestDocument } from '../../../Interfaces/models/GroupRequestDocument.js';
-import { TimeSlot } from '../../../Interfaces/models/GroupDocument.js';
+import { GroupFormData } from '../Types/types.js';
 
-export interface GroupFormData {
-  name: string;
-  bio: string;
-  price: number;
-  maxMembers: number;
-  availableSlots: TimeSlot[];
-  profilePic?: string;
-  coverPic?: string;
-  startDate?: string;
-  adminId: string | Types.ObjectId;
-  createdAt?: Date;
-  members?: string[];
-}
 
 export class GroupRepository extends BaseRepository<GroupDocument> {
   private groupRequestModel: Model<GroupRequestDocument>;

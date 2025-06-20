@@ -38,7 +38,6 @@ private contactRepo: ContactRepository;
       total = await this.chatRepo.countMessagesByGroupId(groupId);
     } else if (contactId) {
       this.checkData(contactId);
-      // const contact = await this.contactRepo.findContactById(contactId);
       const contact: IContact | null = await this.contactRepo.findContactById(contactId);
       if (!contact) {
         this.throwError('Invalid contact');

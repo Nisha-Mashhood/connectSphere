@@ -1,13 +1,10 @@
 import { Request, Response } from 'express';
 import { CategoryService } from '../Service/CategoryService.js';
-import { CategoryInterface as ICategory } from "../../../Interfaces/models/CategoryInterface.js";
 import { BaseController } from '../../../core/Controller/BaseController.js';
 import logger from "../../../core/Utils/Logger.js";
+import { CategoryRequest } from '../Types/types.js';
 
-interface CategoryRequest extends Request {
-  body: Partial<ICategory>;
-  params: { id?: string };
-}
+
 
 export class CategoryController extends BaseController {
   private categoryService: CategoryService;

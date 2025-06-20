@@ -1,8 +1,5 @@
 import { BaseService } from "../../../core/Services/BaseService.js";
-import {
-  CollaborationRepository,
-  LockedSlot,
-} from "../Repositry/CollaborationRepositry.js";
+import {CollaborationRepository} from "../Repositry/CollaborationRepositry.js";
 import { MentorRepository } from "../../Mentor/Repositry/MentorRepositry.js";
 import { ContactRepository } from "../../Contact/Repositry/ContactRepositry.js";
 import { sendEmail } from "../../../core/Utils/Email.js";
@@ -12,6 +9,7 @@ import logger from "../../../core/Utils/Logger.js";
 import { ICollaboration } from "../../../Interfaces/models/ICollaboration.js";
 import { IMentorRequest } from "../../../Interfaces/models/IMentorRequest.js";
 import { ServiceError } from "../../../core/Utils/ErrorHandler.js";
+import { LockedSlot } from "../Types/types.js";
 
 export class CollaborationService extends BaseService {
   private collabRepo: CollaborationRepository;

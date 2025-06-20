@@ -3,7 +3,7 @@ import { GroupService } from '../Service/Groupservice.js';
 import { uploadMedia } from '../../../core/Utils/Cloudinary.js';
 import { ServiceError } from '../../../core/Utils/ErrorHandler.js';
 import logger from '../../../core/Utils/Logger.js';
-import { GroupFormData } from '../Repositry/GroupRepositry.js';
+import { GroupFormData } from '../Types/types.js';
 
 export class GroupController {
   private groupService: GroupService;

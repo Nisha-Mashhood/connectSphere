@@ -10,16 +10,8 @@ import Group from '../../../models/group.model.js';
 import { IMentor } from '../../../Interfaces/models/IMentor.js';
 import UserConnectionModal from '../../../models/userConnection.modal.js';
 import { Task } from '../../../models/task.modal.js';
+import { CollaborationData, UserIds } from '../Types/types.js';
 
-interface CollaborationData {
-  userId: Types.ObjectId;
-  mentorId: IMentor;
-}
-
-interface UserIds {
-  userId: string;
-  mentorUserId: string | null;
-}
 
 export class NotificationRepository extends BaseRepository<IAppNotification> {
   constructor() {

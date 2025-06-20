@@ -3,63 +3,8 @@ import { AuthService } from '../Service/AuthService.js';
 import { Request, Response } from 'express';
 import { AuthService as JWTService } from  '../Utils/JWT.js';
 import logger from '../../../core/Utils/Logger.js';
-import { UserInterface as IUser } from '../../../Interfaces/models/IUser.js';
+import { ForgotPasswordRequestBody, LoginRequestBody, LogoutRequestBody, OAuthRequestBody, RefreshTokenRequestBody, ResetPasswordRequestBody, SignupRequestBody, UpdateProfileRequestBody, VerifyOTPRequestBody, VerifyPasskeyRequestBody } from '../Types/types.js';
 
-// Interface for signup request body
-interface SignupRequestBody {
-  name: string;
-  email: string;
-  password: string;
-}
-
-// Interface for login request body
-interface LoginRequestBody {
-  email: string;
-  password: string;
-}
-
-// Interface for OAuth request body
-interface OAuthRequestBody {
-  code: string;
-}
-
-// Interface for refresh token request body
-interface RefreshTokenRequestBody {
-  refreshToken: string;
-}
-
-// Interface for forgot password request body
-interface ForgotPasswordRequestBody {
-  email: string;
-}
-
-// Interface for verify OTP request body
-interface VerifyOTPRequestBody {
-  email: string;
-  otp: string;
-}
-
-// Interface for reset password request body
-interface ResetPasswordRequestBody {
-  email: string;
-  newPassword: string;
-}
-
-// Interface for logout request body
-interface LogoutRequestBody {
-  email: string;
-}
-
-// Interface for verify passkey request body
-interface VerifyPasskeyRequestBody {
-  passkey: string;
-}
-
-// Interface for update profile request body
-interface UpdateProfileRequestBody extends Partial<IUser> {
-  profilePicFile?: Express.Multer.File;
-  coverPicFile?: Express.Multer.File;
-}
 
 // Controller for authentication and user profile endpoints
 export class AuthController extends BaseController {

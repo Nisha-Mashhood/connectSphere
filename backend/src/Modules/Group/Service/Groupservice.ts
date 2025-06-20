@@ -1,5 +1,5 @@
 import { BaseService } from '../../../core/Services/BaseService.js';
-import { GroupRepository, GroupFormData } from '../Repositry/GroupRepositry.js';
+import { GroupRepository } from '../Repositry/GroupRepositry.js';
 import { ContactRepository } from '../../Contact/Repositry/ContactRepositry.js';
 import { UserRepository } from '../../Auth/Repositry/UserRepositry.js';
 import { sendEmail } from '../../../core/Utils/Email.js';
@@ -9,6 +9,7 @@ import logger from '../../../core/Utils/Logger.js';
 import { GroupDocument } from '../../../Interfaces/models/GroupDocument.js';
 import { GroupRequestDocument } from '../../../Interfaces/models/GroupRequestDocument.js';
 import { ServiceError } from '../../../core/Utils/ErrorHandler.js';
+import { GroupFormData } from '../Types/types.js';
 
 export class GroupService extends BaseService {
   private groupRepo: GroupRepository;

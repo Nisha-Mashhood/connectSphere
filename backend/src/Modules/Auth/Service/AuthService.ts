@@ -11,19 +11,7 @@ import { uploadMedia } from "../../../core/Utils/Cloudinary.js";
 import { OAuth2Client } from "../Utils/GoogleConfig.js";
 import axios from "axios";
 import logger from "../../../core/Utils/Logger.js";
-
-// Interface for signup data
-interface SignupData {
-  name: string;
-  email: string;
-  password: string;
-}
-
-// Interface for profile update data
-interface ProfileUpdateData extends Partial<IUser> {
-  profilePicFile?: Express.Multer.File;
-  coverPicFile?: Express.Multer.File;
-}
+import { ProfileUpdateData, SignupData } from "../Types/types.js";
 
 // Temporary OTP storage (replace with Redis in production)
 const otpStore: Record<string, string> = {};

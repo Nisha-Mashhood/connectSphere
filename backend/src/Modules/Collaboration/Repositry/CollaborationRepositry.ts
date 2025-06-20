@@ -9,11 +9,8 @@ import { ICollaboration } from '../../../Interfaces/models/ICollaboration.js';
 import { IMentorRequest } from '../../../Interfaces/models/IMentorRequest.js';
 import { IMentor } from '../../../Interfaces/models/IMentor.js';
 import { UserInterface } from '../../../Interfaces/models/IUser.js';
+import { LockedSlot } from '../Types/types.js';
 
-export interface LockedSlot {
-  day: string;
-  timeSlots: string[];
-}
 
 export class CollaborationRepository extends BaseRepository<ICollaboration> {
   private mentorRequestModel: Model<IMentorRequest>;
