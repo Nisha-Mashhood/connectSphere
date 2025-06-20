@@ -38,6 +38,7 @@ export class GroupService extends BaseService {
       ...groupData,
       createdAt: new Date(),
     });
+    
     await this.contactRepo.createContact({
       userId: groupData.adminId,
       groupId: newGroup._id.toString(),

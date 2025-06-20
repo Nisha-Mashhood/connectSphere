@@ -5,85 +5,87 @@ import {
   AuthMiddleware
 } from "../../../middlewares/auth.middleware.js";
 import { upload } from "../../../core/Utils/Multer.js";
+import { GROUP_ROUTES } from "../Constant/Group.routes.js";
 
 const router = express.Router();
 const groupController = new GroupController();
 const authMiddleware = new AuthMiddleware();
 
+
 router.post(
-  "/create-group",
+  GROUP_ROUTES.CreateGroup,
   [apiLimiter, authMiddleware.verifyToken, authMiddleware.checkBlockedStatus],
   groupController.createGroup.bind(groupController)
 );
 
 router.get(
-  "/fetch-groups/:adminId",
+  GROUP_ROUTES.FetchGroups,
   [apiLimiter, authMiddleware.verifyToken, authMiddleware.checkBlockedStatus],
   groupController.getGroupDetails.bind(groupController)
 );
 
 router.get(
-  "/group-details/:groupId",
+  GROUP_ROUTES.GetGroupById,
   [apiLimiter, authMiddleware.verifyToken, authMiddleware.checkBlockedStatus],
   groupController.getGroupById.bind(groupController)
 );
 
 router.get(
-  "/group-details",
+  GROUP_ROUTES.GetAllGroups,
   [apiLimiter, authMiddleware.verifyToken, authMiddleware.checkBlockedStatus],
   groupController.getAllGroups.bind(groupController)
 );
 
 router.post(
-  "/send-groupRequest",
+  GROUP_ROUTES.SendGroupRequest,
   [apiLimiter, authMiddleware.verifyToken, authMiddleware.checkBlockedStatus],
   groupController.sendGroupRequest.bind(groupController)
 );
 
 router.get(
-  "/group-request-details-GI/:groupId",
+  GROUP_ROUTES.GetGroupRequestsByGroupId,
   [apiLimiter, authMiddleware.verifyToken, authMiddleware.checkBlockedStatus],
   groupController.getGroupRequestsByGroupId.bind(groupController)
 );
 
 router.get(
-  "/group-request-details-AI/:adminId",
+  GROUP_ROUTES.GetGroupRequestsByAdminId,
   [apiLimiter, authMiddleware.verifyToken, authMiddleware.checkBlockedStatus],
   groupController.getGroupRequestsByAdminId.bind(groupController)
 );
 
 router.get(
-  "/group-request-details-UI/:userId",
+  GROUP_ROUTES.GetGroupRequestsByUserId,
   [apiLimiter, authMiddleware.verifyToken, authMiddleware.checkBlockedStatus],
   groupController.getGroupRequestsByUserId.bind(groupController)
 );
 
 router.put(
-  "/update-groupRequest",
+  GROUP_ROUTES.UpdateGroupRequest,
   [apiLimiter, authMiddleware.verifyToken, authMiddleware.checkBlockedStatus],
   groupController.updateGroupRequest.bind(groupController)
 );
 
 router.post(
-  "/process-payment",
+  GROUP_ROUTES.ProcessPayment,
   [apiLimiter, authMiddleware.verifyToken, authMiddleware.checkBlockedStatus],
   groupController.makeStripePayment.bind(groupController)
 );
 
 router.delete(
-  "/remove-member",
+  GROUP_ROUTES.RemoveMember,
   [apiLimiter, authMiddleware.verifyToken, authMiddleware.checkBlockedStatus],
   groupController.removeGroupMember.bind(groupController)
 );
 
 router.delete(
-  "/remove-group/:groupId",
+  GROUP_ROUTES.RemoveGroup,
   [apiLimiter, authMiddleware.verifyToken, authMiddleware.checkBlockedStatus],
   groupController.deleteGroup.bind(groupController)
 );
 
 router.put(
-  "/upload-group-picture/:groupId",
+  GROUP_ROUTES.UploadGroupPicture,
   [
     apiLimiter,
     authMiddleware.verifyToken,
@@ -97,19 +99,19 @@ router.put(
 );
 
 router.get(
-  "/get-group-details-members/:userid",
+  GROUP_ROUTES.GetGroupDetailsForMembers,
   [apiLimiter, authMiddleware.verifyToken, authMiddleware.checkBlockedStatus],
   groupController.getGroupDetailsForMembers.bind(groupController)
 );
 
 router.get(
-  "/group-requests/:requestId",
+  GROUP_ROUTES.GetGroupRequestById,
   [apiLimiter, authMiddleware.verifyToken, authMiddleware.checkBlockedStatus],
   groupController.getGroupRequestById.bind(groupController)
 );
 
 router.get(
-  "/group-requests",
+ GROUP_ROUTES.GetAllGroupRequests,
   [apiLimiter, authMiddleware.verifyToken, authMiddleware.authorize("admin")],
   groupController.getAllGroupRequests.bind(groupController)
 );

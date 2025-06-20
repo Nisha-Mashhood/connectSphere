@@ -2,25 +2,26 @@ import express from 'express';
 import { ContactMessageController } from '../Controllers/ContactUsController.js';
 import { apiLimiter } from '../../../middlewares/ratelimit.middleware.js';
 import { AuthMiddleware } from '../../../middlewares/auth.middleware.js';
+import { CONTACT_ROUTES } from '../Constant/ContactUs.routes.js';
 
 const router = express.Router();
 const contactMessageController = new ContactMessageController();
 const authMiddleware = new AuthMiddleware();
 
 router.post(
-  '/contact',
+  CONTACT_ROUTES.CreateContactMessage,
   [apiLimiter, authMiddleware.verifyToken, authMiddleware.checkBlockedStatus],
   contactMessageController.createContactMessage.bind(contactMessageController)
 );
 
 router.get(
-  '/messages',
+  CONTACT_ROUTES.GetAllContactMessages,
   [apiLimiter, authMiddleware.verifyToken, authMiddleware.authorize('admin')],
   contactMessageController.getAllContactMessages.bind(contactMessageController)
 );
 
 router.post(
-  '/reply/:contactMessageId',
+  CONTACT_ROUTES.SendReply,
   [apiLimiter, authMiddleware.verifyToken, authMiddleware.authorize('admin')],
   contactMessageController.sendReply.bind(contactMessageController)
 );
