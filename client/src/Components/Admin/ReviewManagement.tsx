@@ -4,16 +4,8 @@ import { get_all_reviews, approve_review, select_review, cancel_approval, desele
 import toast from 'react-hot-toast';
 import { FaCheck, FaStar, FaTimes } from 'react-icons/fa';
 import { BsStar } from 'react-icons/bs';
+import { Review } from '../../types';
 
-interface Review {
-  reviewId: string;
-  userId: { username: string; email: string };
-  rating: number;
-  comment: string;
-  isApproved: boolean;
-  isSelect: boolean;
-  createdAt: string;
-}
 
 const ReviewManagement: React.FC = () => {
   const [reviews, setReviews] = useState<Review[]>([]);

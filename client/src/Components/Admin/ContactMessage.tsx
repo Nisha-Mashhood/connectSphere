@@ -1,5 +1,24 @@
 import { useState, useEffect } from "react";
-import { Tabs, Tab, Table, TableHeader, TableColumn, TableBody, TableRow, TableCell, Button, Modal, ModalContent, ModalHeader, ModalBody, ModalFooter, Input, Textarea, Card, CardBody } from "@nextui-org/react";
+import {
+  Tabs,
+  Tab,
+  Table,
+  TableHeader,
+  TableColumn,
+  TableBody,
+  TableRow,
+  TableCell,
+  Button,
+  Modal,
+  ModalContent,
+  ModalHeader,
+  ModalBody,
+  ModalFooter,
+  Input,
+  Textarea,
+  Card,
+  CardBody,
+} from "@nextui-org/react";
 import { toast } from "react-hot-toast";
 import { getContactMessages, sendReply } from "../../Service/ContactUs.Service";
 
@@ -17,7 +36,9 @@ const Messages = () => {
   const [repliedMessages, setRepliedMessages] = useState<ContactMessage[]>([]);
   const [loading, setLoading] = useState(false);
   const [isReplyModalOpen, setIsReplyModalOpen] = useState(false);
-  const [selectedMessage, setSelectedMessage] = useState<ContactMessage | null>(null);
+  const [selectedMessage, setSelectedMessage] = useState<ContactMessage | null>(
+    null
+  );
   const [replyMessage, setReplyMessage] = useState("");
 
   // Fetch messages
@@ -25,11 +46,20 @@ const Messages = () => {
     try {
       setLoading(true);
       const messages = await getContactMessages();
-      setPendingMessages(messages.filter((msg: ContactMessage) => !msg.givenReply));
-      setRepliedMessages(messages.filter((msg: ContactMessage) => msg.givenReply));
-    } catch (error: any) {
-      toast.error("Failed to fetch messages: " + error.message);
-      console.error("Error fetching messages:", error);
+      setPendingMessages(
+        messages.filter((msg: ContactMessage) => !msg.givenReply)
+      );
+      setRepliedMessages(
+        messages.filter((msg: ContactMessage) => msg.givenReply)
+      );
+    } catch (error: unknown) {
+      if (error instanceof Error) {
+        toast.error("Failed to fetch messages: " + error.message);
+        console.error("Error fetching messages:", error.message);
+      } else {
+        toast.error("An unknown error occurred");
+        console.error("Unknown error:", error);
+      }
     } finally {
       setLoading(false);
     }
@@ -43,23 +73,30 @@ const Messages = () => {
     }
 
     try {
-      const reply = await sendReply(selectedMessage.contactMessageId, { email: selectedMessage.email, replyMessage });
+      const reply = await sendReply(selectedMessage.contactMessageId, {
+        email: selectedMessage.email,
+        replyMessage,
+      });
       console.log(reply);
-      if(reply){
-          toast.success("Reply sent successfully!");
-          setIsReplyModalOpen(false);
-          setReplyMessage("");
-          setSelectedMessage(null);
-          fetchMessages();
+      if (reply) {
+        toast.success("Reply sent successfully!");
+        setIsReplyModalOpen(false);
+        setReplyMessage("");
+        setSelectedMessage(null);
+        fetchMessages();
       }
- 
-    } catch (error: any) {
-      toast.error("Failed to send reply: " + error.message);
-      console.error("Error sending reply:", error);
+    } catch (error: unknown) {
+      if (error instanceof Error) {
+        toast.error("Failed to send reply: " + error.message);
+        console.error("Error sending reply:", error.message);
+      } else {
+        toast.error("An unknown error occurred");
+        console.error("Unknown error:", error);
+      }
     }
   };
 
-  // Format date 
+  // Format date
   const formatDate = (dateString: string): string => {
     const date = new Date(dateString);
     return date.toLocaleString("en-US", {
@@ -169,7 +206,11 @@ const Messages = () => {
       </Card>
 
       {/* Reply Modal */}
-      <Modal isOpen={isReplyModalOpen} onClose={() => setIsReplyModalOpen(false)} size="md">
+      <Modal
+        isOpen={isReplyModalOpen}
+        onClose={() => setIsReplyModalOpen(false)}
+        size="md"
+      >
         <ModalContent>
           <ModalHeader>Reply to {selectedMessage?.name}</ModalHeader>
           <ModalBody>

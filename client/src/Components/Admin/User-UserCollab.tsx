@@ -29,7 +29,7 @@ const UserUserCollab = () => {
     return "bg-gray-100 text-gray-800";
   };
 
-  const getConnectionStatus = (conn: any) => {
+  const getConnectionStatus = (conn: string) => {
     if (conn.connectionStatus === "Connected") return "bg-green-500";
     return "bg-red-500";
   };

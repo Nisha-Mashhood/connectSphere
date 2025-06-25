@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import {
   acceptTheRequest,
@@ -31,7 +31,7 @@ const CollaborationDetails = () => {
   const [reason, setReason] = useState("");
   const navigate = useNavigate();
 
-  const fetchDetails = async () => {
+  const fetchDetails = useCallback(async () => {
     try {
       let data;
       if (collabId) {
@@ -47,11 +47,11 @@ const CollaborationDetails = () => {
     } finally {
       setLoading(false);
     }
-  };
+  },[collabId, requestId]);
 
   useEffect(() => {
     fetchDetails();
-  }, []);
+  }, [fetchDetails]);
 
   const handleCancelMentorship = async () => {
     setShowCancelDialog(false);

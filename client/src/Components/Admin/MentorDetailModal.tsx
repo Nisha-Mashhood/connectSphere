@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react";
+import React, { useCallback, useEffect, useState } from "react";
 import { FaTimes, FaCheck, FaBan, FaStar } from "react-icons/fa";
 import { toast } from "react-hot-toast";
 import {
@@ -30,6 +30,7 @@ import {
   TableRow,
   TableCell,
 } from "@nextui-org/react";
+import { Feedback } from "../../types";
 
 interface MentorDetailModalProps {
   mentor: {
@@ -46,22 +47,12 @@ interface MentorDetailModalProps {
     certifications: string[];
     price: number;
     bio: string;
-    availableSlots: any[];
+    availableSlots: {
+      day:string,
+      timeSlots:string[]
+    }[];
   };
   onClose: () => void;
-}
-
-interface Feedback {
-  _id:string;
-  feedbackId: string;
-  userId: { _id: string; name: string };
-  rating: number;
-  communication: number;
-  expertise: number;
-  punctuality: number;
-  comments: string;
-  wouldRecommend: boolean;
-  isHidden: boolean;
 }
 
 const MentorDetailModal: React.FC<MentorDetailModalProps> = ({ mentor, onClose }) => {
@@ -72,7 +63,7 @@ const MentorDetailModal: React.FC<MentorDetailModalProps> = ({ mentor, onClose }
   const [loadingFeedback, setLoadingFeedback] = useState(false);
 
   // Fetch feedback for the mentor
-  const fetchFeedback = async () => {
+  const fetchFeedback = useCallback(async () => {
     try {
       setLoadingFeedback(true);
       const data = await getFeedbackByMentorId(mentor._id);
@@ -85,7 +76,7 @@ const MentorDetailModal: React.FC<MentorDetailModalProps> = ({ mentor, onClose }
     } finally {
       setLoadingFeedback(false);
     }
-  };
+  },[mentor])
 
   // Toggle feedback visibility
   const handleToggleVisibility = async (feedbackId: string) => {
@@ -111,7 +102,7 @@ const MentorDetailModal: React.FC<MentorDetailModalProps> = ({ mentor, onClose }
   // Fetch feedback on mount
   useEffect(() => {
     fetchFeedback();
-  }, []);
+  }, [fetchFeedback]);
 
 
   const approveMentor = async () => {

@@ -13,7 +13,7 @@ import logger from "./core/Utils/Logger.js";
 import categoryRoutes from "./Modules/Category/Routes/CategoryRoutes.js";
 import subCategoryRoutes from "./Modules/Subcategory/Routes/SubCategoryRoutes.js";
 import skillsRoutes from "./Modules/Skills/Routes/SkillsRoutes.js";
-import userRoutes from "./routes/user.routes.js"; //Check this
+// import userRoutes from "./routes/user.routes.js";//Check this
 import mentorRoutes from "./Modules/Mentor/Routes/MentorRoutes.js";
 import collaborationRoutes from "./Modules/Collaboration/Routes/CollaborationRoutes.js";
 import groupRoutes from "./Modules/Group/Routes/GroupRoutes.js";
@@ -21,7 +21,7 @@ import feedbackRoutes from './Modules/Feedback/Routes/FeedBackRoutes.js';
 import user_userCollabRoutes from './Modules/UserCollaboration/Routes/UserCollaborationroutes.js';
 import taskRoutes from './Modules/Task/Routes/TaskRoutes.js';
 import notificationRoutes from './Modules/Notification/Routes/Notificationroutes.js';
-import adminRoutes from './routes/Admin/adminDashboard.routes.js'; //Check This also
+import adminRoutes from './Modules/AdminDashboard/Routes/AdminDashboardRoutes.js';
 import chatRoutes from "./Modules/Chat/Routes/ChatRoutes.js";
 import contactsRoutes from "./Modules/Contact/Routes/ContactRoutes.js";
 import reviewsRoutes from "./Modules/Review/Routes/ReviewRoutes.js";
@@ -43,7 +43,7 @@ app.use("/api/auth", authRoutes);
 app.use("/api/category", categoryRoutes);
 app.use("/api/subcategory", subCategoryRoutes);
 app.use("/api/skills", skillsRoutes);
-app.use("/api/users", userRoutes); //check this
+// app.use("/api/users", userRoutes);//check this
 app.use("/api/mentors", mentorRoutes);
 app.use("/api/collaboration", collaborationRoutes);
 app.use("/api/group", groupRoutes);
@@ -51,7 +51,7 @@ app.use("/api/feedback", feedbackRoutes);
 app.use("/api/user-userCollab", user_userCollabRoutes);
 app.use("/api/task", taskRoutes);
 app.use("/api/notification", notificationRoutes);
-app.use("/api/admin", adminRoutes); // check this
+app.use("/api/admin", adminRoutes);
 app.use("/api/chat", chatRoutes);
 app.use("/api/contacts", contactsRoutes);
 app.use("/api/reviews", reviewsRoutes);

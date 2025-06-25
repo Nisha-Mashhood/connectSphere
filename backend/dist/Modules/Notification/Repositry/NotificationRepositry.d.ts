@@ -2,10 +2,7 @@ import { Types } from 'mongoose';
 import { BaseRepository } from '../../../core/Repositries/BaseRepositry.js';
 import { AppNotification as IAppNotification } from '../../../Interfaces/models/AppNotification.js';
 import { ITask } from '../../../Interfaces/models/ITask.js';
-interface UserIds {
-    userId: string;
-    mentorUserId: string | null;
-}
+import { UserIds } from '../Types/types.js';
 export declare class NotificationRepository extends BaseRepository<IAppNotification> {
     constructor();
     private toObjectId;
@@ -29,5 +26,4 @@ export declare class NotificationRepository extends BaseRepository<IAppNotificat
     markNotificationAsRead: (notificationId: string) => Promise<IAppNotification | null>;
     getNotificationUnreadCount: (userId: string) => Promise<number>;
 }
-export {};
 //# sourceMappingURL=NotificationRepositry.d.ts.map

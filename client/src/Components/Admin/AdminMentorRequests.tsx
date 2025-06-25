@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react";
+import React, { useCallback, useEffect, useState } from "react";
 import { FaEye } from "react-icons/fa";
 import { toast } from "react-hot-toast";
 import MentorDetailModal from "./MentorDetailModal";
@@ -35,7 +35,10 @@ interface MentorRequest {
   certifications: string[];
   price: number;
   bio: string;
-  availableSlots: any[];
+  availableSlots:{
+      day:string,
+      timeSlots:string[]
+    }[];
 }
 
 const AdminMentorRequests: React.FC = () => {
@@ -48,7 +51,7 @@ const AdminMentorRequests: React.FC = () => {
   const limit = 5; // Items per page
 
   // Fetch mentor requests with pagination, search, and filter
-  const fetchMentorRequests = async () => {
+  const fetchMentorRequests = useCallback(async () => {
     try {
       const data = await fetchMentorRequestsService(page, limit, search, statusFilter, "desc");
       setMentorRequests(data.mentors);
@@ -57,11 +60,11 @@ const AdminMentorRequests: React.FC = () => {
       toast.error("Failed to fetch mentor requests.");
       console.error("Error:", error);
     }
-  };
+  },[page,search,statusFilter])
 
   useEffect(() => {
     fetchMentorRequests();
-  }, []);
+  }, [fetchMentorRequests]);
 
   const handleViewDetails = (mentor: MentorRequest) => {
     setSelectedMentor(mentor);

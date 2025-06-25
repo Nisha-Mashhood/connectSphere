@@ -1,14 +1,6 @@
 import { BaseService } from "../../../core/Services/BaseService.js";
 import { UserInterface as IUser } from "../../../Interfaces/models/IUser.js";
-interface SignupData {
-    name: string;
-    email: string;
-    password: string;
-}
-interface ProfileUpdateData extends Partial<IUser> {
-    profilePicFile?: Express.Multer.File;
-    coverPicFile?: Express.Multer.File;
-}
+import { ProfileUpdateData, SignupData } from "../Types/types.js";
 export declare class AuthService extends BaseService {
     private userRepository;
     private jwtservice;
@@ -50,5 +42,4 @@ export declare class AuthService extends BaseService {
     unblockUser: (id: string) => Promise<void>;
     changeRole: (userId: string, role: string) => Promise<IUser | null>;
 }
-export {};
 //# sourceMappingURL=AuthService.d.ts.map

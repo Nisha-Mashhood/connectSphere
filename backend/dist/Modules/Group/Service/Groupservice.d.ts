@@ -1,7 +1,7 @@
 import { BaseService } from '../../../core/Services/BaseService.js';
-import { GroupFormData } from '../Repositry/GroupRepositry.js';
 import { GroupDocument } from '../../../Interfaces/models/GroupDocument.js';
 import { GroupRequestDocument } from '../../../Interfaces/models/GroupRequestDocument.js';
+import { GroupFormData } from '../Types/types.js';
 export declare class GroupService extends BaseService {
     private groupRepo;
     private contactRepo;

@@ -5,22 +5,41 @@ import { AuthMiddleware } from '../../../middlewares/auth.middleware.js';
 const router = Router();
 const collabController = new CollaborationController();
 const authMiddleware = new AuthMiddleware();
-router.post('/create-mentorprofile', [apiLimiter, authMiddleware.verifyToken, authMiddleware.checkBlockedStatus], collabController.TemporaryRequestController);
-router.get('/get-mentor-requests', [apiLimiter, authMiddleware.verifyToken, authMiddleware.checkBlockedStatus], collabController.getMentorRequestsController);
-router.post('/accept-request/:id', [apiLimiter, authMiddleware.verifyToken, authMiddleware.checkBlockedStatus], collabController.acceptRequestController);
-router.post('/reject-request/:id', [apiLimiter, authMiddleware.verifyToken, authMiddleware.checkBlockedStatus], collabController.rejectRequestController);
-router.get('/get-user-requests/:id', [apiLimiter, authMiddleware.verifyToken, authMiddleware.checkBlockedStatus], collabController.getRequestForUserController);
-router.post('/process-payment', [apiLimiter, authMiddleware.verifyToken, authMiddleware.checkBlockedStatus], collabController.makeStripePaymentController);
-router.get('/get-collabData-user/:id', [apiLimiter, authMiddleware.verifyToken, authMiddleware.checkBlockedStatus], collabController.getCollabDataForUserController);
-router.get('/get-collabData-mentor/:id', [apiLimiter, authMiddleware.verifyToken, authMiddleware.checkBlockedStatus], collabController.getCollabDataForMentorController);
-router.delete('/cancel-collab/:collabId', [apiLimiter, authMiddleware.verifyToken, authMiddleware.checkBlockedStatus], collabController.deleteCollab);
-router.get('/getCollab/:collabId', [apiLimiter, authMiddleware.verifyToken, authMiddleware.checkBlockedStatus], collabController.getCollabDetailsByCollabId);
-router.get('/getCollabRequset/:requestId', [apiLimiter, authMiddleware.verifyToken, authMiddleware.checkBlockedStatus], collabController.getRequestDetailsByRequestId);
-router.put('/markUnavailable/:collabId', [apiLimiter, authMiddleware.verifyToken, authMiddleware.checkBlockedStatus], collabController.markUnavailableDays);
-router.put('/updateTimeslot/:collabId', [apiLimiter, authMiddleware.verifyToken, authMiddleware.checkBlockedStatus], collabController.updateTemporarySlotChanges);
-router.put('/approveTimeSlot/:collabId', [apiLimiter, authMiddleware.verifyToken, authMiddleware.checkBlockedStatus], collabController.approveTimeSlotRequest);
-router.get('/locked-slots/:mentorId', [apiLimiter, authMiddleware.verifyToken, authMiddleware.checkBlockedStatus], collabController.getMentorLockedSlotsController);
-router.get('/collaborations/admin/requests', [apiLimiter, authMiddleware.verifyToken, authMiddleware.authorize('admin')], collabController.getAllMentorRequests);
-router.get('/collaborations/admin', [apiLimiter, authMiddleware.verifyToken, authMiddleware.authorize('admin')], collabController.getAllCollabs);
+export const COLLABORATION_ROUTES = {
+    CreateMentorProfile: '/create-mentorprofile',
+    GetMentorRequests: '/get-mentor-requests',
+    AcceptRequest: '/accept-request/:id',
+    RejectRequest: '/reject-request/:id',
+    GetUserRequests: '/get-user-requests/:id',
+    ProcessPayment: '/process-payment',
+    GetCollabDataUser: '/get-collabData-user/:id',
+    GetCollabDataMentor: '/get-collabData-mentor/:id',
+    CancelCollab: '/cancel-collab/:collabId',
+    GetCollab: '/getCollab/:collabId',
+    GetCollabRequest: '/getCollabRequset/:requestId',
+    MarkUnavailable: '/markUnavailable/:collabId',
+    UpdateTimeslot: '/updateTimeslot/:collabId',
+    ApproveTimeSlot: '/approveTimeSlot/:collabId',
+    GetLockedSlots: '/locked-slots/:mentorId',
+    GetAllMentorRequests: '/collaborations/admin/requests',
+    GetAllCollabs: '/collaborations/admin',
+};
+router.post(COLLABORATION_ROUTES.CreateMentorProfile, [apiLimiter, authMiddleware.verifyToken, authMiddleware.checkBlockedStatus], collabController.TemporaryRequestController);
+router.get(COLLABORATION_ROUTES.GetMentorRequests, [apiLimiter, authMiddleware.verifyToken, authMiddleware.checkBlockedStatus], collabController.getMentorRequestsController);
+router.post(COLLABORATION_ROUTES.AcceptRequest, [apiLimiter, authMiddleware.verifyToken, authMiddleware.checkBlockedStatus], collabController.acceptRequestController);
+router.post(COLLABORATION_ROUTES.RejectRequest, [apiLimiter, authMiddleware.verifyToken, authMiddleware.checkBlockedStatus], collabController.rejectRequestController);
+router.get(COLLABORATION_ROUTES.GetUserRequests, [apiLimiter, authMiddleware.verifyToken, authMiddleware.checkBlockedStatus], collabController.getRequestForUserController);
+router.post(COLLABORATION_ROUTES.ProcessPayment, [apiLimiter, authMiddleware.verifyToken, authMiddleware.checkBlockedStatus], collabController.makeStripePaymentController);
+router.get(COLLABORATION_ROUTES.GetCollabDataUser, [apiLimiter, authMiddleware.verifyToken, authMiddleware.checkBlockedStatus], collabController.getCollabDataForUserController);
+router.get(COLLABORATION_ROUTES.GetCollabDataMentor, [apiLimiter, authMiddleware.verifyToken, authMiddleware.checkBlockedStatus], collabController.getCollabDataForMentorController);
+router.delete(COLLABORATION_ROUTES.CancelCollab, [apiLimiter, authMiddleware.verifyToken, authMiddleware.checkBlockedStatus], collabController.deleteCollab);
+router.get(COLLABORATION_ROUTES.GetCollab, [apiLimiter, authMiddleware.verifyToken, authMiddleware.checkBlockedStatus], collabController.getCollabDetailsByCollabId);
+router.get(COLLABORATION_ROUTES.GetCollabRequest, [apiLimiter, authMiddleware.verifyToken, authMiddleware.checkBlockedStatus], collabController.getRequestDetailsByRequestId);
+router.put(COLLABORATION_ROUTES.MarkUnavailable, [apiLimiter, authMiddleware.verifyToken, authMiddleware.checkBlockedStatus], collabController.markUnavailableDays);
+router.put(COLLABORATION_ROUTES.UpdateTimeslot, [apiLimiter, authMiddleware.verifyToken, authMiddleware.checkBlockedStatus], collabController.updateTemporarySlotChanges);
+router.put(COLLABORATION_ROUTES.ApproveTimeSlot, [apiLimiter, authMiddleware.verifyToken, authMiddleware.checkBlockedStatus], collabController.approveTimeSlotRequest);
+router.get(COLLABORATION_ROUTES.GetLockedSlots, [apiLimiter, authMiddleware.verifyToken, authMiddleware.checkBlockedStatus], collabController.getMentorLockedSlotsController);
+router.get(COLLABORATION_ROUTES.GetAllMentorRequests, [apiLimiter, authMiddleware.verifyToken, authMiddleware.authorize('admin')], collabController.getAllMentorRequests);
+router.get(COLLABORATION_ROUTES.GetAllCollabs, [apiLimiter, authMiddleware.verifyToken, authMiddleware.authorize('admin')], collabController.getAllCollabs);
 export default router;
 //# sourceMappingURL=CollaborationRoutes.js.map

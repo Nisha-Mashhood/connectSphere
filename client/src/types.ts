@@ -148,3 +148,70 @@ export interface GroupCallEndedData {
   callType: "audio" | "video";
   callId: string;
 }
+
+
+export interface Group {
+  _id: string;
+  groupId: string;
+  name: string;
+  bio: string;
+  price: number;
+  maxMembers: number;
+  isFull: boolean;
+  availableSlots: {
+    day: string;
+    timeSlots: string[];
+  }[];
+  profilePic: string;
+  coverPic: string;
+  startDate: string; 
+  adminId: string;
+  members: {
+    userId: string;
+    joinedAt: string;
+  }[];
+  createdAt: string;
+}
+
+
+export interface GroupRequest {
+  _id: string;
+  userId: {
+    _id: string;
+    name: string;
+    email: string;
+    profilePic: string;
+  };
+  groupId: {
+    _id: string;
+    name: string;
+    price: number;
+  };
+  status: "Pending" | "Accepted" | "Rejected";
+  paymentStatus: "Paid" | "Unpaid";
+  createdAt: string;
+}
+
+
+export interface Feedback {
+  _id:string;
+  feedbackId: string;
+  userId: { _id: string; name: string };
+  rating: number;
+  communication: number;
+  expertise: number;
+  punctuality: number;
+  comments: string;
+  wouldRecommend: boolean;
+  isHidden: boolean;
+}
+
+export interface Review {
+  reviewId: string;
+  userId: { username: string; email: string };
+  rating: number;
+  comment: string;
+  isApproved: boolean;
+  isSelect: boolean;
+  createdAt: string;
+}

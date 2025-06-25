@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import toast from "react-hot-toast";
 import { useParams } from "react-router-dom";
 import AddModal from "./AddModal";
@@ -12,14 +12,14 @@ const Skills = () => {
   const [isModalOpen, setIsModalOpen] = useState(false);
 
   // Fetch categories from the backend
-  const fetchSkills = async (subcategoryId: string) => {
+  const fetchSkills = useCallback(async (subcategoryId: string) => {
     try {
       const data = await fetchSkillsService(subcategoryId);
       setSkills(data); 
     } catch (error) {
       console.error("Error fetching categories:", error);
     }
-  };
+  },[])
 
   // Handle Save
   const handleUpdate = async (editingSkillId, formData) => {
@@ -47,7 +47,7 @@ const Skills = () => {
     if (categoryId) {
       fetchSkills(subcategoryId);
     }
-  }, [categoryId]);
+  }, [categoryId,subcategoryId,fetchSkills]);
 
   return (
     <div>

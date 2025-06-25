@@ -28,7 +28,6 @@ export class ChatService extends BaseService {
         }
         else if (contactId) {
             this.checkData(contactId);
-            // const contact = await this.contactRepo.findContactById(contactId);
             const contact = await this.contactRepo.findContactById(contactId);
             if (!contact) {
                 this.throwError('Invalid contact');

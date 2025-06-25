@@ -109,13 +109,13 @@ const UserMentorCollab = () => {
       </h2>
 
       <div className="mb-6">
-        {/* <input
+         <input
           type="text"
           placeholder="Search by name, email, or specialization..."
           value={searchTerm}
           onChange={(e) => setSearchTerm(e.target.value)}
           className="w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
-        /> */}
+        />
       </div>
 
       <div className="flex border-b border-gray-200 mb-6">

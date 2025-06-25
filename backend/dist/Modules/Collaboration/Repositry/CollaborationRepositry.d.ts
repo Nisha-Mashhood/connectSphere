@@ -1,10 +1,7 @@
 import { BaseRepository } from '../../../core/Repositries/BaseRepositry.js';
 import { ICollaboration } from '../../../Interfaces/models/ICollaboration.js';
 import { IMentorRequest } from '../../../Interfaces/models/IMentorRequest.js';
-export interface LockedSlot {
-    day: string;
-    timeSlots: string[];
-}
+import { LockedSlot } from '../Types/types.js';
 export declare class CollaborationRepository extends BaseRepository<ICollaboration> {
     private mentorRequestModel;
     constructor();

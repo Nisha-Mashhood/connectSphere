@@ -1,42 +1,6 @@
 import { BaseController } from './../../../core/Controller/BaseController.js';
 import { Request, Response } from 'express';
-import { UserInterface as IUser } from '../../../Interfaces/models/IUser.js';
-interface SignupRequestBody {
-    name: string;
-    email: string;
-    password: string;
-}
-interface LoginRequestBody {
-    email: string;
-    password: string;
-}
-interface OAuthRequestBody {
-    code: string;
-}
-interface RefreshTokenRequestBody {
-    refreshToken: string;
-}
-interface ForgotPasswordRequestBody {
-    email: string;
-}
-interface VerifyOTPRequestBody {
-    email: string;
-    otp: string;
-}
-interface ResetPasswordRequestBody {
-    email: string;
-    newPassword: string;
-}
-interface LogoutRequestBody {
-    email: string;
-}
-interface VerifyPasskeyRequestBody {
-    passkey: string;
-}
-interface UpdateProfileRequestBody extends Partial<IUser> {
-    profilePicFile?: Express.Multer.File;
-    coverPicFile?: Express.Multer.File;
-}
+import { ForgotPasswordRequestBody, LoginRequestBody, LogoutRequestBody, OAuthRequestBody, RefreshTokenRequestBody, ResetPasswordRequestBody, SignupRequestBody, UpdateProfileRequestBody, VerifyOTPRequestBody, VerifyPasskeyRequestBody } from '../Types/types.js';
 export declare class AuthController extends BaseController {
     private authService;
     private jwtService;
@@ -78,5 +42,4 @@ export declare class AuthController extends BaseController {
         role: string;
     }>, res: Response) => Promise<void>;
 }
-export {};
 //# sourceMappingURL=AuthController.d.ts.map

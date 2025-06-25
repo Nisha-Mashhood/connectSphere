@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { Card, CardBody, CardHeader, Spinner, Dropdown, DropdownTrigger, DropdownMenu, DropdownItem, Button } from "@nextui-org/react";
 import { LineChart, Line, BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from "recharts";
 import { FaChartLine, FaUsers, FaMoneyBillWave, FaUserTie, FaHandshake, FaCalendarAlt, FaChevronDown, FaArrowRight } from 'react-icons/fa';
@@ -41,11 +41,7 @@ const AdminDashboard = () => {
   const [timeRange, setTimeRange] = useState('30');
   const [timeFormat, setTimeFormat] = useState('daily');
 
-  useEffect(() => {
-    fetchDashboardData();
-  }, []);
-
-  const fetchDashboardData = async () => {
+  const fetchDashboardData = useCallback(async () => {
     setIsLoading(true);
     try {
       // Fetch all data in parallel
@@ -142,7 +138,13 @@ const AdminDashboard = () => {
     } finally {
       setIsLoading(false);
     }
-  };
+  },[timeFormat, timeRange])
+
+  useEffect(() => {
+    fetchDashboardData();
+  }, [fetchDashboardData]);
+
+  
 
   // Stats Card Component
   const StatCard = ({ title, value, icon, color, onClick }) => (

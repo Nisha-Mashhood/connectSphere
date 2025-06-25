@@ -1,10 +1,11 @@
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { getAllGroupRequests, groupDetails } from "../../Service/Group.Service";
+import { Group, GroupRequest } from "../../types";
 
 const GroupCollab = () => {
-  const [groups, setGroups] = useState<any[]>([]);
-  const [requests, setRequests] = useState<any[]>([]);
+  const [groups, setGroups] = useState<Group[]>([]);
+  const [requests, setRequests] = useState<GroupRequest[]>([]);
   const [activeTab, setActiveTab] = useState<string>("groups");
   const [loading, setLoading] = useState(true);
   const navigate = useNavigate();

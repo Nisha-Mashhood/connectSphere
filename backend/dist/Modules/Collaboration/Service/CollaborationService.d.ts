@@ -1,7 +1,7 @@
 import { BaseService } from "../../../core/Services/BaseService.js";
-import { LockedSlot } from "../Repositry/CollaborationRepositry.js";
 import { ICollaboration } from "../../../Interfaces/models/ICollaboration.js";
 import { IMentorRequest } from "../../../Interfaces/models/IMentorRequest.js";
+import { LockedSlot } from "../Types/types.js";
 export declare class CollaborationService extends BaseService {
     private collabRepo;
     private contactRepo;

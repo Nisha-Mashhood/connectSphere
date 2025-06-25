@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import {
   getGroupDetails,
@@ -19,7 +19,7 @@ const GroupDetails = () => {
   const [loading, setLoading] = useState(true);
   const navigate = useNavigate();
 
-  const fetchDetails = async () => {
+  const fetchDetails = useCallback(async () => {
     try {
       if (groupId) {
         const groupData = await getGroupDetails(groupId);
@@ -36,11 +36,11 @@ const GroupDetails = () => {
     } finally {
       setLoading(false);
     }
-  };
+  },[groupId,requestId])
 
   useEffect(() => {
     fetchDetails();
-  }, []);
+  }, [fetchDetails]);
 
   const formatDate = (dateString) => {
     return new Date(dateString).toLocaleDateString("en-US", {
@@ -65,9 +65,14 @@ const GroupDetails = () => {
       await removeGroup(groupId);
       toast.success("Group deleted successfully!");
       navigate("/admin/groupManagemnt");
-    } catch (err: any) {
-      console.log(err);
-      toast.error("Failed to delete group");
+    } catch (err: unknown) {
+      if (err instanceof Error) {
+        console.log(err);
+        toast.error("Failed to delete group");
+      }else{
+        toast.error("An unknown error occurred");
+        console.error("Unknown error:", err);
+      }
     }
   };
 
@@ -82,8 +87,14 @@ const GroupDetails = () => {
       await removeUserFromGroup(data);
       toast.success("Member removed successfully");
       fetchDetails();
-    } catch (err: any) {
-      toast.error("Failed to remove member");
+    } catch (err: unknown) {
+      if (err instanceof Error) {
+        console.log(err);
+        toast.error("Failed to remove member");
+      }else{
+        toast.error("An unknown error occurred");
+        console.error("Unknown error:", err);
+      }
     }
   };
 
@@ -91,8 +102,14 @@ const GroupDetails = () => {
     try {
       await updateGroupRequest(requestId, status);
       toast.success(`Request ${status.toLowerCase()}`);
-    } catch (err: any) {
-      toast.error("Failed to update request");
+    } catch (err: unknown) {
+      if (err instanceof Error) {
+        console.log(err);
+        toast.error("Failed to update request");
+      }else{
+        toast.error("An unknown error occurred");
+        console.error("Unknown error:", err);
+      }
     }
   };
 

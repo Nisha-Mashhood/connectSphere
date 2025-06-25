@@ -1,12 +1,6 @@
 import { Request, Response } from 'express';
-import { CategoryInterface as ICategory } from "../../../Interfaces/models/CategoryInterface.js";
 import { BaseController } from '../../../core/Controller/BaseController.js';
-interface CategoryRequest extends Request {
-    body: Partial<ICategory>;
-    params: {
-        id?: string;
-    };
-}
+import { CategoryRequest } from '../Types/types.js';
 export declare class CategoryController extends BaseController {
     private categoryService;
     constructor();
@@ -16,5 +10,4 @@ export declare class CategoryController extends BaseController {
     updateCategory: (req: CategoryRequest, res: Response) => Promise<void>;
     deleteCategory: (req: CategoryRequest, res: Response) => Promise<void>;
 }
-export {};
 //# sourceMappingURL=CategoryController.d.ts.map
