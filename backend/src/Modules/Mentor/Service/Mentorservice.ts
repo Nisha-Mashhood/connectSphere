@@ -1,10 +1,10 @@
-import { BaseService } from "../../../core/Services/BaseService.js";
-import { MentorRepository } from "../Repositry/MentorRepositry.js";
-import { UserRepository } from "../../Auth/Repositry/UserRepositry.js";
-import { sendEmail } from "../../../core/Utils/Email.js";
-import logger from "../../../core/Utils/Logger.js";
-import { IMentor } from "../../../Interfaces/models/IMentor.js";
-import { UserInterface } from '../../../Interfaces/models/IUser.js';
+import { BaseService } from "../../../core/Services/BaseService";
+import { MentorRepository } from "../Repositry/MentorRepositry";
+import { UserRepository } from "../../Auth/Repositry/UserRepositry";
+import { sendEmail } from "../../../core/Utils/Email";
+import logger from "../../../core/Utils/Logger";
+import { IMentor } from "../../../Interfaces/models/IMentor";
+import { UserInterface } from '../../../Interfaces/models/IUser';
 
 export class MentorService extends BaseService {
   private mentorRepo: MentorRepository;

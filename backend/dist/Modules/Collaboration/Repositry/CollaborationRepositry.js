@@ -1,10 +1,10 @@
-import { Types } from 'mongoose';
-import { BaseRepository } from '../../../core/Repositries/BaseRepositry.js';
-import { RepositoryError } from '../../../core/Utils/ErrorHandler.js';
-import logger from '../../../core/Utils/Logger.js';
-import Collaboration from '../../../models/collaboration.js';
-import MentorRequest from '../../../models/mentorRequset.js';
-import Mentor from '../../../models/mentor.model.js';
+import { Types } from "mongoose";
+import { BaseRepository } from "../../../core/Repositries/BaseRepositry.js";
+import { RepositoryError } from "../../../core/Utils/ErrorHandler.js";
+import logger from "../../../core/Utils/Logger.js";
+import Collaboration from "../../../models/collaboration.js";
+import MentorRequest from "../../../models/mentorRequset.js";
+import Mentor from "../../../models/mentor.model.js";
 export class CollaborationRepository extends BaseRepository {
     mentorRequestModel;
     constructor() {
@@ -13,26 +13,26 @@ export class CollaborationRepository extends BaseRepository {
     }
     toObjectId(id) {
         if (!id) {
-            logger.error('Missing ID');
-            throw new RepositoryError('Invalid ID: ID is required');
+            logger.error("Missing ID");
+            throw new RepositoryError("Invalid ID: ID is required");
         }
         let idStr;
-        if (typeof id === 'string') {
+        if (typeof id === "string") {
             idStr = id;
         }
         else if (id instanceof Types.ObjectId) {
             idStr = id.toString();
         }
-        else if (typeof id === 'object' && '_id' in id) {
+        else if (typeof id === "object" && "_id" in id) {
             idStr = id._id.toString();
         }
         else {
             logger.error(`Invalid ID type: ${typeof id}`);
-            throw new RepositoryError('Invalid ID: must be a string, ObjectId, IMentor, or UserInterface');
+            throw new RepositoryError("Invalid ID: must be a string, ObjectId, IMentor, or UserInterface");
         }
         if (!Types.ObjectId.isValid(idStr)) {
             logger.error(`Invalid ID: ${idStr}`);
-            throw new RepositoryError('Invalid ID: must be a 24 character hex string');
+            throw new RepositoryError("Invalid ID: must be a 24 character hex string");
         }
         return new Types.ObjectId(idStr);
     }
@@ -43,8 +43,8 @@ export class CollaborationRepository extends BaseRepository {
                 ...data,
                 mentorId: data.mentorId ? this.toObjectId(data.mentorId) : undefined,
                 userId: data.userId ? this.toObjectId(data.userId) : undefined,
-                paymentStatus: 'Pending',
-                isAccepted: 'Pending',
+                paymentStatus: "Pending",
+                isAccepted: "Pending",
             });
         }
         catch (error) {
@@ -57,7 +57,7 @@ export class CollaborationRepository extends BaseRepository {
             logger.debug(`Fetching mentor requests for mentor: ${mentorId}`);
             return await this.mentorRequestModel
                 .find({ mentorId: this.toObjectId(mentorId) })
-                .populate('userId', 'name profilePic')
+                .populate("userId", "name profilePic")
                 .exec();
         }
         catch (error) {
@@ -93,10 +93,10 @@ export class CollaborationRepository extends BaseRepository {
             return await this.mentorRequestModel
                 .find({ userId: this.toObjectId(userId) })
                 .populate({
-                path: 'mentorId',
+                path: "mentorId",
                 populate: {
-                    path: 'userId',
-                    select: 'name email profilePic',
+                    path: "userId",
+                    select: "name email profilePic",
                 },
             })
                 .exec();
@@ -111,8 +111,12 @@ export class CollaborationRepository extends BaseRepository {
             logger.debug(`Creating collaboration for user: ${collaborationData.userId}`);
             return await this.create({
                 ...collaborationData,
-                mentorId: collaborationData.mentorId ? this.toObjectId(collaborationData.mentorId) : undefined,
-                userId: collaborationData.userId ? this.toObjectId(collaborationData.userId) : undefined,
+                mentorId: collaborationData.mentorId
+                    ? this.toObjectId(collaborationData.mentorId)
+                    : undefined,
+                userId: collaborationData.userId
+                    ? this.toObjectId(collaborationData.userId)
+                    : undefined,
             });
         }
         catch (error) {
@@ -123,7 +127,9 @@ export class CollaborationRepository extends BaseRepository {
     deleteMentorRequest = async (requestId) => {
         try {
             logger.debug(`Deleting mentor request: ${requestId}`);
-            await this.mentorRequestModel.findByIdAndDelete(this.toObjectId(requestId)).exec();
+            await this.mentorRequestModel
+                .findByIdAndDelete(this.toObjectId(requestId))
+                .exec();
         }
         catch (error) {
             logger.error(`Error deleting mentor request: ${error.message}`);
@@ -136,16 +142,16 @@ export class CollaborationRepository extends BaseRepository {
             return await this.model
                 .findById(this.toObjectId(collabId))
                 .populate({
-                path: 'mentorId',
-                model: 'Mentor',
+                path: "mentorId",
+                model: "Mentor",
                 populate: {
-                    path: 'userId',
-                    model: 'User',
+                    path: "userId",
+                    model: "User",
                 },
             })
                 .populate({
-                path: 'userId',
-                model: 'User',
+                path: "userId",
+                model: "User",
             })
                 .exec();
         }
@@ -190,12 +196,12 @@ export class CollaborationRepository extends BaseRepository {
             return await this.model
                 .find({ userId: this.toObjectId(userId), isCancelled: false })
                 .populate({
-                path: 'mentorId',
+                path: "mentorId",
                 populate: {
-                    path: 'userId',
+                    path: "userId",
                 },
             })
-                .populate('userId')
+                .populate("userId")
                 .exec();
         }
         catch (error) {
@@ -206,9 +212,9 @@ export class CollaborationRepository extends BaseRepository {
     getCollabDataForMentor = async (mentorId) => {
         try {
             logger.debug(`Fetching collaboration data for mentor: ${mentorId}`);
-            const mentor = await Mentor.findById(this.toObjectId(mentorId)).select('userId');
+            const mentor = await Mentor.findById(this.toObjectId(mentorId)).select("userId");
             if (!mentor) {
-                throw new RepositoryError('Mentor not found');
+                throw new RepositoryError("Mentor not found");
             }
             const userId = this.toObjectId(mentor.userId.toString());
             return await this.model
@@ -219,12 +225,12 @@ export class CollaborationRepository extends BaseRepository {
                 ],
             })
                 .populate({
-                path: 'mentorId',
+                path: "mentorId",
                 populate: {
-                    path: 'userId',
+                    path: "userId",
                 },
             })
-                .populate('userId')
+                .populate("userId")
                 .exec();
         }
         catch (error) {
@@ -232,78 +238,126 @@ export class CollaborationRepository extends BaseRepository {
             throw new RepositoryError(`Error fetching collaboration data for mentor: ${error.message}`);
         }
     };
-    findMentorRequest = async ({ page, limit, search }) => {
+    findMentorRequest = async ({ page, limit, search, }) => {
         try {
             logger.debug(`Fetching mentor requests with page: ${page}, limit: ${limit}, search: ${search}`);
-            const query = search
-                ? {
-                    $or: [
-                        { 'userId.name': { $regex: search, $options: 'i' } },
-                        { 'userId.email': { $regex: search, $options: 'i' } },
-                        { 'mentorId.userId.name': { $regex: search, $options: 'i' } },
-                        { 'mentorId.userId.email': { $regex: search, $options: 'i' } },
-                        { 'mentorId.specialization': { $regex: search, $options: 'i' } },
-                    ],
-                }
-                : {};
+            const query = {};
+            if (search) {
+                query.$or = [
+                    { "userId.name": { $regex: search, $options: "i" } },
+                    { "userId.email": { $regex: search, $options: "i" } },
+                    { "mentorId.userId.name": { $regex: search, $options: "i" } },
+                    { "mentorId.userId.email": { $regex: search, $options: "i" } },
+                    { "mentorId.specialization": { $regex: search, $options: "i" } },
+                ];
+            }
+            // const trimmedSearch = (search || "").trim();
+            // logger.debug(`Trimmed search term: "${trimmedSearch}"`);
+            // const query = trimmedSearch
+            //   ? {
+            //       $or: [
+            //         { "userId.name": { $regex: trimmedSearch, $options: "i" } },
+            //         { "userId.email": { $regex: trimmedSearch, $options: "i" } },
+            //         {
+            //           "mentorId.userId.name": {
+            //             $regex: trimmedSearch,
+            //             $options: "i",
+            //           },
+            //         },
+            //         {
+            //           "mentorId.userId.email": {
+            //             $regex: trimmedSearch,
+            //             $options: "i",
+            //           },
+            //         },
+            //         {
+            //           "mentorId.specialization": {
+            //             $regex: trimmedSearch,
+            //             $options: "i",
+            //           },
+            //         },
+            //       ],
+            //     }
+            //   : {};
+            logger.debug("Search query:", query);
             const total = await this.mentorRequestModel.countDocuments(query);
+            logger.debug(`Total mentor requests found: ${total}`);
             const requests = await this.mentorRequestModel
                 .find(query)
                 .populate({
-                path: 'mentorId',
-                model: 'Mentor',
+                path: "mentorId",
+                model: "Mentor",
                 populate: {
-                    path: 'userId',
-                    model: 'User',
+                    path: "userId",
+                    model: "User",
                 },
             })
                 .populate({
-                path: 'userId',
-                model: 'User',
+                path: "userId",
+                model: "User",
             })
                 .skip((page - 1) * limit)
                 .limit(limit)
+                .lean()
                 .exec();
-            return { requests, total, page, pages: Math.ceil(total / limit) };
+            logger.debug("Fetched mentor requests:", JSON.stringify(requests, null, 2));
+            return { requests, total, page, pages: Math.ceil(total / limit) || 1 };
         }
         catch (error) {
             logger.error(`Error fetching mentor requests: ${error.message}`);
             throw new RepositoryError(`Error fetching mentor requests: ${error.message}`);
         }
     };
-    findCollab = async ({ page, limit, search }) => {
+    findCollab = async ({ page, limit, search, }) => {
         try {
             logger.debug(`Fetching collaborations with page: ${page}, limit: ${limit}, search: ${search}`);
-            const query = search
-                ? {
-                    $or: [
-                        { 'userId.name': { $regex: search, $options: 'i' } },
-                        { 'userId.email': { $regex: search, $options: 'i' } },
-                        { 'mentorId.userId.name': { $regex: search, $options: 'i' } },
-                        { 'mentorId.userId.email': { $regex: search, $options: 'i' } },
-                        { 'mentorId.specialization': { $regex: search, $options: 'i' } },
-                    ],
-                }
-                : {};
+            //  const trimmedSearch = (search || '').trim();
+            //  logger.debug(`Trimmed search term: "${trimmedSearch}"`);
+            const query = {};
+            if (search) {
+                query.$or = [
+                    { "userId.name": { $regex: search, $options: "i" } },
+                    { "userId.email": { $regex: search, $options: "i" } },
+                    { "mentorId.userId.name": { $regex: search, $options: "i" } },
+                    { "mentorId.userId.email": { $regex: search, $options: "i" } },
+                    { "mentorId.specialization": { $regex: search, $options: "i" } },
+                ];
+            }
+            // const query = trimmedSearch
+            //   ? {
+            //       $or: [
+            //         { 'userId.name': { $regex: trimmedSearch, $options: 'i' } },
+            //         { 'userId.email': { $regex: trimmedSearch, $options: 'i' } },
+            //         { 'mentorId.userId.name': { $regex: trimmedSearch, $options: 'i' } },
+            //         { 'mentorId.userId.email': { $regex: trimmedSearch, $options: 'i' } },
+            //         { 'mentorId.specialization': { $regex: trimmedSearch, $options: 'i' } },
+            //       ],
+            //     }
+            //   : {};
+            logger.debug("Search query:", JSON.stringify(query, null, 2));
+            // Get total count
             const total = await this.model.countDocuments(query);
+            logger.debug(`Total collaborations found: ${total}`);
             const collabs = await this.model
                 .find(query)
                 .populate({
-                path: 'mentorId',
-                model: 'Mentor',
+                path: "mentorId",
+                model: "Mentor",
                 populate: {
-                    path: 'userId',
-                    model: 'User',
+                    path: "userId",
+                    model: "User",
                 },
             })
                 .populate({
-                path: 'userId',
-                model: 'User',
+                path: "userId",
+                model: "User",
             })
                 .skip((page - 1) * limit)
                 .limit(limit)
+                .lean()
                 .exec();
-            return { collabs, total, page, pages: Math.ceil(total / limit) };
+            logger.debug("Fetched collaborations:", JSON.stringify(collabs, null, 2));
+            return { collabs, total, page, pages: Math.ceil(total / limit) || 1 };
         }
         catch (error) {
             logger.error(`Error fetching collaborations: ${error.message}`);
@@ -316,16 +370,16 @@ export class CollaborationRepository extends BaseRepository {
             return await this.mentorRequestModel
                 .findById(this.toObjectId(requestId))
                 .populate({
-                path: 'mentorId',
-                model: 'Mentor',
+                path: "mentorId",
+                model: "Mentor",
                 populate: {
-                    path: 'userId',
-                    model: 'User',
+                    path: "userId",
+                    model: "User",
                 },
             })
                 .populate({
-                path: 'userId',
-                model: 'User',
+                path: "userId",
+                model: "User",
             })
                 .exec();
         }
@@ -387,14 +441,16 @@ export class CollaborationRepository extends BaseRepository {
     updateRequestStatus = async (collabId, requestId, requestType, status, newEndDate) => {
         try {
             logger.debug(`Updating request status for collaboration: ${collabId}, request: ${requestId}`);
-            const updateField = requestType === 'unavailable' ? 'unavailableDays' : 'temporarySlotChanges';
+            const updateField = requestType === "unavailable"
+                ? "unavailableDays"
+                : "temporarySlotChanges";
             let updateQuery = {
                 $set: {
                     [`${updateField}.$.isApproved`]: status,
                 },
             };
             if (newEndDate) {
-                updateQuery.$set['endDate'] = newEndDate;
+                updateQuery.$set["endDate"] = newEndDate;
             }
             return await this.model
                 .findOneAndUpdate({
@@ -402,16 +458,16 @@ export class CollaborationRepository extends BaseRepository {
                 [`${updateField}._id`]: this.toObjectId(requestId),
             }, updateQuery, { new: true })
                 .populate({
-                path: 'mentorId',
-                model: 'Mentor',
+                path: "mentorId",
+                model: "Mentor",
                 populate: {
-                    path: 'userId',
-                    model: 'User',
+                    path: "userId",
+                    model: "User",
                 },
             })
                 .populate({
-                path: 'userId',
-                model: 'User',
+                path: "userId",
+                model: "User",
             })
                 .exec();
         }
@@ -430,14 +486,14 @@ export class CollaborationRepository extends BaseRepository {
                 isCancelled: false,
                 $or: [{ endDate: { $gt: currentDate } }, { endDate: null }],
             })
-                .select('selectedSlot')
+                .select("selectedSlot")
                 .exec();
             const mentorRequests = await this.mentorRequestModel
                 .find({
                 mentorId: this.toObjectId(mentorId),
-                isAccepted: 'Accepted',
+                isAccepted: "Accepted",
             })
-                .select('selectedSlot')
+                .select("selectedSlot")
                 .exec();
             const collabSlots = collaborations.flatMap((collab) => collab.selectedSlot.map((slot) => ({
                 day: slot.day,

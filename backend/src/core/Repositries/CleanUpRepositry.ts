@@ -1,7 +1,7 @@
-import { RepositoryError } from '../Utils/ErrorHandler.js';
-import logger from '../Utils/Logger.js';
-import GroupRequest from '../../models/groupRequest.model.js';
-import MentorRequest from '../../models/mentorRequset.js';
+import { RepositoryError } from '../Utils/ErrorHandler';
+import logger from '../Utils/Logger';
+import GroupRequest from '../../models/groupRequest.model';
+import MentorRequest from '../../models/mentorRequset';
 
 export class CleanupRepository {
   

@@ -1,9 +1,9 @@
 import { Router } from 'express';
-import { SkillsController } from '../../../Modules/Skills/Controllers/SkillsController.js';
-import { apiLimiter } from '../../../middlewares/ratelimit.middleware.js';
-import { upload } from '../../../core/Utils/Multer.js';
-import { AuthMiddleware } from '../../../middlewares/auth.middleware.js';
-import { SKILLS_ROUTES } from '../Constant/Skills.routes.js';
+import { SkillsController } from '../../../Modules/Skills/Controllers/SkillsController';
+import { apiLimiter } from '../../../middlewares/ratelimit.middleware';
+import { upload } from '../../../core/Utils/Multer';
+import { AuthMiddleware } from '../../../middlewares/auth.middleware';
+import { SKILLS_ROUTES } from '../Constant/Skills.routes';
 
 const router = Router();
 const skillsController = new SkillsController();

@@ -1,6 +1,6 @@
 import { Request, Response } from 'express';
-import { ContactMessageService } from '../Service/ContactUsService.js';
-import logger from '../../../core/Utils/Logger.js';
+import { ContactMessageService } from '../Service/ContactUsService';
+import logger from '../../../core/Utils/Logger';
 
 export class ContactMessageController {
   private contactMessageService: ContactMessageService;

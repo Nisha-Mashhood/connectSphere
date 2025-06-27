@@ -1,9 +1,9 @@
 import express from 'express';
-import { AuthController } from '../Controllers/AuthController.js';
-import { AuthMiddleware } from '../../../middlewares/auth.middleware.js';
-import { apiLimiter, authLimiter } from '../../../middlewares/ratelimit.middleware.js';
-import { upload } from '../../../core/Utils/Multer.js';
-import { AUTH_ROUTES } from '../Constant/auth.routes.js';
+import { AuthController } from '../Controllers/AuthController';
+import { AuthMiddleware } from '../../../middlewares/auth.middleware';
+import { apiLimiter, authLimiter } from '../../../middlewares/ratelimit.middleware';
+import { upload } from '../../../core/Utils/Multer';
+import { AUTH_ROUTES } from '../Constant/auth.routes';
 
 const router = express.Router();
 const authController = new AuthController();

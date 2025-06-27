@@ -3,10 +3,11 @@ import { useParams, useNavigate } from "react-router-dom";
 import { disconnectUser_UserConnection, User_UserConnectionsById } from "../../Service/User-User.Service";
 import toast from "react-hot-toast";
 import { Button, Modal, ModalBody, ModalContent, ModalFooter, ModalHeader, Textarea, useDisclosure } from "@nextui-org/react";
+import { UserConnection } from "../../types";
 
 const UserUserCollabDetails = () => {
   const { connId } = useParams<{ connId: string }>();
-  const [connection, setConnection] = useState<any>(null);
+  const [connection, setConnection] = useState<UserConnection>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [disconnectReason, setDisconnectReason] = useState("");
   const { isOpen, onOpen, onClose } = useDisclosure();
@@ -49,6 +50,7 @@ const UserUserCollabDetails = () => {
       onClose();
       setDisconnectReason("");
     } catch (error) {
+      console.log(error)
       toast.error("Failed to disconnect");
     }
   }

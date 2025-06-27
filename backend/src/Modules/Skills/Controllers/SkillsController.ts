@@ -1,9 +1,9 @@
 import { Request, Response } from 'express';
-import { BaseController } from '../../../core/Controller/BaseController.js';
-import logger from "../../../core/Utils/Logger.js";
-import { SkillsService } from '../Service/SkillService.js';
-import { SkillsRepository } from "../Repositry/SkillsRepositry.js";
-import { SkillInterface as ISkill } from "../../../Interfaces/models/SkillInterface.js";
+import { BaseController } from '../../../core/Controller/BaseController';
+import logger from "../../../core/Utils/Logger";
+import { SkillsService } from '../Service/SkillService';
+import { SkillsRepository } from "../Repositry/SkillsRepositry";
+import { SkillInterface as ISkill } from "../../../Interfaces/models/SkillInterface";
 
 interface SkillRequest extends Request {
   body: Partial<ISkill>;

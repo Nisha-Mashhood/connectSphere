@@ -1,9 +1,9 @@
 import { Router } from 'express';
-import { SubcategoryController } from '../../../Modules/Subcategory/Controllers/SubCategoryController.js';
-import { apiLimiter } from '../../../middlewares/ratelimit.middleware.js';
-import { upload } from '../../../core/Utils/Multer.js';
-import { AuthMiddleware } from '../../../middlewares/auth.middleware.js';
-import { SUBCATEGORY_ROUTES } from '../Constant/SubCategory.routes.js';
+import { SubcategoryController } from '../../../Modules/Subcategory/Controllers/SubCategoryController';
+import { apiLimiter } from '../../../middlewares/ratelimit.middleware';
+import { upload } from '../../../core/Utils/Multer';
+import { AuthMiddleware } from '../../../middlewares/auth.middleware';
+import { SUBCATEGORY_ROUTES } from '../Constant/SubCategory.routes';
 
 const router = Router();
 const subcategoryController = new SubcategoryController();

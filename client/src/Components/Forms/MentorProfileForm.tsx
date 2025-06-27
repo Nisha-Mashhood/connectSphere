@@ -20,7 +20,7 @@ const MentorProfileForm = () => {
   const navigate = useNavigate();
   const [loading, setLoading] = useState(false);
   const { currentUser } = useSelector((state: RootState) => state.user);
-  const [skills, setSkills] = useState<any[]>([]); // Skills for dropdown
+  const [skills, setSkills] = useState<any[]>([]); 
   const [bio, setBio] = useState("");
   const [price, setPrice] = useState("");
   const [selectedSkills, setSelectedSkills] = useState<string[]>([]);
@@ -41,6 +41,7 @@ const MentorProfileForm = () => {
         setSkills(data.skills);
       } catch (error) {
         toast.error("Failed to fetch skills");
+        console.log("Mentor Profile form :",error)
       }
     };
     if (currentUser._id) {
@@ -76,7 +77,7 @@ const MentorProfileForm = () => {
   };
 
   // Handle input changes with immediate validation
-  const handleInputChange = (field: keyof Errors, value: any) => {
+  const handleInputChange = (field: keyof Errors, value) => {
     switch (field) {
       case "specialization":
         setSpecialization(value);

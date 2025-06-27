@@ -33,7 +33,7 @@ const ForgotPassword = () => {
 
       toast.success("OTP sent successfully!");
       navigate("/otp"); // Navigate to OTP page
-    } catch (error: any) {
+    } catch (error) {
       toast.error(error.response?.data?.message || "Submission failed");
       dispatch(
         signinFailure(error.response?.data?.message || "Submission failed")

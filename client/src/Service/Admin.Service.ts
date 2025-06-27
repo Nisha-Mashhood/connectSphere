@@ -4,7 +4,7 @@ import { handleError } from "./ErrorHandler";
   export const AdminPasscodeCheck = async (passkey) => {
     try {
       const response = await axiosInstance.post("/auth/verify-admin-passkey",{ passkey });
-      return response.data; 
+      return response.data.data; 
     } catch (error) {
       handleError(error) 
     }
@@ -14,7 +14,7 @@ import { handleError } from "./ErrorHandler";
 export const getTotalUsersCount = async () => {
   try {
     const response = await axiosInstance.get("/admin/total-users");
-    return response.data;
+    return response.data.data;
   } catch (error) {
     handleError(error);
   }

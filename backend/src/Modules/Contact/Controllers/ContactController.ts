@@ -1,7 +1,7 @@
 import { Request, Response } from 'express';
-import { BaseController } from '../../../core/Controller/BaseController.js';
-import { ContactService } from '../Service/ContactService.js';
-import logger from '../../../core/Utils/Logger.js';
+import { BaseController } from '../../../core/Controller/BaseController';
+import { ContactService } from '../Service/ContactService';
+import logger from '../../../core/Utils/Logger';
 
 export class ContactController extends BaseController {
   private contactService: ContactService;

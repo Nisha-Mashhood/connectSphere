@@ -4,10 +4,11 @@ import {
   UserToMentorCollab,
   UserToMentorRequset,
 } from "../../Service/collaboration.Service";
+import { Collaboration, MentorRequest } from "../../types";
 
 const UserMentorCollab = () => {
-  const [userToMentorRequests, setUserToMentorRequests] = useState([]);
-  const [userToMentorCollab, setUserToMentorCollab] = useState([]);
+  const [userToMentorRequests, setUserToMentorRequests] = useState<MentorRequest[]>([]);
+  const [userToMentorCollab, setUserToMentorCollab] = useState<Collaboration[]>([]);
   const [activeTab, setActiveTab] = useState("collaborations");
   const [isLoading, setIsLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState("");
@@ -20,14 +21,14 @@ const UserMentorCollab = () => {
 
   const fetchData = useCallback(async () => {
     setIsLoading(true);
-    console.log("Fetching data with searchTerm:", searchTerm); // Debug log
+    console.log("Fetching data with searchTerm:", searchTerm); 
     try {
       const [requestsData, collabData] = await Promise.all([
         UserToMentorRequset(requestPage, itemsPerPage, searchTerm),
         UserToMentorCollab(collabPage, itemsPerPage, searchTerm),
       ]);
-      console.log("Requests Data:", requestsData); // Debug log
-      console.log("Collab Data:", collabData); // Debug log
+      console.log("Requests Data:", requestsData); 
+      console.log("Collab Data:", collabData); 
 
       setUserToMentorRequests(requestsData?.requests || []);
       setUserToMentorCollab(collabData?.collabs || []);
@@ -43,6 +44,8 @@ const UserMentorCollab = () => {
   // Debounce search to prevent rapid API calls
   useEffect(() => {
     const debounce = setTimeout(() => {
+      setRequestPage(1);
+      setCollabPage(1);
       fetchData();
     }, 300); // 300ms delay
 

@@ -1,9 +1,9 @@
-import { BaseService } from '../../../core/Services/BaseService.js';
-import { ServiceError } from '../../../core/Utils/ErrorHandler.js';
-import logger from '../../../core/Utils/Logger.js';
-import { FeedbackRepository } from '../Repositry/FeedBackRepositry.js';
-import { CollaborationRepository } from '../../Collaboration/Repositry/CollaborationRepositry.js';
-import { IFeedback } from '../../../Interfaces/models/IFeedback.js';
+import { BaseService } from '../../../core/Services/BaseService';
+import { ServiceError } from '../../../core/Utils/ErrorHandler';
+import logger from '../../../core/Utils/Logger';
+import { FeedbackRepository } from '../Repositry/FeedBackRepositry';
+import { CollaborationRepository } from '../../Collaboration/Repositry/CollaborationRepositry';
+import { IFeedback } from '../../../Interfaces/models/IFeedback';
 
 export class FeedbackService extends BaseService {
   private feedbackRepo: FeedbackRepository;

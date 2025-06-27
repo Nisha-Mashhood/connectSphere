@@ -1,7 +1,7 @@
 import { Request, Response } from 'express';
-import { TaskService } from '../Service/TaskService.js';
-import logger from '../../../core/Utils/Logger.js';
-import { ITask } from '../../../Interfaces/models/ITask.js';
+import { TaskService } from '../Service/TaskService';
+import logger from '../../../core/Utils/Logger';
+import { ITask } from '../../../Interfaces/models/ITask';
 import { Types } from 'mongoose';
 
 export class TaskController {

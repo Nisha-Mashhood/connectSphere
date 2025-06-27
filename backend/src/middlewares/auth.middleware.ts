@@ -1,9 +1,9 @@
 import { Request, Response, NextFunction } from 'express';
-import logger from '../core/Utils/Logger.js';
-import { ServiceError } from '../core/Utils/ErrorHandler.js';
-import { AuthService as JWTService } from '../Modules/Auth/Utils/JWT.js';
-import { UserRepository } from '../Modules/Auth/Repositry/UserRepositry.js';
-import { UserInterface } from '../Interfaces/models/IUser.js';
+import logger from '../core/Utils/Logger';
+import { ServiceError } from '../core/Utils/ErrorHandler';
+import { AuthService as JWTService } from '../Modules/Auth/Utils/JWT';
+import { UserRepository } from '../Modules/Auth/Repositry/UserRepositry';
+import { UserInterface } from '../Interfaces/models/IUser';
 
 // Extend Express Request type to include user
 declare global {
@@ -28,7 +28,9 @@ export class AuthMiddleware {
     logger.info(`Access Token: ${accessToken}`);
     if (!accessToken) {
       logger.warn('Access token not found in request');
-      throw new ServiceError('Access token not found');
+      // throw new ServiceError('Access token not found');
+      req.currentUser = undefined; 
+      return next();
     }
     try {
       const decoded = this.jwtService.verifyAccessToken(accessToken);

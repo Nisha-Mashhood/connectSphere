@@ -1,9 +1,9 @@
 import { Model, Types } from 'mongoose';
-import { BaseRepository } from '../../../core/Repositries/BaseRepositry.js';
-import { RepositoryError } from '../../../core/Utils/ErrorHandler.js';
-import logger from '../../../core/Utils/Logger.js';
-import Feedback from '../../../models/feedback.modal.js';
-import { IFeedback } from '../../../Interfaces/models/IFeedback.js';
+import { BaseRepository } from '../../../core/Repositries/BaseRepositry';
+import { RepositoryError } from '../../../core/Utils/ErrorHandler';
+import logger from '../../../core/Utils/Logger';
+import Feedback from '../../../models/feedback.modal';
+import { IFeedback } from '../../../Interfaces/models/IFeedback';
 
 export class FeedbackRepository extends BaseRepository<IFeedback> {
   constructor() {

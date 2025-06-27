@@ -1,7 +1,7 @@
-import mentorModel from "../../../models/mentor.model.js";
-import collaboration from "../../../models/collaboration.js";
-import User from "../../../models/user.model.js";
-import MentorRequest from "../../../models/mentorRequset.js";
+import mentorModel from "../../../models/mentor.model";
+import collaboration from "../../../models/collaboration";
+import User from "../../../models/user.model";
+import MentorRequest from "../../../models/mentorRequset";
 
 class AdminRepository {
     // User  counts

@@ -1,11 +1,11 @@
-import { CategoryRepository } from '../Repositry/CategoryRepositry.js';
-import { BaseService } from "../../../core/Services/BaseService.js";
-import { SkillsRepository } from "../../Skills/Repositry/SkillsRepositry.js";
-import { SubcategoryRepository } from "../../Subcategory/Repositry/SubCategoryRepositry.js";
-import { CategoryInterface as ICategory } from "../../../Interfaces/models/CategoryInterface.js";
-import logger from "../../../core/Utils/Logger.js";
-import { uploadMedia } from "../../../core/Utils/Cloudinary.js";
-import { ServiceError } from "../../../core/Utils/ErrorHandler.js";
+import { CategoryRepository } from '../Repositry/CategoryRepositry';
+import { BaseService } from "../../../core/Services/BaseService";
+import { SkillsRepository } from "../../Skills/Repositry/SkillsRepositry";
+import { SubcategoryRepository } from "../../Subcategory/Repositry/SubCategoryRepositry";
+import { CategoryInterface as ICategory } from "../../../Interfaces/models/CategoryInterface";
+import logger from "../../../core/Utils/Logger";
+import { uploadMedia } from "../../../core/Utils/Cloudinary";
+import { ServiceError } from "../../../core/Utils/ErrorHandler";
 
 export class CategoryService extends BaseService {
   private categoryRepo: CategoryRepository;

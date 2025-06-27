@@ -1,9 +1,9 @@
-import { BaseService } from '../../../core/Services/BaseService.js';
-import { ServiceError } from '../../../core/Utils/ErrorHandler.js';
-import logger from '../../../core/Utils/Logger.js';
-import { UserConnectionRepository } from '../Repositry/UserCollaborationRepositry.js';
-import { ContactRepository } from '../../Contact/Repositry/ContactRepositry.js';
-import { IUserConnection } from '../../../Interfaces/models/IUserConnection.js';
+import { BaseService } from '../../../core/Services/BaseService';
+import { ServiceError } from '../../../core/Utils/ErrorHandler';
+import logger from '../../../core/Utils/Logger';
+import { UserConnectionRepository } from '../Repositry/UserCollaborationRepositry';
+import { ContactRepository } from '../../Contact/Repositry/ContactRepositry';
+import { IUserConnection } from '../../../Interfaces/models/IUserConnection';
 
 export class UserConnectionService extends BaseService {
   private userConnectionRepo: UserConnectionRepository;

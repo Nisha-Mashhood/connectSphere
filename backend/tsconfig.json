@@ -22,7 +22,7 @@
     "inlineSources": true,                               /* Include original source code in source maps. */
 
     /* Advanced Options */
-    "moduleResolution": "nodenext",                          /* Resolve modules in Node.js style. */
+    "moduleResolution": "NodeNext",                          /* Resolve modules in Node.js style. */
     "allowSyntheticDefaultImports": true,                /* Allow default imports for modules without a default export. */
     "typeRoots": ["./node_modules/@types"],              /* Specify the type definition root folder. */
     "baseUrl": "./",  

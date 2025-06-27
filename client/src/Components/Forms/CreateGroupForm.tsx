@@ -49,75 +49,90 @@ const CreateGroupForm = () => {
   const [selectedDay, setSelectedDay] = useState("");
   const [selectedTime, setSelectedTime] = useState("");
 
-  const days = ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday"];
+  const days = [
+    "Monday",
+    "Tuesday",
+    "Wednesday",
+    "Thursday",
+    "Friday",
+    "Saturday",
+    "Sunday",
+  ];
   const timeSlots = [
-    "09:00 AM", "10:00 AM", "11:00 AM", "12:00 PM",
-    "01:00 PM", "02:00 PM", "03:00 PM", "04:00 PM",
-    "05:00 PM", "06:00 PM",
+    "09:00 AM",
+    "10:00 AM",
+    "11:00 AM",
+    "12:00 PM",
+    "01:00 PM",
+    "02:00 PM",
+    "03:00 PM",
+    "04:00 PM",
+    "05:00 PM",
+    "06:00 PM",
   ];
 
   // Validation function
   const validateForm = (): Errors => {
-  const newErrors: Errors = {};
+    const newErrors: Errors = {};
 
-  // Group Name
-  if (!formData.name.trim()) {
-    newErrors.name = "Group name is required";
-  } else if (formData.name.length < 3) {
-    newErrors.name = "Group name must be at least 3 characters";
-  } else if (formData.name.length > 50) {
-    newErrors.name = "Group name cannot exceed 50 characters";
-  }
+    // Group Name
+    if (!formData.name.trim()) {
+      newErrors.name = "Group name is required";
+    } else if (formData.name.length < 3) {
+      newErrors.name = "Group name must be at least 3 characters";
+    } else if (formData.name.length > 50) {
+      newErrors.name = "Group name cannot exceed 50 characters";
+    }
 
-  // Bio
-  if (!formData.bio.trim()) {
-    newErrors.bio = "Bio is required";
-  } else if (formData.bio.length < 10) {
-    newErrors.bio = "Bio must be at least 10 characters";
-  } else if (formData.bio.length > 500) {
-    newErrors.bio = "Bio cannot exceed 500 characters";
-  }
+    // Bio
+    if (!formData.bio.trim()) {
+      newErrors.bio = "Bio is required";
+    } else if (formData.bio.length < 10) {
+      newErrors.bio = "Bio must be at least 10 characters";
+    } else if (formData.bio.length > 500) {
+      newErrors.bio = "Bio cannot exceed 500 characters";
+    }
 
-  // Price
-  if (formData.price < 0) {
-    newErrors.price = "Price cannot be negative";
-  }
+    // Price
+    if (formData.price < 0) {
+      newErrors.price = "Price cannot be negative";
+    }
 
-  // Max Members
-  if (formData.maxMembers === 0) {
-    newErrors.maxMembers = "Maximum members is required";
-  } else if (formData.maxMembers < 2) {
-    newErrors.maxMembers = "Maximum members must be at least 2";
-  } else if (formData.maxMembers > 4) {
-    newErrors.maxMembers = "Maximum members cannot exceed 4";
-  }
+    // Max Members
+    if (formData.maxMembers === 0) {
+      newErrors.maxMembers = "Maximum members is required";
+    } else if (formData.maxMembers < 2) {
+      newErrors.maxMembers = "Maximum members must be at least 2";
+    } else if (formData.maxMembers > 4) {
+      newErrors.maxMembers = "Maximum members cannot exceed 4";
+    }
 
-  // Start Date
-  if (!formData.startDate || formData.startDate.trim() === "") {
-    newErrors.startDate = "Start date is required";
-  } else {
-    const startDate = new Date(formData.startDate);
-    if (isNaN(startDate.getTime())) {
-      newErrors.startDate = "Invalid date format";
+    // Start Date
+    if (!formData.startDate || formData.startDate.trim() === "") {
+      newErrors.startDate = "Start date is required";
     } else {
-      const today = new Date();
-      today.setHours(0, 0, 0, 0); // Reset time for comparison
-      startDate.setHours(0, 0, 0, 0); // Reset time for startDate
-      if (startDate <= today) {
-        newErrors.startDate = "Start date must be a future date";
+      const startDate = new Date(formData.startDate);
+      if (isNaN(startDate.getTime())) {
+        newErrors.startDate = "Invalid date format";
+      } else {
+        const today = new Date();
+        today.setHours(0, 0, 0, 0); // Reset time for comparison
+        startDate.setHours(0, 0, 0, 0); // Reset time for startDate
+        if (startDate <= today) {
+          newErrors.startDate = "Start date must be a future date";
+        }
       }
     }
-  }
 
-  // Available Slots
-  if (!formData.availableSlots.length) {
-    newErrors.availableSlots = "At least one time slot is required";
-  }
+    // Available Slots
+    if (!formData.availableSlots.length) {
+      newErrors.availableSlots = "At least one time slot is required";
+    }
 
-  return newErrors;
-};
+    return newErrors;
+  };
 
-  const handleInputChange = (field: keyof GroupFormData, value: any) => {
+  const handleInputChange = <K extends keyof GroupFormData>(field: K, value:GroupFormData[K]) => {
     setFormData((prev) => ({ ...prev, [field]: value }));
     // Validate on change
     const newErrors = validateForm();
@@ -131,7 +146,9 @@ const CreateGroupForm = () => {
     }
 
     setFormData((prev) => {
-      const existingDaySlot = prev.availableSlots.find((slot) => slot.day === selectedDay);
+      const existingDaySlot = prev.availableSlots.find(
+        (slot) => slot.day === selectedDay
+      );
 
       if (existingDaySlot) {
         if (!existingDaySlot.timeSlots.includes(selectedTime)) {
@@ -139,7 +156,10 @@ const CreateGroupForm = () => {
             ...prev,
             availableSlots: prev.availableSlots.map((slot) =>
               slot.day === selectedDay
-                ? { ...slot, timeSlots: [...slot.timeSlots, selectedTime].sort() }
+                ? {
+                    ...slot,
+                    timeSlots: [...slot.timeSlots, selectedTime].sort(),
+                  }
                 : slot
             ),
           };
@@ -168,7 +188,9 @@ const CreateGroupForm = () => {
         .map((slot) => {
           if (slot.day === day) {
             const newTimeSlots = slot.timeSlots.filter((t) => t !== time);
-            return newTimeSlots.length ? { ...slot, timeSlots: newTimeSlots } : null;
+            return newTimeSlots.length
+              ? { ...slot, timeSlots: newTimeSlots }
+              : null;
           }
           return slot;
         })
@@ -177,52 +199,62 @@ const CreateGroupForm = () => {
 
     // Revalidate available slots after removal
     const newErrors = validateForm();
-    setErrors((prev) => ({ ...prev, availableSlots: newErrors.availableSlots }));
+    setErrors((prev) => ({
+      ...prev,
+      availableSlots: newErrors.availableSlots,
+    }));
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
-  e.preventDefault();
+    e.preventDefault();
 
-  const validationErrors = validateForm();
-  setErrors(validationErrors);
+    const validationErrors = validateForm();
+    setErrors(validationErrors);
 
-  if (Object.keys(validationErrors).length > 0) {
-    toast.error("Please fix the errors before submitting");
-    return;
-  }
+    if (Object.keys(validationErrors).length > 0) {
+      toast.error("Please fix the errors before submitting");
+      return;
+    }
 
-  const confirm = window.confirm(
-    "Once everything is set for the group, it cannot be changed. Do you want to proceed?"
-  );
-  if (!confirm) return;
+    const confirm = window.confirm(
+      "Once everything is set for the group, it cannot be changed. Do you want to proceed?"
+    );
+    if (!confirm) return;
 
-  const membersData = [
-    {
-      userId: currentUser._id,
-      joinedAt: new Date(),
-    },
-  ];
+    const membersData = [
+      {
+        userId: currentUser._id,
+        joinedAt: new Date(),
+      },
+    ];
 
-  try {
-    const response = await createGroup({
-      ...formData,
-      adminId: currentUser._id,
-      createdAt: new Date(),
-      members: membersData,
-    });
+    try {
+      const response = await createGroup({
+        ...formData,
+        adminId: currentUser._id,
+        createdAt: new Date(),
+        members: membersData,
+      });
 
-    console.log("Group Creation Response:", response);
-    toast.success("Group created successfully!");
-    navigate("/profile");
-  } catch (error: any) {
-    toast.error(error.message || "Failed to create group");
-    console.error("Error creating group:", error);
-  }
-};
+      console.log("Group Creation Response:", response);
+      toast.success("Group created successfully!");
+      navigate("/profile");
+    } catch (error: unknown) {
+      if (error instanceof Error) {
+        toast.error("Failed to create group.");
+        console.error("Error creating group:", error.message);
+      } else {
+        toast.error("An unknown error occurred");
+        console.error("Unknown error:", error);
+      }
+    }
+  };
 
   return (
     <div className="max-w-4xl mx-auto p-6">
-      <h1 className="text-3xl font-bold mb-8 text-gray-800 dark:text-white">Create New Group</h1>
+      <h1 className="text-3xl font-bold mb-8 text-gray-800 dark:text-white">
+        Create New Group
+      </h1>
 
       <form onSubmit={handleSubmit} className="space-y-6">
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
@@ -238,7 +270,9 @@ const CreateGroupForm = () => {
                 value={formData.name}
                 onChange={(e) => handleInputChange("name", e.target.value)}
               />
-              {errors.name && <span className="text-red-500 text-sm">{errors.name}</span>}
+              {errors.name && (
+                <span className="text-red-500 text-sm">{errors.name}</span>
+              )}
             </div>
 
             <div>
@@ -251,7 +285,9 @@ const CreateGroupForm = () => {
                 value={formData.bio}
                 onChange={(e) => handleInputChange("bio", e.target.value)}
               />
-              {errors.bio && <span className="text-red-500 text-sm">{errors.bio}</span>}
+              {errors.bio && (
+                <span className="text-red-500 text-sm">{errors.bio}</span>
+              )}
             </div>
 
             <div>
@@ -264,7 +300,9 @@ const CreateGroupForm = () => {
                 value={formData.startDate}
                 onChange={(e) => handleInputChange("startDate", e.target.value)}
               />
-              {errors.startDate && <span className="text-red-500 text-sm">{errors.startDate}</span>}
+              {errors.startDate && (
+                <span className="text-red-500 text-sm">{errors.startDate}</span>
+              )}
             </div>
 
             <div>
@@ -276,9 +314,13 @@ const CreateGroupForm = () => {
                 min="0"
                 className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
                 value={formData.price}
-                onChange={(e) => handleInputChange("price", Number(e.target.value))}
+                onChange={(e) =>
+                  handleInputChange("price", Number(e.target.value))
+                }
               />
-              {errors.price && <span className="text-red-500 text-sm">{errors.price}</span>}
+              {errors.price && (
+                <span className="text-red-500 text-sm">{errors.price}</span>
+              )}
             </div>
 
             <div>
@@ -290,9 +332,15 @@ const CreateGroupForm = () => {
                 min="2"
                 className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
                 value={formData.maxMembers}
-                onChange={(e) => handleInputChange("maxMembers", Number(e.target.value))}
+                onChange={(e) =>
+                  handleInputChange("maxMembers", Number(e.target.value))
+                }
               />
-              {errors.maxMembers && <span className="text-red-500 text-sm">{errors.maxMembers}</span>}
+              {errors.maxMembers && (
+                <span className="text-red-500 text-sm">
+                  {errors.maxMembers}
+                </span>
+              )}
             </div>
           </div>
 
@@ -310,7 +358,9 @@ const CreateGroupForm = () => {
                 >
                   <option value="">Select Day</option>
                   {days.map((day) => (
-                    <option key={day} value={day}>{day}</option>
+                    <option key={day} value={day}>
+                      {day}
+                    </option>
                   ))}
                 </select>
 
@@ -321,7 +371,9 @@ const CreateGroupForm = () => {
                 >
                   <option value="">Select Time</option>
                   {timeSlots.map((time) => (
-                    <option key={time} value={time}>{time}</option>
+                    <option key={time} value={time}>
+                      {time}
+                    </option>
                   ))}
                 </select>
 
@@ -334,7 +386,9 @@ const CreateGroupForm = () => {
                 </button>
               </div>
               {errors.availableSlots && (
-                <span className="text-red-500 text-sm block mt-2">{errors.availableSlots}</span>
+                <span className="text-red-500 text-sm block mt-2">
+                  {errors.availableSlots}
+                </span>
               )}
             </div>
 
@@ -345,7 +399,9 @@ const CreateGroupForm = () => {
               <div className="space-y-2">
                 {formData.availableSlots.map((slot) => (
                   <div key={slot.day} className="border rounded-md p-3">
-                    <div className="font-medium text-gray-800 dark:text-gray-200">{slot.day}</div>
+                    <div className="font-medium text-gray-800 dark:text-gray-200">
+                      {slot.day}
+                    </div>
                     <div className="mt-1 flex flex-wrap gap-2">
                       {slot.timeSlots.map((time) => (
                         <span

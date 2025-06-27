@@ -1,7 +1,7 @@
 import mongoose, { Schema } from "mongoose";
-import { generateCustomId } from "../core/Utils/IdGenerator.js";
-import { IMessage } from "../Interfaces/models/IMessage.js";
-import logger from "../core/Utils/Logger.js";
+import { generateCustomId } from "../core/Utils/IdGenerator";
+import { IMessage } from "../Interfaces/models/IMessage";
+import logger from "../core/Utils/Logger";
 
 const messageSchema: Schema<IMessage> = new mongoose.Schema(
   {

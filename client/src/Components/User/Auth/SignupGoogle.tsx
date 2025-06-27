@@ -22,9 +22,10 @@ const GoogleSignup = () => {
 
          toast.success('Signup successful! Please login to continue');
         navigate('/login');
-      } catch (error: any) {
+      } catch (error) {
         dispatch(signinFailure(error.message));
-        toast.error(error.message || 'Google signup failed');
+        toast.error('Google signup failed');
+        console.log("Google signup failed : ",error.message)
       }
     },
     onError: () => {

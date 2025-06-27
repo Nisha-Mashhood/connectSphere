@@ -1,9 +1,9 @@
 import { Model, Types, FilterQuery } from 'mongoose';
-import { BaseRepository } from '../../../core/Repositries/BaseRepositry.js';
-import { RepositoryError } from '../../../core/Utils/ErrorHandler.js';
-import logger from '../../../core/Utils/Logger.js';
-import { ITask } from '../../../Interfaces/models/ITask.js';
-import { Task } from '../../../models/task.modal.js';
+import { BaseRepository } from '../../../core/Repositries/BaseRepositry';
+import { RepositoryError } from '../../../core/Utils/ErrorHandler';
+import logger from '../../../core/Utils/Logger';
+import { ITask } from '../../../Interfaces/models/ITask';
+import { Task } from '../../../models/task.modal';
 
 export class TaskRepository extends BaseRepository<ITask> {
   constructor() {

@@ -1,9 +1,9 @@
 import { Router } from 'express';
-import { CategoryController } from '../../../Modules/Category/Controllers/CategoryController.js';
-import { apiLimiter } from '../../../middlewares/ratelimit.middleware.js';
-import { upload } from '../../../core/Utils/Multer.js';
-import { AuthMiddleware } from '../../../middlewares/auth.middleware.js';
-import { CATEGORY_ROUTES } from '../Constant/Category.routes.js';
+import { CategoryController } from '../../../Modules/Category/Controllers/CategoryController';
+import { apiLimiter } from '../../../middlewares/ratelimit.middleware';
+import { upload } from '../../../core/Utils/Multer';
+import { AuthMiddleware } from '../../../middlewares/auth.middleware';
+import { CATEGORY_ROUTES } from '../Constant/Category.routes';
 
 const router = Router();
 const categoryController = new CategoryController();

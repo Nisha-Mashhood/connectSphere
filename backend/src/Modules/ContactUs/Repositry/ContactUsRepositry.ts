@@ -1,9 +1,9 @@
 import { Model } from 'mongoose';
-import { BaseRepository } from '../../../core/Repositries/BaseRepositry.js';
-import { RepositoryError } from '../../../core/Utils/ErrorHandler.js';
-import logger from '../../../core/Utils/Logger.js';
-import ContactMessage from '../../../models/ContactMessage.modal.js';
-import { IContactMessage } from '../../../Interfaces/models/IContactMessage.js';
+import { BaseRepository } from '../../../core/Repositries/BaseRepositry';
+import { RepositoryError } from '../../../core/Utils/ErrorHandler';
+import logger from '../../../core/Utils/Logger';
+import ContactMessage from '../../../models/ContactMessage.modal';
+import { IContactMessage } from '../../../Interfaces/models/IContactMessage';
 
 export class ContactMessageRepository extends BaseRepository<IContactMessage> {
   constructor() {

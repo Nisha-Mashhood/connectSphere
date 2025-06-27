@@ -1,7 +1,7 @@
 import mongoose, { Schema } from "mongoose";
-import { generateCustomId } from "../core/Utils/IdGenerator.js";
-import { IHomePageContent } from "../Interfaces/models/IHomePageContent.js";
-import logger from "../core/Utils/Logger.js";
+import { generateCustomId } from "../core/Utils/IdGenerator";
+import { IHomePageContent } from "../Interfaces/models/IHomePageContent";
+import logger from "../core/Utils/Logger";
 
 const HomePageContentSchema: Schema<IHomePageContent> = new Schema(
   {

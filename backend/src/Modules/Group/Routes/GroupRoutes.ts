@@ -1,11 +1,11 @@
 import express from "express";
-import { GroupController } from "../Controllers/GroupController.js";
-import { apiLimiter } from "../../../middlewares/ratelimit.middleware.js";
+import { GroupController } from "../Controllers/GroupController";
+import { apiLimiter } from "../../../middlewares/ratelimit.middleware";
 import {
   AuthMiddleware
-} from "../../../middlewares/auth.middleware.js";
-import { upload } from "../../../core/Utils/Multer.js";
-import { GROUP_ROUTES } from "../Constant/Group.routes.js";
+} from "../../../middlewares/auth.middleware";
+import { upload } from "../../../core/Utils/Multer";
+import { GROUP_ROUTES } from "../Constant/Group.routes";
 
 const router = express.Router();
 const groupController = new GroupController();

@@ -1,4 +1,4 @@
-import AdminRepository from "../Repositry/AdminDashboardRepositry.js";
+import AdminRepository from "../Repositry/AdminDashboardRepositry";
 
 class AdminService {
    getTotalUsersCount = async() => {

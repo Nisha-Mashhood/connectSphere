@@ -1,12 +1,12 @@
 import { Model, Types } from 'mongoose';
-import { BaseRepository } from '../../../core/Repositries/BaseRepositry.js';
-import { RepositoryError } from '../../../core/Utils/ErrorHandler.js';
-import logger from '../../../core/Utils/Logger.js';
-import Group from '../../../models/group.model.js';
-import GroupRequest from '../../../models/groupRequest.model.js';
-import { GroupDocument } from '../../../Interfaces/models/GroupDocument.js';
-import { GroupRequestDocument } from '../../../Interfaces/models/GroupRequestDocument.js';
-import { GroupFormData } from '../Types/types.js';
+import { BaseRepository } from '../../../core/Repositries/BaseRepositry';
+import { RepositoryError } from '../../../core/Utils/ErrorHandler';
+import logger from '../../../core/Utils/Logger';
+import Group from '../../../models/group.model';
+import GroupRequest from '../../../models/groupRequest.model';
+import { GroupDocument } from '../../../Interfaces/models/GroupDocument';
+import { GroupRequestDocument } from '../../../Interfaces/models/GroupRequestDocument';
+import { GroupFormData } from '../Types/types';
 
 
 export class GroupRepository extends BaseRepository<GroupDocument> {

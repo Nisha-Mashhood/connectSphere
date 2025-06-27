@@ -1,10 +1,10 @@
 import { Types } from 'mongoose';
-import { BaseService } from '../../../core/Services/BaseService.js';
-import { ChatRepository } from '../Repositry/ChatRepositry.js';
-import { IChatMessage } from '../../../Interfaces/models/IChatMessage.js';
-import { ContactRepository } from '../../Contact/Repositry/ContactRepositry.js';
-import logger from '../../../core/Utils/Logger.js';
-import { IContact } from '../../../Interfaces/models/IContact.js';
+import { BaseService } from '../../../core/Services/BaseService';
+import { ChatRepository } from '../Repositry/ChatRepositry';
+import { IChatMessage } from '../../../Interfaces/models/IChatMessage';
+import { ContactRepository } from '../../Contact/Repositry/ContactRepositry';
+import logger from '../../../core/Utils/Logger';
+import { IContact } from '../../../Interfaces/models/IContact';
 
 export class ChatService extends BaseService {
 private chatRepo: ChatRepository;

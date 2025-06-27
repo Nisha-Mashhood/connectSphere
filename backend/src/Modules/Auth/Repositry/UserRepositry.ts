@@ -1,8 +1,8 @@
-import User from "../../../models/user.model.js";
-import { UserInterface } from "../../../Interfaces/models/IUser.js";
-import { BaseRepository } from "../../../core/Repositries/BaseRepositry.js";
-import { RepositoryError } from "../../../core/Utils/ErrorHandler.js";
-import logger from "../../../core/Utils/Logger.js";
+import User from "../../../models/user.model";
+import { UserInterface } from "../../../Interfaces/models/IUser";
+import { BaseRepository } from "../../../core/Repositries/BaseRepositry";
+import { RepositoryError } from "../../../core/Utils/ErrorHandler";
+import logger from "../../../core/Utils/Logger";
 
 // Repository for User-specific database operations
 export class UserRepository extends BaseRepository<UserInterface> {

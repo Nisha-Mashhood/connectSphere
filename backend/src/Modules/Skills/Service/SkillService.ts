@@ -1,9 +1,9 @@
-import { BaseService } from "../../../core/Services/BaseService.js";
-import { SkillsRepository } from "../Repositry/SkillsRepositry.js";
-import { SkillInterface as ISkill } from "../../../Interfaces/models/SkillInterface.js";
-import logger from "../../../core/Utils/Logger.js";
-import { uploadMedia } from "../../../core/Utils/Cloudinary.js";
-import { ServiceError } from "../../../core/Utils/ErrorHandler.js";
+import { BaseService } from "../../../core/Services/BaseService";
+import { SkillsRepository } from "../Repositry/SkillsRepositry";
+import { SkillInterface as ISkill } from "../../../Interfaces/models/SkillInterface";
+import logger from "../../../core/Utils/Logger";
+import { uploadMedia } from "../../../core/Utils/Cloudinary";
+import { ServiceError } from "../../../core/Utils/ErrorHandler";
 
 export class SkillsService extends BaseService {
   private skillsRepo: SkillsRepository;

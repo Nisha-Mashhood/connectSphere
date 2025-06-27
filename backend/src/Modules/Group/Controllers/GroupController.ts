@@ -1,9 +1,9 @@
 import { Request, Response } from 'express';
-import { GroupService } from '../Service/Groupservice.js';
-import { uploadMedia } from '../../../core/Utils/Cloudinary.js';
-import { ServiceError } from '../../../core/Utils/ErrorHandler.js';
-import logger from '../../../core/Utils/Logger.js';
-import { GroupFormData } from '../Types/types.js';
+import { GroupService } from '../Service/Groupservice';
+import { uploadMedia } from '../../../core/Utils/Cloudinary';
+import { ServiceError } from '../../../core/Utils/ErrorHandler';
+import logger from '../../../core/Utils/Logger';
+import { GroupFormData } from '../Types/types';
 
 export class GroupController {
   private groupService: GroupService;

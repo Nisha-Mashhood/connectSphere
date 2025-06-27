@@ -1,6 +1,6 @@
 import { Request, Response } from 'express';
-import { UserConnectionService } from '../Service/UserCollaboartionService.js';
-import logger from '../../../core/Utils/Logger.js';
+import { UserConnectionService } from '../Service/UserCollaboartionService';
+import logger from '../../../core/Utils/Logger';
 
 export class UserConnectionController {
   private userConnectionService: UserConnectionService;

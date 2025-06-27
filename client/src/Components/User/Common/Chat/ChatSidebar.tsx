@@ -3,8 +3,6 @@ import { Card, CardBody, Avatar, Input, Chip, Tabs, Tab, Badge } from "@nextui-o
 import { Contact, Notification } from "../../../../types";
 import { FaSearch, FaUserFriends, FaUsers, FaGraduationCap } from "react-icons/fa";
 import { getChatKey } from "./utils/contactUtils";
-// import { useSelector } from "react-redux";
-// import { RootState } from "../../../../redux/store";
 
 interface ChatSidebarProps {
   contacts: Contact[];

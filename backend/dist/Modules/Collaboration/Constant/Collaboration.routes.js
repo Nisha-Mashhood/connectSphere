@@ -14,7 +14,7 @@ export const COLLABORATION_ROUTES = {
     UpdateTimeslot: '/updateTimeslot/:collabId',
     ApproveTimeSlot: '/approveTimeSlot/:collabId',
     GetLockedSlots: '/locked-slots/:mentorId',
-    GetAllMentorRequests: '/collaborations/admin/requests',
-    GetAllCollabs: '/collaborations/admin',
+    GetAllMentorRequests: '/getAllRequest',
+    GetAllCollabs: '/getAllCollab',
 };
 //# sourceMappingURL=Collaboration.routes.js.map

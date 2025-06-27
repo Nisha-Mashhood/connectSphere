@@ -1,8 +1,8 @@
 import { Router } from 'express';
-import { ContactController } from '../Controllers/ContactController.js';
-import { apiLimiter } from '../../../middlewares/ratelimit.middleware.js';
-import { AuthMiddleware } from '../../../middlewares/auth.middleware.js';
-import { CONTACT_ROUTES } from '../Constant/Contact.routes.js';
+import { ContactController } from '../Controllers/ContactController';
+import { apiLimiter } from '../../../middlewares/ratelimit.middleware';
+import { AuthMiddleware } from '../../../middlewares/auth.middleware';
+import { CONTACT_ROUTES } from '../Constant/Contact.routes';
 
 const router = Router();
 const contactController = new ContactController();

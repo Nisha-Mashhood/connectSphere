@@ -1,9 +1,9 @@
-import { BaseService } from '../../../core/Services/BaseService.js';
-import { ServiceError } from '../../../core/Utils/ErrorHandler.js';
-import logger from '../../../core/Utils/Logger.js';
-import { ReviewRepository } from '../Repositry/ReviewRepositry.js';
-import { UserRepository } from '../../Auth/Repositry/UserRepositry.js';
-import { IReview } from '../../../Interfaces/models/IReview.js';
+import { BaseService } from '../../../core/Services/BaseService';
+import { ServiceError } from '../../../core/Utils/ErrorHandler';
+import logger from '../../../core/Utils/Logger';
+import { ReviewRepository } from '../Repositry/ReviewRepositry';
+import { UserRepository } from '../../Auth/Repositry/UserRepositry';
+import { IReview } from '../../../Interfaces/models/IReview';
 
 export class ReviewService extends BaseService {
   private reviewRepo: ReviewRepository;

@@ -1,8 +1,8 @@
-import { BaseRepository } from "../../../core/Repositries/BaseRepositry.js";
-import { RepositoryError } from "../../../core/Utils/ErrorHandler.js";
-import logger from "../../../core/Utils/Logger.js";
-import { SkillInterface as ISkill } from "../../../Interfaces/models/SkillInterface.js";
-import { Skill } from "../../../models/skills.model.js";
+import { BaseRepository } from "../../../core/Repositries/BaseRepositry";
+import { RepositoryError } from "../../../core/Utils/ErrorHandler";
+import logger from "../../../core/Utils/Logger";
+import { SkillInterface as ISkill } from "../../../Interfaces/models/SkillInterface";
+import { Skill } from "../../../models/skills.model";
 
 export class SkillsRepository extends BaseRepository<ISkill> {
   constructor() {

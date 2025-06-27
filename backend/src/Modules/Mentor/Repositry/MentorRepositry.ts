@@ -1,10 +1,10 @@
 import { Types, Model } from "mongoose";
-import { BaseRepository } from "../../../core/Repositries/BaseRepositry.js";
-import { RepositoryError } from "../../../core/Utils/ErrorHandler.js";
-import logger from "../../../core/Utils/Logger.js";
-import Mentor from "../../../models/mentor.model.js";
-import { IMentor } from "../../../Interfaces/models/IMentor.js";
-import { UserInterface } from "../../../Interfaces/models/IUser.js";
+import { BaseRepository } from "../../../core/Repositries/BaseRepositry";
+import { RepositoryError } from "../../../core/Utils/ErrorHandler";
+import logger from "../../../core/Utils/Logger";
+import Mentor from "../../../models/mentor.model";
+import { IMentor } from "../../../Interfaces/models/IMentor";
+import { UserInterface } from "../../../Interfaces/models/IUser";
 
 export class MentorRepository extends BaseRepository<IMentor> {
   constructor() {

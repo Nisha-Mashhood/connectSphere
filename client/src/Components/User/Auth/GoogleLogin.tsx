@@ -36,9 +36,10 @@ const GoogleLogin = () => {
           // Navigate to the homepage
           navigate('/');
         }
-      } catch (error: any) {
+      } catch (error) {
         dispatch(signinFailure(error.message));
-        toast.error(error.message || 'Google login failed');
+        toast.error('Google login failed');
+        console.log("Google Login failed : ",error.message)
       }
     },
     onError: () => {

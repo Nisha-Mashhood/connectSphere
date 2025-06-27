@@ -1,6 +1,6 @@
-import logger from '../Utils/Logger.js';
-import { ServiceError } from '../Utils/ErrorHandler.js';
-import { IBaseService } from '../Interfaces/IBaseService.js';
+import logger from '../Utils/Logger';
+import { ServiceError } from '../Utils/ErrorHandler';
+import { IBaseService } from '../Interfaces/IBaseService';
 
 export abstract class BaseService implements IBaseService {
   // Check if data is provided

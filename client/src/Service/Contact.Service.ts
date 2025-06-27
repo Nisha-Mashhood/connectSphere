@@ -70,7 +70,7 @@ export const getUserContacts = async (): Promise<Contact[]> => {
     const contacts = response.data.data || response.data;
     // console.log("Extracted contacts:", contacts);
     return contacts;
-  } catch (error: any) {
+  } catch (error) {
     console.error("Error fetching contacts:", {
       message: error.message,
       status: error.response?.status,

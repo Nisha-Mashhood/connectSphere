@@ -1,22 +1,13 @@
 import express from 'express';
-import { FeedbackController } from '../Controllers/FeedBackController.js';
-import { apiLimiter } from '../../../middlewares/ratelimit.middleware.js';
-import { AuthMiddleware } from '../../../middlewares/auth.middleware.js';
-import { FEEDBACK_ROUTES } from '../Constant/Feedback.routes.js';
+import { FeedbackController } from '../Controllers/FeedBackController';
+import { apiLimiter } from '../../../middlewares/ratelimit.middleware';
+import { AuthMiddleware } from '../../../middlewares/auth.middleware';
+import { FEEDBACK_ROUTES } from '../Constant/Feedback.routes';
 
 const router = express.Router();
 const feedbackController = new FeedbackController();
 const authMiddleware = new AuthMiddleware();
 
-// const FEEDBACK_ROUTES = {
-//   SendFeedback: '/send-feedback',
-//   GetFeedbackForProfile: '/profile/:profileId/:profileType',
-//   GetFeedbackByCollabId: '/get-feedbackByCollabId/:collabId',
-//   ToggleVisibility: '/toggle-visibility/:feedbackId',
-//   GetFeedbackByMentorId: '/get-feedbackByMentorId/:mentorId',
-//   GetMentorFeedbacks: '/mentor/:mentorId',
-//   GetUserFeedbacks: '/user/:userId',
-// } as const;
 
 router.post(
   FEEDBACK_ROUTES.SendFeedback,

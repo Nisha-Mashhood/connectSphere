@@ -31,7 +31,7 @@ return response.data.data
 
   
   //Fetch categories
-  export const fetchCategoriesService = async (): Promise<any[]> => {
+  export const fetchCategoriesService = async () => {
     try {
       const response = await axiosInstance.get("category/get-categories");
       return response.data.data;
@@ -41,7 +41,7 @@ return response.data.data
   };
 
   // Update category
-export const updateCategory = async (editingCategoryId: string, formData: any) => {
+export const updateCategory = async (editingCategoryId: string, formData) => {
     try {
       const response = await axiosInstance.put(
         `category/update-category/${editingCategoryId}`,
@@ -66,7 +66,7 @@ export const updateCategory = async (editingCategoryId: string, formData: any) =
   };
 
   // Fetch subcategories
-export const fetchSubCategoriesService = async (categoryId: string): Promise<any[]> => {
+export const fetchSubCategoriesService = async (categoryId: string) => {
     try {
       const response = await axiosInstance.get(
         `subcategory/get-subcategories/${categoryId}`
@@ -78,7 +78,7 @@ export const fetchSubCategoriesService = async (categoryId: string): Promise<any
   };
   
   // Update subcategory
-  export const updateSubCategory = async (editingSubCategoryId: string, formData: any) => {
+  export const updateSubCategory = async (editingSubCategoryId: string, formData) => {
     try {
       const response = await axiosInstance.put(
         `subcategory/update-subcategory/${editingSubCategoryId}`,
@@ -103,7 +103,7 @@ export const fetchSubCategoriesService = async (categoryId: string): Promise<any
   };
   
   // Fetch skills
-  export const fetchSkillsService = async (subcategoryId: string): Promise<any[]> => {
+  export const fetchSkillsService = async (subcategoryId: string) => {
     try {
       const response = await axiosInstance.get(
         `skills/get-skills/${subcategoryId}`
@@ -115,7 +115,7 @@ export const fetchSubCategoriesService = async (categoryId: string): Promise<any
   };
   
   // Update skill
-  export const updateSkill = async (editingSkillId: string, formData: any) => {
+  export const updateSkill = async (editingSkillId: string, formData) => {
     try {
       const response = await axiosInstance.put(
         `skills/update-skill/${editingSkillId}`,

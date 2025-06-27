@@ -1,8 +1,8 @@
 import { Request, Response } from 'express';
-import { CategoryService } from '../Service/CategoryService.js';
-import { BaseController } from '../../../core/Controller/BaseController.js';
-import logger from "../../../core/Utils/Logger.js";
-import { CategoryRequest } from '../Types/types.js';
+import { CategoryService } from '../Service/CategoryService';
+import { BaseController } from '../../../core/Controller/BaseController';
+import logger from "../../../core/Utils/Logger";
+import { CategoryRequest } from '../Types/types';
 
 
 

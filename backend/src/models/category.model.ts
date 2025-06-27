@@ -1,7 +1,7 @@
 import mongoose, { Schema, Model } from "mongoose";
-import { generateCustomId } from "../core/Utils/IdGenerator.js";
-import { CategoryInterface } from "../Interfaces/models/CategoryInterface.js";
-import logger from "../core/Utils/Logger.js";
+import { generateCustomId } from "../core/Utils/IdGenerator";
+import { CategoryInterface } from "../Interfaces/models/CategoryInterface";
+import logger from "../core/Utils/Logger";
 
 // Category Schema
 const categorySchema: Schema<CategoryInterface> = new mongoose.Schema(

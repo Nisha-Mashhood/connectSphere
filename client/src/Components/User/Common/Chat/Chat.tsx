@@ -30,7 +30,6 @@ const Chat: React.FC = () => {
   const [contacts, setContacts] = useState<Contact[]>([]);
   const [selectedContact, setSelectedContact] = useState<Contact | null>(null);
   const [allMessages, setAllMessages] = useState<Map<string, IChatMessage[]>>(new Map());
-  // const { chatNotifications } = useSelector((state: RootState) => state.notification);
   const [unreadCounts, setUnreadCounts] = useState<{ [key: string]: number }>({});
   const [typingUsers, setTypingUsers] = useState<{ [key: string]: string[] }>({});
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
@@ -60,7 +59,7 @@ const Chat: React.FC = () => {
         const data = await getUnreadMessages(currentUser._id);
         console.log("Unread Messages:", data);
         setUnreadCounts(data);
-      } catch (error: any) {
+      } catch (error) {
         console.error("Error fetching unread counts:", error);
         toast.error(`Error fetching unread counts: ${error.message}`);
       }
@@ -139,7 +138,7 @@ const Chat: React.FC = () => {
         console.log("playRingtone: Attempting to play audio");
         await ringtone.current.play();
         console.log("playRingtone: Ringtone playing successfully");
-      } catch (error: any) {
+      } catch (error) {
         isRingtonePlaying.current = false;
         console.error("playRingtone: Ringtone playback error:", error);
         if (error.name === "NotAllowedError") {
@@ -341,8 +340,9 @@ const Chat: React.FC = () => {
   const fetchContacts = async () => {
     try {
       const contactData = await getUserContacts();
+      console.log("Fetched Contacts : ", contactData);
       const formattedContacts = contactData.map(formatContact);
-      // console.log("Received contacts :",formattedContacts);
+      console.log("Received contacts :",formattedContacts);
       setContacts(formattedContacts);
       setInitialContact(formattedContacts);
     } catch (error) {

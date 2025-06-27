@@ -1,13 +1,13 @@
-import { BaseService } from '../../../core/Services/BaseService.js';
-import { ServiceError } from '../../../core/Utils/ErrorHandler.js';
-import logger from '../../../core/Utils/Logger.js';
-import { NotificationRepository } from '../Repositry/NotificationRepositry.js';
-import { UserRepository } from '../../Auth/Repositry/UserRepositry.js';
-import { AppNotification as IAppNotification } from '../../../Interfaces/models/AppNotification.js';
-import { ITask } from '../../../Interfaces/models/ITask.js';
+import { BaseService } from '../../../core/Services/BaseService';
+import { ServiceError } from '../../../core/Utils/ErrorHandler';
+import logger from '../../../core/Utils/Logger';
+import { NotificationRepository } from '../Repositry/NotificationRepositry';
+import { UserRepository } from '../../Auth/Repositry/UserRepositry';
+import { AppNotification as IAppNotification } from '../../../Interfaces/models/AppNotification';
+import { ITask } from '../../../Interfaces/models/ITask';
 import { Server } from 'socket.io';
-import { notificationEmitter } from '../../../socket/socket.js';
-import { convertTo24HourFormat } from '../Utils/Helper.js';
+import { SocketService } from '../../../socket/SocketService';
+import { convertTo24HourFormat } from '../Utils/Helper';
 
 let io: Server | null = null;
 
@@ -189,7 +189,7 @@ export class NotificationService extends BaseService {
 
         notifications.push(payload);
         if (isConnected && io) {
-          notificationEmitter.emit('notification', payload);
+          SocketService.notificationEmitter.emit('notification', payload);
           logger.info(`Emitted notification ${notification._id} to user ${userId} for task ${task.taskId}`);
         } else {
           logger.info(`Stored notification ${notification._id} for offline user ${userId} on task ${task.taskId}`);
@@ -292,7 +292,7 @@ export class NotificationService extends BaseService {
             updatedAt: notification.updatedAt,
             taskContext: notification.taskContext,
           };
-          notificationEmitter.emit('notification', payload);
+          SocketService.notificationEmitter.emit('notification', payload);
           logger.info(`Emitted notification ${notification._id} to user ${userId}`);
         }
       }
@@ -330,7 +330,7 @@ export class NotificationService extends BaseService {
           updatedAt: notification.updatedAt,
           taskContext: notification.taskContext,
         };
-        notificationEmitter.emit('notification.updated', payload);
+        SocketService.notificationEmitter.emit('notification.updated', payload);
       }
       return notification;
     } catch (error: any) {

@@ -1,7 +1,7 @@
 import mongoose, { Schema, Model } from "mongoose";
-import { generateCustomId } from "../core/Utils/IdGenerator.js";
-import { SkillInterface } from "../Interfaces/models/SkillInterface.js";
-import logger from "../core/Utils/Logger.js";
+import { generateCustomId } from "../core/Utils/IdGenerator";
+import { SkillInterface } from "../Interfaces/models/SkillInterface";
+import logger from "../core/Utils/Logger";
 
 // Skill Schema
 const skillSchema: Schema<SkillInterface> = new Schema(

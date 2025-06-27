@@ -1,8 +1,8 @@
-import { BaseRepository } from "../../../core/Repositries/BaseRepositry.js";
-import { RepositoryError } from "../../../core/Utils/ErrorHandler.js";
-import logger from "../../../core/Utils/Logger.js";
-import { CategoryInterface as ICategory } from "../../../Interfaces/models/CategoryInterface.js";
-import { Category } from "../../../models/category.model.js";
+import { BaseRepository } from "../../../core/Repositries/BaseRepositry";
+import { RepositoryError } from "../../../core/Utils/ErrorHandler";
+import logger from "../../../core/Utils/Logger";
+import { CategoryInterface as ICategory } from "../../../Interfaces/models/CategoryInterface";
+import { Category } from "../../../models/category.model";
 
 export class CategoryRepository extends BaseRepository<ICategory> {
   constructor() {

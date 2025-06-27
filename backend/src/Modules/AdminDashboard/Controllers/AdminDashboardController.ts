@@ -1,5 +1,5 @@
 import { Request, Response } from "express";
-import AdminService from "../Service/AdminDashboardService.js";
+import AdminService from "../Service/AdminDashboardService";
 
 class AdminController {
    getTotalUsersCount = async(_req: Request, res: Response) => {

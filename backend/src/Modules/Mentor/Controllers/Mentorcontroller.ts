@@ -1,9 +1,9 @@
 import { Request, Response } from 'express';
-import { BaseController } from '../../../core/Controller/BaseController.js';
-import { MentorService } from '../Service/Mentorservice.js';
-import { AuthService } from '../../Auth/Service/AuthService.js';
-import { UserRepository } from '../../Auth/Repositry/UserRepositry.js';
-import { uploadMedia } from '../../../core/Utils/Cloudinary.js';
+import { BaseController } from '../../../core/Controller/BaseController';
+import { MentorService } from '../Service/Mentorservice';
+import { AuthService } from '../../Auth/Service/AuthService';
+import { UserRepository } from '../../Auth/Repositry/UserRepositry';
+import { uploadMedia } from '../../../core/Utils/Cloudinary';
 
 
 export class MentorController extends BaseController {

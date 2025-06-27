@@ -1,5 +1,5 @@
 import { Types } from 'mongoose';
-import { TimeSlot } from '../../../Interfaces/models/GroupDocument.js';
+import { TimeSlot } from '../../../Interfaces/models/GroupDocument';
 
 export interface GroupFormData {
   name: string;

@@ -20,10 +20,10 @@ export const fetchMentorRequests = async (
   sort: string = "desc"
 ) => {
   try {
-    const { data } = await axiosInstance.get("/mentors/getallmentorrequest", {
+    const response = await axiosInstance.get("/mentors/getallmentorrequest", {
       params: { page, limit, search, status, sort },
     });
-    return data;
+    return response.data.data;
   } catch (error) {
     handleError(error);
   }

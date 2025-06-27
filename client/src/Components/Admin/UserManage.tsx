@@ -31,8 +31,10 @@ const UserManagementList = () => {
     const getUsers = async () => {
       try {
         const data = await fetchAllUsers();
-        setUsers(data);
+        console.log("Users: ",data);
+        setUsers(data.users);
       } catch (error) {
+        console.log(error)
         toast.error("Failed to fetch users");
       }
     };
@@ -54,9 +56,10 @@ const UserManagementList = () => {
       }
       // Refresh user list
       const updatedUsers = await fetchAllUsers();
-      setUsers(updatedUsers);
+      setUsers(updatedUsers.users);
       toast.success(`User ${currentBlockStatus ? 'unblocked' : 'blocked'} successfully`);
     } catch (error) {
+      console.log(error)
       toast.error(`Failed to ${currentBlockStatus ? 'unblock' : 'block'} user`);
     }
   };

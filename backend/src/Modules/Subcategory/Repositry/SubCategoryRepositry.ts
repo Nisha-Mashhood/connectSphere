@@ -1,8 +1,8 @@
-import { BaseRepository } from "../../../core/Repositries/BaseRepositry.js";
-import { RepositoryError } from "../../../core/Utils/ErrorHandler.js";
-import logger from "../../../core/Utils/Logger.js";
-import { SubcategoryInterface as ISubcategory } from "../../../Interfaces/models/SubcategoryInterface.js";
-import { Subcategory } from "../../../models/subcategory.model.js";
+import { BaseRepository } from "../../../core/Repositries/BaseRepositry";
+import { RepositoryError } from "../../../core/Utils/ErrorHandler";
+import logger from "../../../core/Utils/Logger";
+import { SubcategoryInterface as ISubcategory } from "../../../Interfaces/models/SubcategoryInterface";
+import { Subcategory } from "../../../models/subcategory.model";
 
 export class SubcategoryRepository extends BaseRepository<ISubcategory> {
   constructor() {

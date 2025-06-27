@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { useNavigate } from "react-router-dom";
 import { useSelector } from "react-redux";
 import { RootState } from "../../../redux/store";
@@ -15,7 +15,7 @@ const MyMentorProfilePage = () => {
 
   
   // Fetch mentor profile and requests
-  const fetchRequests = async () => {
+  const fetchRequests = useCallback(async () => {
     try {
       const mentorResponse = await checkMentorProfile(currentUser._id);
       const mentor = mentorResponse.mentor;
@@ -25,14 +25,15 @@ const MyMentorProfilePage = () => {
       const data = await getAllRequest(mentor._id);
       setRequests(data.requests);
       console.log("Requests:", data);
-    } catch (error: any) {
+    } catch (error) {
+      toast.error("Error in fetching the Request");
       console.error("Error fetching requests:", error.message);
     }
-  };
+  },[currentUser])
 
   useEffect(() => {
     fetchRequests();
-  }, []);
+  }, [fetchRequests]);
 
   // Handle accept button
   const handleAccept = async (requestId: string) => {
@@ -40,7 +41,8 @@ const MyMentorProfilePage = () => {
       await acceptTheRequest(requestId);
       toast.success("Request Accepted!");
       fetchRequests(); // Refresh the requests list
-    } catch (error: any) {
+    } catch (error) {
+      toast.error("Error in accepting the request")
       console.error("Error accepting the request:", error.message);
     }
   };
@@ -51,7 +53,8 @@ const MyMentorProfilePage = () => {
       await rejectTheRequest(requestId);
       toast.success("Request Rejected!");
       fetchRequests(); // Refresh the requests list
-    } catch (error: any) {
+    } catch (error) {
+      toast.error("Error in Rejecting the request");
       console.error("Error rejecting the request:", error.message);
     }
   };

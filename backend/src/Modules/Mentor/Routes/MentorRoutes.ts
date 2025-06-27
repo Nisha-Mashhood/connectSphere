@@ -1,9 +1,9 @@
 import { Router } from 'express';
-import { MentorController } from '../Controllers/Mentorcontroller.js';
-import { apiLimiter } from '../../../middlewares/ratelimit.middleware.js';
-import { AuthMiddleware } from '../../../middlewares/auth.middleware.js';
-import { upload } from '../../../core/Utils/Multer.js';
-import { MENTOR_ROUTES } from '../Constant/Mentor.routes.js';
+import { MentorController } from '../Controllers/Mentorcontroller';
+import { apiLimiter } from '../../../middlewares/ratelimit.middleware';
+import { AuthMiddleware } from '../../../middlewares/auth.middleware';
+import { upload } from '../../../core/Utils/Multer';
+import { MENTOR_ROUTES } from '../Constant/Mentor.routes';
 
 const router = Router();
 const mentorController = new MentorController();

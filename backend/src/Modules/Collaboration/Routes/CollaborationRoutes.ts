@@ -1,31 +1,13 @@
 import { Router } from 'express';
-import { CollaborationController } from '../Controllers/CollaborationController.js';
-import { apiLimiter } from '../../../middlewares/ratelimit.middleware.js';
-import { AuthMiddleware } from '../../../middlewares/auth.middleware.js';
+import { CollaborationController } from '../Controllers/CollaborationController';
+import { apiLimiter } from '../../../middlewares/ratelimit.middleware';
+import { AuthMiddleware } from '../../../middlewares/auth.middleware';
+import { COLLABORATION_ROUTES } from '../Constant/Collaboration.routes';
 
 const router = Router();
 const collabController = new CollaborationController();
 const authMiddleware = new AuthMiddleware();
 
-export const COLLABORATION_ROUTES = {
-  CreateMentorProfile: '/create-mentorprofile',
-  GetMentorRequests: '/get-mentor-requests',
-  AcceptRequest: '/accept-request/:id',
-  RejectRequest: '/reject-request/:id',
-  GetUserRequests: '/get-user-requests/:id',
-  ProcessPayment: '/process-payment',
-  GetCollabDataUser: '/get-collabData-user/:id',
-  GetCollabDataMentor: '/get-collabData-mentor/:id',
-  CancelCollab: '/cancel-collab/:collabId',
-  GetCollab: '/getCollab/:collabId',
-  GetCollabRequest: '/getCollabRequset/:requestId',
-  MarkUnavailable: '/markUnavailable/:collabId',
-  UpdateTimeslot: '/updateTimeslot/:collabId',
-  ApproveTimeSlot: '/approveTimeSlot/:collabId',
-  GetLockedSlots: '/locked-slots/:mentorId',
-  GetAllMentorRequests: '/collaborations/admin/requests',
-  GetAllCollabs: '/collaborations/admin',
-} as const;
 
 router.post(COLLABORATION_ROUTES.CreateMentorProfile, [apiLimiter, authMiddleware.verifyToken, authMiddleware.checkBlockedStatus], collabController.TemporaryRequestController);
 router.get(COLLABORATION_ROUTES.GetMentorRequests, [apiLimiter, authMiddleware.verifyToken, authMiddleware.checkBlockedStatus], collabController.getMentorRequestsController);

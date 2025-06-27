@@ -1,6 +1,6 @@
 import { Request, Response } from 'express';
-import { ReviewService } from '../Service/ReviewService.js';
-import logger from '../../../core/Utils/Logger.js';
+import { ReviewService } from '../Service/ReviewService';
+import logger from '../../../core/Utils/Logger';
 
 export class ReviewController {
   private reviewService: ReviewService;

@@ -14,7 +14,7 @@ export const fetchChatMessages = async (
       params: { contactId, groupId, page, limit },
     });
     return response.data.data;
-  } catch (error: any) {
+  } catch (error) {
     console.error("Error fetching chat messages:", error.message);
     throw error;
   }
@@ -44,7 +44,7 @@ export const uploadMedia = async (
       onUploadProgress, 
     });
     return response.data.data;
-  } catch (error: any) {
+  } catch (error) {
     console.error("Error uploading media:", error.message);
     throw error;
   }
@@ -56,7 +56,7 @@ export const getUnreadMessages = async(userId: string) =>{
       params: { userId },
     });
     return response.data.data;
-  } catch (error: any) {
+  } catch (error) {
     console.error("Error fetching chat messages:", error.message);
     throw error;
   }

@@ -1,15 +1,15 @@
-import { BaseService } from '../../../core/Services/BaseService.js';
-import { GroupRepository } from '../Repositry/GroupRepositry.js';
-import { ContactRepository } from '../../Contact/Repositry/ContactRepositry.js';
-import { UserRepository } from '../../Auth/Repositry/UserRepositry.js';
-import { sendEmail } from '../../../core/Utils/Email.js';
-import stripe from '../../../core/Utils/Stripe.js';
+import { BaseService } from '../../../core/Services/BaseService';
+import { GroupRepository } from '../Repositry/GroupRepositry';
+import { ContactRepository } from '../../Contact/Repositry/ContactRepositry';
+import { UserRepository } from '../../Auth/Repositry/UserRepositry';
+import { sendEmail } from '../../../core/Utils/Email';
+import stripe from '../../../core/Utils/Stripe';
 import { v4 as uuid } from 'uuid';
-import logger from '../../../core/Utils/Logger.js';
-import { GroupDocument } from '../../../Interfaces/models/GroupDocument.js';
-import { GroupRequestDocument } from '../../../Interfaces/models/GroupRequestDocument.js';
-import { ServiceError } from '../../../core/Utils/ErrorHandler.js';
-import { GroupFormData } from '../Types/types.js';
+import logger from '../../../core/Utils/Logger';
+import { GroupDocument } from '../../../Interfaces/models/GroupDocument';
+import { GroupRequestDocument } from '../../../Interfaces/models/GroupRequestDocument';
+import { ServiceError } from '../../../core/Utils/ErrorHandler';
+import { GroupFormData } from '../Types/types';
 
 export class GroupService extends BaseService {
   private groupRepo: GroupRepository;

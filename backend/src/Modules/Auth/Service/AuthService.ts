@@ -1,17 +1,17 @@
-import { BaseService } from "../../../core/Services/BaseService.js";
-import { ServiceError } from "../../../core/Utils/ErrorHandler.js";
-import { UserRepository } from "../Repositry/UserRepositry.js";
-import { UserInterface as IUser } from "../../../Interfaces/models/IUser.js";
+import { BaseService } from "../../../core/Services/BaseService";
+import { ServiceError } from "../../../core/Utils/ErrorHandler";
+import { UserRepository } from "../Repositry/UserRepositry";
+import { UserInterface as IUser } from "../../../Interfaces/models/IUser";
 import bcrypt from "bcryptjs";
-import { AuthService as JWTService } from "../Utils/JWT.js"
-import { generateOTP } from "../Utils/OTP.js";
-import { sendEmail } from "../../../core/Utils/Email.js";
-import config from "../../../config/env.config.js";
-import { uploadMedia } from "../../../core/Utils/Cloudinary.js";
-import { OAuth2Client } from "../Utils/GoogleConfig.js";
+import { AuthService as JWTService } from "../Utils/JWT"
+import { generateOTP } from "../Utils/OTP";
+import { sendEmail } from "../../../core/Utils/Email";
+import config from "../../../config/env.config";
+import { uploadMedia } from "../../../core/Utils/Cloudinary";
+import { OAuth2Client } from "../Utils/GoogleConfig";
 import axios from "axios";
-import logger from "../../../core/Utils/Logger.js";
-import { ProfileUpdateData, SignupData } from "../Types/types.js";
+import logger from "../../../core/Utils/Logger";
+import { ProfileUpdateData, SignupData } from "../Types/types";
 
 // Temporary OTP storage (replace with Redis in production)
 const otpStore: Record<string, string> = {};
@@ -426,6 +426,7 @@ export class AuthService extends BaseService {
 
   // Verify admin passkey
    verifyAdminPasskey = async(passkey: string): Promise<boolean> => {
+    logger.info(`AdminPasskey from Server :${config.adminpasscode} and passkey from front end : ${passkey}`);
     try {
       if (passkey !== config.adminpasscode) {
         throw new ServiceError("Invalid admin passkey");

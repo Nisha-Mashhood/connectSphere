@@ -61,7 +61,7 @@ export const  delete_task = async(taskId) =>{
     const response = await axiosInstance.delete(`/task/delete/${taskId}`);
     return response.data.data;
   } catch(error) {
-
+     handleError(error);
   }
 }
 

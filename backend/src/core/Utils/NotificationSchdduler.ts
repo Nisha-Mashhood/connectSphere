@@ -1,7 +1,7 @@
 import cron from 'node-cron';
-import logger from './Logger.js';
-import { RepositoryError } from './ErrorHandler.js';
-import { CleanupRepository } from '../Repositries/CleanUpRepositry.js';
+import logger from './Logger';
+import { RepositoryError } from './ErrorHandler';
+import { CleanupRepository } from '../Repositries/CleanUpRepositry';
 
 export class CleanupScheduler {
   private cleanupRepo: CleanupRepository;

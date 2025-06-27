@@ -1,8 +1,8 @@
 import express from "express";
-import AdminController from "../Controllers/AdminDashboardController.js";
-import { apiLimiter } from "../../../middlewares/ratelimit.middleware.js";
-import { AuthMiddleware } from '../../../middlewares/auth.middleware.js';
-import { ADMIN_DASHBOARD_ROUTES } from "../Constant/AdminDashboard.routes.js";
+import AdminController from "../Controllers/AdminDashboardController";
+import { apiLimiter } from "../../../middlewares/ratelimit.middleware";
+import { AuthMiddleware } from '../../../middlewares/auth.middleware';
+import { ADMIN_DASHBOARD_ROUTES } from "../Constant/AdminDashboard.routes";
 
 const router = express.Router();
 const authMiddleware = new AuthMiddleware();

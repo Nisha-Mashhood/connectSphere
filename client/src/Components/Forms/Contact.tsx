@@ -28,9 +28,14 @@ const Contact = () => {
       await sendContactMessage(data);
       toast.success("Message sent successfully!");
       reset();
-    } catch (error: any) {
-      toast.error("Failed to send message. Please try again.");
-      console.error("Error sending contact message:", error.message);
+    } catch (error: unknown) {
+      if (error instanceof Error) {
+        toast.error("Failed to send message. Please try again.");
+        console.error("Error sending Message:", error.message);
+      } else {
+        toast.error("An unknown error occurred");
+        console.error("Unknown error:", error);
+      }
     }
   };
 
@@ -39,14 +44,24 @@ const Contact = () => {
       <div className="grid max-w-screen-xl grid-cols-1 gap-8 px-8 py-16 mx-auto rounded-lg md:grid-cols-2 md:px-12 lg:px-16 xl:px-32 dark:bg-gray-100 dark:text-gray-800">
         <div className="flex flex-col justify-between">
           <div className="space-y-2">
-            <h2 className="text-4xl font-bold leading-tight lg:text-5xl">Let's talk!</h2>
-            <div className="dark:text-gray-600">Share Your feedback and concerns.</div>
+            <h2 className="text-4xl font-bold leading-tight lg:text-5xl">
+              Let's talk!
+            </h2>
+            <div className="dark:text-gray-600">
+              Share Your feedback and concerns.
+            </div>
           </div>
-          <img src="assets/svg/doodle.svg" alt="" className="p-6 h-52 md:h-64" />
+          <img
+            src="assets/svg/doodle.svg"
+            alt=""
+            className="p-6 h-52 md:h-64"
+          />
         </div>
         <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
           <div>
-            <label htmlFor="name" className="text-sm">Full name</label>
+            <label htmlFor="name" className="text-sm">
+              Full name
+            </label>
             <Input
               id="name"
               label="Name"
@@ -63,7 +78,9 @@ const Contact = () => {
             />
           </div>
           <div>
-            <label htmlFor="email" className="text-sm">Email</label>
+            <label htmlFor="email" className="text-sm">
+              Email
+            </label>
             <Input
               id="email"
               label="Email"
@@ -80,7 +97,9 @@ const Contact = () => {
             />
           </div>
           <div>
-            <label htmlFor="message" className="text-sm">Message</label>
+            <label htmlFor="message" className="text-sm">
+              Message
+            </label>
             <Textarea
               id="message"
               label="Message"

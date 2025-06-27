@@ -44,9 +44,9 @@ const GithubCallback = () => {
           toast.error("Invalid authentication request");
           navigate("/login");
         }
-      } catch (error: any) {
-        console.error("Callback handling error:", error);
-        toast.error(error.message || "Authentication failed");
+      } catch (error) {
+        console.error("Callback handling error:", error.message );
+        toast.error("Authentication failed");
         navigate("/login");
       }
     };

@@ -1,15 +1,15 @@
 import { Server, Socket } from 'socket.io';
 import { EventEmitter } from 'events';
 import mongoose from 'mongoose';
-import logger from '../core/Utils/Logger.js';
-import { ContactRepository } from '../Modules/Contact/Repositry/ContactRepositry.js';
-import { GroupRepository } from '../Modules/Group/Repositry/GroupRepositry.js';
-import { ChatRepository } from '../Modules/Chat/Repositry/ChatRepositry.js';
-import { UserRepository } from '../Modules/Auth/Repositry/UserRepositry.js';
-import { NotificationService, TaskNotificationPayload } from '../Modules/Notification/Service/NotificationService.js';
-import Group from '../models/group.model.js';
-import Collaboration from '../models/collaboration.js';
-import UserConnection from '../models/userConnection.modal.js';
+import logger from '../core/Utils/Logger';
+import { ContactRepository } from '../Modules/Contact/Repositry/ContactRepositry';
+import { GroupRepository } from '../Modules/Group/Repositry/GroupRepositry';
+import { ChatRepository } from '../Modules/Chat/Repositry/ChatRepositry';
+import { UserRepository } from '../Modules/Auth/Repositry/UserRepositry';
+import { NotificationService, TaskNotificationPayload } from '../Modules/Notification/Service/NotificationService';
+import Group from '../models/group.model';
+import Collaboration from '../models/collaboration';
+import UserConnection from '../models/userConnection.modal';
 
 interface CallOffer {
   senderId: string;
@@ -61,7 +61,7 @@ interface CallData {
 
 export class SocketService {
   private io: Server | null = null;
-  private notificationEmitter: EventEmitter = new EventEmitter();
+  public static notificationEmitter: EventEmitter = new EventEmitter();
   private sentNotifications: Set<string> = new Set();
   private activeOffers: Map<string, CallOffer> = new Map();
   private endedCalls: Set<string> = new Set();
@@ -86,7 +86,7 @@ export class SocketService {
     logger.info('Socket.IO server initialized');
 
     // Subscribe to task notifications
-    this.notificationEmitter.on('notification', (notification: TaskNotificationPayload) => {
+    SocketService.notificationEmitter.on('notification', (notification: TaskNotificationPayload) => {
       this.emitTaskNotification(notification);
     });
 

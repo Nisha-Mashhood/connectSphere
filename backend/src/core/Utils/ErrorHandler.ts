@@ -1,4 +1,4 @@
-import logger from "./Logger.js";
+import logger from "./Logger";
 import { Response } from "express";
 
 // HTTP Error (Controller)

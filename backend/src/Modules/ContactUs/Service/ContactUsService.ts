@@ -1,10 +1,10 @@
-import { BaseService } from '../../../core/Services/BaseService.js';
-import { ServiceError } from '../../../core/Utils/ErrorHandler.js';
-import logger from '../../../core/Utils/Logger.js';
-import { ContactMessageRepository } from '../Repositry/ContactUsRepositry.js';
-import { IContactMessage } from '../../../Interfaces/models/IContactMessage.js';
-import { sendEmail } from '../../../core/Utils/Email.js';
-import config from '../../../config/env.config.js';
+import { BaseService } from '../../../core/Services/BaseService';
+import { ServiceError } from '../../../core/Utils/ErrorHandler';
+import logger from '../../../core/Utils/Logger';
+import { ContactMessageRepository } from '../Repositry/ContactUsRepositry';
+import { IContactMessage } from '../../../Interfaces/models/IContactMessage';
+import { sendEmail } from '../../../core/Utils/Email';
+import config from '../../../config/env.config';
 
 export class ContactMessageService extends BaseService {
   private contactMessageRepo: ContactMessageRepository;

@@ -14,7 +14,7 @@ export declare const COLLABORATION_ROUTES: {
     readonly UpdateTimeslot: "/updateTimeslot/:collabId";
     readonly ApproveTimeSlot: "/approveTimeSlot/:collabId";
     readonly GetLockedSlots: "/locked-slots/:mentorId";
-    readonly GetAllMentorRequests: "/collaborations/admin/requests";
-    readonly GetAllCollabs: "/collaborations/admin";
+    readonly GetAllMentorRequests: "/getAllRequest";
+    readonly GetAllCollabs: "/getAllCollab";
 };
 //# sourceMappingURL=Collaboration.routes.d.ts.map

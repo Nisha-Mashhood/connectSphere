@@ -1,7 +1,7 @@
 import { Response } from 'express';
-import { IBaseController } from '../Interfaces/IBaseController.js';
-import { HttpError, RepositoryError, ServiceError } from '../Utils/ErrorHandler.js';
-import logger from '../Utils/Logger.js';
+import { IBaseController } from '../Interfaces/IBaseController';
+import { HttpError, RepositoryError, ServiceError } from '../Utils/ErrorHandler';
+import logger from '../Utils/Logger';
 
 export abstract class BaseController implements IBaseController {
   sendSuccess = (res: Response, data: any, message: string = 'Success', statusCode: number = 200): void => {

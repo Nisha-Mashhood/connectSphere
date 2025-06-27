@@ -1,4 +1,4 @@
-import React, { useState, useRef, useEffect } from "react";
+import React, { useState, useRef, useEffect, useCallback } from "react";
 import { Button, Tooltip, Avatar, Dropdown, DropdownTrigger, DropdownMenu, DropdownItem, Modal, ModalContent, ModalHeader, ModalBody, ModalFooter } from "@nextui-org/react";
 import { FaArrowLeft, FaPhone, FaVideo, FaBars, FaEllipsisV, FaUserFriends, FaInfoCircle, FaMicrophone, FaMicrophoneSlash, FaVideoSlash, FaDesktop } from "react-icons/fa";
 import { Contact } from "../../../../types";
@@ -73,7 +73,7 @@ const ChatHeader: React.FC<ChatHeaderProps> = ({
       ringtone.current.currentTime = 0;
       isRingtonePlaying.current = false;
     }
-  }, [isIncomingCall, ringtone]);
+  }, [isIncomingCall, ringtone, isRingtonePlaying]);
 
   // Attempt to play ringtone when incoming call is received
   useEffect(() => {
@@ -87,6 +87,88 @@ const ChatHeader: React.FC<ChatHeaderProps> = ({
       });
     }
   }, [isIncomingCall, incomingCallData, playRingtone]);
+
+   const declineCall = useCallback(() => {
+    if (!selectedContact || !incomingCallData || isCallTerminated || !isIncomingCall) {
+      console.log("Cannot decline call: Missing data or already terminated");
+      return;
+    }
+
+    console.log(`Declining ${incomingCallData.callType} call from:`, incomingCallData.userId);
+
+    // Stop ringtone when call is accepted
+    if (ringtone.current) {
+      ringtone.current.pause();
+      ringtone.current.currentTime = 0;
+      isRingtonePlaying.current = false;
+    }
+
+    socketService.emitCallEnded(
+      incomingCallData.userId,
+      selectedContact.type,
+      incomingCallData.chatKey,
+      incomingCallData.callType
+    );
+    setIsIncomingCall(false);
+    setIncomingCallData(null);
+    setIsCallTerminated(true);
+    webrtcService.stop();
+    setLocalStream(null);
+    setRemoteStream(null);
+  },[incomingCallData, isCallTerminated, isIncomingCall, isRingtonePlaying, ringtone, selectedContact]);
+
+   const endAudioCall = useCallback(() => {
+    if (!selectedContact) return;
+    console.log("Ending audio call");
+    webrtcService.stop();
+    if (localAudioRef.current) {
+      localAudioRef.current.srcObject = null;
+    }
+    if (remoteAudioRef.current) {
+      remoteAudioRef.current.srcObject = null;
+    }
+    setLocalStream(null);
+    setRemoteStream(null);
+    setIsAudioCallActive(false);
+    setIsAudioMuted(false);
+    setHasProcessedAnswer(false);
+    setIsCallTerminated(true);
+
+    const chatKey = getChatKey(selectedContact);
+    const targetId = selectedContact.targetId || selectedContact.groupId || "";
+    socketService.emitCallEnded(targetId, selectedContact.type, chatKey, "audio");
+    console.log("Audio call ended");
+  },[getChatKey, selectedContact]);
+
+  
+
+  const endVideoCall = useCallback(() => {
+    if (!selectedContact) return;
+    console.log("Ending video call");
+    webrtcService.stop();
+    if (localVideoRef.current) {
+      localVideoRef.current.srcObject = null;
+    }
+    if (remoteVideoRef.current) {
+      remoteVideoRef.current.srcObject = null;
+    }
+    setLocalStream(null);
+    setRemoteStream(null);
+    setIsVideoCallActive(false);
+    setIsAudioMuted(false);
+    setIsVideoOff(false);
+    setIsScreenSharing(false);
+    setHasProcessedAnswer(false);
+    setIsCallTerminated(true);
+
+    const chatKey = getChatKey(selectedContact);
+    const targetId = selectedContact.targetId || selectedContact.groupId || "";
+    socketService.emitCallEnded(targetId, selectedContact.type, chatKey, "video");
+    console.log("Video call ended");
+  },[getChatKey, selectedContact, setIsVideoCallActive]
+);
+
+
 
   // Initialize WebRTC and socket listeners
   useEffect(() => {
@@ -260,7 +342,7 @@ const ChatHeader: React.FC<ChatHeaderProps> = ({
       socketService.socket?.off("callEnded", handleCallEnded);
       socketService.socket?.off("notification.new", handleNotificationNew);
     };
-  }, [selectedContact, getChatKey, isVideoCallActive, isAudioCallActive]);
+  }, [selectedContact, getChatKey, isVideoCallActive, isAudioCallActive, hasProcessedAnswer, endAudioCall, endVideoCall]);
 
   // Auto-decline incoming call after 30 seconds
   useEffect(() => {
@@ -272,7 +354,7 @@ const ChatHeader: React.FC<ChatHeaderProps> = ({
       }, 30000);
     }
     return () => clearTimeout(timeout);
-  }, [isIncomingCall, incomingCallData, selectedContact]);
+  }, [isIncomingCall, incomingCallData, selectedContact, declineCall]);
 
   // Cleanup WebRTC on component unmount
   useEffect(() => {
@@ -289,7 +371,7 @@ const ChatHeader: React.FC<ChatHeaderProps> = ({
       setIsVideoOff(false);
       setIsScreenSharing(false);
     };
-  }, []);
+  }, [setIsVideoCallActive]);
 
   // Assign streams to audio/video elements
   useEffect(() => {
@@ -587,82 +669,6 @@ const ChatHeader: React.FC<ChatHeaderProps> = ({
     }
   };
 
-  const declineCall = () => {
-    if (!selectedContact || !incomingCallData || isCallTerminated || !isIncomingCall) {
-      console.log("Cannot decline call: Missing data or already terminated");
-      return;
-    }
-
-    console.log(`Declining ${incomingCallData.callType} call from:`, incomingCallData.userId);
-
-    // Stop ringtone when call is accepted
-    if (ringtone.current) {
-      ringtone.current.pause();
-      ringtone.current.currentTime = 0;
-      isRingtonePlaying.current = false;
-    }
-
-    socketService.emitCallEnded(
-      incomingCallData.userId,
-      selectedContact.type,
-      incomingCallData.chatKey,
-      incomingCallData.callType
-    );
-    setIsIncomingCall(false);
-    setIncomingCallData(null);
-    setIsCallTerminated(true);
-    webrtcService.stop();
-    setLocalStream(null);
-    setRemoteStream(null);
-  };
-
-  const endVideoCall = () => {
-    if (!selectedContact) return;
-    console.log("Ending video call");
-    webrtcService.stop();
-    if (localVideoRef.current) {
-      localVideoRef.current.srcObject = null;
-    }
-    if (remoteVideoRef.current) {
-      remoteVideoRef.current.srcObject = null;
-    }
-    setLocalStream(null);
-    setRemoteStream(null);
-    setIsVideoCallActive(false);
-    setIsAudioMuted(false);
-    setIsVideoOff(false);
-    setIsScreenSharing(false);
-    setHasProcessedAnswer(false);
-    setIsCallTerminated(true);
-
-    const chatKey = getChatKey(selectedContact);
-    const targetId = selectedContact.targetId || selectedContact.groupId || "";
-    socketService.emitCallEnded(targetId, selectedContact.type, chatKey, "video");
-    console.log("Video call ended");
-  };
-
-  const endAudioCall = () => {
-    if (!selectedContact) return;
-    console.log("Ending audio call");
-    webrtcService.stop();
-    if (localAudioRef.current) {
-      localAudioRef.current.srcObject = null;
-    }
-    if (remoteAudioRef.current) {
-      remoteAudioRef.current.srcObject = null;
-    }
-    setLocalStream(null);
-    setRemoteStream(null);
-    setIsAudioCallActive(false);
-    setIsAudioMuted(false);
-    setHasProcessedAnswer(false);
-    setIsCallTerminated(true);
-
-    const chatKey = getChatKey(selectedContact);
-    const targetId = selectedContact.targetId || selectedContact.groupId || "";
-    socketService.emitCallEnded(targetId, selectedContact.type, chatKey, "audio");
-    console.log("Audio call ended");
-  };
 
   return (
     <div

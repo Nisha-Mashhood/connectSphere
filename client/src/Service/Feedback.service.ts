@@ -2,7 +2,7 @@ import { axiosInstance } from "../lib/axios";
 import { handleError } from "./ErrorHandler";
 
 //Send feedback (create a feedback document)
-export const sendFeedBack = async (feedbackData: any) => {
+export const sendFeedBack = async (feedbackData) => {
     try {
       const response = await axiosInstance.post("/feedback/send-feedback", feedbackData);
       return response.data.data;

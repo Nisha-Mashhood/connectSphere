@@ -103,7 +103,7 @@ const FeedbackModal = ({ isOpen, onClose, collaborationData, onComplete }) => {
     return newErrors;
   };
 
-  const handleInputChange = (field: keyof IFeedbackData, value: any) => {
+  const handleInputChange = <K extends keyof IFeedbackData>(field: K, value: IFeedbackData[K]) => {
     setFeedback((prev) => ({ ...prev, [field]: value }));
     const newErrors = validateForm();
     setErrors((prev) => ({ ...prev, [field]: newErrors[field] }));

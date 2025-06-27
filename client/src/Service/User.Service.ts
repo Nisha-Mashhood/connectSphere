@@ -49,7 +49,6 @@ export const unblockUserService = async (userId) => {
 export const updateUserRoleService = async (id, role) => {
   try {
     const response = await axiosInstance.put(`/auth/changerole/${id}`, { role });
-    toast.success("User role updated successfully");
     return response.data.data;
   } catch (error) {
     handleError(error)
@@ -94,6 +93,6 @@ export const updateContactInfo = async (userId: string, data: { email: string; p
     const response = await axiosInstance.put(`/auth/updateUserDetails/${userId}`, data);
     return response.data.data;
   } catch (error) {
-    throw error;
+    handleError(error)
   }
 };

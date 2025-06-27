@@ -1,10 +1,10 @@
 import { Types, Model } from 'mongoose';
-import { BaseRepository } from '../../../core/Repositries/BaseRepositry.js';
-import { RepositoryError } from '../../../core/Utils/ErrorHandler.js';
-import logger from '../../../core/Utils/Logger.js';
-import Contact from '../../../models/contacts.model.js';
-import { IContact } from '../../../Interfaces/models/IContact.js';
-import { PopulatedContact } from '../Types/types.js';
+import { BaseRepository } from '../../../core/Repositries/BaseRepositry';
+import { RepositoryError } from '../../../core/Utils/ErrorHandler';
+import logger from '../../../core/Utils/Logger';
+import Contact from '../../../models/contacts.model';
+import { IContact } from '../../../Interfaces/models/IContact';
+import { PopulatedContact } from '../Types/types';
 
 
 export class ContactRepository extends BaseRepository<IContact> {

@@ -1,4 +1,4 @@
-import Counter from "../../models/counters.model.js";
+import Counter from "../../models/counters.model";
 
 export const generateCustomId = async (collectionName: string, prefix: string): Promise<string> => {
   const counter = await Counter.findOneAndUpdate(

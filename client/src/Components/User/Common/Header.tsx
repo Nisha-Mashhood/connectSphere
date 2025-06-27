@@ -36,22 +36,34 @@ export const ConnectSphereLogo = () => {
 const Header = () => {
   const dispatch = useDispatch();
   const navigate = useNavigate();
-  const { currentUser } = useSelector((state: RootState) => state.user);
-  const { taskNotifications, taskUnreadCount, chatNotifications, chatUnreadCount } = useSelector((state: RootState) => state.notification);
+  const { currentUser, loading } = useSelector((state: RootState) => state.user);
+  const { taskNotifications, taskUnreadCount, chatNotifications, chatUnreadCount } = useSelector(
+    (state: RootState) => state.notification
+  );
+
+  // Check if user is authenticated and not an admin
+  const showNotifications = currentUser && currentUser.role !== "admin" && !loading;
 
   const handleLogout = async () => {
-    const email = currentUser?.email;
+    if (!currentUser) return;
+    const email = currentUser.email;
     try {
       await logout(email);
       dispatch(signOut());
+      localStorage.removeItem("userId"); 
       toast.success("Logged out successfully!");
       navigate("/login", { replace: true });
     } catch (err) {
-      toast.error(err.response?.data?.message || "Logout failed");
+      toast.error("Logout failed");
+      console.log("Logout Failed :", err.response?.data?.message)
     }
   };
 
   const handleProfileClick = () => {
+    if (!currentUser) {
+      navigate("/login");
+      return;
+    }
     navigate("/profile");
   };
 
@@ -94,16 +106,20 @@ const Header = () => {
       }
     } catch (error) {
       toast.error("Error checking mentor status.");
+      console.log("Error checking mentor status: ", error);
     }
   };
 
-
- const handleNotificationClick = async (notification: Notification) => {
+  const handleNotificationClick = async (notification: Notification) => {
+    if (!currentUser || currentUser.role === "admin") {
+      navigate("/login");
+      return;
+    }
     try {
       console.log("Clicked on notification:", notification);
-      await markNotificationService(notification._id, currentUser?._id || "");
+      await markNotificationService(notification._id, currentUser._id);
       dispatch(markNotificationAsRead(notification._id));
-      socketService.markNotificationAsRead(notification._id, currentUser?._id || "");
+      socketService.markNotificationAsRead(notification._id, currentUser._id);
 
       if (notification.type === "task_reminder") {
         if (!notification.taskContext) {
@@ -134,12 +150,16 @@ const Header = () => {
   };
 
   const handleChatClick = async () => {
+    if (!currentUser || currentUser.role === "admin") {
+      navigate("/login");
+      return;
+    }
     try {
       const unreadChatNotifications = chatNotifications.filter(n => n.status === "unread");
       for (const notification of unreadChatNotifications) {
-        await markNotificationService(notification._id, currentUser?._id || "");
+        await markNotificationService(notification._id, currentUser._id);
         dispatch(markNotificationAsRead(notification._id));
-        socketService.markNotificationAsRead(notification._id, currentUser?._id || "");
+        socketService.markNotificationAsRead(notification._id, currentUser._id);
       }
       navigate("/chat");
     } catch (error) {
@@ -151,6 +171,11 @@ const Header = () => {
   // Ensure taskNotifications is an array
   const safeTaskNotifications = Array.isArray(taskNotifications) ? taskNotifications : [];
 
+  // Skip rendering if loading
+  if (loading) {
+    return null; 
+  }
+
   return (
     <Navbar
       className="bg-white shadow-md z-[200]"
@@ -158,12 +183,10 @@ const Header = () => {
       height="4rem"
       isBordered
     >
-      {/* Logo */}
       <NavbarBrand>
         <ConnectSphereLogo />
       </NavbarBrand>
 
-      {/* Navigation Links */}
       <NavbarContent className="hidden sm:flex gap-8" justify="center">
         <NavbarItem>
           <Link
@@ -192,83 +215,86 @@ const Header = () => {
             Explore
           </Link>
         </NavbarItem>
-        <NavbarItem>
-          <Badge
-            content={chatUnreadCount}
-            color="danger"
-            isInvisible={chatUnreadCount === 0}
-            placement="top-right"
-          >
-            <Link
-              href="/chat"
-              color="foreground"
-              className="text-sm font-medium hover:text-primary transition-colors"
-              onPress={handleChatClick}
+        {showNotifications && (
+          <NavbarItem>
+            <Badge
+              content={chatUnreadCount}
+              color="danger"
+              isInvisible={chatUnreadCount === 0}
+              placement="top-right"
             >
-              Chat
-            </Link>
-          </Badge>
-        </NavbarItem>
+              <Link
+                href="/chat"
+                color="foreground"
+                className="text-sm font-medium hover:text-primary transition-colors"
+                onPress={handleChatClick}
+              >
+                Chat
+              </Link>
+            </Badge>
+          </NavbarItem>
+        )}
       </NavbarContent>
 
-      {/* User Actions */}
       <NavbarContent justify="end">
-        {currentUser && (
+        {currentUser ? (
           <>
-            <NavbarItem>
-              <Dropdown placement="bottom-end" closeOnSelect={false}>
-                <DropdownTrigger>
-                  <Badge
-                    content={taskUnreadCount}
-                    color="danger"
-                    isInvisible={taskUnreadCount === 0}
-                    placement="top-right"
-                  >
-                    <Button
-                      isIconOnly
-                      variant="light"
-                      aria-label="Notifications"
-                      className="text-gray-600 hover:text-primary"
+            {showNotifications && (
+              <NavbarItem>
+                <Dropdown placement="bottom-end" closeOnSelect={false}>
+                  <DropdownTrigger>
+                    <Badge
+                      content={taskUnreadCount}
+                      color="danger"
+                      isInvisible={taskUnreadCount === 0}
+                      placement="top-right"
                     >
-                      <svg
-                        xmlns="http://www.w3.org/2000/svg"
-                        className="h-6 w-6"
-                        fill="none"
-                        viewBox="0 0 24 24"
-                        stroke="currentColor"
+                      <Button
+                        isIconOnly
+                        variant="light"
+                        aria-label="Notifications"
+                        className="text-gray-600 hover:text-primary"
                       >
-                        <path
-                          strokeLinecap="round"
-                          strokeLinejoin="round"
-                          strokeWidth={2}
-                          d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9"
-                        />
-                      </svg>
-                    </Button>
-                  </Badge>
-                </DropdownTrigger>
-                <DropdownMenu aria-label="Notifications" variant="flat">
-                  {safeTaskNotifications.length === 0 ? (
-                    <DropdownItem key="no-notifications" isReadOnly>
-                      No new notifications
-                    </DropdownItem>
-                  ) : (
-                    safeTaskNotifications
-                      .filter((n) => n.status === "unread")
-                      .map((notification) => (
-                        <DropdownItem
-                          key={notification._id}
-                          onPress={() => handleNotificationClick(notification)}
-                          description={new Date(notification.createdAt).toLocaleTimeString()}
-                          className="max-w-xs truncate"
+                        <svg
+                          xmlns="http://www.w3.org/2000/svg"
+                          className="h-6 w-6"
+                          fill="none"
+                          viewBox="0 0 24 24"
+                          stroke="currentColor"
                         >
-                          {notification.content}
-                        </DropdownItem>
-                      ))
-                  )}
-                </DropdownMenu>
-              </Dropdown>
-            </NavbarItem>
+                          <path
+                            strokeLinecap="round"
+                            strokeLinejoin="round"
+                            strokeWidth={2}
+                            d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9"
+                          />
+                        </svg>
+                      </Button>
+                    </Badge>
+                  </DropdownTrigger>
+                  <DropdownMenu aria-label="Notifications" variant="flat">
+                    {safeTaskNotifications.length === 0 ? (
+                      <DropdownItem key="no-notifications" isReadOnly>
+                        No new notifications
+                      </DropdownItem>
+                    ) : (
+                      safeTaskNotifications
+                        .filter((n) => n.status === "unread")
+                        .map((notification) => (
+                          <DropdownItem
+                            key={notification._id}
+                            onPress={() => handleNotificationClick(notification)}
+                            description={new Date(notification.createdAt).toLocaleTimeString()}
+                            className="max-w-xs truncate"
+                          >
+                            {notification.content}
+                          </DropdownItem>
+                        ))
+                    )}
+                  </DropdownMenu>
+                </Dropdown>
+              </NavbarItem>
+            )}
             <Dropdown placement="bottom-end">
               <DropdownTrigger>
                 <Avatar
@@ -284,9 +310,11 @@ const Header = () => {
                 <DropdownItem key="profile" onPress={handleProfileClick}>
                   Profile
                 </DropdownItem>
-                <DropdownItem key="become-mentor" onPress={handleBecomeMentor}>
-                  Become a Mentor
-                </DropdownItem>
+                {currentUser.role !== "admin" && (
+                  <DropdownItem key="become-mentor" onPress={handleBecomeMentor}>
+                    Become a Mentor
+                  </DropdownItem>
+                )}
                 <DropdownItem
                   key="logout"
                   color="danger"
@@ -297,8 +325,7 @@ const Header = () => {
               </DropdownMenu>
             </Dropdown>
           </>
-        )}
-        {!currentUser && (
+        ) : (
           <Button
             color="primary"
             variant="solid"

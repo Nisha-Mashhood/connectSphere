@@ -1,9 +1,9 @@
 import express from 'express';
-import { TaskController } from '../Controllers/TaskController.js';
-import { apiLimiter } from '../../../middlewares/ratelimit.middleware.js';
-import { AuthMiddleware } from '../../../middlewares/auth.middleware.js';
-import { upload } from '../../../core/Utils/Multer.js';
-import { TASK_ROUTES } from '../Constant/Task.routes.js';
+import { TaskController } from '../Controllers/TaskController';
+import { apiLimiter } from '../../../middlewares/ratelimit.middleware';
+import { AuthMiddleware } from '../../../middlewares/auth.middleware';
+import { upload } from '../../../core/Utils/Multer';
+import { TASK_ROUTES } from '../Constant/Task.routes';
 
 const router = express.Router();
 const taskController = new TaskController();

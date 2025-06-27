@@ -1,9 +1,9 @@
 import { Model, Types } from 'mongoose';
-import { BaseRepository } from '../../../core/Repositries/BaseRepositry.js';
-import { RepositoryError } from '../../../core/Utils/ErrorHandler.js';
-import logger from '../../../core/Utils/Logger.js';
-import UserConnection from '../../../models/userConnection.modal.js';
-import { IUserConnection } from '../../../Interfaces/models/IUserConnection.js';
+import { BaseRepository } from '../../../core/Repositries/BaseRepositry';
+import { RepositoryError } from '../../../core/Utils/ErrorHandler';
+import logger from '../../../core/Utils/Logger';
+import UserConnection from '../../../models/userConnection.modal';
+import { IUserConnection } from '../../../Interfaces/models/IUserConnection';
 
 export class UserConnectionRepository extends BaseRepository<IUserConnection> {
   constructor() {

@@ -83,10 +83,10 @@ const Signup = () => {
       await register(values);
       toast.success("User Registered Successfully");
       Navigate("/login");
-    } catch (err: any) {
-      console.error(err);
+    } catch (err) {
+      console.error("Sign up Error : ",err.response?.data?.message);
       dispatch(signinFailure(err.response?.data?.message || "Signup failed"));
-      toast.error(err.response?.data?.message || "Signup failed");
+      toast.error( "Signup failed");
     } finally {
       setSubmitting(false);
     }

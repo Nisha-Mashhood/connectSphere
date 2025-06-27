@@ -1,10 +1,10 @@
-import { BaseService } from '../../../core/Services/BaseService.js';
-import { ServiceError } from '../../../core/Utils/ErrorHandler.js';
-import logger from '../../../core/Utils/Logger.js';
-import { TaskRepository } from '../Repositry/TaskRepositry.js';
-import { NotificationRepository } from '../../Notification/Repositry/NotificationRepositry.js';
-import { ITask } from '../../../Interfaces/models/ITask.js';
-import { uploadMedia } from '../../../core/Utils/Cloudinary.js';
+import { BaseService } from '../../../core/Services/BaseService';
+import { ServiceError } from '../../../core/Utils/ErrorHandler';
+import logger from '../../../core/Utils/Logger';
+import { TaskRepository } from '../Repositry/TaskRepositry';
+import { NotificationRepository } from '../../Notification/Repositry/NotificationRepositry';
+import { ITask } from '../../../Interfaces/models/ITask';
+import { uploadMedia } from '../../../core/Utils/Cloudinary';
 
 export class TaskService extends BaseService {
   private taskRepo: TaskRepository;

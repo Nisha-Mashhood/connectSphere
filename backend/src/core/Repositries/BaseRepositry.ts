@@ -1,7 +1,7 @@
 import { Model, Document, FilterQuery } from 'mongoose';
-import { IBaseRepository } from '../Interfaces/IBaseRepositry.js'; 
-import logger from '../Utils/Logger.js'; 
-import { RepositoryError } from '../Utils/ErrorHandler.js'; 
+import { IBaseRepository } from '../Interfaces/IBaseRepositry'; 
+import logger from '../Utils/Logger'; 
+import { RepositoryError } from '../Utils/ErrorHandler'; 
 
 //Base class for Basic DataBase Operations
 export abstract class BaseRepository<T extends Document> implements IBaseRepository<T> {

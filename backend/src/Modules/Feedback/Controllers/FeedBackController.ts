@@ -1,7 +1,7 @@
 import { Request, Response } from 'express';
-import { FeedbackService } from '../Service/Feedbackservice.js';
-import logger from '../../../core/Utils/Logger.js';
-import { IFeedback } from '../../../Interfaces/models/IFeedback.js';
+import { FeedbackService } from '../Service/Feedbackservice';
+import logger from '../../../core/Utils/Logger';
+import { IFeedback } from '../../../Interfaces/models/IFeedback';
 
 export class FeedbackController {
   private feedbackService: FeedbackService;

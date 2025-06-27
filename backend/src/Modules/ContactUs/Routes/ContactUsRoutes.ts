@@ -1,8 +1,8 @@
 import express from 'express';
-import { ContactMessageController } from '../Controllers/ContactUsController.js';
-import { apiLimiter } from '../../../middlewares/ratelimit.middleware.js';
-import { AuthMiddleware } from '../../../middlewares/auth.middleware.js';
-import { CONTACT_ROUTES } from '../Constant/ContactUs.routes.js';
+import { ContactMessageController } from '../Controllers/ContactUsController';
+import { apiLimiter } from '../../../middlewares/ratelimit.middleware';
+import { AuthMiddleware } from '../../../middlewares/auth.middleware';
+import { CONTACT_ROUTES } from '../Constant/ContactUs.routes';
 
 const router = express.Router();
 const contactMessageController = new ContactMessageController();

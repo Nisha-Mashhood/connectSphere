@@ -1,9 +1,8 @@
 import mongoose, { Schema } from "mongoose";
-import { generateCustomId } from "../core/Utils/IdGenerator.js";
-import { ICollaboration } from "../Interfaces/models/ICollaboration.js";
-import logger from "../core/Utils/Logger.js";
+import { generateCustomId } from "../core/Utils/IdGenerator";
+import { ICollaboration } from "../Interfaces/models/ICollaboration";
+import logger from "../core/Utils/Logger";
 
-// Schema remains the same, just ensure it matches the interface
 const CollaborationSchema: Schema<ICollaboration> = new Schema(
   {
     collaborationId: {

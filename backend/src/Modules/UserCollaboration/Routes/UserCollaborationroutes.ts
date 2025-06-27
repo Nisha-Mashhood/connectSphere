@@ -1,8 +1,8 @@
 import express from 'express';
-import { UserConnectionController } from '../Controllers/userCollaborationController.js';
-import { apiLimiter } from '../../../middlewares/ratelimit.middleware.js';
-import { AuthMiddleware } from '../../../middlewares/auth.middleware.js';
-import { USER_CONNECTION_ROUTES } from '../Constant/UserCollaboration.routes.js';
+import { UserConnectionController } from '../Controllers/userCollaborationController';
+import { apiLimiter } from '../../../middlewares/ratelimit.middleware';
+import { AuthMiddleware } from '../../../middlewares/auth.middleware';
+import { USER_CONNECTION_ROUTES } from '../Constant/UserCollaboration.routes';
 
 const router = express.Router();
 const userConnectionController = new UserConnectionController();

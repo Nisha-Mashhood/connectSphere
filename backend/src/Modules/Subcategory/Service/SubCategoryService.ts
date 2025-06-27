@@ -1,10 +1,10 @@
-import { BaseService } from "../../../core/Services/BaseService.js";
-import { SkillsRepository } from "../../Skills/Repositry/SkillsRepositry.js";
-import { SubcategoryRepository } from "../Repositry/SubCategoryRepositry.js";
-import { SubcategoryInterface as ISubcategory } from "../../../Interfaces/models/SubcategoryInterface.js";
-import logger from "../../../core/Utils/Logger.js";
-import { uploadMedia } from "../../../core/Utils/Cloudinary.js";
-import { ServiceError } from "../../../core/Utils/ErrorHandler.js";
+import { BaseService } from "../../../core/Services/BaseService";
+import { SkillsRepository } from "../../Skills/Repositry/SkillsRepositry";
+import { SubcategoryRepository } from "../Repositry/SubCategoryRepositry";
+import { SubcategoryInterface as ISubcategory } from "../../../Interfaces/models/SubcategoryInterface";
+import logger from "../../../core/Utils/Logger";
+import { uploadMedia } from "../../../core/Utils/Cloudinary";
+import { ServiceError } from "../../../core/Utils/ErrorHandler";
 
 export class SubcategoryService extends BaseService {
   private subcategoryRepo: SubcategoryRepository;

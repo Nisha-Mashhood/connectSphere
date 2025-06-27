@@ -257,7 +257,7 @@ const ProfileDisplay = () => {
       await SendRequsetToMentor(requestData);
       toast.success("Request sent successfully!");
       closeModal();
-    } catch (error: any) {
+    } catch (error) {
       console.error("Error sending request:", error.message);
       toast.error("Failed to send the request. Please try again.");
     }

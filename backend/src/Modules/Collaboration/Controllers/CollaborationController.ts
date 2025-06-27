@@ -1,9 +1,9 @@
 import { Request, Response } from 'express';
-import { BaseController } from '../../../core/Controller/BaseController.js';
-import { CollaborationService } from '../Service/CollaborationService.js';
-import MentorRequest from '../../../models/mentorRequset.js';
-import { IMentorRequest } from '../../../Interfaces/models/IMentorRequest.js';
-// import logger from '../../../core/utils/Logger.js';
+import { BaseController } from '../../../core/Controller/BaseController';
+import { CollaborationService } from '../Service/CollaborationService';
+import MentorRequest from '../../../models/mentorRequset';
+import { IMentorRequest } from '../../../Interfaces/models/IMentorRequest';
+// import logger from '../../../core/utils/Logger';
 
 export class CollaborationController extends BaseController {
   private collabService: CollaborationService;

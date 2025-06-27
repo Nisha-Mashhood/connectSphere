@@ -117,17 +117,13 @@ const Login = () => {
       }
       toast.success("Login successful!");
       navigate("/", { replace: true });
-    } catch (error: any) {
-      handleLoginError(error, dispatch);
+    } catch (error) {
+      dispatch(signinFailure(error.message));
+      toast.error("Login Failed");
+      console.log("Login Failed : ",error.message)
     }
   };
 
-  // Error handling function
-  const handleLoginError = (error: any, dispatch: any) => {
-    const errorMessage = error.message || "Login failed";
-    toast.error(errorMessage);
-    dispatch(signinFailure(errorMessage));
-  };
 
   return (
     <div>

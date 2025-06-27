@@ -1,23 +1,13 @@
 import express from 'express';
-import { ReviewController } from '../Controllers/ReviewController.js';
-import { apiLimiter } from '../../../middlewares/ratelimit.middleware.js';
-import { AuthMiddleware } from '../../../middlewares/auth.middleware.js';
-import { REVIEW_ROUTES } from '../Constant/Review.routes.js';
+import { ReviewController } from '../Controllers/ReviewController';
+import { apiLimiter } from '../../../middlewares/ratelimit.middleware';
+import { AuthMiddleware } from '../../../middlewares/auth.middleware';
+import { REVIEW_ROUTES } from '../Constant/Review.routes';
 
 const router = express.Router();
 const reviewController = new ReviewController();
 const authMiddleware = new AuthMiddleware();
 
-// const REVIEW_ROUTES = {
-//   SubmitReview: '/submit',
-//   SkipReview: '/skip',
-//   GetAllReviews: '/all',
-//   ApproveReview: '/approve/:reviewId',
-//   SelectReview: '/select/:reviewId',
-//   GetSelectedReviews: '/selected',
-//   CancelApproval: '/cancel/:reviewId',
-//   DeselectReview: '/deselect/:reviewId',
-// } as const;
 
 router.post(
   REVIEW_ROUTES.SubmitReview,

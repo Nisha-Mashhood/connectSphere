@@ -49,7 +49,7 @@ export interface Contact {
   };
 }
 
-export const formatContact = (contact: any): Contact => ({
+export const formatContact = (contact): Contact => ({
   id: contact.targetId,
   contactId: contact._id,
   userId: contact.userId,
@@ -213,5 +213,85 @@ export interface Review {
   comment: string;
   isApproved: boolean;
   isSelect: boolean;
+  createdAt: string;
+}
+
+export interface User {
+  _id: string;
+  name: string;
+  email: string;
+  phone:number,
+  reasonForJoining:string,
+  industry:string,
+  jobTitle: string;
+  profilePic: string;
+}
+
+export interface UserConnection {
+  _id: string;
+  requester: User;
+  recipient: User;
+  requestStatus: string; 
+  connectionStatus: string; 
+  requestSentAt: string;
+  createdAt: string;
+  updatedAt: string;
+  disconnectionReason: string | null;
+}
+
+export interface MentorForCollab {
+  _id: string;
+  userId: User;
+  specialization: string;
+}
+
+export interface MentorRequest {
+  _id: string;
+  mentorRequestId: string;
+  mentorId: MentorForCollab;
+  userId: User;
+  selectedSlot: {
+    day: string;
+    timeSlots: string[];
+  };
+  price: number;
+  timePeriod: number;
+  paymentStatus: string;
+  isAccepted: string;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface Collaboration {
+  _id: string;
+  collaborationId: string;
+  mentorId: MentorForCollab;
+  userId: User;
+  selectedSlot: {
+    day: string;
+    timeSlots: string[];
+  }[];
+  unavailableDays: {
+    _id: string;
+    datesAndReasons: { date: string; reason: string }[];
+    requestedBy: string;
+    requesterId: string;
+    isApproved: string;
+    approvedById: string;
+  }[];
+  temporarySlotChanges: {
+    _id: string;
+    datesAndNewSlots: { date: string; newTimeSlots: string[] }[];
+    requestedBy: string;
+    requesterId: string;
+    isApproved: string;
+    approvedById: string;
+  }[];
+  price: number;
+  payment: boolean;
+  isCancelled: boolean;
+  startDate: string;
+  endDate?: string;
+  feedbackGiven: boolean;
   createdAt: string;
 }

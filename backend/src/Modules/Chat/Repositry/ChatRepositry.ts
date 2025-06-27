@@ -1,9 +1,9 @@
 import { Types, Model } from 'mongoose';
-import { BaseRepository } from '../../../core/Repositries/BaseRepositry.js';
-import { RepositoryError } from '../../../core/Utils/ErrorHandler.js';
-import logger from '../../../core/Utils/Logger.js';
-import ChatMessage from '../../../models/chat.model.js';
-import { IChatMessage } from '../../../Interfaces/models/IChatMessage.js';
+import { BaseRepository } from '../../../core/Repositries/BaseRepositry';
+import { RepositoryError } from '../../../core/Utils/ErrorHandler';
+import logger from '../../../core/Utils/Logger';
+import ChatMessage from '../../../models/chat.model';
+import { IChatMessage } from '../../../Interfaces/models/IChatMessage';
 
 export class ChatRepository extends BaseRepository<IChatMessage> {
   constructor() {

@@ -1,7 +1,7 @@
 import { Contact, IChatMessage } from "../../../../../types";
 
 // Formats raw contact data from the server into a Contact type
-export const formatContact = (contact: any): Contact => ({
+export const formatContact = (contact): Contact => ({
   id: contact.targetId,
   contactId: contact._id,
   userId: contact.userId,
@@ -52,7 +52,7 @@ export const formatContact = (contact: any): Contact => ({
         price:contact.groupDetails.price,
         maxMembers:contact.groupDetails.maxMembers,
         availableSlots:contact.groupDetails.availableSlots,
-        members: contact.groupDetails.members.map((member: any) => ({
+        members: contact.groupDetails.members.map((member) => ({
          userId: member.userId,
           name: member.name,
           profilePic: member.profilePic,

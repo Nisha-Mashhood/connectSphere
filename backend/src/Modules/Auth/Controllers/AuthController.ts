@@ -1,9 +1,9 @@
-import { BaseController } from './../../../core/Controller/BaseController.js';
-import { AuthService } from '../Service/AuthService.js';
+import { BaseController } from './../../../core/Controller/BaseController';
+import { AuthService } from '../Service/AuthService';
 import { Request, Response } from 'express';
-import { AuthService as JWTService } from  '../Utils/JWT.js';
-import logger from '../../../core/Utils/Logger.js';
-import { ForgotPasswordRequestBody, LoginRequestBody, LogoutRequestBody, OAuthRequestBody, RefreshTokenRequestBody, ResetPasswordRequestBody, SignupRequestBody, UpdateProfileRequestBody, VerifyOTPRequestBody, VerifyPasskeyRequestBody } from '../Types/types.js';
+import { AuthService as JWTService } from  '../Utils/JWT';
+import logger from '../../../core/Utils/Logger';
+import { ForgotPasswordRequestBody, LoginRequestBody, LogoutRequestBody, OAuthRequestBody, RefreshTokenRequestBody, ResetPasswordRequestBody, SignupRequestBody, UpdateProfileRequestBody, VerifyOTPRequestBody, VerifyPasskeyRequestBody } from '../Types/types';
 
 
 // Controller for authentication and user profile endpoints

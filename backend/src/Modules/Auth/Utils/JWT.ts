@@ -1,9 +1,9 @@
 import jwt from 'jsonwebtoken';
 import { Response } from 'express';
-import config from '../../../config/env.config.js';
-import logger from '../../../core/Utils/Logger.js';
-import { ServiceError } from '../../../core/Utils/ErrorHandler.js';
-import { UserRepository } from '../Repositry/UserRepositry.js';
+import config from '../../../config/env.config';
+import logger from '../../../core/Utils/Logger';
+import { ServiceError } from '../../../core/Utils/ErrorHandler';
+import { UserRepository } from '../Repositry/UserRepositry';
 
 interface JwtPayload {
   [key: string]: any;

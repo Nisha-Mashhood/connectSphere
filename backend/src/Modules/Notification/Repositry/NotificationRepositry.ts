@@ -1,16 +1,16 @@
 import { Model, Types } from 'mongoose';
-import { BaseRepository } from '../../../core/Repositries/BaseRepositry.js';
-import { RepositoryError } from '../../../core/Utils/ErrorHandler.js';
-import logger from '../../../core/Utils/Logger.js';
-import { AppNotificationModel } from '../../../models/notification.modal.js';
-import { AppNotification as IAppNotification } from '../../../Interfaces/models/AppNotification.js';
-import { ITask } from '../../../Interfaces/models/ITask.js';
-import Collaboration from '../../../models/collaboration.js';
-import Group from '../../../models/group.model.js';
-import { IMentor } from '../../../Interfaces/models/IMentor.js';
-import UserConnectionModal from '../../../models/userConnection.modal.js';
-import { Task } from '../../../models/task.modal.js';
-import { CollaborationData, UserIds } from '../Types/types.js';
+import { BaseRepository } from '../../../core/Repositries/BaseRepositry';
+import { RepositoryError } from '../../../core/Utils/ErrorHandler';
+import logger from '../../../core/Utils/Logger';
+import { AppNotificationModel } from '../../../models/notification.modal';
+import { AppNotification as IAppNotification } from '../../../Interfaces/models/AppNotification';
+import { ITask } from '../../../Interfaces/models/ITask';
+import Collaboration from '../../../models/collaboration';
+import Group from '../../../models/group.model';
+import { IMentor } from '../../../Interfaces/models/IMentor';
+import UserConnectionModal from '../../../models/userConnection.modal';
+import { Task } from '../../../models/task.modal';
+import { CollaborationData, UserIds } from '../Types/types';
 
 
 export class NotificationRepository extends BaseRepository<IAppNotification> {

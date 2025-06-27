@@ -1,6 +1,7 @@
 import React from "react";
 import { Input, Textarea, Select, SelectItem, Chip, Button } from "@nextui-org/react";
 import { FaCalendar, FaBell, FaImage } from "react-icons/fa";
+import { Collaboration, Group } from "../../types";
 
 interface ITaskData {
   name: string;
@@ -32,8 +33,8 @@ interface TaskFormProps {
   taskData: ITaskData;
   errors: ITaskErrors;
   users: { userId: string; name: string }[];
-  groups: any[];
-  collaborations: any[];
+  groups: Group[];
+  collaborations: Collaboration[];
   showUserSelect: boolean;
   context: string;
   isEditMode: boolean;

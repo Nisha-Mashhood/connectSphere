@@ -1,10 +1,10 @@
 import { Request, Response } from 'express';
-import { BaseController } from '../../../core/Controller/BaseController.js';
-import { ChatService } from '../Service/ChatService.js';
-import { ChatRepository } from '../Repositry/ChatRepositry.js';
-import { uploadMedia } from '../../../core/Utils/Cloudinary.js';
-import logger from '../../../core/Utils/Logger.js';
-import { HttpError } from '../../../core/Utils/ErrorHandler.js';
+import { BaseController } from '../../../core/Controller/BaseController';
+import { ChatService } from '../Service/ChatService';
+import { ChatRepository } from '../Repositry/ChatRepositry';
+import { uploadMedia } from '../../../core/Utils/Cloudinary';
+import logger from '../../../core/Utils/Logger';
+import { HttpError } from '../../../core/Utils/ErrorHandler';
 
 export class ChatController extends BaseController {
   private chatService: ChatService;

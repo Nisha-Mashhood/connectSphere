@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useMemo } from "react";
 import { 
   Card, 
   CardBody,  
@@ -20,6 +20,7 @@ import {
   FaEnvelope,  
   FaUserTie, 
 } from "react-icons/fa";
+import { debounce } from 'lodash';
 
 const UserDetailsPage = () => {
   const [user, setUser] = useState(null);
@@ -27,16 +28,59 @@ const UserDetailsPage = () => {
   const { userId } = useParams();
   const navigate = useNavigate();
 
+ // Define debounced updateUserRole
+  const updateUserRole = useMemo(
+    () =>
+      debounce(async (newRole) => {
+        // console.log('updateUserRole called with:', newRole); // Debug log
+        if (!newRole) {
+          console.log('No role selected, aborting');
+          return;
+        }
+
+        if (newRole === "admin") {
+          const passkey = prompt("Enter the admin passkey:");
+          if (!passkey) {
+            toast.error("Passkey entry canceled. Role update aborted.");
+            return;
+          }
+
+          try {
+            const isValid = await verifyAdminPasskey(passkey);
+            if (!isValid) {
+              toast.error("Invalid admin passkey. Role update canceled.");
+              return;
+            }
+          } catch (error) {
+            console.log(error);
+            toast.error("Failed to verify admin passkey. Role update canceled.");
+            return;
+          }
+        }
+
+        try {
+          await updateUserRoleService(user._id, newRole);
+          setUser((prev) => ({ ...prev, role: newRole }));
+          toast.success(`User role updated to ${newRole}`);
+        } catch (error) {
+          console.log(error);
+          toast.error("Failed to update user role");
+        }
+      }, 300),
+    [user?._id]
+  );
+
   // Fetch user details
   useEffect(() => {
     const fetchUser = async () => {
       if (!userId) return;
-      
+
       try {
         setLoading(true);
         const userData = await fetchUserDetails(userId);
-        setUser(userData);
+        setUser(userData.user);
       } catch (error) {
+        console.log(error);
         toast.error("Failed to fetch user details");
         navigate('/admin/user');
       } finally {
@@ -47,35 +91,6 @@ const UserDetailsPage = () => {
     fetchUser();
   }, [userId, navigate]);
 
-  // Update user role
-  const updateUserRole = async (newRole) => {
-    if (newRole === "admin") {
-      const passkey = prompt("Enter the admin passkey:");
-      if (!passkey) {
-        toast.error("Passkey entry canceled. Role update aborted.");
-        return;
-      }
-
-      try {
-        const isValid = await verifyAdminPasskey(passkey);
-        if (!isValid) {
-          toast.error("Invalid admin passkey. Role update canceled.");
-          return;
-        }
-      } catch (error) {
-        toast.error("Failed to verify admin passkey. Role update canceled.");
-        return;
-      }
-    }
-
-    try {
-      await updateUserRoleService(user._id, newRole);
-      setUser(prev => ({ ...prev, role: newRole }));
-      toast.success("User role updated successfully");
-    } catch (error) {
-      toast.error("Failed to update user role");
-    }
-  };
 
   if (loading) {
     return (

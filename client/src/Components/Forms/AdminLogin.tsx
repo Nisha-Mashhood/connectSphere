@@ -38,6 +38,7 @@ const AdminLogin = () => {
       }
   
       const isPasskeyValid = await AdminPasscodeCheck(passkey);
+      console.log('PassKey verified : ',isPasskeyValid);
       if (!isPasskeyValid.valid) {
         toast.error("Invalid admin passkey.");
         return;
@@ -46,18 +47,12 @@ const AdminLogin = () => {
       toast.success("Welcome, Admin!");
       dispatch(setIsAdmin(user));
       navigate("/admin/dashboard", { replace: true });
-    } catch (error: any) {
-      handleLoginError(error, dispatch);
+    } catch (error) {
+      dispatch(signinFailure(error.message));
+      toast.error(error.message || "Login error");
     }
   };
   
-  // Error handling function
-  const handleLoginError = (error: any, dispatch: any) => {
-    const errorMessage = error.message || "Login failed";
-    toast.error(errorMessage);
-    dispatch(signinFailure(errorMessage));
-  };
-
   return (
     <div className="flex flex-col items-center justify-center h-screen bg-gray-900">
       <div className="w-full max-w-sm p-6 bg-gray-800 text-white shadow-md rounded-md">

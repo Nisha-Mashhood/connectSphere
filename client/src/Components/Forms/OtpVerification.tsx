@@ -38,8 +38,9 @@ const OTPVerification = () => {
       } else {
         toast.error("Invalid OTP. Please try again.");
       }
-    } catch (error: any) {
-      toast.error(error.response?.data?.message || "Submission failed");
+    } catch (error) {
+      toast.error("Submission failed");
+      console.log(error.response?.data?.message)
     }
   };
 
@@ -47,7 +48,7 @@ const OTPVerification = () => {
   useEffect(() => {
     if (!resetEmail) {
       toast.error("Email is required");
-      navigate("/forgot-password");
+      // navigate("/forgot-password");
       return null;
     }
     if (timeLeft > 0) {
@@ -56,7 +57,7 @@ const OTPVerification = () => {
     } else {
       setIsResendEnabled(true); // Enable the resend OTP button after timer ends
     }
-  }, [timeLeft]);
+  }, [timeLeft,resetEmail]);
 
   // Resend OTP logic
   const handleResendOtp = async () => {
@@ -68,6 +69,7 @@ const OTPVerification = () => {
       setIsResendEnabled(false); // Disable resend until the timer resets
     } catch (error) {
       toast.error("Failed to resend OTP. Please try again.");
+      console.log("OTP verification : ",error)
     }
   };
 

@@ -1,9 +1,9 @@
 import { Model, Types } from 'mongoose';
-import { BaseRepository } from '../../../core/Repositries/BaseRepositry.js';
-import { RepositoryError } from '../../../core/Utils/ErrorHandler.js';
-import logger from '../../../core/Utils/Logger.js';
-import Review from '../../../models/Review.modal.js';
-import { IReview } from '../../../Interfaces/models/IReview.js';
+import { BaseRepository } from '../../../core/Repositries/BaseRepositry';
+import { RepositoryError } from '../../../core/Utils/ErrorHandler';
+import logger from '../../../core/Utils/Logger';
+import Review from '../../../models/Review.modal';
+import { IReview } from '../../../Interfaces/models/IReview';
 
 export class ReviewRepository extends BaseRepository<IReview> {
   constructor() {

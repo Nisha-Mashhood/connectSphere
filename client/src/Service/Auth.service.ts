@@ -22,7 +22,8 @@ export const login = async (data) => {
 
 export const logout = async (email) => {
   try {
-    await axiosInstance.post("/auth/logout", { email });
+    const response = await axiosInstance.post("/auth/logout", { email });
+    return response.data.data
   } catch (error) {
     handleError(error)
   }
@@ -64,7 +65,8 @@ export const updateUserDetails = async (userId: string, formData: FormData) => {
 export const sentOTP = async (email: string) => {
   try {
     console.log(email);
-    await axiosInstance.post("/auth/register/forgot-password", { email });
+    const response = await axiosInstance.post("/auth/register/forgot-password", { email });
+    return response.data.data
   } catch (error) {
     handleError(error)
   }
@@ -75,7 +77,7 @@ export const verifyOTP = async (data) => {
       "/auth/register/verify-otp",
       data
     );
-    return response.data;
+    return response.data.data;
   } catch (error) {
     handleError(error)
   }
@@ -90,7 +92,7 @@ export const resetPassword = async (data) => {
 };
 
 
-export const googleSignup = async (code: any) => {
+export const googleSignup = async (code) => {
   try {
     const response = await axiosInstance.post('/auth/google-signup', {code});
     return response.data.data;

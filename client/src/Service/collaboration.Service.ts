@@ -63,7 +63,7 @@ export const getTheRequestByUser = async (userId) => {
 };
 
 //Make payment for the mentor
-export const processStripePayment = async (paymentDetails: any) => {
+export const processStripePayment = async (paymentDetails) => {
   try {
     const response = await axiosInstance.post(
       `/collaboration/process-payment`,

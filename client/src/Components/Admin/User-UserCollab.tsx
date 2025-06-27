@@ -1,9 +1,10 @@
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { fetchAllUserConnections } from "../../Service/User-User.Service";
+import { UserConnection } from "../../types";
 
 const UserUserCollab = () => {
-  const [connections, setConnections] = useState<any[]>([]);
+  const [connections, setConnections] = useState<UserConnection[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const navigate = useNavigate();
 
@@ -13,6 +14,7 @@ const UserUserCollab = () => {
       try {
         const data = await fetchAllUserConnections();
         setConnections(data);
+        console.log("User-User Connections : ",data);
       } catch (error) {
         console.error(error);
       } finally {
@@ -29,7 +31,7 @@ const UserUserCollab = () => {
     return "bg-gray-100 text-gray-800";
   };
 
-  const getConnectionStatus = (conn: string) => {
+  const getConnectionStatus = (conn: UserConnection) => {
     if (conn.connectionStatus === "Connected") return "bg-green-500";
     return "bg-red-500";
   };

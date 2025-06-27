@@ -1,7 +1,8 @@
-import { BaseRepository } from '../../../core/Repositries/BaseRepositry.js';
-import { ICollaboration } from '../../../Interfaces/models/ICollaboration.js';
-import { IMentorRequest } from '../../../Interfaces/models/IMentorRequest.js';
-import { LockedSlot } from '../Types/types.js';
+import { Types } from "mongoose";
+import { BaseRepository } from "../../../core/Repositries/BaseRepositry.js";
+import { ICollaboration } from "../../../Interfaces/models/ICollaboration.js";
+import { IMentorRequest } from "../../../Interfaces/models/IMentorRequest.js";
+import { LockedSlot } from "../Types/types.js";
 export declare class CollaborationRepository extends BaseRepository<ICollaboration> {
     private mentorRequestModel;
     constructor();
@@ -19,22 +20,30 @@ export declare class CollaborationRepository extends BaseRepository<ICollaborati
     updateCollabFeedback: (collabId: string) => Promise<ICollaboration | null>;
     getCollabDataForUser: (userId: string) => Promise<ICollaboration[]>;
     getCollabDataForMentor: (mentorId: string) => Promise<ICollaboration[]>;
-    findMentorRequest: ({ page, limit, search }: {
+    findMentorRequest: ({ page, limit, search, }: {
         page: number;
         limit: number;
         search: string;
     }) => Promise<{
-        requests: IMentorRequest[];
+        requests: (import("mongoose").FlattenMaps<IMentorRequest> & Required<{
+            _id: Types.ObjectId;
+        }> & {
+            __v: number;
+        })[];
         total: number;
         page: number;
         pages: number;
     }>;
-    findCollab: ({ page, limit, search }: {
+    findCollab: ({ page, limit, search, }: {
         page: number;
         limit: number;
         search: string;
     }) => Promise<{
-        collabs: ICollaboration[];
+        collabs: (import("mongoose").FlattenMaps<ICollaboration> & Required<{
+            _id: Types.ObjectId;
+        }> & {
+            __v: number;
+        })[];
         total: number;
         page: number;
         pages: number;

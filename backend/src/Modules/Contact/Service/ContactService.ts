@@ -1,7 +1,7 @@
-import { BaseService } from '../../../core/Services/BaseService.js';
-import { ContactRepository } from '../Repositry/ContactRepositry.js';
-import logger from '../../../core/Utils/Logger.js';
-import { FormattedContact, PopulatedContact } from '../Types/types.js';
+import { BaseService } from '../../../core/Services/BaseService';
+import { ContactRepository } from '../Repositry/ContactRepositry';
+import logger from '../../../core/Utils/Logger';
+import { FormattedContact, PopulatedContact } from '../Types/types';
 
 export class ContactService extends BaseService {
   private contactRepo: ContactRepository;

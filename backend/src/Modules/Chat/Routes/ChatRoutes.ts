@@ -1,9 +1,9 @@
 import { Router } from 'express';
-import { ChatController } from '../Controllers/ChatController.js';
-import { upload } from '../../../core/Utils/Multer.js';
-import { apiLimiter } from '../../../middlewares/ratelimit.middleware.js';
-import { AuthMiddleware } from '../../../middlewares/auth.middleware.js';
-import { CHAT_ROUTES } from '../Constant/Chat.routes.js';
+import { ChatController } from '../Controllers/ChatController';
+import { upload } from '../../../core/Utils/Multer';
+import { apiLimiter } from '../../../middlewares/ratelimit.middleware';
+import { AuthMiddleware } from '../../../middlewares/auth.middleware';
+import { CHAT_ROUTES } from '../Constant/Chat.routes';
 
 const router = Router();
 const chatController = new ChatController();

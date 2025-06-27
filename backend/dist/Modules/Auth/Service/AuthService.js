@@ -343,6 +343,7 @@ export class AuthService extends BaseService {
     };
     // Verify admin passkey
     verifyAdminPasskey = async (passkey) => {
+        logger.info(`AdminPasskey from Server :${config.adminpasscode} and passkey from front end : ${passkey}`);
         try {
             if (passkey !== config.adminpasscode) {
                 throw new ServiceError("Invalid admin passkey");

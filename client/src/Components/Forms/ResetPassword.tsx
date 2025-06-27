@@ -36,9 +36,10 @@ const ResetPassword = () => {
       toast.success("Password reset successfully!");
       dispatch(clearResetEmail()); // Clear email from Redux
       navigate("/login"); // Redirect to login page
-    } catch (error: any) {
-      toast.error(error.response?.data?.message || "Password reset failed");
+    } catch (error) {
+      toast.error("Password reset failed");
       dispatch(signinFailure(error.response?.data?.message || "Password reset failed"));
+      console.log("Reset Password Error : ",error.response?.data?.message)
     }
   };
 

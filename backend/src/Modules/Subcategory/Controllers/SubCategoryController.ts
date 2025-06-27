@@ -1,9 +1,9 @@
 import { Request, Response } from 'express';
-import { SubcategoryService } from '../Service/SubCategoryService.js';
-import { SubcategoryRepository } from "../Repositry/SubCategoryRepositry.js";
-import { SubcategoryInterface as ISubcategory } from "../../../Interfaces/models/SubcategoryInterface.js";
-import { BaseController } from '../../../core/Controller/BaseController.js';
-import logger from "../../../core/Utils/Logger.js";
+import { SubcategoryService } from '../Service/SubCategoryService';
+import { SubcategoryRepository } from "../Repositry/SubCategoryRepositry";
+import { SubcategoryInterface as ISubcategory } from "../../../Interfaces/models/SubcategoryInterface";
+import { BaseController } from '../../../core/Controller/BaseController';
+import logger from "../../../core/Utils/Logger";
 
 
 interface SubcategoryRequest extends Request {
