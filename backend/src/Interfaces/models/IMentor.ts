@@ -3,7 +3,7 @@ import { Document, Types } from "mongoose";
 export interface IMentor extends Document {
   _id: Types.ObjectId;
   mentorId: string;
-  userId: Types.ObjectId ;
+  userId: Types.ObjectId;
   isApproved?: string;
   rejectionReason?: string;
   skills?: string[];

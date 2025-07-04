@@ -1,6 +1,18 @@
 import { axiosInstance } from "../lib/axios";
 import { handleError } from "./ErrorHandler";
 
+export interface MentorAnalytics {
+  mentorId: string;
+  name: string;
+  email: string;
+  specialization: string | undefined;
+  approvalStatus: string | undefined;
+  totalCollaborations: number;
+  totalEarnings: number;
+  platformFees: number;
+  avgCollabPrice: number;
+}
+
 // Fetch mentor requests
 export const createMentorProfile = async (formdata:FormData) => {
   try {
@@ -42,8 +54,8 @@ export const fetchMentorById = async (mentorId) => {
 //Fetch All Mentors
 export const fetchAllMentors = async () =>{
   try {
-    const { data } = await axiosInstance.get("/mentors/getAllMentors")
-    return data
+    const response = await axiosInstance.get("/mentors/getAllMentors")
+    return response.data.data
   } catch (error) {
     handleError(error)
   }
@@ -68,12 +80,12 @@ export const cancelMentorship = async (mentorId) => {
 };
 
 // Reject mentor request
-export const rejectMentor = async (mentorId:string, rejectionReason) => {
+export const rejectMentor = async (mentorId:string, reason) => {
   try {
-    await axiosInstance.delete(`/mentors/rejectmentorrequest/${mentorId}`, {
-      data: { rejectionReason },
+    await axiosInstance.put(`/mentors/rejectmentorrequest/${mentorId}`, {
+      reason,
     });
-  } catch (error) {
+  }catch (error) {
     handleError(error)
   }
 };
@@ -105,3 +117,28 @@ export const updateMentorProfile = async(mentorId, mentorInfo) =>{
     handleError(error)
   }
 }
+
+  export const getMentorAnalytics = async (
+  page: number,
+  limit: number,
+  sortBy: 'totalEarnings' | 'platformFees' | 'totalCollaborations' | 'avgCollabPrice',
+  sortOrder: 'asc' | 'desc'
+) => {
+  try {
+    const response = await axiosInstance.get('/mentors/mentor-analytics', {
+      params: { page, limit, sortBy, sortOrder },
+    });
+    return response.data.data;
+  } catch (error) {
+    handleError(error);
+  }
+};
+
+export const getSalesReport = async (period: string) => {
+  try {
+    const response = await axiosInstance.get('/mentors/sales-report', { params: { period } });
+    return response.data.data;
+  } catch (error) {
+    handleError(error);
+  }
+};

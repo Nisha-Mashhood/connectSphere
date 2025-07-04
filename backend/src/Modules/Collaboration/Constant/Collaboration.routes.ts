@@ -7,7 +7,7 @@ export const COLLABORATION_ROUTES = {
   ProcessPayment: '/process-payment',
   GetCollabDataUser: '/get-collabData-user/:id',
   GetCollabDataMentor: '/get-collabData-mentor/:id',
-  CancelCollab: '/cancel-collab/:collabId',
+  CancelAndRefundCollab: '/cancel-and-refund/:collabId',
   GetCollab: '/getCollab/:collabId',
   GetCollabRequest: '/getCollabRequset/:requestId',
   MarkUnavailable: '/markUnavailable/:collabId',
@@ -16,4 +16,5 @@ export const COLLABORATION_ROUTES = {
   GetLockedSlots: '/locked-slots/:mentorId',
   GetAllMentorRequests: '/getAllRequest',
   GetAllCollabs: '/getAllCollab',
+  // RefundCollab: '/refund/:collabId',
 } as const;

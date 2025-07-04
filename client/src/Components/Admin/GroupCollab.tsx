@@ -16,7 +16,7 @@ const GroupCollab = () => {
       try {
         const groupData = await groupDetails();
         const requestData = await getAllGroupRequests();
-        setGroups(groupData.data || []);
+        setGroups(groupData || []);
         setRequests(requestData || []);
       } catch (error) {
         console.error("Error fetching data:", error);

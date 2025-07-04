@@ -9,4 +9,6 @@ export const MENTOR_ROUTES = {
   UpdateMentorProfile: '/update-mentor/:mentorId',
   GetAllMentors: '/getAllMentors',
   GetMentorByUserId: '/user/:userId',
+  GetMentorAnalytics: '/mentor-analytics',
+  GetSalesReport: '/sales-report',
 } as const;

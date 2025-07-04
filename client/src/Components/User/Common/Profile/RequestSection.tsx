@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { useSelector } from "react-redux";
 import {
   getTheRequestByUser,
@@ -54,7 +54,6 @@ const PaymentForm = ({ request, onSuccessfulPayment }) => {
 
   // Get the current URL to use for return_url
   const getReturnUrl = () => {
-    // Use window.location if available, or fallback to a hardcoded base URL
     return typeof window !== 'undefined' 
       ? `${window.location.origin}/profile` 
       : 'https://yourwebsite.com/payment-result';
@@ -119,7 +118,7 @@ const PaymentForm = ({ request, onSuccessfulPayment }) => {
     } else if (paymentStatus === 'failed') {
       toast.error("Payment failed. Please try again.");
     }
-  }, []);
+  }, [onSuccessfulPayment]);
 
   return (
     <form onSubmit={handleSubmit}>
@@ -172,25 +171,31 @@ const RequestsSection = ({ handleProfileClick }) => {
   const [isLoading, setIsLoading] = useState(true);
   const { isOpen, onOpen, onClose } = useDisclosure();
 
-  const fetchRequests = async () => {
-    setIsLoading(true);
-    try {
-      // Get requests sent by the user/mentor
-      const sentData = await getTheRequestByUser(currentUser._id);
-      setSentRequests(sentData.requests || []);
+  const fetchRequests = useCallback(async () => {
+  setIsLoading(true);
+  try {
+    // Get requests sent by the user/mentor
+    const sentData = await getTheRequestByUser(currentUser._id);
+    console.log("Sent Requests:", sentData);
+    setSentRequests(sentData.requests || []);
 
-      // Get requests received by the mentor (if applicable)
-      if (currentUser.role === "mentor" && mentorDetails) {
-        const receivedData = await getAllRequest(mentorDetails._id);
-        setReceivedRequests(receivedData.requests || []);
-      }
-    } catch (error) {
-      console.error("Error fetching requests:", error.message);
-      toast.error("Failed to load requests. Please try again.");
-    } finally {
-      setIsLoading(false);
+    console.log("Current user Details : ",currentUser);
+    console.log("Mentor Details : ",mentorDetails);//mentor deatils is coming as null check that!!!
+
+    // Get requests received by the mentor
+    if (currentUser.role === "mentor" && mentorDetails) {
+      console.log("Mentor details : ",mentorDetails);
+      const receivedData = await getAllRequest(mentorDetails._id);
+      console.log("Received Requests:", receivedData);
+      setReceivedRequests(receivedData.requests || []);
     }
-  };
+  } catch (error) {
+    console.error("Error fetching requests:", error.message);
+    toast.error("Failed to load requests. Please try again.");
+  } finally {
+    setIsLoading(false);
+  }
+}, [currentUser, mentorDetails]);
 
   const handleAccept = async (requestId) => {
     try {
@@ -250,7 +255,7 @@ const RequestsSection = ({ handleProfileClick }) => {
         fetchRequests();
       }
     }
-  }, [currentUser._id]);
+  }, [currentUser._id, fetchRequests]);
 
   // Render a single request card
   const renderRequestCard = (request, isSent) => {

@@ -3,7 +3,7 @@ import { BaseController } from '../../../core/Controller/BaseController';
 import { CollaborationService } from '../Service/CollaborationService';
 import MentorRequest from '../../../models/mentorRequset';
 import { IMentorRequest } from '../../../Interfaces/models/IMentorRequest';
-// import logger from '../../../core/utils/Logger';
+import logger from '../../../core/Utils/Logger';
 
 export class CollaborationController extends BaseController {
   private collabService: CollaborationService;
@@ -91,11 +91,11 @@ export class CollaborationController extends BaseController {
       );
       const paymentIntent = 'paymentIntent' in paymentResult ? paymentResult.paymentIntent : paymentResult;
       if (paymentIntent.status === 'requires_action' && paymentIntent.next_action) {
-        this.sendSuccess(res, { charge: paymentIntent }, 'Payment requires action', 200);
+        this.sendSuccess(res, { status: 'requires_action', charge: paymentIntent }, 'Payment requires action', 200);
       } else if (paymentIntent.status === 'succeeded') {
-        this.sendSuccess(res, { charge: paymentIntent, contacts: paymentResult.contacts }, 'Payment succeeded');
+        this.sendSuccess(res, { status: 'success', charge: paymentIntent, contacts: paymentResult.contacts }, 'Payment succeeded');
       } else {
-        this.sendSuccess(res, { charge: paymentIntent }, `Payment status: ${paymentIntent.status}`);
+        this.sendSuccess(res, { status: paymentIntent.status, charge: paymentIntent }, `Payment status: ${paymentIntent.status}`);
       }
     } catch (error: any) {
       this.handleError(error, res);
@@ -122,16 +122,31 @@ export class CollaborationController extends BaseController {
     }
   }
 
-  deleteCollab = async (req: Request, res: Response): Promise<void> =>{
+  // deleteCollab = async (req: Request, res: Response): Promise<void> =>{
+  //   try {
+  //     const { collabId } = req.params;
+  //     const { reason } = req.body;
+  //     const response = await this.collabService.removeCollab(collabId, reason);
+  //     this.sendSuccess(res, response, 'Collaboration deleted successfully');
+  //   } catch (error: any) {
+  //     this.handleError(error, res);
+  //   }
+  // }
+
+  cancelAndRefundCollab = async (req: Request, res: Response): Promise<void> => {
     try {
       const { collabId } = req.params;
-      const { reason } = req.body;
-      const response = await this.collabService.removeCollab(collabId, reason);
-      this.sendSuccess(res, response, 'Collaboration deleted successfully');
+      const { reason, amount } = req.body;
+      logger.info('Processing cancellation and refund with data:', { collabId, reason, amount });
+      if (!reason || !amount) {
+        this.throwError(400, 'Reason and amount are required');
+      }
+      const updatedCollab = await this.collabService.cancelAndRefundCollab(collabId, reason, amount);
+      this.sendSuccess(res, updatedCollab, 'Collaboration cancelled with refund');
     } catch (error: any) {
       this.handleError(error, res);
     }
-  }
+  };
 
   getAllMentorRequests = async(req: Request, res: Response): Promise<void> =>{
     try {
@@ -243,4 +258,18 @@ export class CollaborationController extends BaseController {
       this.handleError(error, res);
     }
   }
+
+  //Process The Refund
+  // processRefund = async (req: Request, res: Response): Promise<void> => {
+  //   try {
+  //     const { collabId } = req.params;
+  //     const { reason, amount } = req.body;
+  //     logger.info( req.params);
+  //     logger.info( req.body);
+  //     logger.info('Parsed refund request:', { collabId, reason, amount });
+  //     this.sendSuccess(res, { collabId, reason, amount }, 'Refund data received for verification');
+  //   } catch (error: any) {
+  //     this.handleError(error, res);
+  //   }
+  // };
 }

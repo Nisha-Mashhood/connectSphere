@@ -20,5 +20,7 @@ router.get(MENTOR_ROUTES.GetMentorDetails, [apiLimiter, authMiddleware.verifyTok
 router.put(MENTOR_ROUTES.UpdateMentorProfile, [apiLimiter, authMiddleware.verifyToken, authMiddleware.checkBlockedStatus], mentorController.updateMentorProfile);
 router.get(MENTOR_ROUTES.GetAllMentors, [apiLimiter, authMiddleware.verifyToken, authMiddleware.checkBlockedStatus], mentorController.getAllMentors);
 router.get(MENTOR_ROUTES.GetMentorByUserId, [apiLimiter, authMiddleware.verifyToken, authMiddleware.checkBlockedStatus], mentorController.getMentorByUserId);
+router.get(MENTOR_ROUTES.GetMentorAnalytics, [apiLimiter, authMiddleware.verifyToken, authMiddleware.authorize('admin')], mentorController.getMentorAnalytics);
+router.get(MENTOR_ROUTES.GetSalesReport, [apiLimiter, authMiddleware.verifyToken, authMiddleware.authorize('admin')], mentorController.getSalesReport);
 
 export default router;

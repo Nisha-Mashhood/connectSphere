@@ -8,4 +8,5 @@ export default defineConfig({
     port: 5173, // Default Vite port 
     https: false, // Change to true if testing on HTTPS
   },
+  define: { 'process.env': {} }
 });

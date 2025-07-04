@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import {
   Card,
   CardHeader,
@@ -22,7 +22,6 @@ import {
 } from "../../../../Service/User-User.Service";
 import { getRelativeTime } from "../../../../lib/helperforprofile";
 import toast from "react-hot-toast";
-// import { useNavigate } from "react-router-dom";
 
 const UserConnections = ({ currentUser, handleProfileClick }) => {
   const [connections, setConnections] = useState([]);
@@ -33,7 +32,7 @@ const UserConnections = ({ currentUser, handleProfileClick }) => {
   // const navigate = useNavigate();
 
   // Fetch both connections and requests
-  const fetchUserData = async () => {
+  const fetchUserData = useCallback(async () => {
     try {
       const connectionsData = await getUser_UserConnections(currentUser._id);
       const requestsData = await getUser_UserRequests(currentUser._id);
@@ -53,11 +52,11 @@ const UserConnections = ({ currentUser, handleProfileClick }) => {
       console.error("Error fetching user data:", error);
       toast.error("Failed to fetch user connections");
     }
-  };
+  },[currentUser._id]);
 
   useEffect(() => {
     fetchUserData();
-  }, [currentUser._id]);
+  }, [currentUser._id, fetchUserData]);
 
   // Handle request responses
   const handleRequestResponse = async (requestId, action) => {
@@ -87,6 +86,7 @@ const UserConnections = ({ currentUser, handleProfileClick }) => {
       setDisconnectReason("");
     } catch (error) {
       toast.error("Failed to disconnect");
+      console.log("FAiled to disconnect : ",error);
     }
   };
   console.log(currentUser._id);

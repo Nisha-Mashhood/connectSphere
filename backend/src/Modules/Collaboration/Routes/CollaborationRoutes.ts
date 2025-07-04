@@ -17,7 +17,7 @@ router.get(COLLABORATION_ROUTES.GetUserRequests, [apiLimiter, authMiddleware.ver
 router.post(COLLABORATION_ROUTES.ProcessPayment, [apiLimiter, authMiddleware.verifyToken, authMiddleware.checkBlockedStatus], collabController.makeStripePaymentController);
 router.get(COLLABORATION_ROUTES.GetCollabDataUser, [apiLimiter, authMiddleware.verifyToken, authMiddleware.checkBlockedStatus], collabController.getCollabDataForUserController);
 router.get(COLLABORATION_ROUTES.GetCollabDataMentor, [apiLimiter, authMiddleware.verifyToken, authMiddleware.checkBlockedStatus], collabController.getCollabDataForMentorController);
-router.delete(COLLABORATION_ROUTES.CancelCollab, [apiLimiter, authMiddleware.verifyToken, authMiddleware.checkBlockedStatus], collabController.deleteCollab);
+router.delete(COLLABORATION_ROUTES.CancelAndRefundCollab, [apiLimiter, authMiddleware.verifyToken, authMiddleware.checkBlockedStatus], collabController.cancelAndRefundCollab);
 router.get(COLLABORATION_ROUTES.GetCollab, [apiLimiter, authMiddleware.verifyToken, authMiddleware.checkBlockedStatus], collabController.getCollabDetailsByCollabId);
 router.get(COLLABORATION_ROUTES.GetCollabRequest, [apiLimiter, authMiddleware.verifyToken, authMiddleware.checkBlockedStatus], collabController.getRequestDetailsByRequestId);
 router.put(COLLABORATION_ROUTES.MarkUnavailable, [apiLimiter, authMiddleware.verifyToken, authMiddleware.checkBlockedStatus], collabController.markUnavailableDays);
@@ -27,7 +27,7 @@ router.get(COLLABORATION_ROUTES.GetLockedSlots, [apiLimiter, authMiddleware.veri
 
 router.get(COLLABORATION_ROUTES.GetAllMentorRequests, [apiLimiter, authMiddleware.verifyToken, authMiddleware.authorize('admin')], collabController.getAllMentorRequests);
 router.get(COLLABORATION_ROUTES.GetAllCollabs, [apiLimiter, authMiddleware.verifyToken, authMiddleware.authorize('admin')], collabController.getAllCollabs);
-
+// router.post(COLLABORATION_ROUTES.RefundCollab, [apiLimiter, authMiddleware.verifyToken, authMiddleware.checkBlockedStatus,], collabController.processRefund);
 export default router;
 
 

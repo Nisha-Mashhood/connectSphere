@@ -10,30 +10,31 @@ export class CleanupScheduler {
     this.cleanupRepo = new CleanupRepository();
   }
 
-  public start(): void {
-    // Cleanup old GroupRequest and MentorRequest documents daily at midnight
-    cron.schedule('0 0 * * *', async () => {
-      logger.info('Running daily cleanup task for old requests');
-      try {
-        // Calculate the date 15 days ago
-        const fifteenDaysAgo = new Date();
-        fifteenDaysAgo.setDate(fifteenDaysAgo.getDate() - 15);
+  public async start(): Promise<void> {
+    logger.info("✅ Cleanup scheduler started.");
 
-        // Delete old GroupRequest documents
-        const deletedGroupRequests = await this.cleanupRepo.deleteOldGroupRequests(fifteenDaysAgo);
-        logger.info(`Cleanup: Deleted ${deletedGroupRequests} old GroupRequest documents`);
+    // Run cleanup once immediately at server start
+    await this.runCleanup();
 
-        // Delete old MentorRequest documents
-        const deletedMentorRequests = await this.cleanupRepo.deleteOldMentorRequests(fifteenDaysAgo);
-        logger.info(`Cleanup: Deleted ${deletedMentorRequests} old MentorRequest documents`);
-
-        logger.info('Daily cleanup task completed successfully');
-      } catch (error: any) {
-        logger.error(`Daily cleanup task failed: ${error.message}`);
-        throw new RepositoryError(`Daily cleanup task failed: ${error.message}`);
-      }
+    // Schedule daily cleanup at midnight
+    cron.schedule('0 0 * * *', () => {
+      this.runCleanup();
     });
+  }
 
-    logger.info('✅ Cleanup scheduler started.');
+  private async runCleanup(): Promise<void> {
+    logger.info('🧹 Running cleanup task for old requests');
+    try {
+      const fifteenDaysAgo = new Date();
+      fifteenDaysAgo.setDate(fifteenDaysAgo.getDate() - 15);
+
+      const deletedGroupRequests = await this.cleanupRepo.deleteOldGroupRequests(fifteenDaysAgo);
+      const deletedMentorRequests = await this.cleanupRepo.deleteOldMentorRequests(fifteenDaysAgo);
+
+      logger.info(`✅ Cleanup Summary: Deleted ${deletedGroupRequests} group requests, ${deletedMentorRequests} mentor requests`);
+    } catch (error: any) {
+      logger.error(`❌ Cleanup task failed: ${error.message}`);
+      throw new RepositoryError(`Cleanup task failed: ${error.message}`);
+    }
   }
 }

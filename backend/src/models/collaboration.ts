@@ -86,9 +86,17 @@ const CollaborationSchema: Schema<ICollaboration> = new Schema(
       type: Boolean,
       default: false,
     },
+    paymentIntentId: {
+      type: String,
+      default: null,
+    },
     isCancelled: {
       type: Boolean,
       default: false,
+    },
+    isCompleted:{
+      type:Boolean,
+      default:false
     },
     price: {
       type: Number,

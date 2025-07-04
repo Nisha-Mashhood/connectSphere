@@ -2,6 +2,7 @@ import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { useSelector } from "react-redux";
 import { RootState } from "../../redux/store";
+import { Button, Modal, ModalContent, ModalHeader, ModalBody, ModalFooter } from "@nextui-org/react"; // Import Modal components
 import toast from "react-hot-toast";
 import { createGroup } from "../../Service/Group.Service";
 
@@ -48,6 +49,7 @@ const CreateGroupForm = () => {
   const [errors, setErrors] = useState<Errors>({});
   const [selectedDay, setSelectedDay] = useState("");
   const [selectedTime, setSelectedTime] = useState("");
+  const [isConfirmModalOpen, setIsConfirmModalOpen] = useState(false); // State for confirmation modal
 
   const days = [
     "Monday",
@@ -116,8 +118,8 @@ const CreateGroupForm = () => {
         newErrors.startDate = "Invalid date format";
       } else {
         const today = new Date();
-        today.setHours(0, 0, 0, 0); // Reset time for comparison
-        startDate.setHours(0, 0, 0, 0); // Reset time for startDate
+        today.setHours(0, 0, 0, 0);
+        startDate.setHours(0, 0, 0, 0);
         if (startDate <= today) {
           newErrors.startDate = "Start date must be a future date";
         }
@@ -132,9 +134,8 @@ const CreateGroupForm = () => {
     return newErrors;
   };
 
-  const handleInputChange = <K extends keyof GroupFormData>(field: K, value:GroupFormData[K]) => {
+  const handleInputChange = <K extends keyof GroupFormData>(field: K, value: GroupFormData[K]) => {
     setFormData((prev) => ({ ...prev, [field]: value }));
-    // Validate on change
     const newErrors = validateForm();
     setErrors(newErrors);
   };
@@ -177,7 +178,7 @@ const CreateGroupForm = () => {
       };
     });
 
-    setErrors((prev) => ({ ...prev, availableSlots: undefined })); // Clear error on successful add
+    setErrors((prev) => ({ ...prev, availableSlots: undefined }));
     setSelectedTime("");
   };
 
@@ -197,7 +198,6 @@ const CreateGroupForm = () => {
         .filter((slot): slot is TimeSlot => slot !== null),
     }));
 
-    // Revalidate available slots after removal
     const newErrors = validateForm();
     setErrors((prev) => ({
       ...prev,
@@ -215,25 +215,19 @@ const CreateGroupForm = () => {
       toast.error("Please fix the errors before submitting");
       return;
     }
+    //conformation modal
+    setIsConfirmModalOpen(true);
+  };
 
-    const confirm = window.confirm(
-      "Once everything is set for the group, it cannot be changed. Do you want to proceed?"
-    );
-    if (!confirm) return;
-
-    const membersData = [
-      {
-        userId: currentUser._id,
-        joinedAt: new Date(),
-      },
-    ];
+  const handleConfirmCreate = async () => {
+    setIsConfirmModalOpen(false); 
 
     try {
       const response = await createGroup({
         ...formData,
         adminId: currentUser._id,
         createdAt: new Date(),
-        members: membersData,
+        members: [currentUser._id]
       });
 
       console.log("Group Creation Response:", response);
@@ -248,6 +242,10 @@ const CreateGroupForm = () => {
         console.error("Unknown error:", error);
       }
     }
+  };
+
+  const handleCancelCreate = () => {
+    setIsConfirmModalOpen(false); 
   };
 
   return (
@@ -442,6 +440,27 @@ const CreateGroupForm = () => {
           </button>
         </div>
       </form>
+
+      {/* Confirmation Modal */}
+      <Modal isOpen={isConfirmModalOpen} onClose={handleCancelCreate} size="sm">
+        <ModalContent>
+          <ModalHeader>Confirm Group Creation</ModalHeader>
+          <ModalBody>
+            <p>
+              Once everything is set for the group, it cannot be changed. Do you
+              want to proceed?
+            </p>
+          </ModalBody>
+          <ModalFooter>
+            <Button color="danger" variant="light" onPress={handleCancelCreate}>
+              Cancel
+            </Button>
+            <Button color="primary" onPress={handleConfirmCreate}>
+              Confirm
+            </Button>
+          </ModalFooter>
+        </ModalContent>
+      </Modal>
     </div>
   );
 };

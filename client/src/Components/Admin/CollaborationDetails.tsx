@@ -2,7 +2,7 @@ import { useCallback, useEffect, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import {
   acceptTheRequest,
-  cancelCollab,
+  cancelAndRefundCollab,
   fetchCollabDetails,
   fetchCollabRequsetDetails,
   rejectTheRequest,
@@ -28,6 +28,7 @@ const CollaborationDetails = () => {
   const [details, setDetails] = useState(null);
   const [loading, setLoading] = useState(true);
   const [showCancelDialog, setShowCancelDialog] = useState(false);
+  const [showRefundConfirmDialog, setShowRefundConfirmDialog] = useState(false);
   const [reason, setReason] = useState("");
   const navigate = useNavigate();
 
@@ -41,28 +42,33 @@ const CollaborationDetails = () => {
         data = await fetchCollabRequsetDetails(requestId);
         console.log("Request details : ", data);
       }
-      setDetails(data.data);
+      setDetails(data);
     } catch (error) {
       console.error("Error fetching details:", error);
     } finally {
       setLoading(false);
     }
-  },[collabId, requestId]);
+  }, [collabId, requestId]);
 
   useEffect(() => {
     fetchDetails();
   }, [fetchDetails]);
 
-  const handleCancelMentorship = async () => {
-    setShowCancelDialog(false);
+  const handleConfirmRefund = async () => {
+    if (!reason.trim()) {
+      toast.error("Cancellation reason is required.");
+      return;
+    }
     try {
-      const response = await cancelCollab(id, reason);
-      console.log(response);
-      toast.success("Mentor Collaboration Cancelled");
+      await cancelAndRefundCollab(collabId, reason, details.price / 2);
+      toast.success("Mentor Collaboration Cancelled with 50% Refund");
       navigate("/admin/userMentorManagemnt");
     } catch (error) {
-      console.error("Error cancelling mentorship:", error);
+      console.error("Error processing refund:", error);
+      toast.error("Failed to process refund. Please try again.");
     }
+    setShowRefundConfirmDialog(false);
+    setShowCancelDialog(false);
   };
 
   const handleAcceptRequset = async () => {
@@ -86,6 +92,7 @@ const CollaborationDetails = () => {
       toast.error("Failed to reject request. Please try again.");
     }
   };
+
   if (loading)
     return (
       <div className="flex justify-center items-center h-64">
@@ -119,7 +126,6 @@ const CollaborationDetails = () => {
       </div>
     );
 
-  // Format date nicely
   const formatDate = (dateString) => {
     if (!dateString) return "N/A";
     return new Date(dateString).toLocaleDateString("en-US", {
@@ -129,9 +135,8 @@ const CollaborationDetails = () => {
     });
   };
 
-  // Get status badge with color
   const getStatusBadge = (status) => {
-    if ( status === true) {
+    if (status === true) {
       return (
         <span className="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium bg-green-100 text-green-800">
           Payment Done
@@ -159,7 +164,7 @@ const CollaborationDetails = () => {
       <div className="bg-white shadow overflow-hidden sm:rounded-lg">
         <div className="px-4 py-5 sm:px-6 bg-gradient-to-r from-blue-50 to-indigo-50">
           <div className="flex justify-between items-center">
-            <div className="flex  items-center">
+            <div className="flex items-center">
               <button
                 onClick={() => navigate(-1)}
                 className="text-blue-400 hover:text-blue-100 transition-colors"
@@ -179,7 +184,7 @@ const CollaborationDetails = () => {
                   />
                 </svg>
               </button>
-              <div className="flex-col pl-5  items-center">
+              <div className="flex-col pl-5 items-center">
                 <h3 className="text-lg leading-6 font-medium text-gray-900">
                   {isCollab
                     ? "Collaboration Details"
@@ -193,12 +198,22 @@ const CollaborationDetails = () => {
               </div>
             </div>
             {isCollab ? (
-              <Button
-                className="text-sm bg-red-100 text-red-600 hover:bg-red-300"
-                onPress={() => setShowCancelDialog(true)}
-              >
-                <FaTimes size={10} />
-              </Button>
+              details.isCancelled ? (
+                <span className="text-sm font-medium text-red-600 bg-red-100 px-3 py-1 rounded-md">
+                  Collaboration Cancelled
+                </span>
+              ) : new Date(details.endDate) < new Date() ? (
+                <span className="text-sm font-medium text-gray-500 bg-green-100 px-3 py-1 rounded-md">
+                  Collaboration Completed
+                </span>
+              ) : (
+                <Button
+                  className="text-sm bg-red-100 text-red-600 hover:bg-red-300"
+                  onPress={() => setShowCancelDialog(true)}
+                >
+                  <FaTimes size={10} />
+                </Button>
+              )
             ) : (
               <div className="flex justify-between items-center gap-4">
                 {details?.isAccepted === "Pending" ? (
@@ -217,9 +232,13 @@ const CollaborationDetails = () => {
                     </Button>
                   </>
                 ) : (
-                  <span className={`text-sm font-medium ${
-                    details?.isAccepted === "Accepted" ? "text-green-600" : "text-red-600"
-                  }`}>
+                  <span
+                    className={`text-sm font-medium ${
+                      details?.isAccepted === "Accepted"
+                        ? "text-green-600"
+                        : "text-red-600"
+                    }`}
+                  >
                     {details?.isAccepted}
                   </span>
                 )}
@@ -386,6 +405,7 @@ const CollaborationDetails = () => {
         </div>
       </div>
 
+      {/* Cancellation Reason Modal */}
       <Modal
         isOpen={showCancelDialog}
         onClose={() => setShowCancelDialog(false)}
@@ -394,9 +414,9 @@ const CollaborationDetails = () => {
           <ModalHeader>Cancel Mentorship</ModalHeader>
           <ModalBody>
             <div className="space-y-4">
-              <p>Are you sure you want to cancel this mentorship?</p>
+              <p>Please provide a reason for cancelling this mentorship.</p>
               <Textarea
-                placeholder="Enter reason for deletion"
+                placeholder="Enter reason for cancellation"
                 value={reason}
                 onChange={(e) => setReason(e.target.value)}
               />
@@ -408,10 +428,54 @@ const CollaborationDetails = () => {
               variant="light"
               onPress={() => setShowCancelDialog(false)}
             >
-              No, keep mentorship
+              Close
             </Button>
-            <Button color="danger" onPress={handleCancelMentorship}>
-              Yes, cancel mentorship
+            <Button
+              color="primary"
+              onPress={() => {
+                if (!reason.trim()) {
+                  toast.error("Cancellation reason is required.");
+                  return;
+                }
+                setShowCancelDialog(false);
+                setShowRefundConfirmDialog(true);
+              }}
+              isDisabled={!reason.trim()}
+            >
+              Proceed to Refund
+            </Button>
+          </ModalFooter>
+        </ModalContent>
+      </Modal>
+
+      {/* Refund Confirmation Modal */}
+      <Modal
+        isOpen={showRefundConfirmDialog}
+        onClose={() => setShowRefundConfirmDialog(false)}
+      >
+        <ModalContent>
+          <ModalHeader>Confirm Refund and Cancellation</ModalHeader>
+          <ModalBody>
+            <p>
+              Are you sure you want to cancel this mentorship? A 50% refund of
+              Rs.
+              {details?.price ? (details.price / 2).toFixed(2) : "0.00"} will be
+              processed.
+            </p>
+            <p className="text-sm text-gray-500">
+              Reason: {reason || "Not provided"}
+            </p>
+          </ModalBody>
+          <ModalFooter>
+            <Button
+              color="default"
+              variant="light"
+              onPress={() => setShowRefundConfirmDialog(false)}
+            >
+              Cancel
+            </Button>
+            <Button color="danger" onPress={handleConfirmRefund}>
+              Confirm Refund and Cancel
             </Button>
           </ModalFooter>
         </ModalContent>

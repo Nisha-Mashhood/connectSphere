@@ -11,13 +11,24 @@ import ChatMessages from "./ChatMessages/ChatMessages";
 import ChatInput from "./ChatInput/ChatInput";
 import { Card } from "@nextui-org/react";
 import { Contact, IChatMessage } from "../../../../types";
-import { deduplicateMessages, formatContact, getChatKeyFromMessage } from "./utils/contactUtils";
-import { fetchChatMessages, getUnreadMessages } from "../../../../Service/Chat.Service";
+import {
+  deduplicateMessages,
+  formatContact,
+  getChatKeyFromMessage,
+} from "./utils/contactUtils";
+import {
+  fetchChatMessages,
+  getUnreadMessages,
+} from "../../../../Service/Chat.Service";
 import toast from "react-hot-toast";
 import { debounce } from "lodash";
-import { markNotificationAsRead as markNotificationService} from "../../../../Service/Notification.Service";
-import { markNotificationAsRead, setActiveChatKey, setIsInChatComponent } from "../../../../redux/Slice/notificationSlice";
-import { setSelectedContact as setSelectedContactRedux} from "../../../../redux/Slice/userSlice";
+import { markNotificationAsRead as markNotificationService } from "../../../../Service/Notification.Service";
+import {
+  markNotificationAsRead,
+  setActiveChatKey,
+  setIsInChatComponent,
+} from "../../../../redux/Slice/notificationSlice";
+import { setSelectedContact as setSelectedContactRedux } from "../../../../redux/Slice/userSlice";
 import { useDispatch } from "react-redux";
 import { fetchUserDetails } from "../../../../Service/Auth.service";
 import ringTone from "../../../../assets/ringTone.mp3";
@@ -26,12 +37,20 @@ const Chat: React.FC = () => {
   const navigate = useNavigate();
   const dispatch = useDispatch();
   const { currentUser } = useSelector((state: RootState) => state.user);
-  const { chatNotifications, isInChatComponent } = useSelector((state: RootState) => state.notification);
+  const { chatNotifications, isInChatComponent } = useSelector(
+    (state: RootState) => state.notification
+  );
   const [contacts, setContacts] = useState<Contact[]>([]);
   const [selectedContact, setSelectedContact] = useState<Contact | null>(null);
-  const [allMessages, setAllMessages] = useState<Map<string, IChatMessage[]>>(new Map());
-  const [unreadCounts, setUnreadCounts] = useState<{ [key: string]: number }>({});
-  const [typingUsers, setTypingUsers] = useState<{ [key: string]: string[] }>({});
+  const [allMessages, setAllMessages] = useState<Map<string, IChatMessage[]>>(
+    new Map()
+  );
+  const [unreadCounts, setUnreadCounts] = useState<{ [key: string]: number }>(
+    {}
+  );
+  const [typingUsers, setTypingUsers] = useState<{ [key: string]: string[] }>(
+    {}
+  );
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
   const [isDetailsSidebarOpen, setIsDetailsSidebarOpen] = useState(false);
   const [isVideoCallActive, setIsVideoCallActive] = useState(false);
@@ -52,26 +71,46 @@ const Chat: React.FC = () => {
       ? `user-mentor_${contact.collaborationId}`
       : `user-user_${contact.userConnectionId}`;
 
-  const fetchUnreadCounts = useCallback(
-    debounce(async () => {
-      if (!currentUser?._id) return;
-      try {
-        const data = await getUnreadMessages(currentUser._id);
-        console.log("Unread Messages:", data);
-        setUnreadCounts(data);
-      } catch (error) {
-        console.error("Error fetching unread counts:", error);
-        toast.error(`Error fetching unread counts: ${error.message}`);
+
+ const fetchUnreadCounts = useCallback(
+  debounce(async () => {
+    if (!currentUser?._id) {
+      console.warn("No current user ID, skipping unread counts fetch");
+      return;
+    }
+    try {
+      console.log("Fetching unread counts for user:", currentUser._id);
+      const data = await getUnreadMessages(currentUser._id);
+      console.log("Unread Messages:", data);
+      setUnreadCounts(data);
+    } catch (error) {
+      console.error("Error fetching unread counts:", {
+        message: error.message,
+        error,
+      });
+      if (
+        !error.message.includes("No unread messages") &&
+        !error.message.includes("HTTP 404") &&
+        !error.message.includes("No messages")
+      ) {
+        toast.error(`Error fetching unread counts`);
+      } else {
+        console.log("Non-critical error, setting empty unread counts");
+        setUnreadCounts({});
       }
-    }, 500),
-    [currentUser?._id]
-  );
+    }
+  }, 500),
+  [currentUser?._id]
+)
 
   const updateMessages = useCallback(
     debounce((chatKey: string, newMessages: IChatMessage[]) => {
       setAllMessages((prev) => {
         const messages = prev.get(chatKey) || [];
-        const uniqueMessages = deduplicateMessages([...messages, ...newMessages]);
+        const uniqueMessages = deduplicateMessages([
+          ...messages,
+          ...newMessages,
+        ]);
         return new Map(prev).set(chatKey, uniqueMessages);
       });
     }, 200),
@@ -84,7 +123,10 @@ const Chat: React.FC = () => {
       ringtone.current.src = ringTone; // Set src to imported file
       ringtone.current.load(); // Force preload
       ringtone.current.onloadeddata = () => {
-        console.log("Audio element loaded, readyState:", ringtone.current!.readyState);
+        console.log(
+          "Audio element loaded, readyState:",
+          ringtone.current!.readyState
+        );
         console.log("Audio element src after load:", ringtone.current!.src);
       };
       ringtone.current.onerror = (e) => {
@@ -94,12 +136,14 @@ const Chat: React.FC = () => {
     }
   }, []);
 
-
   // Callback to play ringtone
   const playRingtone = useCallback(async () => {
     console.log("playRingtone: Starting execution");
     if (ringtone.current && !isRingtonePlaying.current) {
-      console.log("playRingtone: Audio element exists, readyState:", ringtone.current.readyState);
+      console.log(
+        "playRingtone: Audio element exists, readyState:",
+        ringtone.current.readyState
+      );
       console.log("playRingtone: Current src:", ringtone.current.src);
       isRingtonePlaying.current = true;
       try {
@@ -112,7 +156,10 @@ const Chat: React.FC = () => {
           console.log("playRingtone: Audio not ready, waiting for load");
           await new Promise<void>((resolve, reject) => {
             ringtone.current!.onloadeddata = () => {
-              console.log("playRingtone: Audio loaded, readyState:", ringtone.current!.readyState);
+              console.log(
+                "playRingtone: Audio loaded, readyState:",
+                ringtone.current!.readyState
+              );
               resolve();
             };
             ringtone.current!.onerror = (e) => {
@@ -123,9 +170,8 @@ const Chat: React.FC = () => {
           });
         }
 
-
         // Resume AudioContext if suspended
-        const audioContext = new (window.AudioContext)();
+        const audioContext = new window.AudioContext();
         if (audioContext.state === "suspended") {
           console.log("playRingtone: AudioContext suspended, resuming");
           await audioContext.resume();
@@ -143,12 +189,20 @@ const Chat: React.FC = () => {
         console.error("playRingtone: Ringtone playback error:", error);
         if (error.name === "NotAllowedError") {
           console.log("playRingtone: Blocked by autoplay policy:", error);
-          toast.error("Please click the 'Enable Audio' button to hear the ringtone.", { duration: 5000 });
+          toast.error(
+            "Please click the 'Enable Audio' button to hear the ringtone.",
+            { duration: 5000 }
+          );
         } else if (error.name === "AbortError") {
           console.log("playRingtone: Play interrupted by pause, ignoring");
         } else {
-          console.error("playRingtone: Unexpected error playing ringtone:", error);
-          toast.error("Failed to play ringtone. Please check if the audio file exists.");
+          console.error(
+            "playRingtone: Unexpected error playing ringtone:",
+            error
+          );
+          toast.error(
+            "Failed to play ringtone. Please check if the audio file exists."
+          );
         }
       }
     } else if (!ringtone.current) {
@@ -165,32 +219,40 @@ const Chat: React.FC = () => {
     // Set session flag
     sessionStorage.setItem("isInChatComponent", "true");
     dispatch(setIsInChatComponent(true));
-  
+
     const token = localStorage.getItem("authToken") || "";
     socketService.connect(currentUser._id, token);
-  
-    const handleReceiveMessage = async(message: IChatMessage) => {
+
+    const handleReceiveMessage = async (message: IChatMessage) => {
       const chatKey = getChatKeyFromMessage(message);
       updateMessages(chatKey, [message]);
       fetchUnreadCounts();
 
       if (isInChatComponent) {
         const relevantNotification = chatNotifications.find(
-          n => n.relatedId === chatKey && n.type === "message" && n.status === "unread"
+          (n) =>
+            n.relatedId === chatKey &&
+            n.type === "message" &&
+            n.status === "unread"
         );
         if (relevantNotification) {
           try {
-            await markNotificationService(relevantNotification._id, currentUser._id);
+            await markNotificationService(
+              relevantNotification._id,
+              currentUser._id
+            );
             dispatch(markNotificationAsRead(relevantNotification._id));
-            socketService.markNotificationAsRead(relevantNotification._id, currentUser._id);
+            socketService.markNotificationAsRead(
+              relevantNotification._id,
+              currentUser._id
+            );
           } catch (error) {
             console.error("Error marking message notification as read:", error);
           }
         }
       }
-
     };
-  
+
     const handleMessageSaved = (message: IChatMessage) => {
       const chatKey = getChatKeyFromMessage(message);
       setAllMessages((prev) => {
@@ -204,22 +266,37 @@ const Chat: React.FC = () => {
         return new Map(prev).set(chatKey, deduplicateMessages(updatedMessages));
       });
     };
-  
-    const handleTyping = ({ userId, chatKey }: { userId: string; chatKey: string }) => {
+
+    const handleTyping = ({
+      userId,
+      chatKey,
+    }: {
+      userId: string;
+      chatKey: string;
+    }) => {
       setTypingUsers((prev) => ({
         ...prev,
-        [chatKey]: [...(prev[chatKey] || []).filter((id) => id !== userId), userId],
+        [chatKey]: [
+          ...(prev[chatKey] || []).filter((id) => id !== userId),
+          userId,
+        ],
       }));
     };
-  
-    const handleStopTyping = ({ userId, chatKey }: { userId: string; chatKey: string }) => {
+
+    const handleStopTyping = ({
+      userId,
+      chatKey,
+    }: {
+      userId: string;
+      chatKey: string;
+    }) => {
       console.log("Received stopTyping event:", { userId, chatKey });
       setTypingUsers((prev) => ({
         ...prev,
         [chatKey]: (prev[chatKey] || []).filter((id) => id !== userId),
       }));
     };
-  
+
     const handleMessagesRead = ({ chatKey }: { chatKey: string }) => {
       setAllMessages((prev) => {
         const messages = prev.get(chatKey) || [];
@@ -232,7 +309,14 @@ const Chat: React.FC = () => {
       fetchUnreadCounts();
     };
 
-    const handleOffer = async (data: { userId: string; targetId: string; type: string; chatKey: string; offer: RTCSessionDescriptionInit; callType: "audio" | "video" }) => {
+    const handleOffer = async (data: {
+      userId: string;
+      targetId: string;
+      type: string;
+      chatKey: string;
+      offer: RTCSessionDescriptionInit;
+      callType: "audio" | "video";
+    }) => {
       console.log("Received offer:", data);
       try {
         let callerName = "Unknown Caller";
@@ -256,19 +340,30 @@ const Chat: React.FC = () => {
         });
         if (isInChatComponent) {
           const relevantNotification = chatNotifications.find(
-            n => n.relatedId === data.chatKey && n.type === "incoming_call" && n.status === "unread"
+            (n) =>
+              n.relatedId === data.chatKey &&
+              n.type === "incoming_call" &&
+              n.status === "unread"
           );
           if (relevantNotification) {
             try {
-              await markNotificationService(relevantNotification._id, currentUser._id);
+              await markNotificationService(
+                relevantNotification._id,
+                currentUser._id
+              );
               dispatch(markNotificationAsRead(relevantNotification._id));
-              socketService.markNotificationAsRead(relevantNotification._id, currentUser._id);
+              socketService.markNotificationAsRead(
+                relevantNotification._id,
+                currentUser._id
+              );
             } catch (error) {
-              console.error("Error marking incoming_call notification as read:", error);
+              console.error(
+                "Error marking incoming_call notification as read:",
+                error
+              );
             }
           }
         }
-        
       } catch (error) {
         console.error("Error handling offer:", error);
         toast.error("Failed to process incoming call.");
@@ -286,7 +381,13 @@ const Chat: React.FC = () => {
       setIncomingCall(null);
     };
 
-    const handleCallEnded = ({ chatKey, callType }: { chatKey: string; callType: "audio" | "video" }) => {
+    const handleCallEnded = ({
+      chatKey,
+      callType,
+    }: {
+      chatKey: string;
+      callType: "audio" | "video";
+    }) => {
       console.log("Handling callEnded:", { chatKey, callType });
       if (selectedContact && getChatKey(selectedContact) === chatKey) {
         setIsVideoCallActive(false);
@@ -297,10 +398,13 @@ const Chat: React.FC = () => {
           ringtone.current.currentTime = 0;
           isRingtonePlaying.current = false;
         }
-        toast.success(`${callType.charAt(0).toUpperCase() + callType.slice(1)} call ended`, { duration: 3000 });
+        toast.success(
+          `${callType.charAt(0).toUpperCase() + callType.slice(1)} call ended`,
+          { duration: 3000 }
+        );
       }
     };
-  
+
     socketService.onReceiveMessage(handleReceiveMessage);
     socketService.onMessageSaved(handleMessageSaved);
     socketService.onTyping(handleTyping);
@@ -312,7 +416,7 @@ const Chat: React.FC = () => {
 
     fetchContacts();
     fetchUnreadCounts();
-  
+
     return () => {
       console.log("Cleaning up socket listeners in Chat.tsx");
       sessionStorage.removeItem("isInChatComponent");
@@ -342,7 +446,7 @@ const Chat: React.FC = () => {
       const contactData = await getUserContacts();
       console.log("Fetched Contacts : ", contactData);
       const formattedContacts = contactData.map(formatContact);
-      console.log("Received contacts :",formattedContacts);
+      console.log("Received contacts :", formattedContacts);
       setContacts(formattedContacts);
       setInitialContact(formattedContacts);
     } catch (error) {
@@ -381,7 +485,10 @@ const Chat: React.FC = () => {
         setAllMessages((prev) => {
           const currentMessages = prev.get(chatKey) || [];
           const updatedMessages = [...messages, ...currentMessages];
-          return new Map(prev).set(chatKey, deduplicateMessages(updatedMessages));
+          return new Map(prev).set(
+            chatKey,
+            deduplicateMessages(updatedMessages)
+          );
         });
       } catch (error) {
         console.error("Error preloading messages:", error);
@@ -391,8 +498,8 @@ const Chat: React.FC = () => {
       socketService.emitActiveChat(currentUser._id, chatKey);
       socketService.markAsRead(chatKey, currentUser?._id || "", contact.type);
       dispatch(setSelectedContactRedux(contact));
-       // Mark relevant notifications as read
-       try {
+      // Mark relevant notifications as read
+      try {
         const relevantNotifications = chatNotifications.filter(
           (n) =>
             n.relatedId === chatKey &&
@@ -400,9 +507,15 @@ const Chat: React.FC = () => {
             ["message", "missed_call", "incoming_call"].includes(n.type)
         );
         for (const notification of relevantNotifications) {
-          await markNotificationService(notification._id, currentUser?._id || "");
+          await markNotificationService(
+            notification._id,
+            currentUser?._id || ""
+          );
           dispatch(markNotificationAsRead(notification._id));
-          socketService.markNotificationAsRead(notification._id, currentUser?._id || "");
+          socketService.markNotificationAsRead(
+            notification._id,
+            currentUser?._id || ""
+          );
         }
         navigate(`/chat/${contact.type}/${contact.id}`);
       } catch (error) {
@@ -445,7 +558,7 @@ const Chat: React.FC = () => {
             getChatKey={getChatKey}
             isVideoCallActive={isVideoCallActive}
             setIsVideoCallActive={setIsVideoCallActive}
-            incomingCallDetails = {incomingCall}
+            incomingCallDetails={incomingCall}
             ringtone={ringtone}
             playRingtone={playRingtone}
             isRingtonePlaying={isRingtonePlaying}
@@ -467,14 +580,19 @@ const Chat: React.FC = () => {
           />
         </Card>
       </div>
-      
+
       {!isVideoCallActive && (
         <div
           className={`fixed inset-y-0 right-0 z-[100] w-80 md:w-1/4 md:static transform transition-transform duration-300 ease-in-out bg-white dark:bg-gray-900 md:bg-transparent ${
-            isDetailsSidebarOpen ? "translate-x-0" : "translate-x-full md:translate-x-0"
+            isDetailsSidebarOpen
+              ? "translate-x-0"
+              : "translate-x-full md:translate-x-0"
           }`}
         >
-          <ChatDetailsSidebar selectedContact={selectedContact} currentUserId={currentUser?._id} />
+          <ChatDetailsSidebar
+            selectedContact={selectedContact}
+            currentUserId={currentUser?._id}
+          />
         </div>
       )}
       {(isSidebarOpen || isDetailsSidebarOpen) && (
@@ -487,7 +605,7 @@ const Chat: React.FC = () => {
         />
       )}
 
-<audio ref={ringtone} loop preload="auto" hidden />
+      <audio ref={ringtone} loop preload="auto" hidden />
     </div>
   );
 };

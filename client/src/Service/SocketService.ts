@@ -1,5 +1,5 @@
 import { io, Socket } from "socket.io-client";
-import { IChatMessage, Notification } from "../types";
+import { GroupIceCandidateData, IChatMessage, Notification } from "../types";
 
 export class SocketService {
   public socket: Socket | null = null;
@@ -115,6 +115,151 @@ export class SocketService {
       setTimeout(() => this.callEndedSent.delete(eventKey), 60000); // Clear after 60s
     } else {
       console.error("Cannot send callEnded: Socket or userId missing");
+    }
+  }
+
+  //Group call
+  public sendGroupIceCandidate(groupId: string, senderId: string, recipientId: string, candidate: RTCIceCandidateInit, callType: 'audio' | 'video', callId: string) {
+    if (this.socket && this.userId) {
+      console.log(`Sending group ${callType} ICE candidate to ${recipientId} for group ${groupId}, callId: ${callId}`);
+      this.socket.emit('groupIceCandidate', {
+        groupId,
+        senderId,
+        recipientId,
+        candidate,
+        callType,
+        callId,
+      });
+    } else {
+      console.error('Cannot send group ICE candidate: Socket or userId missing');
+    }
+  }
+
+  public sendGroupOffer(groupId: string, senderId: string, recipientId: string, offer: RTCSessionDescriptionInit, callType: 'audio' | 'video', callId: string) {
+    if (this.socket && this.userId) {
+      console.log(`Sending group ${callType} offer to ${recipientId} for group ${groupId}, callId: ${callId}`);
+      this.socket.emit('groupOffer', {
+        groupId,
+        senderId,
+        recipientId,
+        offer,
+        callType,
+        callId,
+      });
+    } else {
+      console.error('Cannot send group offer: Socket or userId missing');
+    }
+  }
+
+  public sendGroupAnswer(groupId: string, senderId: string, recipientId: string, answer: RTCSessionDescriptionInit, callType: 'audio' | 'video', callId: string) {
+    if (this.socket && this.userId) {
+      console.log(`Sending group ${callType} answer to ${recipientId} for group ${groupId}, callId: ${callId}`);
+      this.socket.emit('groupAnswer', {
+        groupId,
+        senderId,
+        recipientId,
+        answer,
+        callType,
+        callId,
+      });
+    } else {
+      console.error('Cannot send group answer: Socket or userId missing');
+    }
+  }
+
+  public onGroupIceCandidate(callback: (data: GroupIceCandidateData) => void) {
+    this.socket?.on('groupIceCandidate', (data) => {
+      console.log('Received group ICE candidate:', data);
+      callback(data);
+    });
+  }
+
+  public onGroupOffer(callback: (data: { groupId: string; senderId: string; recipientId: string; offer: RTCSessionDescriptionInit; callType: 'audio' | 'video'; callId: string }) => void) {
+    this.socket?.on('groupOffer', (data) => {
+      console.log('Received group offer:', data);
+      callback(data);
+    });
+  }
+
+  public onGroupAnswer(callback: (data: { groupId: string; senderId: string; recipientId: string; answer: RTCSessionDescriptionInit; callType: 'audio' | 'video'; callId: string }) => void) {
+    this.socket?.on('groupAnswer', (data) => {
+      console.log('Received group answer:', data);
+      callback(data);
+    });
+  }
+
+  offGroupIceCandidate(callback: (data: GroupIceCandidateData) => void): void {
+    if (this.socket) {
+      this.socket.off('groupIceCandidate', callback);
+      console.log('Unregistered groupIceCandidate listener');
+    }
+  }
+
+  public offGroupOffer(callback: (data: { groupId: string; senderId: string; recipientId: string; offer: RTCSessionDescriptionInit; callType: 'audio' | 'video'; callId: string }) => void): void {
+    if (this.socket) {
+      this.socket.off('groupOffer', callback);
+      console.log('Unregistered groupOffer listener');
+    }
+  }
+
+  public offGroupAnswer(callback: (data: { groupId: string; senderId: string; recipientId: string; answer: RTCSessionDescriptionInit; callType: 'audio' | 'video'; callId: string }) => void): void {
+    if (this.socket) {
+      this.socket.off('groupAnswer', callback);
+      console.log('Unregistered groupAnswer listener');
+    }
+  }
+
+  public emitGroupCallEnded(
+    groupId: string,
+    senderId: string,
+    recipientId: string,
+    callType: 'audio' | 'video',
+    callId: string
+  ): void {
+    if (this.socket && this.userId) {
+      const eventKey = `${groupId}_${callId}_${callType}`;
+      if (this.callEndedSent.has(eventKey)) {
+        console.log(`Skipping duplicate groupCallEnded for ${eventKey}`);
+        return;
+      }
+      this.callEndedSent.add(eventKey);
+      console.log(`Emitting groupCallEnded to ${recipientId} for group ${groupId}, callId: ${callId}`);
+      this.socket.emit('groupCallEnded', { groupId, senderId, recipientId, callType, callId });
+      setTimeout(() => this.callEndedSent.delete(eventKey), 60000); // Clear after 60s
+    } else {
+      console.error('Cannot send groupCallEnded: Socket or userId missing');
+    }
+  }
+
+  public onGroupCallEnded(
+    callback: (data: { groupId: string; senderId: string; recipientId: string; callType: 'audio' | 'video'; callId: string }) => void
+  ): void {
+    this.socket?.on('groupCallEnded', (data) => {
+      console.log('Received group call ended:', data);
+      callback(data);
+    });
+  }
+
+  public offGroupCallEnded(
+    callback: (data: { groupId: string; senderId: string; recipientId: string; callType: 'audio' | 'video'; callId: string }) => void
+  ): void {
+    if (this.socket) {
+      this.socket.off('groupCallEnded', callback);
+      console.log('Unregistered groupCallEnded listener');
+    }
+  }
+
+  joinUserRoom(userId: string): void {
+    if (this.socket) {
+      this.socket.emit('joinUserRoom', userId);
+      console.log(`Emitted joinUserRoom for user_${userId}`);
+    }
+  }
+
+  leaveUserRoom(userId: string): void {
+    if (this.socket) {
+      this.socket.emit('leaveUserRoom', userId);
+      console.log(`Emitted leaveUserRoom for user_${userId}`);
     }
   }
 

@@ -7,8 +7,12 @@ import {
 import { Collaboration, MentorRequest } from "../../types";
 
 const UserMentorCollab = () => {
-  const [userToMentorRequests, setUserToMentorRequests] = useState<MentorRequest[]>([]);
-  const [userToMentorCollab, setUserToMentorCollab] = useState<Collaboration[]>([]);
+  const [userToMentorRequests, setUserToMentorRequests] = useState<
+    MentorRequest[]
+  >([]);
+  const [userToMentorCollab, setUserToMentorCollab] = useState<Collaboration[]>(
+    []
+  );
   const [activeTab, setActiveTab] = useState("collaborations");
   const [isLoading, setIsLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState("");
@@ -21,14 +25,14 @@ const UserMentorCollab = () => {
 
   const fetchData = useCallback(async () => {
     setIsLoading(true);
-    console.log("Fetching data with searchTerm:", searchTerm); 
+    console.log("Fetching data with searchTerm:", searchTerm);
     try {
       const [requestsData, collabData] = await Promise.all([
         UserToMentorRequset(requestPage, itemsPerPage, searchTerm),
         UserToMentorCollab(collabPage, itemsPerPage, searchTerm),
       ]);
-      console.log("Requests Data:", requestsData); 
-      console.log("Collab Data:", collabData); 
+      console.log("Requests Data:", requestsData);
+      console.log("Collab Data:", collabData);
 
       setUserToMentorRequests(requestsData?.requests || []);
       setUserToMentorCollab(collabData?.collabs || []);
@@ -60,7 +64,40 @@ const UserMentorCollab = () => {
     });
   };
 
-  const getStatusBadge = (status) => {
+  const getStatusBadge = (
+    status,
+    endDate = null,
+    isCancelled = false,
+    isAccepted = null
+  ) => {
+    // Check if collaboration is cancelled
+    if (isCancelled) {
+      return (
+        <span className="px-2 py-1 bg-red-100 text-red-800 rounded-full text-xs font-medium">
+          Deactive
+        </span>
+      );
+    }
+
+    // Check if request is rejected
+    if (isAccepted === "Rejected") {
+      return (
+        <span className="px-2 py-1 bg-red-100 text-red-800 rounded-full text-xs font-medium">
+          Deactive
+        </span>
+      );
+    }
+
+    // Check if collaboration is completed based on endDate
+    const isCompleted = endDate && new Date(endDate) < new Date();
+    if (isCompleted) {
+      return (
+        <span className="px-2 py-1 bg-gray-200 text-gray-800 rounded-full text-xs font-medium">
+          Collaboration Completed
+        </span>
+      );
+    }
+
     if (status === "Accepted" || status === true) {
       return (
         <span className="px-2 py-1 bg-green-100 text-green-800 rounded-full text-xs font-medium">
@@ -103,7 +140,6 @@ const UserMentorCollab = () => {
       </button>
     </div>
   );
-  
 
   return (
     <div className="p-6 bg-white rounded-lg shadow-sm">
@@ -112,7 +148,7 @@ const UserMentorCollab = () => {
       </h2>
 
       <div className="mb-6">
-         <input
+        <input
           type="text"
           placeholder="Search by name, email, or specialization..."
           value={searchTerm}
@@ -249,7 +285,11 @@ const UserMentorCollab = () => {
                             </div>
                           </td>
                           <td className="px-6 py-4 whitespace-nowrap">
-                            {getStatusBadge(collab.payment)}
+                            {getStatusBadge(
+                              collab.payment,
+                              collab.endDate,
+                              collab.isCancelled
+                            )}
                           </td>
                         </tr>
                       ))}

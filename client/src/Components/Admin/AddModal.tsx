@@ -94,7 +94,7 @@ const AddModal = ({ isOpen, onClose, type, fetch, categoryId=null, subcategoryId
           toast.success(`${type.charAt(0).toUpperCase() + type.slice(1)} added successfully!`);      
         } catch (error) {
           setLoading(false);
-          toast.error(error.response?.data?.message || `Failed to add ${type.charAt(0).toUpperCase() + type.slice(1)} `);
+          toast.error(error.response?.message || `Failed to add ${type.charAt(0).toUpperCase() + type.slice(1)} `);
         }
       };
   

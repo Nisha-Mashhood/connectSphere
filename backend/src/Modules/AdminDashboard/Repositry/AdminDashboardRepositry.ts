@@ -2,8 +2,15 @@ import mentorModel from "../../../models/mentor.model";
 import collaboration from "../../../models/collaboration";
 import User from "../../../models/user.model";
 import MentorRequest from "../../../models/mentorRequset";
+import { FeedbackRepository } from "../../../Modules/Feedback/Repositry/FeedBackRepositry";
 
 class AdminRepository {
+  private feedbackRepo: FeedbackRepository;
+
+  constructor() {
+    this.feedbackRepo = new FeedbackRepository();
+  }
+
     // User  counts
    getTotalUsersCount = async() => {
     return await User.countDocuments({ role: 'user' });
@@ -188,8 +195,19 @@ class AdminRepository {
           },
         },
       ]);
-  
-      return topMentors;
+
+    // Add average rating for each mentor
+    const mentorsWithRatings = await Promise.all(
+      topMentors.map(async (mentor) => {
+        const averageRating = await this.feedbackRepo.getMentorAverageRating(mentor._id.toString());
+        return {
+          ...mentor,
+          rating: averageRating > 0 ? Number(averageRating.toFixed(2)) : "No feedback",
+        };
+      })
+    );
+
+    return mentorsWithRatings;
     } catch (error) {
       console.error("Error fetching top mentors:", error);
       throw error;

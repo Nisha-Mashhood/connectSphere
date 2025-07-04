@@ -32,47 +32,52 @@ export class GroupRepository extends BaseRepository<GroupDocument> {
 
    createGroup = async(groupData: GroupFormData): Promise<GroupDocument> => {
     try {
-      logger.debug(`Creating group: ${groupData.name}`);
-      return await this.create({
+      logger.debug(`Creating group with group data: ${groupData}`);
+      const newGroup = await this.create({
         ...groupData,
         adminId: this.toObjectId(groupData.adminId),
         createdAt: groupData.createdAt || new Date(),
         isFull: false,
         startDate: groupData.startDate ? new Date(groupData.startDate) : undefined,
         members: groupData.members
-          ? groupData.members.map((id) => ({
-              userId: this.toObjectId(id),
-              joinedAt: new Date(),
-            }))
-          : [],
-      });
+        ? groupData.members.map((userId: string) => ({
+            userId: this.toObjectId(userId),
+            joinedAt: new Date(),
+          }))
+        : [],
+    });
+      logger.info("Created Group : ",newGroup);
+      return newGroup
+
     } catch (error: any) {
       logger.error(`Error creating group: ${error.message}`);
       throw new RepositoryError(`Error creating group: ${error.message}`);
     }
   }
 
-   getGroupsByAdminId = async(adminId: string): Promise<GroupDocument[]> =>{
-    try {
-      logger.debug(`Fetching groups for admin: ${adminId}`);
-      return await this.model
-        .find({ adminId: this.toObjectId(adminId) })
-        .populate('members.userId', 'name email jobTitle profilePic')
-        .populate('adminId', 'name email jobTitle profilePic')
-        .exec();
-    } catch (error: any) {
-      logger.error(`Error fetching groups by adminId: ${error.message}`);
-      throw new RepositoryError(`Error fetching groups: ${error.message}`);
-    }
+   getGroupsByAdminId = async (adminId: string): Promise<GroupDocument[]> => {
+  try {
+    logger.debug(`Fetching groups for admin: ${adminId}`);
+    const fetchedGroup = await this.model
+      .find({ adminId :this.toObjectId(adminId)})
+      .populate('members.userId', 'name email jobTitle profilePic')
+      .populate('adminId', 'name email jobTitle profilePic')
+      .exec();
+    logger.info("Fetched groups from Repository: ", fetchedGroup);
+    return fetchedGroup;
+  } catch (error: any) {
+    logger.error(`Error fetching groups by adminId: ${error.message}`);
+    throw new RepositoryError(`Error fetching groups: ${error.message}`);
   }
+};
 
-   getGroupById = async(groupId: string): Promise<GroupDocument | null> => {
+   getGroupById = async(_id: string): Promise<GroupDocument | null> => {
     try {
-      logger.debug(`Fetching group by ID: ${groupId}`);
+      logger.debug(`Fetching group by ID: ${_id} :- Repositry`);
       return await this.model
-        .findById(this.toObjectId(groupId))
-        .populate('members.userId', 'name email jobTitle profilePic')
-        .populate('adminId', 'name email jobTitle profilePic')
+        .findById(this.toObjectId(_id))
+        .populate('members.userId')
+        .populate('adminId')
         .exec();
     } catch (error: any) {
       logger.error(`Error fetching group by ID: ${error.message}`);

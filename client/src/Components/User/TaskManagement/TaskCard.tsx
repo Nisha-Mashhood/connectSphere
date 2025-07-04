@@ -84,7 +84,7 @@ const TaskCard: React.FC<TaskCardProps> = ({
     }
 
     const assigneeNames = task.assignedUsers
-      .map((user: any) => user.name || connectedUsers.find((u) => u.userId === user._id)?.name)
+      .map((user) => user.name || connectedUsers.find((u) => u.userId === user._id)?.name)
       .filter((name: string) => name && name !== "Unknown");
 
     return assigneeNames.length > 0
@@ -94,28 +94,38 @@ const TaskCard: React.FC<TaskCardProps> = ({
 
   return (
     <Card className="w-full">
-      <CardHeader className="flex justify-between items-center">
-        <div className="flex items-center gap-2">
-          {hasUnreadNotification && (
-            <Badge content={<FaBell className="text-yellow-500" />} placement="top-left">
-              <h3 className="text-lg font-semibold">{task.name}</h3>
+      <CardHeader className="flex items-start gap-3">
+        {task.image && (
+          <div className="flex-shrink-0">
+            <Badge
+              content={hasUnreadNotification && <FaBell className="text-yellow-500" />}
+              placement="top-left"
+              isInvisible={!hasUnreadNotification}
+            >
+              <img
+                src={task.image}
+                alt="Task"
+                className="w-12 h-12 object-cover rounded-lg"
+              />
             </Badge>
-          )}
-          {!hasUnreadNotification && (
+          </div>
+        )}
+        <div className="flex flex-col flex-1">
+          <div className="flex justify-between items-center">
             <h3 className="text-lg font-semibold">{task.name}</h3>
-          )}
+            <div className="flex gap-2">
+              <Button isIconOnly color="secondary" variant="light" onPress={onView}>
+                <FaEye />
+              </Button>
+              <Button isIconOnly color="warning" variant="light" onPress={onEdit}>
+                <FaEdit />
+              </Button>
+            </div>
+          </div>
           <p className="text-sm text-gray-500">{getCreatedByDisplay()}</p>
           {context === "profile" && (
             <p className="text-sm text-gray-500">{getAssigneeDisplay()}</p>
           )}
-        </div>
-        <div className="flex gap-2">
-          <Button isIconOnly color="secondary" variant="light" onPress={onView}>
-            <FaEye />
-          </Button>
-          <Button isIconOnly color="warning" variant="light" onPress={onEdit}>
-            <FaEdit />
-          </Button>
         </div>
       </CardHeader>
       <CardBody>

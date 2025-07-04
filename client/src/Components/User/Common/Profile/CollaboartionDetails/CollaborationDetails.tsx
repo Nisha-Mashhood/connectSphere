@@ -123,6 +123,7 @@ const CollaborationDetails = () => {
         currentUser={currentUser}
         dispatch={dispatch}
         navigate={navigate}
+        collaboration={collaboration}
       />
     </div>
   );

@@ -50,14 +50,25 @@ export const uploadMedia = async (
   }
 };
 
-export const getUnreadMessages = async(userId: string) =>{
+export const getUnreadMessages = async (userId: string) => {
   try {
     const response = await axiosInstance.get("/chat/unread", {
       params: { userId },
     });
-    return response.data.data;
+    console.log("getUnreadMessages response:", response.data); 
+    return response.data.data; 
   } catch (error) {
-    console.error("Error fetching chat messages:", error.message);
-    throw error;
+    const errorMessage = error.response
+      ? `Status ${error.response.status}: ${error.response.data?.message || error.message}`
+      : error.message || "Unknown error in getUnreadMessages";
+    console.error("Error fetching chat unread messages:", {
+      message: errorMessage,
+      error,
+    });
+    if (error.response?.status === 404 || errorMessage.includes("No messages")) {
+      console.log("No unread messages found, returning empty counts");
+      return {};
+    }
+    throw new Error(errorMessage); 
   }
-}
+};

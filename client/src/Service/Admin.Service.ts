@@ -14,7 +14,7 @@ import { handleError } from "./ErrorHandler";
 export const getTotalUsersCount = async () => {
   try {
     const response = await axiosInstance.get("/admin/total-users");
-    return response.data.data;
+    return response.data;
   } catch (error) {
     handleError(error);
   }

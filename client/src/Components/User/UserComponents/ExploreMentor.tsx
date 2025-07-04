@@ -34,17 +34,33 @@ import {
 import { fetchAllUsers } from "../../../Service/User.Service";
 import { useDispatch, useSelector } from "react-redux";
 import { AppDispatch, RootState } from "../../../redux/store";
-import { getLockedMentorSlot, SendRequsetToMentor } from "../../../Service/collaboration.Service";
+import {
+  getLockedMentorSlot,
+  SendRequsetToMentor,
+} from "../../../Service/collaboration.Service";
 import toast from "react-hot-toast";
 import { FaSearch, FaUsers, FaUserTie } from "react-icons/fa";
-import { fetchCollabDetails, fetchGroupDetailsForMembers, fetchGroupRequests, fetchRequests, fetchUserConnections } from "../../../redux/Slice/profileSlice";
+import {
+  fetchCollabDetails,
+  fetchGroupDetailsForMembers,
+  fetchGroupRequests,
+  fetchRequests,
+  fetchUserConnections,
+  setGroupRequests,
+} from "../../../redux/Slice/profileSlice";
 import RequestStatusHandler from "./HelperComponents/RequestStatusHandler";
 import { sendUser_UserRequset } from "../../../Service/User-User.Service";
 
 const ExploreMentors = () => {
   const { currentUser } = useSelector((state: RootState) => state.user);
-  const { mentorDetails, collabDetails, req, groupRequests,  groupMemberships,  userConnections } =
-    useSelector((state: RootState) => state.profile);
+  const {
+    mentorDetails,
+    collabDetails,
+    req,
+    groupRequests,
+    groupMemberships,
+    userConnections,
+  } = useSelector((state: RootState) => state.profile);
   const dispatch = useDispatch<AppDispatch>();
   const [mentors, setMentors] = useState([]);
   const [categories, setCategories] = useState([]);
@@ -77,51 +93,57 @@ const ExploreMentors = () => {
             groupDetails(),
             fetchAllUsers(),
           ]);
-          
-          if (currentUser) {
-            await Promise.all([
-              // Fetch request status
-              dispatch(fetchRequests({
+
+        console.log("Mentors Data:", mentorsData);
+        console.log("Categories Data:", categoriesData);
+        console.log("Skills Data:", skillsData);
+        console.log("Group Data:", groupData);
+        console.log("User Data:", userData);
+
+        if (currentUser) {
+          await Promise.all([
+            dispatch(
+              fetchRequests({
                 userId: currentUser._id,
                 role: currentUser.role,
-                mentorId: mentorDetails?._id
-              })),
-              // Fetch collaboration status
-              dispatch(fetchCollabDetails({
+                mentorId: mentorDetails?._id,
+              })
+            ),
+            dispatch(
+              fetchCollabDetails({
                 userId: currentUser._id,
-                role: currentUser.role
-              })),
-              // Fetch group request status
-              dispatch(fetchGroupRequests(currentUser._id)),
-              //fetch group membership datas
-              dispatch(fetchGroupDetailsForMembers(currentUser._id)),
-              // Add user connections fetch
-              dispatch(fetchUserConnections(currentUser._id))
-            ]);
-          }
+                role: currentUser.role,
+              })
+            ),
+            dispatch(fetchGroupRequests(currentUser._id)),
+            dispatch(fetchGroupDetailsForMembers(currentUser._id)),
+            dispatch(fetchUserConnections(currentUser._id)),
+          ]);
+        }
 
-        // Filter out the current user from the users list
-        const filteredUsers =
-          userData?.filter((user) => user._id !== currentUser._id) || [];
+        const filteredUsers = Array.isArray(userData)
+          ? userData.filter((user) => user._id !== currentUser._id)
+          : [];
+        const filteredMentors =
+          mentorDetails?._id && Array.isArray(mentorsData)
+            ? mentorsData.filter((mentor) => mentor._id !== mentorDetails._id)
+            : mentorsData || [];
+        const filteredGroups = Array.isArray(groupData)
+          ? groupData.filter((group) => group.adminId?._id !== currentUser._id)
+          : [];
 
-        // Filter out the current mentor from the mentors list (if the user is a mentor)
-        const filteredMentors = mentorDetails?._id
-          ? mentorsData?.filter((mentor) => mentor._id !== mentorDetails._id)
-          : mentorsData || [];
-
-        // Filter out groups where the current user is the admin
-        const filteredGroups =
-          groupData?.data?.filter(
-            (group) => group.adminId !== currentUser._id
-          ) || [];
-
-        setMentors(filteredMentors || []);
-        setCategories(categoriesData || []);
-        setSkills(skillsData.skills || []);
-        setGroups(filteredGroups || []);
-        setUsers(filteredUsers?.filter((user) => user.role === "user") || []);
+        setMentors(filteredMentors);
+        setCategories(Array.isArray(categoriesData) ? categoriesData : []);
+        setSkills(skillsData?.skills || []);
+        setGroups(filteredGroups);
+        setUsers(filteredUsers.filter((user) => user.role === "user"));
       } catch (error) {
         console.error("Error fetching data:", error);
+        setMentors([]);
+        setCategories([]);
+        setSkills([]);
+        setGroups([]);
+        setUsers([]);
       } finally {
         setIsLoading(false);
       }
@@ -216,21 +238,21 @@ const ExploreMentors = () => {
         timeSlots: timeSlot.trim(),
       },
       price: selectedMentor.price,
-      timePeriod:selectedMentor.timePeriod,
+      timePeriod: selectedMentor.timePeriod,
     };
 
     try {
       const response = await SendRequsetToMentor(requestData);
-      if(response) {
+      if (response) {
         toast.success("Request sent successfully!");
-            dispatch(
-              fetchRequests({
-                userId: currentUser._id,
-                role: currentUser.role,
-                mentorId: selectedMentor?._id || undefined,
-              })
-            );
-      setSelectedMentor(null);
+        dispatch(
+          fetchRequests({
+            userId: currentUser._id,
+            role: currentUser.role,
+            mentorId: selectedMentor?._id || undefined,
+          })
+        );
+        setSelectedMentor(null);
       }
     } catch (error) {
       console.error("Error booking mentor:", error);
@@ -242,50 +264,56 @@ const ExploreMentors = () => {
   const getUserButtonConfig = (targetUser, userConnections) => {
     // Check if there's a connection request sent by current user
     const sentRequest = userConnections.sent?.find(
-      conn => conn.recipient._id === targetUser._id
+      (conn) => conn.recipient._id === targetUser._id
     );
-  
+
     // Check if there's a connection request received from this user
     const receivedRequest = userConnections.received?.find(
-      conn => conn.requester._id === targetUser._id
+      (conn) => conn.requester._id === targetUser._id
     );
-  
+
     // If there's an existing connection
-    if (sentRequest?.connectionStatus === 'Connected' || receivedRequest?.connectionStatus === 'Connected') {
+    if (
+      sentRequest?.connectionStatus === "Connected" ||
+      receivedRequest?.connectionStatus === "Connected"
+    ) {
       return {
         disabled: true,
-        text: 'Connected'
+        text: "Connected",
       };
     }
-  
+
     // If there's a pending sent request
-    if (sentRequest?.requestStatus === 'Pending') {
+    if (sentRequest?.requestStatus === "Pending") {
       return {
         disabled: true,
-        text: 'Request Pending'
+        text: "Request Pending",
       };
     }
-  
+
     // If there's a pending received request
-    if (receivedRequest?.requestStatus === 'Pending') {
+    if (receivedRequest?.requestStatus === "Pending") {
       return {
         disabled: true,
-        text: 'Accept Request'
+        text: "Accept Request",
       };
     }
-  
+
     // If request was rejected
-    if (sentRequest?.requestStatus === 'Rejected' || sentRequest?.connectionStatus === "Disconnected") {
+    if (
+      sentRequest?.requestStatus === "Rejected" ||
+      sentRequest?.connectionStatus === "Disconnected"
+    ) {
       return {
         disabled: false,
-        text: 'Connect Again'
+        text: "Connect Again",
       };
     }
-  
+
     // Default state - can send connection request
     return {
       disabled: false,
-      text: 'Connect'
+      text: "Connect",
     };
   };
 
@@ -293,11 +321,14 @@ const ExploreMentors = () => {
   const handleRequestUser = async () => {
     try {
       console.log(`Sending request to user ${selectedUser._id}`);
-      const newConnection = await sendUser_UserRequset(currentUser._id, selectedUser._id)
-      if(newConnection){
+      const newConnection = await sendUser_UserRequset(
+        currentUser._id,
+        selectedUser._id
+      );
+      if (newConnection) {
         toast.success("Connection Requset send successfully");
         setSelectedUser(null);
-        dispatch(fetchUserConnections(currentUser._id))
+        dispatch(fetchUserConnections(currentUser._id));
       }
     } catch (error) {
       console.error("Error sending user request:", error);
@@ -312,9 +343,16 @@ const ExploreMentors = () => {
     try {
       console.log(`Requesting to join group ${selectedGroup._id}`);
       const response = await sendRequsettoGroup(data);
-      if(response){
-        toast.success("Connection Requset send successfully");
-        dispatch(fetchGroupRequests(currentUser._id));
+      if (response) {
+        toast.success("Requset send successfully");
+        const newRequest = {
+          _id: response._id,
+          groupId: { _id: selectedGroup._id },
+          userId: { _id: currentUser._id },
+          status: "Pending",
+          paymentStatus: "Pending",
+        };
+        dispatch(setGroupRequests([...(groupRequests || []), newRequest]));
         setSelectedGroup(null);
       }
     } catch (error) {
@@ -338,7 +376,7 @@ const ExploreMentors = () => {
 
     // Check if there's an ongoing collaboration
     const ongoingCollab = collabDetails?.data?.find(
-      (collab) => collab.mentorId._id === mentor._id && !collab.isCancelled
+      (collab) => collab.mentorId._id === mentor._id && !collab.isCancelled && !collab.isCompleted
     );
     if (ongoingCollab) {
       return {
@@ -377,52 +415,55 @@ const ExploreMentors = () => {
   //Get the count of members
   const getMemberCounts = (group) => {
     const totalMembers = group.maxMembers;
-    const currentMembers = group.members?.length || 0;;
+    const currentMembers = group.members?.length || 0;
     const remainingSlots = totalMembers - currentMembers;
-  
+
     return {
       total: totalMembers,
       current: currentMembers,
-      remaining: remainingSlots
+      remaining: remainingSlots,
     };
   };
-  
+
   // Helper function to determine group button state
   const getGroupButtonConfig = (group) => {
-    // Check if user is already a member of this group
-    const isMember = groupMemberships?.some(membership => membership._id === group._id);
+    // Check if user is already a member
+    const isMember = groupMemberships?.some(
+      (membership) => membership._id === group._id
+    );
     if (isMember) {
       return {
         disabled: true,
-        text: "Member"
+        text: "Member",
       };
     }
-  
-    // Check if user has already sent a request
-    const existingRequest = groupRequests?.find(
-      (request) => request.groupId._id === group._id
-    );
-  
-    if (existingRequest && existingRequest.status !== "Rejected") {
-      const requestStatus = {
-        Pending: "Request Pending",
-        Accepted: "Request Accepted",
-        Rejected: "Request Rejected",
-      };
-      return {
-        disabled: true,
-        text: requestStatus[existingRequest.status] || "Request Pending",
-      };
-    }
-  
+
     // Check if group is full
-    if (group.currentMembers >= group.maxMembers) {
+    const memberCounts = getMemberCounts(group);
+    if (memberCounts.current >= memberCounts.total) {
       return {
         disabled: true,
         text: "Group Full",
       };
     }
-  
+
+    // Check if user has sent a request
+    const existingRequest = groupRequests?.find(
+      (request) => request.groupId._id === group._id
+    );
+    if (existingRequest) {
+      const requestStatus = {
+        Pending: "Request Pending",
+        Accepted: "Request Accepted",
+        Rejected: "Join Group", // Allow resending if rejected
+      };
+      return {
+        disabled: existingRequest.status !== "Rejected",
+        text: requestStatus[existingRequest.status] || "Join Group",
+      };
+    }
+
+    // Default: can send a request
     return {
       disabled: false,
       text: "Join Group",
@@ -480,40 +521,38 @@ const ExploreMentors = () => {
 
   const renderUserCard = (user) => {
     const buttonConfig = getUserButtonConfig(user, userConnections);
-    
+
     return (
       <Card key={user._id} className="hover:shadow-lg transition-shadow">
-       <CardHeader className="p-0">
-                <img
-                  src={user.profilePic || "/api/placeholder/400/400"}
-                  alt={user.name}
-                  className="w-full aspect-square object-cover"
-                />
-              </CardHeader>
-              <CardBody className="space-y-4">
-                <Link to={`/profileDispaly/${user._id}`}>
-                  <h3 className="text-xl font-semibold hover:underline">
-                    {user.name}
-                  </h3>
-                </Link>
-                <p className="text-gray-600">
-                  {user.jobTitle || "Community Member"}
-                </p>
-              </CardBody>
-              <CardFooter>
-                <Button
-                  color="primary"
-                  className="w-full"
-                  onPress={() => !buttonConfig.disabled && setSelectedUser(user)}
-                  isDisabled={buttonConfig.disabled}
-                >
-                  {buttonConfig.text}
-                </Button>
-              </CardFooter>
+        <CardHeader className="p-0">
+          <img
+            src={user.profilePic || "/api/placeholder/400/400"}
+            alt={user.name}
+            className="w-full aspect-square object-cover"
+          />
+        </CardHeader>
+        <CardBody className="space-y-4">
+          <Link to={`/profileDispaly/${user._id}`}>
+            <h3 className="text-xl font-semibold hover:underline">
+              {user.name}
+            </h3>
+          </Link>
+          <p className="text-gray-600">{user.jobTitle || "Community Member"}</p>
+        </CardBody>
+        <CardFooter>
+          <Button
+            color="primary"
+            className="w-full"
+            onPress={() => !buttonConfig.disabled && setSelectedUser(user)}
+            isDisabled={buttonConfig.disabled}
+          >
+            {buttonConfig.text}
+          </Button>
+        </CardFooter>
       </Card>
     );
   };
-  
+
   // JSX for group cards
   const renderGroupCard = (group) => {
     const buttonConfig = getGroupButtonConfig(group);
@@ -527,24 +566,27 @@ const ExploreMentors = () => {
           <div className="space-y-2">
             <p className="text-sm text-gray-600">Price: ₹{group.price}</p>
             <div className="flex flex-col gap-1">
-            <div className="flex items-center justify-between text-sm text-gray-600">
-              <span>Members:</span>
-              <span className="font-medium">
-                {memberCounts.current} / {memberCounts.total}
-              </span>
+              <div className="flex items-center justify-between text-sm text-gray-600">
+                <span>Members:</span>
+                <span className="font-medium">
+                  {memberCounts.current} / {memberCounts.total}
+                </span>
+              </div>
+              <div className="w-full bg-gray-200 rounded-full h-2">
+                <div
+                  className="bg-blue-600 h-2 rounded-full"
+                  style={{
+                    width: `${
+                      (memberCounts.current / memberCounts.total) * 100
+                    }%`,
+                  }}
+                ></div>
+              </div>
+              <p className="text-sm text-gray-500">
+                {memberCounts.remaining}{" "}
+                {memberCounts.remaining === 1 ? "spot" : "spots"} remaining
+              </p>
             </div>
-            <div className="w-full bg-gray-200 rounded-full h-2">
-              <div 
-                className="bg-blue-600 h-2 rounded-full"
-                style={{ 
-                  width: `${(memberCounts.current / memberCounts.total) * 100}%` 
-                }}
-              ></div>
-            </div>
-            <p className="text-sm text-gray-500">
-              {memberCounts.remaining} {memberCounts.remaining === 1 ? 'spot' : 'spots'} remaining
-            </p>
-          </div>
             <p className="text-sm text-gray-600 dark:text-gray-300">
               Start Date:{" "}
               {group.startDate
@@ -580,8 +622,8 @@ const ExploreMentors = () => {
     </div>
   );
 
-   // users tab content
-   const renderUsersTab = () => (
+  // users tab content
+  const renderUsersTab = () => (
     <div className="py-4">
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
         {filteredUsers.map(renderUserCard)}
@@ -600,7 +642,7 @@ const ExploreMentors = () => {
 
   return (
     <div className="container mx-auto px-4 py-8 max-w-7xl">
-       <RequestStatusHandler currentUser={currentUser} />
+      <RequestStatusHandler currentUser={currentUser} />
       {/* Header and Search Section */}
       <div className="mb-8 space-y-6">
         <div className="flex flex-col gap-2">
@@ -668,7 +710,7 @@ const ExploreMentors = () => {
           >
             {renderMentorsTab()}
           </Tab>
-          
+
           <Tab
             key="users"
             title={
@@ -740,10 +782,13 @@ const ExploreMentors = () => {
                         onValueChange={setSelectedSlot}
                       >
                         {selectedMentor.availableSlots?.map(
-                          (slot: any, dayIndex: number) =>
+                          (slot, dayIndex: number) =>
                             slot.timeSlots.map(
                               (timeSlot: string, slotIndex: number) => {
-                                const isLocked = isSlotLocked(slot.day, timeSlot);
+                                const isLocked = isSlotLocked(
+                                  slot.day,
+                                  timeSlot
+                                );
                                 return (
                                   <label
                                     key={`${dayIndex}-${slotIndex}`}
@@ -863,49 +908,57 @@ const ExploreMentors = () => {
             <>
               <ModalHeader>Join Group</ModalHeader>
               <ModalBody>
-              {selectedGroup && (
-            <div>
-              <h3 className="text-xl font-bold">{selectedGroup.name}</h3>
-              <p className="text-gray-600">{selectedGroup.bio}</p>
-              <p className="text-sm text-gray-600">
-                Price: ₹{selectedGroup.price}
-              </p>
-              <div className="space-y-2">
-                {/* Use the getMemberCounts function here to get the member count */}
-                {(() => {
-                  const memberCounts = getMemberCounts(selectedGroup);
-                  return (
-                    <>
-                      <div className="flex items-center justify-between text-sm">
-                        <span>Current Members:</span>
-                        <span className="font-medium">{memberCounts.current}</span>
-                      </div>
-                      <div className="flex items-center justify-between text-sm">
-                        <span>Maximum Capacity:</span>
-                        <span className="font-medium">{memberCounts.total}</span>
-                      </div>
-                      <div className="flex items-center justify-between text-sm">
-                        <span>Available Spots:</span>
-                        <span className="font-medium text-green-600">
-                          {memberCounts.remaining}
-                        </span>
-                      </div>
-                      
-                      {/* Progress bar */}
-                      <div className="w-full bg-gray-200 rounded-full h-2 mt-2">
-                        <div 
-                          className="bg-blue-600 h-2 rounded-full"
-                          style={{ 
-                            width: `${(memberCounts.current / memberCounts.total) * 100}%` 
-                          }}
-                        ></div>
-                      </div>
-                    </>
-                  );
-                })()}
-              </div>
-            </div>
-          )}
+                {selectedGroup && (
+                  <div>
+                    <h3 className="text-xl font-bold">{selectedGroup.name}</h3>
+                    <p className="text-gray-600">{selectedGroup.bio}</p>
+                    <p className="text-sm text-gray-600">
+                      Price: ₹{selectedGroup.price}
+                    </p>
+                    <div className="space-y-2">
+                      {/* Use the getMemberCounts function here to get the member count */}
+                      {(() => {
+                        const memberCounts = getMemberCounts(selectedGroup);
+                        return (
+                          <>
+                            <div className="flex items-center justify-between text-sm">
+                              <span>Current Members:</span>
+                              <span className="font-medium">
+                                {memberCounts.current}
+                              </span>
+                            </div>
+                            <div className="flex items-center justify-between text-sm">
+                              <span>Maximum Capacity:</span>
+                              <span className="font-medium">
+                                {memberCounts.total}
+                              </span>
+                            </div>
+                            <div className="flex items-center justify-between text-sm">
+                              <span>Available Spots:</span>
+                              <span className="font-medium text-green-600">
+                                {memberCounts.remaining}
+                              </span>
+                            </div>
+
+                            {/* Progress bar */}
+                            <div className="w-full bg-gray-200 rounded-full h-2 mt-2">
+                              <div
+                                className="bg-blue-600 h-2 rounded-full"
+                                style={{
+                                  width: `${
+                                    (memberCounts.current /
+                                      memberCounts.total) *
+                                    100
+                                  }%`,
+                                }}
+                              ></div>
+                            </div>
+                          </>
+                        );
+                      })()}
+                    </div>
+                  </div>
+                )}
               </ModalBody>
               <ModalFooter>
                 <Button color="default" onPress={onClose}>

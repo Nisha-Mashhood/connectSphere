@@ -38,7 +38,7 @@ const MentorProfileForm = () => {
     const fetchSkills = async () => {
       try {
         const data = await getAllSkills();
-        setSkills(data.skills);
+        setSkills(data);
       } catch (error) {
         toast.error("Failed to fetch skills");
         console.log("Mentor Profile form :",error)

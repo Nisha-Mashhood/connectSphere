@@ -40,6 +40,7 @@ export class GroupController {
         res.status(404).json({ success: false, message: 'No groups found for this admin' });
         return;
       }
+      logger.info("groups Fetched : ",groups);
       res.status(200).json({
         success: true,
         message: 'Groups fetched successfully',
@@ -157,7 +158,7 @@ export class GroupController {
     updateGroupRequest  = async(req: Request, res: Response): Promise<void> =>{
     try {
       const { requestId, status } = req.body;
-      logger.debug(`Updating group request: ${requestId} to ${status}`);
+      logger.debug(`Updating group request: ${requestId} to ${status} :- Controller`);
       const result = await this.groupService.modifyGroupRequestStatus(requestId, status);
       res.status(200).json({
         success: true,

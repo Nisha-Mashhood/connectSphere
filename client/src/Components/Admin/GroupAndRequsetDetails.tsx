@@ -8,6 +8,15 @@ import {
   updateGroupRequest,
 } from "../../Service/Group.Service";
 import toast from "react-hot-toast";
+import {
+  Modal,
+  ModalBody,
+  ModalContent,
+  ModalFooter,
+  ModalHeader,
+  Button,
+  useDisclosure,
+} from "@nextui-org/react";
 
 const GroupDetails = () => {
   const { groupId, requestId } = useParams<{
@@ -17,13 +26,17 @@ const GroupDetails = () => {
   const [group, setGroup] = useState(null);
   const [request, setRequest] = useState(null);
   const [loading, setLoading] = useState(true);
+  const { isOpen, onOpen, onClose } = useDisclosure();
+  const [confirmAction, setConfirmAction] = useState<null | (() => void)>(null);
+  const [modalTitle, setModalTitle] = useState("");
+  const [modalDescription, setModalDescription] = useState("");
   const navigate = useNavigate();
 
   const fetchDetails = useCallback(async () => {
     try {
       if (groupId) {
         const groupData = await getGroupDetails(groupId);
-        setGroup(groupData.data);
+        setGroup(groupData);
         console.log("Group Data:", groupData);
       } else if (requestId) {
         const requestData = await getGroupRequestDetails(requestId);
@@ -36,7 +49,7 @@ const GroupDetails = () => {
     } finally {
       setLoading(false);
     }
-  },[groupId,requestId])
+  }, [groupId, requestId]);
 
   useEffect(() => {
     fetchDetails();
@@ -50,63 +63,83 @@ const GroupDetails = () => {
     });
   };
 
+  const openConfirmationModal = ({
+    title,
+    description,
+    action,
+  }: {
+    title: string;
+    description: string;
+    action: () => void;
+  }) => {
+    setModalTitle(title);
+    setModalDescription(description);
+    setConfirmAction(() => action);
+    onOpen();
+  };
+
   const handleRemoveGroup = async () => {
     if (!groupId) return;
 
-    if (
-      !confirm(
-        "Are you sure you want to delete this group? This action cannot be undone."
-      )
-    ) {
-      return;
-    }
-    alert(groupId);
-    try {
-      await removeGroup(groupId);
-      toast.success("Group deleted successfully!");
-      navigate("/admin/groupManagemnt");
-    } catch (err: unknown) {
-      if (err instanceof Error) {
-        console.log(err);
-        toast.error("Failed to delete group");
-      }else{
-        toast.error("An unknown error occurred");
-        console.error("Unknown error:", err);
-      }
-    }
+    openConfirmationModal({
+      title: "Delete Group",
+      description:
+        "Are you sure you want to delete this group? This action cannot be undone.",
+      action: async () => {
+        if (!groupId) return;
+        try {
+          await removeGroup(groupId);
+          toast.success("Group deleted successfully!");
+          navigate("/admin/groupManagemnt");
+        } catch (err: unknown) {
+          if (err instanceof Error) {
+            console.log(err);
+            toast.error("Failed to delete group");
+          } else {
+            toast.error("An unknown error occurred");
+            console.error("Unknown error:", err);
+          }
+        }
+        onClose();
+      },
+    });
   };
 
   const handleRemoveMember = async (userId) => {
     if (!groupId) return;
-    const data = {
-      groupId,
-      userId,
-    };
-    alert(data);
-    try {
-      await removeUserFromGroup(data);
-      toast.success("Member removed successfully");
-      fetchDetails();
-    } catch (err: unknown) {
-      if (err instanceof Error) {
-        console.log(err);
-        toast.error("Failed to remove member");
-      }else{
-        toast.error("An unknown error occurred");
-        console.error("Unknown error:", err);
-      }
-    }
+    openConfirmationModal({
+      title: "Remove Member",
+      description:
+        "Are you sure you want to remove this member from the group?",
+      action: async () => {
+        try {
+          await removeUserFromGroup({ groupId, userId });
+          toast.success("Member removed successfully");
+          fetchDetails();
+        } catch (err: unknown) {
+          if (err instanceof Error) {
+            console.log(err);
+            toast.error("Failed to remove member");
+          } else {
+            toast.error("An unknown error occurred");
+            console.error("Unknown error:", err);
+          }
+        }
+        onClose();
+      },
+    });
   };
 
   const handleRequestUpdate = async (status: string) => {
     try {
       await updateGroupRequest(requestId, status);
       toast.success(`Request ${status.toLowerCase()}`);
+      navigate(`/admin/groupManagemnt`);
     } catch (err: unknown) {
       if (err instanceof Error) {
         console.log(err);
         toast.error("Failed to update request");
-      }else{
+      } else {
         toast.error("An unknown error occurred");
         console.error("Unknown error:", err);
       }
@@ -547,6 +580,33 @@ const GroupDetails = () => {
           )}
         </div>
       </div>
+      <Modal
+        isOpen={isOpen}
+        onClose={onClose}
+        backdrop="blur"
+        placement="center"
+      >
+        <ModalContent>
+          {(onClose) => (
+            <>
+              <ModalHeader className="text-lg font-semibold">
+                {modalTitle}
+              </ModalHeader>
+              <ModalBody>
+                <p className="text-gray-600">{modalDescription}</p>
+              </ModalBody>
+              <ModalFooter>
+                <Button variant="light" onPress={onClose}>
+                  Cancel
+                </Button>
+                <Button color="danger" onPress={() => confirmAction?.()}>
+                  Confirm
+                </Button>
+              </ModalFooter>
+            </>
+          )}
+        </ModalContent>
+      </Modal>
     </div>
   );
 };

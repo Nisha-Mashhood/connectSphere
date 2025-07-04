@@ -1,6 +1,6 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { useSelector } from "react-redux";
-import { Button, Modal, ModalContent, ModalHeader, ModalBody } from "@nextui-org/react";
+import { Button, Modal, ModalContent, ModalHeader, ModalBody, Tabs, Tab, Chip } from "@nextui-org/react";
 import { FaPlus } from "react-icons/fa";
 import toast from "react-hot-toast";
 import { RootState } from "../../../redux/store";
@@ -58,6 +58,7 @@ const TaskManagement = ({ context, currentUser, contextData }) => {
   const [isDeleting, setIsDeleting] = useState(false);
   const [errors, setErrors] = useState<ITaskErrors>({});
   const [connectedUsers, setConnectedUsers] = useState<{ userId: string; name: string }[]>([]);
+  const [selectedTab, setSelectedTab] = useState<string>("upcoming");
 
   const [taskData, setTaskData] = useState<ITaskData>({
     name: "",
@@ -75,12 +76,10 @@ const TaskManagement = ({ context, currentUser, contextData }) => {
   });
 
   // Fetch user connections for profile context
-  const fetchUserConnections = async () => {
+  const fetchUserConnections = useCallback(async () => {
     try {
       const connectionsData = await getUser_UserConnections(currentUser._id);
-      console.log("Connections data in TaskManagement:", connectionsData);
-
-      const users = connectionsData.data
+      const users = connectionsData
         .filter((conn) => conn.requestStatus === "Accepted" && conn.connectionStatus === "Connected")
         .map((conn) => {
           const otherUser = conn.requester._id === currentUser._id ? conn.recipient : conn.requester;
@@ -92,37 +91,40 @@ const TaskManagement = ({ context, currentUser, contextData }) => {
         .filter((user, index, self) => 
           user.userId && self.findIndex((u) => u.userId === user.userId) === index
         );
-
       setConnectedUsers(users);
-      console.log("Connected users in TaskManagement:", users);
     } catch (error) {
       console.error("Error fetching user connections:", error);
       toast.error("Failed to fetch user connections");
     }
-  };
+  }, [currentUser._id]);
 
   // Fetch all tasks
-  const fetchTasks = async () => {
+  const fetchTasks = useCallback(async () => {
     try {
       const response = await get_tasks_by_context(context, contextData?._id, currentUser._id);
+      console.log(`TASK FOR CONTEXT ${context} is:`, response);
       if (response) {
         const sortedTasks = response.sort((a, b) => 
           new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
         );
         setAllTasks(sortedTasks);
+      } else {
+        console.warn("No tasks data in response");
+        setAllTasks([]);
       }
     } catch (error) {
       console.error("Error fetching tasks:", error);
       toast.error("Failed to fetch tasks");
+      setAllTasks([]);
     }
-  };
-  console.log("TASK : ",allTasks)
+  }, [context, contextData?._id, currentUser._id]);
+
   useEffect(() => {
     fetchTasks();
     if (context === "profile") {
       fetchUserConnections();
     }
-  }, [context, currentUser?._id, contextData]);
+  }, [context, currentUser?._id, contextData, fetchTasks, fetchUserConnections]);
 
   const formatDate = (dateString: string) => {
     if (!dateString) return "";
@@ -160,7 +162,7 @@ const TaskManagement = ({ context, currentUser, contextData }) => {
     return newErrors;
   };
 
-  const handleInputChange = (field: keyof ITaskData, value: any) => {
+  const handleInputChange = (field: keyof ITaskData, value) => {
     setTaskData((prev) => ({ ...prev, [field]: value }));
     const newErrors = validateForm();
     setErrors((prev) => ({ ...prev, [field]: newErrors[field] }));
@@ -190,7 +192,7 @@ const TaskManagement = ({ context, currentUser, contextData }) => {
 
     try {
       const formData = new FormData();
-      const { taskImage, taskImagePreview, ...filteredTaskData } = taskData;
+      const { taskImage, ...filteredTaskData } = taskData;
 
       let autoStatus = filteredTaskData.status;
       const today = new Date();
@@ -236,11 +238,10 @@ const TaskManagement = ({ context, currentUser, contextData }) => {
 
     try {
       if (!selectedTask) return;
-      const { taskImage, taskImagePreview, ...updates } = taskData;
+      const { taskImage, ...updates } = taskData;
 
       let autoStatus = updates.status;
-      if (autoStatus !== selectedTask.status) {
-      } else {
+      if (autoStatus === selectedTask.status) {
         const today = new Date();
         const startDate = new Date(updates.startDate);
         const dueDate = new Date(updates.dueDate);
@@ -311,7 +312,7 @@ const TaskManagement = ({ context, currentUser, contextData }) => {
     }
   };
 
-  const openEditModal = (task: any) => {
+  const openEditModal = (task) => {
     setSelectedTask(task);
     setErrors({});
     setTaskData({
@@ -351,32 +352,178 @@ const TaskManagement = ({ context, currentUser, contextData }) => {
     setErrors({});
   };
 
+  // Filter tasks by status, with "Upcoming" based on startDate
+  const today = new Date();
+  const upcomingTasks = allTasks.filter(
+    (task) => new Date(task.startDate) > today && (task.status === "pending" || task.status === "in-progress")
+  );
+  const pendingTasks = allTasks.filter(
+    (task) => {
+      const startDate = new Date(task.startDate);
+      const dueDate = new Date(task.dueDate);
+      return startDate <= today && today <= dueDate && task.status === "pending";
+    }
+  );
+  const inProgressTasks = allTasks.filter((task) => task.status === "in-progress");
+  const completedTasks = allTasks.filter((task) => task.status === "completed");
+  const notCompletedTasks = allTasks.filter((task) => task.status === "not-completed");
+
   return (
-    <div className="space-y-4">
+    <div className="space-y-3">
       <div className="flex justify-between items-center">
-        <h2 className="text-xl font-semibold">Task Management</h2>
-        <Button color="primary" startContent={<FaPlus />} onPress={() => { resetForm(); setIsOpen(true); }}>
-          Add New Task
+        <h2 className="text-lg font-semibold">Tasks</h2>
+        <Button
+          color="primary"
+          size="sm"
+          startContent={<FaPlus />}
+          onPress={() => {
+            resetForm();
+            setIsOpen(true);
+          }}
+        >
+          Add Task
         </Button>
       </div>
 
-      <TaskList
-        tasks={allTasks}
-        currentUser={currentUser}
-        notifications={taskNotifications}
-        connectedUsers={connectedUsers}
-        context={context}
-        onViewTask={(task) => { setSelectedTask(task); setIsViewOpen(true); }}
-        onEditTask={openEditModal}
-        onStatusChange={handleStatusChange}
-        onPriorityChange={handlePriorityChange}
-        formatDate={formatDate}
-      />
+      <Tabs
+        aria-label="Task statuses"
+        color="primary"
+        variant="underlined"
+        classNames={{
+          tabList: "px-0 pt-0",
+          panel: "p-3",
+          tab: "py-2 text-sm",
+        }}
+        fullWidth
+        selectedKey={selectedTab}
+        onSelectionChange={(key) => setSelectedTab(key as string)}
+      >
+        <Tab
+          key="upcoming"
+          title={
+            <span className="flex items-center gap-1">
+              Upcoming <Chip size="sm" color="warning" variant="flat">{upcomingTasks.length}</Chip>
+            </span>
+          }
+        >
+          <TaskList
+            tasks={upcomingTasks}
+            currentUser={currentUser}
+            notifications={taskNotifications}
+            connectedUsers={connectedUsers}
+            context={context}
+            onViewTask={(task) => {
+              setSelectedTask(task);
+              setIsViewOpen(true);
+            }}
+            onEditTask={openEditModal}
+            onStatusChange={handleStatusChange}
+            onPriorityChange={handlePriorityChange}
+            formatDate={formatDate}
+          />
+        </Tab>
+        <Tab
+          key="pending"
+          title={
+            <span className="flex items-center gap-1">
+              Pending <Chip size="sm" color="warning" variant="flat">{pendingTasks.length}</Chip>
+            </span>
+          }
+        >
+          <TaskList
+            tasks={pendingTasks}
+            currentUser={currentUser}
+            notifications={taskNotifications}
+            connectedUsers={connectedUsers}
+            context={context}
+            onViewTask={(task) => {
+              setSelectedTask(task);
+              setIsViewOpen(true);
+            }}
+            onEditTask={openEditModal}
+            onStatusChange={handleStatusChange}
+            onPriorityChange={handlePriorityChange}
+            formatDate={formatDate}
+          />
+        </Tab>
+        <Tab
+          key="in-progress"
+          title={
+            <span className="flex items-center gap-1">
+              In Progress <Chip size="sm" color="primary" variant="flat">{inProgressTasks.length}</Chip>
+            </span>
+          }
+        >
+          <TaskList
+            tasks={inProgressTasks}
+            currentUser={currentUser}
+            notifications={taskNotifications}
+            connectedUsers={connectedUsers}
+            context={context}
+            onViewTask={(task) => {
+              setSelectedTask(task);
+              setIsViewOpen(true);
+            }}
+            onEditTask={openEditModal}
+            onStatusChange={handleStatusChange}
+            onPriorityChange={handlePriorityChange}
+            formatDate={formatDate}
+          />
+        </Tab>
+        <Tab
+          key="completed"
+          title={
+            <span className="flex items-center gap-1">
+              Completed <Chip size="sm" color="success" variant="flat">{completedTasks.length}</Chip>
+            </span>
+          }
+        >
+          <TaskList
+            tasks={completedTasks}
+            currentUser={currentUser}
+            notifications={taskNotifications}
+            connectedUsers={connectedUsers}
+            context={context}
+            onViewTask={(task) => {
+              setSelectedTask(task);
+              setIsViewOpen(true);
+            }}
+            onEditTask={openEditModal}
+            onStatusChange={handleStatusChange}
+            onPriorityChange={handlePriorityChange}
+            formatDate={formatDate}
+          />
+        </Tab>
+        <Tab
+          key="not-completed"
+          title={
+            <span className="flex items-center gap-1">
+              Not Completed <Chip size="sm" color="danger" variant="flat">{notCompletedTasks.length}</Chip>
+            </span>
+          }
+        >
+          <TaskList
+            tasks={notCompletedTasks}
+            currentUser={currentUser}
+            notifications={taskNotifications}
+            connectedUsers={connectedUsers}
+            context={context}
+            onViewTask={(task) => {
+              setSelectedTask(task);
+              setIsViewOpen(true);
+            }}
+            onEditTask={openEditModal}
+            onStatusChange={handleStatusChange}
+            onPriorityChange={handlePriorityChange}
+            formatDate={formatDate}
+          />
+        </Tab>
+      </Tabs>
 
       {/* Create Task Modal */}
-      <Modal isOpen={isOpen} onClose={() => setIsOpen(false)} size="2xl">
+      <Modal isOpen={isOpen} onClose={() => setIsOpen(false)} size="lg">
         <ModalContent>
-          <ModalHeader>Create New Task</ModalHeader>
+          <ModalHeader className="text-lg">Create New Task</ModalHeader>
           <ModalBody>
             <TaskForm
               taskData={taskData}
@@ -398,9 +545,9 @@ const TaskManagement = ({ context, currentUser, contextData }) => {
       </Modal>
 
       {/* Edit Task Modal */}
-      <Modal isOpen={isEditOpen} onClose={() => setIsEditOpen(false)} size="2xl">
+      <Modal isOpen={isEditOpen} onClose={() => setIsEditOpen(false)} size="lg">
         <ModalContent>
-          <ModalHeader>Edit Task</ModalHeader>
+          <ModalHeader className="text-lg">Edit Task</ModalHeader>
           <ModalBody>
             <TaskForm
               taskData={taskData}
@@ -426,7 +573,10 @@ const TaskManagement = ({ context, currentUser, contextData }) => {
         isOpen={isViewOpen}
         onClose={() => setIsViewOpen(false)}
         task={selectedTask}
-        onEdit={() => { setIsViewOpen(false); openEditModal(selectedTask); }}
+        onEdit={() => {
+          setIsViewOpen(false);
+          openEditModal(selectedTask);
+        }}
         onDelete={handleTaskDelete}
         isDeleting={isDeleting}
         setIsDeleting={setIsDeleting}

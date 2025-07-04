@@ -23,7 +23,7 @@ const TimeSlotsModal = ({
     "02:00 PM", "03:00 PM", "04:00 PM", "05:00 PM", "06:00 PM",
   ];
 
-  const selectedDay = collaboration.selectedSlot[0].day; // e.g., "Monday"
+  const selectedDay = collaboration.selectedSlot[0].day; 
 
   const getSelectedDayOfWeek = () => {
     const dayMap = { "Sunday": 0, "Monday": 1, "Tuesday": 2, "Wednesday": 3, "Thursday": 4, "Friday": 5, "Saturday": 6 };
@@ -34,7 +34,7 @@ const TimeSlotsModal = ({
     const dateList = [];
     const startDate = new Date(collaboration.startDate);
     const endDate = new Date(collaboration.endDate);
-    let currentDate = new Date(startDate);
+    const currentDate = new Date(startDate);
     const selectedDayOfWeek = getSelectedDayOfWeek();
 
     while (currentDate <= endDate) {

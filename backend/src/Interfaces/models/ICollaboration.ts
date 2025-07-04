@@ -36,7 +36,9 @@ export interface ICollaboration extends Document {
   }[];
   price: number;
   payment: boolean;
+  paymentIntentId:string;
   isCancelled: boolean;
+  isCompleted:boolean;
   startDate: Date;
   endDate?: Date;
   feedbackGiven: boolean;

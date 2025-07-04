@@ -123,4 +123,37 @@ export class ContactRepository extends BaseRepository<IContact> {
       throw new RepositoryError(`Error finding contacts by user ID: ${error.message}`);
     }
   }
+
+  async deleteContact(
+    id: string,
+    type: 'group' | 'user-mentor' | 'user-user',
+    userId?: string
+  ): Promise<number> {
+    try {
+      logger.debug(`Deleting contact for id: ${id}, type: ${type}${userId ? `, userId: ${userId}` : ''}`);
+      
+      const query: any = { type };
+      if (type === 'group') {
+        query.groupId = this.toObjectId(id);
+        if (userId) {
+          query.userId = this.toObjectId(userId);
+        }
+      } else if (type === 'user-mentor') {
+        query.collaborationId = this.toObjectId(id);
+      } else if (type === 'user-user') {
+        query.userConnectionId = this.toObjectId(id);
+      } else {
+        throw new RepositoryError(`Invalid contact type: ${type}`);
+      }
+
+      const result = await this.model.deleteMany(query).exec();
+      const deletedCount = result.deletedCount || 0;
+      
+      logger.info(`Deleted ${deletedCount} contact(s) for id: ${id}, type: ${type}${userId ? `, userId: ${userId}` : ''}`);
+      return deletedCount;
+    } catch (error: any) {
+      logger.error(`Error deleting contact for id: ${id}, type: ${type}: ${error.message}`);
+      throw new RepositoryError(`Error deleting contact: ${error.message}`);
+    }
+  }
 }

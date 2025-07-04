@@ -1,7 +1,8 @@
 import { ReactNode, useState } from 'react';
 import { FaUser, FaTasks, FaSignOutAlt, FaLayerGroup, FaChalkboardTeacher, 
          FaUserFriends, FaTachometerAlt, FaBars, FaTimes, 
-         FaStar, FaEnvelope } from 'react-icons/fa';
+         FaStar, FaEnvelope, 
+         FaChartLine} from 'react-icons/fa';
 import { Button, Avatar, Tooltip } from "@nextui-org/react";
 import { useDispatch, useSelector } from "react-redux";
 import { useNavigate, useLocation } from "react-router-dom";
@@ -56,6 +57,8 @@ const AdminSidebar = ({ children }: AdminSidebarProps) => {
     { name: "Group Management", path: "/admin/groupManagemnt", icon: <FaLayerGroup /> },
     { name: "Review Management", path: "/admin/reviews", icon: <FaStar /> },
     { name: "Messages", path: "/admin/messages", icon: <FaEnvelope /> },
+    { name: "Mentor Analytics", path: "/admin/mentor-analytics", icon: <FaChartLine /> },
+    { name: "Sales Report", path: "/admin/sales-report", icon: <FaChartLine /> },
   ];
 
   return (

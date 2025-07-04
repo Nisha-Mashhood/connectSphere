@@ -10,54 +10,8 @@ import { NotificationService, TaskNotificationPayload } from '../Modules/Notific
 import Group from '../models/group.model';
 import Collaboration from '../models/collaboration';
 import UserConnection from '../models/userConnection.modal';
+import { CallData, CallOffer, GroupIceCandidateData, MarkAsReadData, Message, TypingData } from '../Interfaces/Types/ISocketService';
 
-interface CallOffer {
-  senderId: string;
-  targetId: string;
-  type: string;
-  chatKey: string;
-  callType: 'audio' | 'video';
-  recipientIds: string[];
-  endTimeout: NodeJS.Timeout;
-}
-
-interface Message {
-  senderId: string;
-  targetId: string;
-  type: 'group' | 'user-mentor' | 'user-user';
-  content: string;
-  contentType?: string;
-  collaborationId?: string;
-  userConnectionId?: string;
-  groupId?: string;
-  _id?: string;
-  thumbnailUrl?: string;
-  fileMetadata?: { fileName: string; fileSize: number; mimeType: string };
-}
-
-interface TypingData {
-  userId: string;
-  targetId: string;
-  type: 'group' | 'user-mentor' | 'user-user';
-  chatKey: string;
-}
-
-interface MarkAsReadData {
-  chatKey: string;
-  userId: string;
-  type: 'group' | 'user-mentor' | 'user-user';
-}
-
-interface CallData {
-  userId: string;
-  targetId: string;
-  type: string;
-  chatKey: string;
-  callType: 'audio' | 'video';
-  offer?: RTCSessionDescriptionInit;
-  answer?: RTCSessionDescriptionInit;
-  candidate?: RTCIceCandidateInit;
-}
 
 export class SocketService {
   private io: Server | null = null;
@@ -102,6 +56,7 @@ export class SocketService {
 
     socket.on('joinChats', (userId: string) => this.handleJoinChats(socket, userId));
     socket.on('joinUserRoom', (userId: string) => this.handleJoinUserRoom(socket, userId));
+    socket.on('leaveUserRoom', (userId: string) => this.handleLeaveUserRoom(socket, userId));
     socket.on('activeChat', (data: { userId: string; chatKey: string }) => this.handleActiveChat(data));
     socket.on('sendMessage', (message: Message) => this.handleSendMessage(socket, message));
     socket.on('typing', (data: TypingData) => this.handleTyping(socket, data));
@@ -111,6 +66,10 @@ export class SocketService {
     socket.on('answer', (data: CallData) => this.handleAnswer(socket, data));
     socket.on('ice-candidate', (data: CallData) => this.handleIceCandidate(socket, data));
     socket.on('callEnded', (data: CallData) => this.handleCallEnded(socket, data));
+    socket.on('groupIceCandidate', (data: GroupIceCandidateData) => this.handleGroupIceCandidate(socket, data));
+    socket.on('groupOffer', (data: { groupId: string; senderId: string; recipientId: string; offer: RTCSessionDescriptionInit; callType: 'audio' | 'video'; callId: string }) => this.handleGroupOffer(socket, data));
+    socket.on('groupAnswer', (data: { groupId: string; senderId: string; recipientId: string; answer: RTCSessionDescriptionInit; callType: 'audio' | 'video'; callId: string }) => this.handleGroupAnswer(socket, data));
+    socket.on('groupCallEnded', (data: { groupId: string; senderId: string; recipientId: string; callType: 'audio' | 'video'; callId: string }) => this.handleGroupCallEnded(socket, data));
     socket.on('notification.read', (data: { notificationId: string; userId: string }) => this.handleNotificationRead(socket, data));
     socket.on('leaveChat', (userId: string) => this.handleLeaveChat(userId));
     socket.on('disconnect', () => this.handleDisconnect(socket));
@@ -146,6 +105,11 @@ export class SocketService {
   private handleJoinUserRoom(socket: Socket, userId: string): void {
     socket.join(`user_${userId}`);
     logger.info(`User ${userId} joined personal room: user_${userId}, socketId=${socket.id}`);
+  }
+
+  private handleLeaveUserRoom(socket: Socket, userId: string): void {
+    socket.leave(`user_${userId}`);
+    logger.info(`User ${userId} left personal room: user_${userId}, socketId=${socket.id}`);
   }
 
   private handleActiveChat(data: { userId: string; chatKey: string }): void {
@@ -617,6 +581,159 @@ export class SocketService {
       socket.emit('error', { message: 'Failed to end call' });
     }
   }
+
+  private async handleGroupIceCandidate(socket: Socket, data: GroupIceCandidateData): Promise<void> {
+    try {
+      const { groupId, senderId, recipientId, candidate, callType, callId } = data;
+      logger.info(`Received group ${callType} ICE candidate from ${senderId} to ${recipientId} for group ${groupId}, callId: ${callId}`);
+      logger.info("Candidate details : ", candidate);
+      // Verify group and membership
+      const group = await this.groupRepo.getGroupById(groupId);
+      if (!group) {
+        logger.error(`Invalid group ID: ${groupId}`);
+        socket.emit('error', { message: 'Invalid group ID' });
+        return;
+      }
+      const isSenderMember = await this.groupRepo.isUserInGroup(groupId, senderId);
+      const isRecipientMember = await this.groupRepo.isUserInGroup(groupId, recipientId);
+      if (!isSenderMember || !isRecipientMember) {
+        logger.error(`Invalid membership: senderId=${senderId}, recipientId=${recipientId}, groupId=${groupId}`);
+        socket.emit('error', { message: 'Invalid group membership' });
+        return;
+      }
+
+      // Emit to recipient's user room
+      socket.to(`user_${recipientId}`).emit('groupIceCandidate', data);
+      logger.info(`Relayed group ICE candidate to user_${recipientId}`);
+    } catch (error: any) {
+      logger.error(`Error relaying group ICE candidate: ${error.message}`);
+      socket.emit('error', { message: 'Failed to relay group ICE candidate' });
+    }
+  }
+
+  private async handleGroupOffer(socket: Socket, data: { groupId: string; senderId: string; recipientId: string; offer: RTCSessionDescriptionInit; callType: 'audio' | 'video'; callId: string }): Promise<void> {
+    try {
+      const { groupId, senderId, recipientId, offer, callType, callId } = data;
+      logger.info(`Received group ${callType} offer from ${senderId} to ${recipientId} for group ${groupId}, callId: ${callId} with offer ${offer}`);
+      const group = await this.groupRepo.getGroupById(groupId);
+      if (!group) {
+        logger.error(`Invalid group ID: ${groupId}`);
+        socket.emit('error', { message: 'Invalid group ID' });
+        return;
+      }
+      const isSenderMember = await this.groupRepo.isUserInGroup(groupId, senderId);
+      const isRecipientMember = await this.groupRepo.isUserInGroup(groupId, recipientId);
+      if (!isSenderMember || !isRecipientMember) {
+        logger.error(`Invalid membership: senderId=${senderId}, recipientId=${recipientId}, groupId=${groupId}`);
+        socket.emit('error', { message: 'Invalid group membership' });
+        return;
+      }
+
+      socket.to(`user_${recipientId}`).emit('groupOffer', data);
+      logger.info(`Relayed group offer to user_${recipientId}`);
+    } catch (error: any) {
+      logger.error(`Error relaying group offer: ${error.message}`);
+      socket.emit('error', { message: 'Failed to relay group offer' });
+    }
+  }
+
+  private async handleGroupAnswer(socket: Socket, data: { groupId: string; senderId: string; recipientId: string; answer: RTCSessionDescriptionInit; callType: 'audio' | 'video'; callId: string }): Promise<void> {
+    try {
+      const { groupId, senderId, recipientId, answer, callType, callId } = data;
+      logger.info(`Received group ${callType} answer from ${senderId} to ${recipientId} for group ${groupId}, callId: ${callId} with answer ${answer}`);
+      const group = await this.groupRepo.getGroupById(groupId);
+      if (!group) {
+        logger.error(`Invalid group ID: ${groupId}`);
+        socket.emit('error', { message: 'Invalid group ID' });
+        return;
+      }
+      const isSenderMember = await this.groupRepo.isUserInGroup(groupId, senderId);
+      const isRecipientMember = await this.groupRepo.isUserInGroup(groupId, recipientId);
+      if (!isSenderMember || !isRecipientMember) {
+        logger.error(`Invalid membership: senderId=${senderId}, recipientId=${recipientId}, groupId=${groupId}`);
+        socket.emit('error', { message: 'Invalid group membership' });
+        return;
+      }
+
+      socket.to(`user_${recipientId}`).emit('groupAnswer', data);
+      logger.info(`Relayed group answer to user_${recipientId}`);
+    } catch (error: any) {
+      logger.error(`Error relaying group answer: ${error.message}`);
+      socket.emit('error', { message: 'Failed to relay group answer' });
+    }
+  }
+
+  private async handleGroupCallEnded(socket: Socket, data: { groupId: string; senderId: string; recipientId: string; callType: 'audio' | 'video'; callId: string }): Promise<void> {
+  try {
+    const { groupId, senderId, recipientId, callType, callId } = data;
+    const eventKey = `${groupId}_${callId}_${callType}`;
+
+    // Prevent duplicate processing
+    if (this.endedCalls.has(eventKey)) {
+      logger.info(`Ignoring duplicate groupCallEnded for ${eventKey}`);
+      return;
+    }
+    this.endedCalls.add(eventKey);
+    logger.info(`Received groupCallEnded from ${senderId} to ${recipientId} for group ${groupId}, callId: ${callId}, callType: ${callType}`);
+
+    const group = await this.groupRepo.getGroupById(groupId);
+    if (!group) {
+      logger.error(`Invalid group ID: ${groupId}`);
+      socket.emit('error', { message: 'Group not found' });
+      return;
+    }
+    const senderObjectId = new mongoose.Types.ObjectId(senderId);
+    const recipientObjectId = new mongoose.Types.ObjectId(recipientId);
+
+    const isSenderMember = group.members.some(member => member.userId.equals(senderObjectId));
+    const isRecipientMember = group.members.some(member => member.userId.equals(recipientObjectId));
+    if (!isSenderMember || !isRecipientMember) {
+      logger.error(`Invalid members: sender ${senderId} or recipient ${recipientId} not in group ${groupId}`);
+      socket.emit('error', { message: 'Invalid group members' });
+      return;
+    }
+
+    if (!this.io) {
+      logger.error('Socket.IO server not initialized');
+      socket.emit('error', { message: 'Server not initialized' });
+      return;
+    }
+
+    // Emit groupCallEnded to the recipient's user room
+    // const recipientRoom = `user_${recipientId}`;
+    // this.io.to(recipientRoom).emit('groupCallEnded', {
+    //   groupId,
+    //   senderId,
+    //   recipientId,
+    //   callType,
+    //   callId,
+    // });
+    // logger.info(`Emitted groupCallEnded to ${recipientRoom} for callId: ${callId}`);
+
+    const groupMembers = group.members
+      .filter(member => !member.userId.equals(senderObjectId))
+      .map(member => member.userId.toString());
+    for (const memberId of groupMembers) {
+      const recipientRoom = `user_${memberId}`;
+      this.io.to(recipientRoom).emit('groupCallEnded', {
+        groupId,
+        senderId,
+        recipientId: memberId,
+        callType,
+        callId,
+      });
+      logger.info(`Emitted groupCallEnded to ${recipientRoom} for callId: ${callId}`);
+    }
+    // Clean up endedCalls set after a timeout 
+    setTimeout(() => {
+      this.endedCalls.delete(eventKey);
+      logger.info(`Cleaned up endedCalls entry for ${eventKey}`);
+    }, 60 * 60 * 1000); // 1 hour timeout
+  } catch (error) {
+    logger.error(`Error handling groupCallEnded for group ${data.groupId}, callId: ${data.callId}:`, error);
+    socket.emit('error', { message: 'Failed to process call termination' });
+  }
+}
 
   private async handleNotificationRead(socket: Socket, data: { notificationId: string; userId: string }): Promise<void> {
     try {

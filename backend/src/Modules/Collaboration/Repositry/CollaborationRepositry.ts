@@ -74,8 +74,13 @@ export class CollaborationRepository extends BaseRepository<ICollaboration> {
     try {
       logger.debug(`Fetching mentor requests for mentor: ${mentorId}`);
       return await this.mentorRequestModel
-        .find({ mentorId: this.toObjectId(mentorId) })
-        .populate("userId", "name profilePic")
+        .find({ mentorId: this.toObjectId(mentorId), isAccepted: "Pending" })
+        .populate({
+          path: "mentorId",
+          populate: { path: "userId", select: "name email profilePic" },
+        })
+        .populate("userId", "name email profilePic")
+        .lean()
         .exec();
     } catch (error: any) {
       logger.error(`Error fetching mentor requests: ${error.message}`);
@@ -280,42 +285,34 @@ export class CollaborationRepository extends BaseRepository<ICollaboration> {
     }
   };
 
-  getCollabDataForMentor = async (
-    mentorId: string
-  ): Promise<ICollaboration[]> => {
-    try {
-      logger.debug(`Fetching collaboration data for mentor: ${mentorId}`);
-      const mentor = await Mentor.findById(this.toObjectId(mentorId)).select(
-        "userId"
-      );
-      if (!mentor) {
-        throw new RepositoryError("Mentor not found");
-      }
-      const userId = this.toObjectId(mentor.userId.toString());
-      return await this.model
-        .find({
-          $or: [
-            { mentorId: this.toObjectId(mentorId), isCancelled: false },
-            { userId, isCancelled: false },
-          ],
-        })
-        .populate({
-          path: "mentorId",
-          populate: {
-            path: "userId",
-          },
-        })
-        .populate("userId")
-        .exec();
-    } catch (error: any) {
-      logger.error(
-        `Error fetching collaboration data for mentor: ${error.message}`
-      );
-      throw new RepositoryError(
-        `Error fetching collaboration data for mentor: ${error.message}`
-      );
+  getCollabDataForMentor = async(mentorId: string): Promise<ICollaboration[]> => {
+  try {
+    logger.debug(`Fetching collaboration data for mentor: ${mentorId}`);
+    const mentor = await Mentor.findById(this.toObjectId(mentorId)).select("userId");
+    if (!mentor) {
+      throw new RepositoryError("Mentor not found");
     }
-  };
+    const userId = this.toObjectId(mentor.userId.toString());
+    return await this.model
+      .find({
+        $or: [
+          { mentorId: this.toObjectId(mentorId), isCancelled: false, isCompleted: false },
+          { userId, isCancelled: false, isCompleted: false },
+        ],
+      })
+      .populate({
+        path: "mentorId",
+        populate: {
+          path: "userId",
+        },
+      })
+      .populate("userId")
+      .exec();
+  } catch (error: any) {
+    logger.error(`Error fetching collaboration data for mentor: ${error.message}`);
+    throw new RepositoryError(`Error fetching collaboration data for mentor: ${error.message}`);
+  }
+}
 
   findMentorRequest = async ({
     page,
@@ -341,37 +338,6 @@ export class CollaborationRepository extends BaseRepository<ICollaboration> {
           { "mentorId.specialization": { $regex: search, $options: "i" } },
         ];
       }
-
-      // const trimmedSearch = (search || "").trim();
-      // logger.debug(`Trimmed search term: "${trimmedSearch}"`);
-
-      // const query = trimmedSearch
-      //   ? {
-      //       $or: [
-      //         { "userId.name": { $regex: trimmedSearch, $options: "i" } },
-      //         { "userId.email": { $regex: trimmedSearch, $options: "i" } },
-      //         {
-      //           "mentorId.userId.name": {
-      //             $regex: trimmedSearch,
-      //             $options: "i",
-      //           },
-      //         },
-      //         {
-      //           "mentorId.userId.email": {
-      //             $regex: trimmedSearch,
-      //             $options: "i",
-      //           },
-      //         },
-      //         {
-      //           "mentorId.specialization": {
-      //             $regex: trimmedSearch,
-      //             $options: "i",
-      //           },
-      //         },
-      //       ],
-      //     }
-      //   : {};
-
       logger.debug("Search query:", query);
 
       const total = await this.mentorRequestModel.countDocuments(query);
@@ -424,8 +390,6 @@ export class CollaborationRepository extends BaseRepository<ICollaboration> {
         `Fetching collaborations with page: ${page}, limit: ${limit}, search: ${search}`
       );
 
-      //  const trimmedSearch = (search || '').trim();
-      //  logger.debug(`Trimmed search term: "${trimmedSearch}"`);
       const query: any = {};
 
       if (search) {
@@ -437,18 +401,6 @@ export class CollaborationRepository extends BaseRepository<ICollaboration> {
           { "mentorId.specialization": { $regex: search, $options: "i" } },
         ];
       }
-
-      // const query = trimmedSearch
-      //   ? {
-      //       $or: [
-      //         { 'userId.name': { $regex: trimmedSearch, $options: 'i' } },
-      //         { 'userId.email': { $regex: trimmedSearch, $options: 'i' } },
-      //         { 'mentorId.userId.name': { $regex: trimmedSearch, $options: 'i' } },
-      //         { 'mentorId.userId.email': { $regex: trimmedSearch, $options: 'i' } },
-      //         { 'mentorId.specialization': { $regex: trimmedSearch, $options: 'i' } },
-      //       ],
-      //     }
-      //   : {};
 
       logger.debug("Search query:", JSON.stringify(query, null, 2));
 
@@ -723,5 +675,33 @@ export class CollaborationRepository extends BaseRepository<ICollaboration> {
         `Error fetching locked slots: ${error.message}`
       );
     }
-  };
+  }
+
+  findByMentorId = async (mentorId: string): Promise<ICollaboration[]> => {
+    try {
+      logger.debug(`Fetching collaborations for mentor: ${mentorId}`);
+      return await this.model
+        .find({ mentorId: this.toObjectId(mentorId), isCancelled: false })
+        .populate('userId', 'name email')
+        .populate('mentorId', 'userId')
+        .exec();
+    } catch (error: any) {
+      logger.error(`Error fetching collaborations for mentor: ${error.message}`);
+      throw new RepositoryError(`Error fetching collaborations: ${error.message}`);
+    }
+  }
+
+ findByDateRange =  async (startDate: Date, endDate: Date): Promise<ICollaboration[]> => {
+    try {
+      logger.debug(`Fetching collaborations from ${startDate} to ${endDate}`);
+      return await this.model
+        .find({ createdAt: { $gte: startDate, $lte: endDate }, isCancelled: false })
+        .populate('userId')
+        .populate('mentorId')
+        .exec();
+    } catch (error: any) {
+      logger.error(`Error fetching collaborations by date range: ${error.message}`);
+      throw new RepositoryError(`Error fetching collaborations: ${error.message}`);
+    }
+  }
 }

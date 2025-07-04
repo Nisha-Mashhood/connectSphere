@@ -24,7 +24,7 @@ const UnavailableDatesModal = ({
     const dateList = [];
     const startDate = new Date(collaboration.startDate);
     const endDate = new Date(collaboration.endDate);
-    let currentDate = new Date(startDate);
+    const currentDate = new Date(startDate);
     const selectedDayOfWeek = getSelectedDayOfWeek();
 
     while (currentDate <= endDate) {
@@ -68,7 +68,7 @@ const UnavailableDatesModal = ({
     const sortedDates = [...unavailableDates].sort((a, b) => a.getTime() - b.getTime());
     const newEndDate = new Date(collaboration.endDate);
     let daysToAdd = sortedDates.length;
-    let currentDate = new Date(newEndDate);
+    const currentDate = new Date(newEndDate);
     currentDate.setDate(currentDate.getDate() + 1);
     const selectedDayOfWeek = getSelectedDayOfWeek();
 

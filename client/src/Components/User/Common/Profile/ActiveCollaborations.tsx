@@ -1,5 +1,5 @@
 import { useDispatch, useSelector } from "react-redux";
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback, useMemo } from "react";
 import { AppDispatch, RootState } from "../../../../redux/store";
 import { calculateTimeLeft } from "../../../../lib/helperforprofile";
 import { FaClock, FaStar } from "react-icons/fa";
@@ -16,15 +16,24 @@ const ActiveCollaborations = ({ handleProfileClick }) => {
   const navigate = useNavigate();
   const { currentUser } = useSelector((state: RootState) => state.user);
   const { collabDetails } = useSelector((state: RootState) => state.profile);
-  const [mentorDetails, setMentorDetails] = useState({})
+  const [mentorDetails, setMentorDetails] = useState({});
   const [feedbackModalOpen, setFeedbackModalOpen] = useState(false);
   const [selectedCollab, setSelectedCollab] = useState(null);
   const [feedbackData, setFeedbackData] = useState({});
   const [activeTab, setActiveTab] = useState("asMentor");
   const dispatch = useDispatch<AppDispatch>();
+  const [currentDate, setCurrentDate] = useState(new Date()); 
+
+  useEffect(() => {
+    const interval = setInterval(() => {
+      setCurrentDate(new Date());
+    }, 60000); 
+
+    return () => clearInterval(interval); 
+  }, []);
 
   // Fetch collaboration data and feedback for mentor view
-  const fetchCollaborations = async () => {
+  const fetchCollaborations = useCallback(async () => {
     if (currentUser && currentUser._id) {
       try {
         if (currentUser.role === "mentor") {
@@ -48,12 +57,11 @@ const ActiveCollaborations = ({ handleProfileClick }) => {
         console.error("Error fetching collaborations:", error);
       }
     }
-  };
+  }, [currentUser, dispatch]);
   console.log(`mentorDetails of this user is : ${mentorDetails}`);
 
-
   // Fetch feedback for completed collaborations (mentor view)
-  const fetchFeedbackForCollabs = async (collabs) => {
+  const fetchFeedbackForCollabs = useCallback(async (collabs) => {
     const feedbackPromises = collabs
       .filter((collab) => collab.feedbackGiven)
       .map(async (collab) => {
@@ -62,24 +70,48 @@ const ActiveCollaborations = ({ handleProfileClick }) => {
           console.log("FeedBack Accessed :", feedback);
           return { [collab._id]: feedback[0] || null };
         } catch (error) {
-          console.error(`Error fetching feedback for collab ${collab._id}:`, error);
+          console.error(
+            `Error fetching feedback for collab ${collab._id}:`,
+            error
+          );
           return { [collab._id]: null };
         }
       });
     const feedbackResults = await Promise.all(feedbackPromises);
-    const feedbackMap = feedbackResults.reduce((acc, curr) => ({ ...acc, ...curr }), {});
+    const feedbackMap = feedbackResults.reduce(
+      (acc, curr) => ({ ...acc, ...curr }),
+      {}
+    );
     setFeedbackData(feedbackMap);
-  };
+  }, []);
+
+  const ongoingCollabs = useMemo(() => {
+    return (
+      collabDetails?.data?.filter(
+      (collab) => new Date(collab.endDate) > currentDate && !collab.isCancelled
+    ) || []
+    );
+  }, [collabDetails, currentDate]);
+    
+
+  const completedCollabs = useMemo(() => {
+    return (
+      collabDetails?.data?.filter(
+        (collab) =>
+          new Date(collab.endDate) <= currentDate || collab.isCancelled
+      ) || []
+    );
+  }, [collabDetails, currentDate]);
 
   useEffect(() => {
     fetchCollaborations();
-  }, [dispatch, currentUser]);
+  }, [dispatch, currentUser, fetchCollaborations]);
 
   useEffect(() => {
     if (currentUser?.role === "mentor" && collabDetails?.data) {
       fetchFeedbackForCollabs(completedCollabs);
     }
-  }, [collabDetails, currentUser]);
+  }, [collabDetails, currentUser, fetchFeedbackForCollabs, completedCollabs]);
 
   const handleCollabClick = (collabId) => {
     navigate(`/collaboration/${collabId}`);
@@ -96,29 +128,31 @@ const ActiveCollaborations = ({ handleProfileClick }) => {
     console.log("Feedback completed");
   };
 
-  const currentDate = new Date();
-  const ongoingCollabs =
-    collabDetails?.data?.filter(
-      (collab) => new Date(collab.endDate) > currentDate && !collab.isCancelled
-    ) || [];
-  const completedCollabs =
-    collabDetails?.data?.filter(
-      (collab) => new Date(collab.endDate) <= currentDate || collab.isCancelled
-    ) || [];
-
-    // For mentors, split collaborations into "As Mentor" and "As User"
-  const mentorOngoingCollabs = currentUser.role === "mentor"
-    ? ongoingCollabs.filter((collab) => collab.mentorId?.userId?._id === currentUser._id)
-    : [];
-  const mentorCompletedCollabs = currentUser.role === "mentor"
-    ? completedCollabs.filter((collab) => collab.mentorId?.userId?._id === currentUser._id)
-    : [];
-  const userOngoingCollabs = currentUser.role === "mentor"
-    ? ongoingCollabs.filter((collab) => collab.userId?._id === currentUser._id)
-    : ongoingCollabs;
-  const userCompletedCollabs = currentUser.role === "mentor"
-    ? completedCollabs.filter((collab) => collab.userId?._id === currentUser._id)
-    : completedCollabs;
+  // For mentors, split collaborations into "As Mentor" and "As User"
+  const mentorOngoingCollabs =
+    currentUser.role === "mentor"
+      ? ongoingCollabs.filter(
+          (collab) => collab.mentorId?.userId?._id === currentUser._id
+        )
+      : [];
+  const mentorCompletedCollabs =
+    currentUser.role === "mentor"
+      ? completedCollabs.filter(
+          (collab) => collab.mentorId?.userId?._id === currentUser._id
+        )
+      : [];
+  const userOngoingCollabs =
+    currentUser.role === "mentor"
+      ? ongoingCollabs.filter(
+          (collab) => collab.userId?._id === currentUser._id
+        )
+      : ongoingCollabs;
+  const userCompletedCollabs =
+    currentUser.role === "mentor"
+      ? completedCollabs.filter(
+          (collab) => collab.userId?._id === currentUser._id
+        )
+      : completedCollabs;
 
   console.log("Ongoing collaborations (Mentor):", mentorOngoingCollabs);
   console.log("Completed collaborations (Mentor):", mentorCompletedCollabs);
@@ -163,104 +197,113 @@ const ActiveCollaborations = ({ handleProfileClick }) => {
   };
 
   const renderCollaboration = (collab, isCompleted = false) => {
-    const isUserRole = currentUser.role === "user" || (currentUser.role === "mentor" && collab.userId?._id === currentUser._id);
+    const isUserRole =
+      currentUser.role === "user" ||
+      (currentUser.role === "mentor" && collab.userId?._id === currentUser._id);
     const displayUser = isUserRole ? collab.mentorId?.userId : collab.userId;
     return (
-    <div
-      key={collab._id}
-      className="bg-white dark:bg-gray-700 p-4 rounded-lg shadow-sm border border-gray-200 dark:border-gray-600 cursor-pointer"
-      onClick={() => handleCollabClick(collab._id)}
-    >
-      <div className="flex items-center space-x-4">
-        <img
-          src={displayUser?.profilePic}
-          alt="Profile"
-          className="w-12 h-12 rounded-full object-cover"
-        />
-        <div className="flex-1">
-          <p
-            className="font-semibold text-gray-900 dark:text-white cursor-pointer hover:underline"
-            onClick={(e) => {
-              e.stopPropagation();
-              handleProfileClick(isUserRole ? collab.mentorId?._id : collab.userId?._id);
-            }}
-          >
-           {displayUser?.name}
-          </p>
-          <div className="flex items-center space-x-2 text-sm text-gray-600 dark:text-gray-300">
-            <span>{collab.selectedSlot[0].day}</span>
-            <span>•</span>
-            <span>{collab.selectedSlot[0].timeSlots.join(", ")}</span>
-          </div>
-          <div className="flex items-center space-x-4 mt-2 text-sm">
-            <div className="flex items-center text-blue-600 dark:text-blue-400">
-              <FaClock className="mr-1" />
-              <span>
-                {isCompleted ? "Completed" : calculateTimeLeft(collab.endDate)}
+      <div
+        key={collab._id}
+        className="bg-white dark:bg-gray-700 p-4 rounded-lg shadow-sm border border-gray-200 dark:border-gray-600 cursor-pointer"
+        onClick={() => handleCollabClick(collab._id)}
+      >
+        <div className="flex items-center space-x-4">
+          <img
+            src={displayUser?.profilePic}
+            alt="Profile"
+            className="w-12 h-12 rounded-full object-cover"
+          />
+          <div className="flex-1">
+            <p
+              className="font-semibold text-gray-900 dark:text-white cursor-pointer hover:underline"
+              onClick={(e) => {
+                e.stopPropagation();
+                handleProfileClick(
+                  isUserRole ? collab.mentorId?._id : collab.userId?._id
+                );
+              }}
+            >
+              {displayUser?.name}
+            </p>
+            <div className="flex items-center space-x-2 text-sm text-gray-600 dark:text-gray-300">
+              <span>{collab.selectedSlot[0].day}</span>
+              <span>•</span>
+              <span>{collab.selectedSlot[0].timeSlots.join(", ")}</span>
+            </div>
+            <div className="flex items-center space-x-4 mt-2 text-sm">
+              <div className="flex items-center text-blue-600 dark:text-blue-400">
+                <FaClock className="mr-1" />
+                <span>
+                  {isCompleted
+                    ? "Completed"
+                    : calculateTimeLeft(collab.endDate)}
+                </span>
+              </div>
+              <span className="text-gray-600 dark:text-gray-400">
+                ₹{collab.price}
               </span>
             </div>
-            <span className="text-gray-600 dark:text-gray-400">
-              ₹{collab.price}
-            </span>
           </div>
-        </div>
-        <div className="flex items-center space-x-2">
-          {isCompleted && currentUser.role === "user" ? (
-            collab.feedbackGiven ? (
-              <button
-                disabled
-                className="px-3 py-1 text-sm font-medium rounded-full bg-gray-300 text-gray-700 dark:bg-gray-800 dark:text-gray-400 cursor-not-allowed"
-              >
-                Feedback Provided
-              </button>
+          <div className="flex items-center space-x-2">
+            {isCompleted && currentUser.role === "user" ? (
+              collab.feedbackGiven ? (
+                <button
+                  disabled
+                  className="px-3 py-1 text-sm font-medium rounded-full bg-gray-300 text-gray-700 dark:bg-gray-800 dark:text-gray-400 cursor-not-allowed"
+                >
+                  Feedback Provided
+                </button>
+              ) : (
+                <button
+                  onClick={(e) => handleFeedbackClick(e, collab)}
+                  className="px-3 py-1 text-sm font-medium rounded-full bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-200 flex items-center"
+                >
+                  <FaStar className="mr-1" /> Give Feedback
+                </button>
+              )
+            ) : isCompleted &&
+              currentUser.role === "mentor" &&
+              collab.feedbackGiven ? (
+              <Tooltip content={renderFeedbackTooltip(collab)} placement="top">
+                <button
+                  disabled
+                  className="px-3 py-1 text-sm font-medium rounded-full bg-gray-300 text-gray-700 dark:bg-gray-800 dark:text-gray-400 cursor-default"
+                >
+                  Feedback Provided
+                </button>
+              </Tooltip>
+            ) : isCompleted && currentUser.role === "mentor" ? (
+              <span className="px-3 py-1 text-sm font-medium rounded-full bg-gray-100 text-gray-800 dark:bg-gray-900 dark:text-gray-200">
+                No Feedback
+              </span>
             ) : (
-              <button
-                onClick={(e) => handleFeedbackClick(e, collab)}
-                className="px-3 py-1 text-sm font-medium rounded-full bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-200 flex items-center"
-              >
-                <FaStar className="mr-1" /> Give Feedback
-              </button>
-            )
-          ) : isCompleted && currentUser.role === "mentor" && collab.feedbackGiven ? (
-            <Tooltip content={renderFeedbackTooltip(collab)} placement="top">
-              <button
-                disabled
-                className="px-3 py-1 text-sm font-medium rounded-full bg-gray-300 text-gray-700 dark:bg-gray-800 dark:text-gray-400 cursor-default"
-              >
-                Feedback Provided
-              </button>
-            </Tooltip>
-          ) : isCompleted && currentUser.role === "mentor" ? (
-            <span className="px-3 py-1 text-sm font-medium rounded-full bg-gray-100 text-gray-800 dark:bg-gray-900 dark:text-gray-200">
-              No Feedback
-            </span>
-          ) : (
-            <span className="px-3 py-1 text-sm font-medium rounded-full bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200">
-              Active
-            </span>
-          )}
-        </div>
-      </div>
-      {!isCompleted && (
-        <div className="mt-4">
-          <div className="w-full bg-gray-200 rounded-full h-2.5 dark:bg-gray-600">
-            <div
-              className="bg-blue-600 h-2.5 rounded-full"
-              style={{
-                width: `${
-                  ((new Date().getTime() -
-                    new Date(collab.startDate).getTime()) /
-                    (new Date(collab.endDate).getTime() -
-                      new Date(collab.startDate).getTime())) *
-                  100
-                }%`,
-              }}
-            ></div>
+              <span className="px-3 py-1 text-sm font-medium rounded-full bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200">
+                Active
+              </span>
+            )}
           </div>
         </div>
-      )}
-    </div>
-  )};
+        {!isCompleted && (
+          <div className="mt-4">
+            <div className="w-full bg-gray-200 rounded-full h-2.5 dark:bg-gray-600">
+              <div
+                className="bg-blue-600 h-2.5 rounded-full"
+                style={{
+                  width: `${
+                    ((new Date().getTime() -
+                      new Date(collab.startDate).getTime()) /
+                      (new Date(collab.endDate).getTime() -
+                        new Date(collab.startDate).getTime())) *
+                    100
+                  }%`,
+                }}
+              ></div>
+            </div>
+          </div>
+        )}
+      </div>
+    );
+  };
 
   const renderMentorTab = () => (
     <div>
@@ -268,7 +311,9 @@ const ActiveCollaborations = ({ handleProfileClick }) => {
         Ongoing Collaborations (As Mentor)
       </h2>
       <div className="space-y-4 mb-8">
-        {mentorOngoingCollabs.map((collab) => renderCollaboration(collab, false))}
+        {mentorOngoingCollabs.map((collab) =>
+          renderCollaboration(collab, false)
+        )}
         {mentorOngoingCollabs.length === 0 && (
           <p className="text-center text-gray-500 dark:text-gray-400 py-4">
             No ongoing collaborations found
@@ -279,7 +324,9 @@ const ActiveCollaborations = ({ handleProfileClick }) => {
         Completed Collaborations (As Mentor)
       </h2>
       <div className="space-y-4">
-        {mentorCompletedCollabs.map((collab) => renderCollaboration(collab, true))}
+        {mentorCompletedCollabs.map((collab) =>
+          renderCollaboration(collab, true)
+        )}
         {mentorCompletedCollabs.length === 0 && (
           <p className="text-center text-gray-500 dark:text-gray-400 py-4">
             No completed collaborations found
@@ -306,7 +353,9 @@ const ActiveCollaborations = ({ handleProfileClick }) => {
         Completed Collaborations (As User)
       </h2>
       <div className="space-y-4">
-        {userCompletedCollabs.map((collab) => renderCollaboration(collab, true))}
+        {userCompletedCollabs.map((collab) =>
+          renderCollaboration(collab, true)
+        )}
         {userCompletedCollabs.length === 0 && (
           <p className="text-center text-gray-500 dark:text-gray-400 py-4">
             No completed collaborations found
@@ -326,16 +375,10 @@ const ActiveCollaborations = ({ handleProfileClick }) => {
           color="primary"
           variant="underlined"
         >
-          <Tab
-            key="asMentor"
-            title="As Mentor"
-          >
+          <Tab key="asMentor" title="As Mentor">
             {renderMentorTab()}
           </Tab>
-          <Tab
-            key="asUser"
-            title="As User"
-          >
+          <Tab key="asUser" title="As User">
             {renderUserTab()}
           </Tab>
         </Tabs>
@@ -345,7 +388,9 @@ const ActiveCollaborations = ({ handleProfileClick }) => {
             Ongoing Collaborations
           </h2>
           <div className="space-y-4 mb-8">
-            {userOngoingCollabs.map((collab) => renderCollaboration(collab, false))}
+            {userOngoingCollabs.map((collab) =>
+              renderCollaboration(collab, false)
+            )}
             {userOngoingCollabs.length === 0 && (
               <p className="text-center text-gray-500 dark:text-gray-400 py-4">
                 No ongoing collaborations found
@@ -356,7 +401,9 @@ const ActiveCollaborations = ({ handleProfileClick }) => {
             Completed Collaborations
           </h2>
           <div className="space-y-4">
-            {userCompletedCollabs.map((collab) => renderCollaboration(collab, true))}
+            {userCompletedCollabs.map((collab) =>
+              renderCollaboration(collab, true)
+            )}
             {userCompletedCollabs.length === 0 && (
               <p className="text-center text-gray-500 dark:text-gray-400 py-4">
                 No completed collaborations found
@@ -365,14 +412,17 @@ const ActiveCollaborations = ({ handleProfileClick }) => {
           </div>
         </>
       )}
-      {selectedCollab && (currentUser.role === "user" || (currentUser.role === "mentor" && selectedCollab.userId?._id === currentUser._id)) && (
-        <FeedbackModal
-          isOpen={feedbackModalOpen}
-          onClose={() => setFeedbackModalOpen(false)}
-          collaborationData={selectedCollab}
-          onComplete={handleFeedbackComplete}
-        />
-      )}
+      {selectedCollab &&
+        (currentUser.role === "user" ||
+          (currentUser.role === "mentor" &&
+            selectedCollab.userId?._id === currentUser._id)) && (
+          <FeedbackModal
+            isOpen={feedbackModalOpen}
+            onClose={() => setFeedbackModalOpen(false)}
+            collaborationData={selectedCollab}
+            onComplete={handleFeedbackComplete}
+          />
+        )}
     </div>
   );
 };

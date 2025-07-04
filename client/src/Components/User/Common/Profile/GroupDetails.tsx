@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState, lazy, Suspense, Key } from "react"; 
 import { useSelector } from "react-redux";
 import { useNavigate, useParams } from "react-router-dom";
 import { RootState } from "../../../../redux/store";
@@ -22,6 +22,11 @@ import {
   Divider,
   Tabs,
   Tab,
+  Modal,
+  ModalContent,
+  ModalHeader,
+  ModalBody,
+  ModalFooter, 
 } from "@nextui-org/react";
 import {
   FaCheck,
@@ -35,21 +40,26 @@ import {
   FaCog,
 } from "react-icons/fa";
 import toast from "react-hot-toast";
-import TaskManagement from "../../TaskManagement/TaskManagemnt";
+import { Group, GroupRequest } from "../../../../types";
+
+// Lazy load TaskManagement
+const TaskManagement = lazy(() => import("../../TaskManagement/TaskManagemnt"));
 
 const GroupDetails = () => {
   const navigate = useNavigate();
   const { groupId } = useParams();
   const { currentUser } = useSelector((state: RootState) => state.user);
-  const [groupRequests, setGroupRequests] = useState<any[]>([]);
-  const [group, setGroup] = useState<any | null>(null);
+  const [groupRequests, setGroupRequests] = useState<GroupRequest[]>([]);
+  const [isProcessing, setIsProcessing] = useState({});
+  const [group, setGroup] = useState<Group | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [isHoveringProfile, setIsHoveringProfile] = useState(false);
   const [isHoveringCover, setIsHoveringCover] = useState(false);
   const [selectedTab, setSelectedTab] = useState("tasks");
+  const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false); 
 
-  const fetchGroupDetails = async () => {
+  const fetchGroupDetails = useCallback(async () => {
     try {
       setLoading(true);
       setError(null);
@@ -57,8 +67,8 @@ const GroupDetails = () => {
       const groupResponse = await getGroupDetails(groupId);
       console.log("Group Response:", groupResponse);
 
-      if (groupResponse?.data) {
-        setGroup(groupResponse.data);
+      if (groupResponse) {
+        setGroup(groupResponse);
         console.log("Group Response:", group);
       } else {
         setError("Failed to fetch group details");
@@ -67,16 +77,16 @@ const GroupDetails = () => {
       const requestsResponse = await getGroupRequestsByGroupId(groupId);
       console.log("Group Requests:", requestsResponse);
 
-      if (requestsResponse?.data) {
-        setGroupRequests(requestsResponse.data);
+      if (requestsResponse) {
+        setGroupRequests(requestsResponse);
       }
-    } catch (err: any) {
+    } catch (err) {
       console.error("Error fetching group details:", err);
       setError(err.message || "Something went wrong");
     } finally {
       setLoading(false);
     }
-  };
+  }, [group, groupId]);
 
   useEffect(() => {
     if (groupId) {
@@ -84,26 +94,32 @@ const GroupDetails = () => {
     }
   }, [groupId]);
 
-  const fetchGroupdDetailsForMembers = async (id) => {
+  const fetchGroupdDetailsForMembers = useCallback(async (id) => {
     console.log(currentUser);
     const response2 = await groupDetailsForMembers(id);
     console.log("Group details for members: ", response2);
-  };
+  }, [currentUser]);
 
   useEffect(() => {
     fetchGroupdDetailsForMembers(currentUser._id);
-  }, []);
+  }, [currentUser._id, fetchGroupdDetailsForMembers]);
 
   const handleRequestUpdate = async (requestId: string, status: string) => {
+    if (isProcessing[requestId]) return;
+    setIsProcessing((prev) => ({ ...prev, [requestId]: true }));
+    console.log(`handleRequestUpdate called for requestId: ${requestId}, status: ${status}`);
+
     try {
       const response = await updateGroupRequest(requestId, status);
       if (response) {
         toast.success(response.message || `Request ${status.toLowerCase()}`);
         await fetchGroupDetails();
       }
-    } catch (err: any) {
+    } catch (err) {
       setError(err.message);
       toast.error(err.message || "Failed to update request");
+    } finally {
+      setIsProcessing((prev) => ({ ...prev, [requestId]: false }));
     }
   };
 
@@ -117,31 +133,36 @@ const GroupDetails = () => {
       await removeUserFromGroup(data);
       toast.success("Member removed successfully");
       fetchGroupDetails();
-    } catch (err: any) {
+    } catch (err) {
       setError(err.message);
       toast.error("Failed to remove member");
     }
   };
 
   const handleDeleteGroup = async () => {
-    if (!groupId) return;
+    setIsDeleteModalOpen(true); 
+  };
 
-    if (
-      !confirm(
-        "Are you sure you want to delete this group? This action cannot be undone."
-      )
-    ) {
-      return;
-    }
+  const handleConfirmDelete = async () => {
+    setIsDeleteModalOpen(false);
+    if (!groupId) return;
 
     try {
       await removeGroup(groupId);
       toast.success("Group deleted successfully!");
-      navigate("/profile"); // Redirect after deletion
-    } catch (err: any) {
+      navigate("/profile");
+    } catch (err) {
       setError(err.message);
       toast.error("Failed to delete group");
     }
+  };
+
+  const handleCancelDelete = () => {
+    setIsDeleteModalOpen(false); 
+  };
+
+  const handleTabChange = (key: Key) => {
+    setSelectedTab(String(key)); 
   };
 
   const handlePhotoUpload = async (
@@ -156,18 +177,17 @@ const GroupDetails = () => {
 
     try {
       const response = await uploadGroupPicture(groupId, formData);
+      console.log("Upload response:", response);
 
       if (response) {
-        if (type === "profile") {
-          setGroup({ ...group, profilePic: response.updatedGroup.profilePic });
-        } else {
-          setGroup({ ...group, coverPic: response.updatedGroup.coverPic });
-        }
+        await fetchGroupDetails();
         toast.success(`${type} photo updated successfully`);
+      } else {
+        throw new Error("No response data received");
       }
     } catch (error) {
-      console.log(error);
-      toast.error("Failed to update photo");
+      console.error("Photo upload error:", error);
+      toast.error(error.message || "Failed to update photo");
     }
   };
 
@@ -199,7 +219,6 @@ const GroupDetails = () => {
         <>
           {/* Header Card with Cover and Basic Info */}
           <Card className="w-full shadow-md mb-6">
-            {/* Cover Image Section */}
             <div
               className="relative h-48 md:h-64"
               onMouseEnter={() => setIsHoveringCover(true)}
@@ -217,15 +236,21 @@ const GroupDetails = () => {
                       color="default"
                       variant="flat"
                       startContent={<FaCamera />}
+                      onPress={() =>
+                        document
+                          .getElementById("cover-pic-hover-input")
+                          ?.click()
+                      }
                     >
                       Change Cover
-                      <input
-                        type="file"
-                        className="hidden"
-                        accept="image/*"
-                        onChange={(e) => handlePhotoUpload(e, "cover")}
-                      />
                     </Button>
+                    <input
+                      type="file"
+                      id="cover-pic-hover-input"
+                      className="hidden"
+                      accept="image/*"
+                      onChange={(e) => handlePhotoUpload(e, "cover")}
+                    />
                   </label>
                 </div>
               )}
@@ -237,7 +262,7 @@ const GroupDetails = () => {
                     color="danger"
                     variant="flat"
                     startContent={<FaTrash />}
-                    onClick={handleDeleteGroup}
+                    onPress={handleDeleteGroup}
                     size="sm"
                     className="bg-white/80 backdrop-blur-md"
                   >
@@ -281,12 +306,6 @@ const GroupDetails = () => {
                   <h2 className="text-2xl font-bold">{group.name}</h2>
                   <p className="text-default-500 mt-1">{group.bio}</p>
                   <div className="flex flex-wrap gap-2 mt-3">
-                    {/* <Chip color="primary" variant="flat">
-                      {group.maxMembers} Max Members
-                    </Chip>
-                    <Chip color="secondary" variant="flat">
-                      {group.members?.length || 0} Members
-                    </Chip> */}
                     <Chip
                       color={group.isFull ? "danger" : "secondary"}
                       variant="flat"
@@ -295,7 +314,7 @@ const GroupDetails = () => {
                       {group.isFull ? "(Full)" : ""}
                     </Chip>
                     {pendingRequestsCount > 0 &&
-                      group.adminId === currentUser._id && (
+                      group.adminId._id === currentUser._id && (
                         <Chip color="warning" variant="flat">
                           {pendingRequestsCount} Pending Request
                           {pendingRequestsCount !== 1 ? "s" : ""}
@@ -313,7 +332,7 @@ const GroupDetails = () => {
               <Tabs
                 aria-label="Group sections"
                 selectedKey={selectedTab}
-                onSelectionChange={setSelectedTab as any}
+                onSelectionChange={handleTabChange}
                 color="primary"
                 variant="underlined"
                 classNames={{
@@ -333,11 +352,19 @@ const GroupDetails = () => {
                   }
                 >
                   <div className="p-6">
-                    <TaskManagement
-                      context="group"
-                      currentUser={currentUser}
-                      contextData={group}
-                    />
+                    <Suspense
+                      fallback={
+                        <div className="flex justify-center items-center h-32">
+                          <Spinner size="lg" label="Loading Tasks..." />
+                        </div>
+                      }
+                    >
+                      <TaskManagement
+                        context="group"
+                        currentUser={currentUser}
+                        contextData={group}
+                      />
+                    </Suspense>
                   </div>
                 </Tab>
 
@@ -734,6 +761,35 @@ const GroupDetails = () => {
               </Tabs>
             </CardBody>
           </Card>
+
+          {/* Deletion Confirmation Modal */}
+          <Modal
+            isOpen={isDeleteModalOpen}
+            onClose={handleCancelDelete}
+            size="sm"
+          >
+            <ModalContent>
+              <ModalHeader>Confirm Group Deletion</ModalHeader>
+              <ModalBody>
+                <p>
+                  Are you sure you want to delete this group? This action cannot
+                  be undone, and all group data will be permanently deleted.
+                </p>
+              </ModalBody>
+              <ModalFooter>
+                <Button
+                  color="default"
+                  variant="light"
+                  onPress={handleCancelDelete}
+                >
+                  Cancel
+                </Button>
+                <Button color="danger" onPress={handleConfirmDelete}>
+                  Delete
+                </Button>
+              </ModalFooter>
+            </ModalContent>
+          </Modal>
         </>
       )}
     </div>

@@ -140,6 +140,7 @@ export class CollaborationService extends BaseService {
         isCancelled: false,
         startDate,
         endDate,
+        paymentIntentId: paymentIntent.id,
       });
 
       const mentor = await this.mentorRepo.getMentorById(
@@ -175,10 +176,44 @@ export class CollaborationService extends BaseService {
     return { paymentIntent };
   }
 
+  //Check whether the collbaoration is completed
+  private async checkAndCompleteCollaboration(collab: ICollaboration): Promise<ICollaboration | null> {
+    const currentDate = new Date();
+  if (
+    !collab.isCancelled &&
+    (collab.feedbackGiven || (collab.endDate && collab.endDate <= currentDate))
+  ) {
+    logger.debug(`Marking collaboration ${collab._id} as complete`);
+
+    // Update the collaboration to set isCompleted to true
+    const updatedCollab = await this.collabRepo.findByIdAndUpdate(
+      collab._id.toString(),
+      { isCompleted: true }, 
+      { new: true }
+    );
+
+    // Delete associated contacts
+    await this.contactRepo.deleteContact(collab._id.toString(), 'user-mentor');
+    logger.info(`Collaboration ${collab._id} was completed, so associated contact was deleted`);
+
+    return updatedCollab;
+  }
+  return collab;
+  }
+
    getCollabDataForUserService = async(userId: string): Promise<ICollaboration[]> => {
     logger.debug(`Fetching collaboration data for user: ${userId}`);
     this.checkData(userId);
-    return await this.collabRepo.getCollabDataForUser(userId);
+    const collaborations = await this.collabRepo.getCollabDataForUser(userId);
+    const updatedCollaborations = await Promise.all(
+      collaborations.map(async (collab) => {
+        return await this.checkAndCompleteCollaboration(collab);
+      })
+    );
+
+    return updatedCollaborations.filter(
+    (collab): collab is ICollaboration => collab !== null && !collab.isCompleted
+  );
   }
 
    getCollabDataForMentorService = async(
@@ -186,35 +221,113 @@ export class CollaborationService extends BaseService {
   ): Promise<ICollaboration[]> => {
     logger.debug(`Fetching collaboration data for mentor: ${mentorId}`);
     this.checkData(mentorId);
-    return await this.collabRepo.getCollabDataForMentor(mentorId);
+    const collaborations = await this.collabRepo.getCollabDataForMentor(mentorId);
+    const updatedCollaborations = await Promise.all(
+      collaborations.map(async (collab) => {
+        return await this.checkAndCompleteCollaboration(collab);
+      })
+    );
+
+    return updatedCollaborations.filter(
+    (collab): collab is ICollaboration => collab !== null && !collab.isCompleted
+  );
   }
 
-   removeCollab = async(
+  //  removeCollab = async(
+  //   collabId: string,
+  //   reason: string
+  // ): Promise<ICollaboration | null> => {
+  //   logger.debug(`Removing collaboration: ${collabId}`);
+  //   this.checkData({ collabId, reason });
+  //   const collab = await this.collabRepo.findCollabById(collabId);
+  //   if (!collab) {
+  //     throw new ServiceError("Collaboration not found");
+  //   }
+
+  //   const mentorEmail = (collab.mentorId as any).userId?.email;
+  //   const mentorName = (collab.mentorId as any).userId?.name;
+  //   const userName = (collab.userId as any).name;
+
+  //   if (!mentorEmail) {
+  //     throw new ServiceError("Mentor email not found");
+  //   }
+
+  //   const subject = "Mentorship Session Cancellation Notice";
+  //   const text = `Dear ${mentorName},\n\nWe regret to inform you that your mentorship session with ${userName} has been cancelled.\nReason: ${reason}\n\nIf you have any questions, please contact support.\n\nBest regards,\nConnectSphere Team`;
+  //   await sendEmail(mentorEmail, subject, text);
+  //   logger.info(`Cancellation email sent to mentor: ${mentorEmail}`);
+
+  //   const updatedCollab = await this.collabRepo.markCollabAsCancelled(collabId);
+  //   await this.contactRepo.deleteContact(collabId, 'user-mentor');
+
+  //   logger.info(`Collaboration ${collabId} cancelled and associated contacts deleted`);
+  //   return updatedCollab;
+  // }
+
+  cancelAndRefundCollab = async (
     collabId: string,
-    reason: string
+    reason: string,
+    amount: number
   ): Promise<ICollaboration | null> => {
-    logger.debug(`Removing collaboration: ${collabId}`);
-    this.checkData({ collabId, reason });
+    logger.debug(`Processing cancellation and refund for collaboration: ${collabId}`);
+    this.checkData({ collabId, reason, amount });
+
     const collab = await this.collabRepo.findCollabById(collabId);
     if (!collab) {
       throw new ServiceError("Collaboration not found");
     }
-
-    const mentorEmail = (collab.mentorId as any).userId?.email;
-    const mentorName = (collab.mentorId as any).userId?.name;
-    const userName = (collab.userId as any).name;
-
-    if (!mentorEmail) {
-      throw new ServiceError("Mentor email not found");
+    if (!collab.payment) {
+      throw new ServiceError("No payment found for this collaboration");
+    }
+    if (collab.isCancelled) {
+      throw new ServiceError("Collaboration is already cancelled");
     }
 
-    const subject = "Mentorship Session Cancellation Notice";
-    const text = `Dear ${mentorName},\n\nWe regret to inform you that your mentorship session with ${userName} has been cancelled.\nReason: ${reason}\n\nIf you have any questions, please contact support.\n\nBest regards,\nConnectSphere Team`;
-    await sendEmail(mentorEmail, subject, text);
+    // Attempt refund if paymentIntentId exists
+    if (collab.paymentIntentId) {
+      const refundAmount = Math.round(amount * 100); 
+      const refund = await stripe.refunds.create({
+        payment_intent: collab.paymentIntentId,
+        amount: refundAmount,
+        reason: "requested_by_customer",
+        metadata: { collabId, reason },
+      });
+      logger.info(`Refund processed for collaboration ${collabId}: ${refund.id}, amount: ${refundAmount / 100} INR`);
+    } else {
+      logger.warn(`No paymentIntentId for collaboration ${collabId}. Skipping refund and notifying support.`);
+    }
+
+    // Mark collaboration as cancelled
+    const updatedCollab = await this.collabRepo.markCollabAsCancelled(collabId);
+    await this.contactRepo.deleteContact(collabId, 'user-mentor');
+
+    // Send emails to user and mentor
+    const userEmail = (collab.userId as any).email;
+    const userName = (collab.userId as any).name;
+    const mentorEmail = (collab.mentorId as any).userId?.email;
+    const mentorName = (collab.mentorId as any).userId?.name;
+
+    if (!userEmail || !mentorEmail) {
+      throw new ServiceError("User or mentor email not found");
+    }
+
+    // User email
+    const userSubject = "Mentorship Cancellation and Refund Notice";
+    const userText = collab.paymentIntentId
+      ? `Dear ${userName},\n\nYour mentorship session with ${mentorName} has been cancelled, and a 50% refund of Rs. ${amount.toFixed(2)} has been processed.\nReason: ${reason}\n\nIf you have any questions, please contact support.\n\nBest regards,\nConnectSphere Team`
+      : `Dear ${userName},\n\nYour mentorship session with ${mentorName} has been cancelled. No refund was processed due to missing payment details. Please contact support for assistance.\nReason: ${reason}\n\nBest regards,\nConnectSphere Team`;
+    await sendEmail(userEmail, userSubject, userText);
+    logger.info(`Cancellation and refund email sent to user: ${userEmail}`);
+
+    // Mentor email
+    const mentorSubject = "Mentorship Session Cancellation Notice";
+    const mentorText = `Dear ${mentorName},\n\nWe regret to inform you that your mentorship session with ${userName} has been cancelled.\nReason: ${reason}\n\nIf you have any questions, please contact support.\n\nBest regards,\nConnectSphere Team`;
+    await sendEmail(mentorEmail, mentorSubject, mentorText);
     logger.info(`Cancellation email sent to mentor: ${mentorEmail}`);
 
-    return await this.collabRepo.markCollabAsCancelled(collabId);
-  }
+    logger.info(`Collaboration ${collabId} cancelled${collab.paymentIntentId ? ` with 50% refund of Rs. ${amount.toFixed(2)}` : ''}`);
+    return updatedCollab;
+  };
 
    getMentorRequestsService = async({
     page,
@@ -234,7 +347,7 @@ export class CollaborationService extends BaseService {
     return await this.collabRepo.findMentorRequest({ page, limit, search });
   }
 
-   getCollabsService = async({
+   async getCollabsService({
     page,
     limit,
     search,
@@ -247,9 +360,27 @@ export class CollaborationService extends BaseService {
     total: number;
     page: number;
     pages: number;
-  }> => {
+  }> {
     logger.debug(`Fetching collaborations for admin`);
-    return await this.collabRepo.findCollab({ page, limit, search });
+
+    const { collabs, total, page: currentPage, pages } = await this.collabRepo.findCollab({
+      page,
+      limit,
+      search,
+    });
+
+    const updatedCollabs = await Promise.all(
+      collabs.map(async (collab) => {
+        return await this.checkAndCompleteCollaboration(collab);
+      })
+    );
+
+    return {
+      collabs: updatedCollabs.filter((collab): collab is ICollaboration => collab !== null),
+      total,
+      page: currentPage,
+      pages,
+    };
   }
 
    fetchCollabById = async(collabId: string): Promise<ICollaboration | null> => {

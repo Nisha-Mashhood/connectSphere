@@ -71,7 +71,7 @@ export const getGroupDetails = async (groupId: string) => {
 export const getGroupRequestsByGroupId = async (groupId: string) => {
   try {
     const response = await axiosInstance.get(
-      `/group/group-request-details-UI/${groupId}`
+      `/group/group-request-details-GI/${groupId}`
     );
     return response.data.data;
   } catch (error) {
@@ -82,11 +82,13 @@ export const getGroupRequestsByGroupId = async (groupId: string) => {
 };
 
 export const updateGroupRequest = async (requestId: string, status: string) => {
+  console.log("Calling backend Update group Requset")
   try {
     const response = await axiosInstance.put("/group/update-groupRequest", {
       requestId,
       status,
     });
+    console.log("Response from backend : ",response);
     return response.data.data;
   } catch (error) {
     throw new Error(
@@ -102,7 +104,7 @@ export const processStripePaymentForGroups = async (paymentDetails) => {
       `/group/process-payment`,
       paymentDetails
     );
-    return response.data.data;
+    return response.data;
   } catch (error) {
     handleError(error);
   }

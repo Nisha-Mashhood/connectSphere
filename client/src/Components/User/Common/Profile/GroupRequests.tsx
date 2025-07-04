@@ -1,6 +1,6 @@
 import { useSelector } from "react-redux";
 import { RootState } from "../../../../redux/store";
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import toast from "react-hot-toast";
 import GroupsSection from "../../Groups/Groups.Section";
 import { getRelativeTime } from "../../../../lib/helperforprofile";
@@ -18,6 +18,7 @@ import {
 } from "@stripe/react-stripe-js";
 import { Button } from "@nextui-org/react";
 import { FaCreditCard } from "react-icons/fa";
+import { Group } from "../../../../types";
 
 // Initialize Stripe outside the component
 const stripePromise = loadStripe(
@@ -78,6 +79,7 @@ const CheckoutForm = ({ request, currentUser, onSuccess }) => {
         returnUrl: returnUrl,
       });
 
+      console.log("Payemnt response : ",response);
       if (response?.status === "success") {
         toast.success("Payment successful!");
         onSuccess();
@@ -105,7 +107,7 @@ const CheckoutForm = ({ request, currentUser, onSuccess }) => {
     } else if (paymentStatus === "failed") {
       toast.error("Payment failed. Please try again.");
     }
-  }, []);
+  }, [onSuccess]);
 
   return (
     <form onSubmit={handleSubmit}>
@@ -152,24 +154,19 @@ const CheckoutForm = ({ request, currentUser, onSuccess }) => {
 const GroupRequests = () => {
   const { currentUser } = useSelector((state: RootState) => state.user);
   const [groupRequests, setGroupRequests] = useState([]);
-  const [groups, setGroups] = useState<any[]>([]);
+  const [groups, setGroups] = useState<Group[]>([]);
   const [loading, setLoading] = useState(true);
   const [paymentRequest, setPaymentRequest] = useState(null);
 
-  useEffect(() => {
-    if (currentUser?._id) {
-      fetchGroupRequests();
-      fetchGroups();
-    }
-  }, [currentUser?._id]);
-
+  
   // Fetches groups created by the current user
-  const fetchGroups = async () => {
+  const fetchGroups = useCallback(async () => {
     try {
       setLoading(true);
       const response = await groupDetailsWithAdminId(currentUser._id);
+      console.log(`fetched Groups for adminId ${currentUser._id} is ${response}`);
       // Check if response exists and has data property
-      setGroups(response?.data || []);
+      setGroups(response || []);
     } catch (error) {
       console.error("Error fetching user groups:", error);
       setGroups([]);
@@ -177,19 +174,22 @@ const GroupRequests = () => {
     } finally {
       setLoading(false);
     }
-  };
+  },[currentUser._id]);
 
   // Fetches group requests sent by the current user
-  const fetchGroupRequests = async () => {
+  const fetchGroupRequests = useCallback(async () => {
     try {
       setLoading(true);
       const response = await getGroupRequestsByUser(currentUser._id);
+      console.log("Group request sent :",response);
 
-      if (response?.data) {
+      if (response) {
         // Filter requests where the adminId inside groupId is NOT the current user
-        const filteredRequests = response.data.filter(
+        const filteredRequests = response.filter(
           (request) => request.groupId?.adminId !== currentUser._id
         );
+
+        console.log("Filtered Requset : ",filteredRequests)
         setGroupRequests(filteredRequests);
       } else {
         setGroupRequests([]);
@@ -201,7 +201,16 @@ const GroupRequests = () => {
     } finally {
       setLoading(false);
     }
-  };
+  },[currentUser._id]);
+
+  useEffect(() => {
+    if (currentUser?._id) {
+      fetchGroupRequests();
+      fetchGroups();
+    }
+  }, [currentUser?._id, fetchGroupRequests, fetchGroups]);
+
+
 
   const handlePaymentSuccess = () => {
     fetchGroupRequests();

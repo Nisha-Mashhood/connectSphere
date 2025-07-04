@@ -82,7 +82,7 @@ export class TaskRepository extends BaseRepository<ITask> {
     }
   }
 
-   findTasksByContext = async(contextType: string, contextId: string, userId: string): Promise<ITask[]> =>{
+   findTasksByContext = async(contextType: string, contextId: string, userId: string): Promise<ITask[] | null> =>{
     try {
       logger.debug(`Fetching tasks for contextType=${contextType}, contextId=${contextId}, userId=${userId}`);
       let query: FilterQuery<ITask>;
@@ -114,11 +114,33 @@ export class TaskRepository extends BaseRepository<ITask> {
         ];
       }
 
-      return await this.model
+      const tasks = await this.model
         .find(query)
         .populate(populatePaths)
         .sort({ createdAt: -1 })
         .exec();
+
+      // Update status for tasks past due date
+      const today = new Date();
+      const updatedTasks = await Promise.all(
+        tasks.map(async (task: ITask & ITask & { _id: Types.ObjectId }) => {
+          if (task.dueDate && new Date(task.dueDate) < today && task.status !== 'completed' && task.status !== 'not-completed') {
+            logger.debug(`Updating status to not-completed for task: ${task.taskId} due to past due date: ${task.dueDate}`);
+            const updatedTask = await this.model
+              .findByIdAndUpdate(
+                task._id,
+                { status: 'not-completed' },
+                { new: true }
+              )
+              .populate(populatePaths);
+            return updatedTask ? updatedTask.toObject() : null;
+          }
+          return task.toObject();
+        })
+      );
+
+      // Filter out null values to ensure ITask[]
+      return updatedTasks.filter((task:any): task is ITask => task !== null);
     } catch (error: any) {
       logger.error(`Error fetching tasks by context: ${error.message}`);
       throw new RepositoryError(`Error fetching tasks by context: ${error.message}`);

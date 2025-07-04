@@ -159,15 +159,17 @@ export interface Group {
   maxMembers: number;
   isFull: boolean;
   availableSlots: {
+    _id:string;
     day: string;
     timeSlots: string[];
   }[];
   profilePic: string;
   coverPic: string;
   startDate: string; 
-  adminId: string;
+  adminId: User;
   members: {
-    userId: string;
+    _id:string;
+    userId: User;
     joinedAt: string;
   }[];
   createdAt: string;

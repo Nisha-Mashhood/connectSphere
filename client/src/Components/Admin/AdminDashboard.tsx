@@ -44,7 +44,6 @@ const AdminDashboard = () => {
   const fetchDashboardData = useCallback(async () => {
     setIsLoading(true);
     try {
-      // Fetch all data in parallel
       const [
         users,
         mentors,
@@ -115,7 +114,7 @@ const AdminDashboard = () => {
         ? topMentorsList.map(mentor => ({
             name: mentor.name || 'Unknown',
             sessionCount: mentor.collaborationCount || 0,
-            rating: mentor.rating || 4.5,
+            rating: mentor.rating || "No feedback",
             userId: mentor._id
           }))
         : [];
@@ -362,7 +361,7 @@ const AdminDashboard = () => {
             color="primary"
             variant="light"
             endContent={<FaArrowRight />}
-            onPress={() => navigate("/admin/mentormange")}
+            onPress={() => navigate("/admin/mentor-analytics")}
           >
             View All
           </Button>

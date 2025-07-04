@@ -3,6 +3,7 @@ import { checkMentorProfile } from '../../Service/Mentor.Service';
 import { getAllRequest, getCollabDataforMentor, getCollabDataforUser, getTheRequestByUser } from '../../Service/collaboration.Service';
 import { getGroupRequestsByUser, groupDetailsForMembers, groupDetailsWithAdminId } from '../../Service/Group.Service';
 import { getUser_UserRequests } from '../../Service/User-User.Service';
+import { User } from '../../types';
 
 // Define the argument type for the thunk
 interface FetchCollabDetailsArgs {
@@ -29,8 +30,8 @@ interface FetchCollabDetailsArgs {
 
   interface UserConnection {
     _id: string;
-    requester: any;
-    recipient: any;
+    requester:User;
+    recipient: User;
     requestStatus: 'Pending' | 'Accepted' | 'Rejected';
     connectionStatus: 'Connected' | 'Disconnected';
     requestSentAt: Date;
@@ -54,9 +55,9 @@ export const fetchMentorDetails = createAsyncThunk(
 
 // Thunk to fetch collaboration details
 export const fetchCollabDetails = createAsyncThunk<
-FetchCollabDetailsResponse, // Return type
-FetchCollabDetailsArgs,    // Argument type
-{ rejectValue: string }    // Reject value type
+FetchCollabDetailsResponse, 
+FetchCollabDetailsArgs,   
+{ rejectValue: string }    
 >(
   'profile/fetchCollabDetails',
   async ({ userId, role }, { rejectWithValue }) => {
@@ -184,6 +185,9 @@ const profileSlice = createSlice({
         ...action.payload
       };
     },
+    setGroupRequests: (state, action) => {
+      state.groupRequests = action.payload;
+    },
   },
   extraReducers: (builder) => {
     builder
@@ -294,6 +298,7 @@ const profileSlice = createSlice({
 
 export const { 
   updateMentorInfo,
+   setGroupRequests
 } = profileSlice.actions;
 
 export default profileSlice.reducer;

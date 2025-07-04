@@ -20,6 +20,7 @@ export const getAllRequest = async (mentorId) => {
     const response = await axiosInstance.get(
       `/collaboration/get-mentor-requests?mentorId=${mentorId}`
     );
+    console.log("Received Requset from backend ", response);
     return response.data.data;
   } catch (error) {
     handleError(error);
@@ -100,12 +101,12 @@ export const getCollabDataforMentor = async (mentorId) => {
 };
 
 //Cancel Mentorship
-export const cancelCollab = async (collabId, reason) => {
+export const cancelAndRefundCollab = async (collabId, reason, amount) => {
   try {
     const response = await axiosInstance.delete(
-      `/collaboration/cancel-collab/${collabId}`,
+      `/collaboration/cancel-and-refund/${collabId}`,
       {
-        data: { reason },
+        data: { reason, amount },
       }
     );
     return response.data.data;
@@ -208,6 +209,22 @@ export const getLockedMentorSlot= async (mentorId) => {
     const response = await axiosInstance.get(`/collaboration/locked-slots/${mentorId}`,);
     return response.data.data;
   } catch (error) {
+    handleError(error);
+  }
+};
+
+//Handle refund
+export const processRefund = async (collabId: string, reason: string, amount: number) => {
+  console.log('Sending refund request:', { collabId, reason, amount }); 
+  try {
+    const response = await axiosInstance.post(`/collaboration/refund/${collabId}`, {
+      reason,
+      amount,
+    });
+    console.log('Refund response:', response.data);
+    return response.data.data;
+  } catch (error) {
+    console.error('Refund request error:', error); 
     handleError(error);
   }
 };

@@ -53,9 +53,9 @@ const AdminMentorRequests: React.FC = () => {
   // Fetch mentor requests with pagination, search, and filter
   const fetchMentorRequests = useCallback(async () => {
     try {
-      const data = await fetchMentorRequestsService(page, limit, search, statusFilter, "desc");
-      setMentorRequests(data.mentors);
-      setTotalPages(data.totalPages);
+      const response= await fetchMentorRequestsService(page, limit, search, statusFilter, "desc");
+      setMentorRequests(response.mentors);
+      setTotalPages(response.totalPages);
     } catch (error) {
       toast.error("Failed to fetch mentor requests.");
       console.error("Error:", error);

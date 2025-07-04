@@ -19,6 +19,7 @@
     "@stripe/stripe-js": "^5.10.0",
     "axios": "^1.7.9",
     "axios-retry": "^4.5.0",
+    "date-fns-tz": "^3.2.0",
     "emoji-picker-react": "^4.12.2",
     "formik": "^2.4.6",
     "framer-motion": "^11.18.0",

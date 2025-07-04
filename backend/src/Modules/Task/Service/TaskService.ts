@@ -32,14 +32,33 @@ export class TaskService extends BaseService {
         taskData.image = url;
       }
 
-      return await this.taskRepo.createTask(taskData);
+      const createdTask = await this.taskRepo.createTask(taskData);
+
+      if (taskData.notificationDate || taskData.notificationTime) {
+      logger.debug(`Creating notification for task: ${createdTask._id}`);
+
+      await this.notificationRepo.createNotification({
+        userId: taskData.createdBy,
+        senderId: taskData.createdBy,
+        type: 'task_reminder',
+        content: `Reminder set for task: ${taskData.name}`,
+        relatedId: createdTask._id.toString(),
+        notificationDate: taskData.notificationDate,
+        notificationTime: taskData.notificationTime,
+      });
+
+      logger.info(`Notification created for task ${createdTask._id}`);
+    }
+
+    return createdTask;
+
     } catch (error: any) {
       logger.error(`Error creating task: ${error.message}`);
       throw new ServiceError(`Error creating task: ${error.message}`);
     }
   }
 
-   getTasksByContext = async(contextType: string, contextId: string, userId: string): Promise<ITask[]> =>{
+   getTasksByContext = async(contextType: string, contextId: string, userId: string): Promise<ITask[] | null> =>{
     try {
       logger.debug(`Fetching tasks for contextType=${contextType}, contextId=${contextId}, userId=${userId}`);
       this.checkData({ contextType, contextId, userId });

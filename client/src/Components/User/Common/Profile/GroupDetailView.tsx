@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { useSelector } from "react-redux";
 import { useNavigate, useParams } from "react-router-dom";
 import { RootState } from "../../../../redux/store";
@@ -36,18 +36,19 @@ import {
 } from "react-icons/fa";
 import toast from "react-hot-toast";
 import TaskManagement from "../../TaskManagement/TaskManagemnt";
+import { Group, GroupRequest } from "../../../../types";
 
 const GroupDetails = () => {
   const navigate = useNavigate();
   const { groupId } = useParams();
   const { currentUser } = useSelector((state: RootState) => state.user);
-  const [groupRequests, setGroupRequests] = useState<any[]>([]);
-  const [group, setGroup] = useState<any | null>(null);
+  const [groupRequests, setGroupRequests] = useState<GroupRequest[]>([]);
+  const [group, setGroup] = useState<Group | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [isHoveringProfile, setIsHoveringProfile] = useState(false);
 
-  const fetchGroupDetails = async () => {
+  const fetchGroupDetails = useCallback(async () => {
     try {
       setLoading(true);
       setError(null);
@@ -55,8 +56,8 @@ const GroupDetails = () => {
       const groupResponse = await getGroupDetails(groupId);
       console.log("Group Response:", groupResponse);
 
-      if (groupResponse?.data) {
-        setGroup(groupResponse.data);
+      if (groupResponse) {
+        setGroup(groupResponse);
       } else {
         setError("Failed to fetch group details");
       }
@@ -64,39 +65,39 @@ const GroupDetails = () => {
       const requestsResponse = await getGroupRequestsByGroupId(groupId);
       console.log("Group Requests:", requestsResponse);
 
-      if (requestsResponse?.data) {
-        setGroupRequests(requestsResponse.data);
+      if (requestsResponse) {
+        setGroupRequests(requestsResponse);
       }
-    } catch (err: any) {
+    } catch (err) {
       console.error("Error fetching group details:", err);
       setError(err.message || "Something went wrong");
     } finally {
       setLoading(false);
     }
-  };
+  },[groupId]);
 
   useEffect(() => {
     if (groupId) {
       fetchGroupDetails();
     }
-  }, [groupId]);
+  }, [groupId, fetchGroupDetails]);
 
-  const fetchGroupdDetailsForMembers = async (id) => {
+  const fetchGroupdDetailsForMembers =useCallback( async (id) => {
     console.log(currentUser);
     const response2 = await groupDetailsForMembers(id);
     console.log("Group details for members: ", response2);
-  };
+  },[currentUser]);
 
   useEffect(() => {
     fetchGroupdDetailsForMembers(currentUser._id);
-  }, []);
+  }, [currentUser._id, fetchGroupdDetailsForMembers]);
 
   const handleRequestUpdate = async (requestId: string, status: string) => {
     try {
       const response = await updateGroupRequest(requestId, status);
       toast.success(response.message || `Request ${status.toLowerCase()}`);
       await fetchGroupDetails(); // Refresh group and requests
-    } catch (err: any) {
+    } catch (err) {
       setError(err.message);
       toast.error(err.message || "Failed to update request");
     }
@@ -112,7 +113,7 @@ const GroupDetails = () => {
       await removeUserFromGroup(data);
       toast.success("Member removed successfully");
       fetchGroupDetails();
-    } catch (err: any) {
+    } catch (err) {
       setError(err.message);
       toast.error("Failed to remove member");
     }
@@ -124,7 +125,7 @@ const GroupDetails = () => {
       await removeUserFromGroup({ groupId, userId: currentUser._id });
       toast.success("You have successfully exited the group");
       navigate("/profile");
-    } catch (err: any) {
+    } catch (err) {
       toast.error(err.message || "Failed to exit group");
     }
   };
@@ -143,8 +144,8 @@ const GroupDetails = () => {
     try {
       await removeGroup(groupId);
       toast.success("Group deleted successfully!");
-      navigate("/profile"); // Redirect after deletion
-    } catch (err: any) {
+      navigate("/profile"); 
+    } catch (err) {
       setError(err.message);
       toast.error("Failed to delete group");
     }

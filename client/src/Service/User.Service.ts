@@ -7,7 +7,7 @@ import { handleError } from "./ErrorHandler";
 export const fetchAllUsers = async () => {
   try {
     const response = await axiosInstance.get("/auth/getallusers");
-    return response.data.data;
+    return response.data.data.users;
   } catch (error) {
     handleError(error)
   }

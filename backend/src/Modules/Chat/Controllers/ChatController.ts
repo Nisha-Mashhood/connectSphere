@@ -84,6 +84,7 @@ export class ChatController extends BaseController {
         this.throwError(400, 'User ID is required');
       }
       const unreadCounts = await this.chatService.getUnreadMessageCounts(userId as string);
+      logger.debug("Unread Counts: %s", JSON.stringify(unreadCounts, null, 2));
       this.sendSuccess(res, unreadCounts, 'Unread message counts retrieved successfully');
     } catch (error: any) {
       this.handleError(error, res);

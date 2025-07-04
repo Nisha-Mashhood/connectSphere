@@ -19,6 +19,8 @@ import GroupDetails from "../Components/Admin/GroupAndRequsetDetails";
 import CollaborationDetails from "../Components/Admin/CollaborationDetails";
 import ReviewManagement from "../Components/Admin/ReviewManagement";
 import Messages from "../Components/Admin/ContactMessage";
+import MentorAnalytics from "../Components/Admin/MentorAnalytics";
+import SalesReport from "../Components/Admin/SalesReport";
 
 const AdminRoutes = () => (
   <Routes>
@@ -43,7 +45,8 @@ const AdminRoutes = () => (
         <Route path="group-request/:requestId" element={<GroupDetails />} />
         <Route path="reviews" element={<ReviewManagement />} />
         <Route path="messages" element={<Messages/>} />
-
+        <Route path="mentor-analytics" element={<MentorAnalytics />} />
+        <Route path="sales-report" element={<SalesReport />} />
         
       </Route>
     </Route>

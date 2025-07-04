@@ -69,7 +69,16 @@ export class UserConnectionService extends BaseService {
    disconnectConnection= async(connectionId: string, reason: string): Promise<IUserConnection | null> =>{
     logger.debug(`Disconnecting connection: connectionId=${connectionId}`);
     this.checkData({ connectionId, reason });
-    return await this.userConnectionRepo.disconnectUserConnection(connectionId, reason);
+    const updatedConnection = await this.userConnectionRepo.disconnectUserConnection(connectionId, reason);
+    if (!updatedConnection) {
+      logger.error(`Connection not found: connectionId=${connectionId}`);
+      throw new ServiceError('Connection not found');
+    }
+
+    await this.contactRepo.deleteContact(connectionId, 'user-user');
+
+    logger.info(`Connection ${connectionId} disconnected and associated contacts deleted`);
+    return updatedConnection;
   }
 
    fetchUserConnections = async(userId: string): Promise<IUserConnection[]> => {
