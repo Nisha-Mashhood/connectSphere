@@ -166,6 +166,11 @@ export class AuthController extends BaseController {
         this.throwError(400, 'User ID is required');
       }
       const userDetails = await this.authService.profileDetails(userId);
+       if (!userDetails) {
+        this.sendSuccess(res, { userDetails: null }, 'No user found');
+        logger.info(`No user found for ID: ${userId}`);
+        return;
+      }
       this.sendSuccess(res, { userDetails }, 'Profile details accessed successfully');
       logger.info(`Profile details fetched for userId: ${userId}`);
     } catch (error) {
@@ -283,15 +288,55 @@ export class AuthController extends BaseController {
   }
 
   //get all User Details
-   getAllUsers = async(_req: Request, res: Response) =>{
+   getAllUsers = async (req: Request, res: Response): Promise<void> => {
     try {
-      logger.debug(`Fetching all users`);
-      const users = await this.authService.getAllUsers();
-      this.sendSuccess(res, { users }, 'Users retrieved successfully');
-      logger.info(`Fetched all users`);
-    } catch (error) {
-      logger.error(`Error fetching all users: ${error}`);
-      this.handleError(error, res);
+      const { search, page, limit } = req.query;
+      const query: any = {};
+
+      if (search) query.search = search as string;
+      if (page) query.page = parseInt(page as string, 10);
+      if (limit) query.limit = parseInt(limit as string, 10);
+
+      logger.debug(`Fetching users with query: ${JSON.stringify(query)}`);
+      const result = await this.authService.getAllUsers(query);
+
+      // If no users found, return 200 with empty array and message
+      if (result.users.length === 0) {
+        res.status(200).json({
+          success: true,
+          message: "No users found",
+          data: {
+            users: [],
+            total: 0,
+            page: query.page || 1,
+            limit: query.limit || 10,
+          },
+        });
+        return;
+      }
+
+      // If no query parameters, return all users
+      if (!search && !page && !limit) {
+        res.status(200).json({
+          success: true,
+          message: "Users fetched successfully",
+          data: result.users,
+        });
+      } else {
+        res.status(200).json({
+          success: true,
+          message: "Users fetched successfully",
+          data: {
+            users: result.users,
+            total: result.total,
+            page: query.page || 1,
+            limit: query.limit || 10,
+          },
+        });
+      }
+    } catch (error: any) {
+      logger.error(`Error in getAllUsers: ${error.message}`);
+      res.status(500).json({ success: false, message: `Server error: ${error.message}` });
     }
   }
 
@@ -304,6 +349,11 @@ export class AuthController extends BaseController {
         this.throwError(400, 'User ID is required');
       }
       const user = await this.authService.profileDetails(id);
+      if (!user) {
+        this.sendSuccess(res, { user: null }, 'No user found');
+        logger.info(`No user found for ID: ${id}`);
+        return;
+      }
       this.sendSuccess(res, { user }, 'User retrieved successfully');
       logger.info(`Fetched user: ${id}`);
     } catch (error) {

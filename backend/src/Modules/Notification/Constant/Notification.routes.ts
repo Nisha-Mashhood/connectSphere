@@ -1,5 +1,5 @@
 export const NOTIFICATION_ROUTES = {
   GetNotifications: '/getNotification',
-  MarkAsRead: '/:notificationId/read',
+  MarkAsRead: '/read',
   GetUnreadCount: '/unread-count',
 } as const;

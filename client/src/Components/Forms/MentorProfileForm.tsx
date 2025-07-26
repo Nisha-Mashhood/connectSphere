@@ -294,7 +294,7 @@ const MentorProfileForm = () => {
           <label className="block font-medium mb-2">
             Session Price (in ₹)
             <span className="block text-sm font-normal text-gray-600 mt-1">
-              Set your per-hour fee (min ₹101, ₹100 deducted as platform fee).
+              Set your total session's fee (min ₹101, ₹100 deducted as platform fee).
             </span>
           </label>
           <div className="relative">
@@ -310,7 +310,7 @@ const MentorProfileForm = () => {
           </div>
           {errors.price && <span className="text-red-500 text-sm">{errors.price}</span>}
           <p className="text-sm text-gray-500 mt-1">
-            Your earnings per session: ₹{price ? (Number(price) - 100).toString() : "0"}
+            Your earnings for whole session: ₹{price ? (Number(price) - 100).toString() : "0"}
           </p>
         </div>
 

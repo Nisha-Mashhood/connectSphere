@@ -3,7 +3,7 @@ import { ServiceError } from "../../../core/Utils/ErrorHandler";
 import { UserRepository } from "../Repositry/UserRepositry";
 import { UserInterface as IUser } from "../../../Interfaces/models/IUser";
 import bcrypt from "bcryptjs";
-import { AuthService as JWTService } from "../Utils/JWT"
+import { AuthService as JWTService } from "../Utils/JWT";
 import { generateOTP } from "../Utils/OTP";
 import { sendEmail } from "../../../core/Utils/Email";
 import config from "../../../config/env.config";
@@ -11,7 +11,9 @@ import { uploadMedia } from "../../../core/Utils/Cloudinary";
 import { OAuth2Client } from "../Utils/GoogleConfig";
 import axios from "axios";
 import logger from "../../../core/Utils/Logger";
-import { ProfileUpdateData, SignupData } from "../Types/types";
+import { ProfileUpdateData, SignupData, UserQuery } from "../Types/types";
+import { NotificationService } from "../../../Modules/Notification/Service/NotificationService";
+
 
 // Temporary OTP storage (replace with Redis in production)
 const otpStore: Record<string, string> = {};
@@ -19,16 +21,52 @@ const otpStore: Record<string, string> = {};
 // Service for authentication and user profile operations
 export class AuthService extends BaseService {
   private userRepository: UserRepository;
+  private notificationService: NotificationService;
   private jwtservice = new JWTService();
 
   constructor() {
     super();
     this.userRepository = new UserRepository();
+    this.notificationService = new NotificationService();
     this.jwtservice = new JWTService();
   }
 
+  //Notify admin for New User
+  private async notifyAdminsOfNewUser(user: IUser): Promise<void> {
+    try {
+      // Find all admin users
+      const admins = await this.userRepository.getAllAdmins();
+      if (admins.length === 0) {
+        logger.info("No admins found to notify for new user registration");
+        return;
+      }
+
+      logger.info(admins)
+
+      //Create new_user notifications for each admin
+      for (const admin of admins) {
+        const notification = await this.notificationService.sendNotification(
+          admin._id.toString(),
+          "new_user",
+          user._id.toString(),
+          user._id.toString(), 
+          "profile" 
+        );
+        logger.info(`Created new_user notification for admin ${admin._id}: ${notification._id}`);
+      }
+      logger.info(
+        `Created new_user notifications for ${admins.length} admins`
+      )
+    } catch (error: any) {
+      logger.error(
+        `Error notifying admins of new user ${user._id}: ${error.message}`
+      );
+      throw new ServiceError(`Failed to notify admins: ${error.message}`);
+    }
+  }
+
   //  user signup
-   signup = async(data: SignupData): Promise<IUser> =>{
+  signup = async (data: SignupData): Promise<IUser> => {
     try {
       const { name, email, password } = data;
       const userExists = await this.userRepository.findUserByEmail(email);
@@ -36,21 +74,27 @@ export class AuthService extends BaseService {
         throw new ServiceError("User already exists");
       }
       const hashedPassword = await bcrypt.hash(password, 10);
-      return await this.userRepository.createUser({
+      const user = await this.userRepository.createUser({
         name,
         email,
         password: hashedPassword,
       });
+
+      logger.info(`User created successfully: ${user._id}`);
+
+      // Notify admins of new user
+      await this.notifyAdminsOfNewUser(user);
+      return user;
     } catch (error) {
       logger.error(`Error in signup for email ${data.email}: ${error}`);
       throw error instanceof ServiceError
         ? error
         : new ServiceError("Failed to signup user");
     }
-  }
+  };
 
   //  user login
-   login = async(
+  login = async (
     email: string,
     password: string
   ): Promise<{
@@ -58,7 +102,7 @@ export class AuthService extends BaseService {
     accessToken: string;
     refreshToken: string;
     needsReviewPrompt: boolean;
-  }> =>{
+  }> => {
     try {
       const user = await this.userRepository.findUserByEmail(email);
       if (!user) {
@@ -112,10 +156,10 @@ export class AuthService extends BaseService {
         ? error
         : new ServiceError("Failed to login user");
     }
-  }
+  };
 
   //  Google signup
-   googleSignup = async(code: string): Promise<IUser> =>{
+  googleSignup = async (code: string): Promise<IUser> => {
     try {
       const { tokens } = await OAuth2Client.getToken(code);
       OAuth2Client.setCredentials(tokens);
@@ -127,7 +171,7 @@ export class AuthService extends BaseService {
       if (existingUser) {
         throw new ServiceError("Email already registered");
       }
-      return await this.userRepository.createUser({
+      const user = await this.userRepository.createUser({
         name,
         email,
         provider: "google",
@@ -135,23 +179,30 @@ export class AuthService extends BaseService {
         profilePic: picture,
         password: null,
       });
+
+      logger.info(`User created successfully: ${user._id}`);
+      
+      // Notify admins of new user
+      await this.notifyAdminsOfNewUser(user);
+
+      return user;
     } catch (error) {
       logger.error(`Error in Google signup: ${error}`);
       throw error instanceof ServiceError
         ? error
         : new ServiceError("Google signup failed");
     }
-  }
+  };
 
   //  Google login
-   googleLogin = async(
+  googleLogin = async (
     code: string
   ): Promise<{
     user: IUser;
     accessToken: string;
     refreshToken: string;
     needsReviewPrompt: boolean;
-  }> =>{
+  }> => {
     try {
       const { tokens } = await OAuth2Client.getToken(code);
       OAuth2Client.setCredentials(tokens);
@@ -201,10 +252,10 @@ export class AuthService extends BaseService {
         ? error
         : new ServiceError("Google login failed");
     }
-  }
+  };
 
   //  GitHub signup
-   githubSignup = async(code: string): Promise<IUser> =>{
+  githubSignup = async (code: string): Promise<IUser> => {
     try {
       const tokenResponse = await axios.post(
         "https://github.com/login/oauth/access_token",
@@ -237,7 +288,7 @@ export class AuthService extends BaseService {
       if (existingUser) {
         throw new ServiceError("Email already registered");
       }
-      return await this.userRepository.createUser({
+      const user = await this.userRepository.createUser({
         name: userResponse.data.name || userResponse.data.login,
         email,
         provider: "github",
@@ -245,23 +296,30 @@ export class AuthService extends BaseService {
         profilePic: userResponse.data.avatar_url,
         password: null,
       });
+
+      logger.info(`User created successfully: ${user._id}`);
+      
+      // Notify admins of new user
+      await this.notifyAdminsOfNewUser(user);
+
+      return user;
     } catch (error) {
       logger.error(`Error in GitHub signup: ${error}`);
       throw error instanceof ServiceError
         ? error
         : new ServiceError("GitHub signup failed");
     }
-  }
+  };
 
   //  GitHub login
-   githubLogin = async(
+  githubLogin = async (
     code: string
   ): Promise<{
     user: IUser;
     accessToken: string;
     refreshToken: string;
     needsReviewPrompt: boolean;
-  }> =>{
+  }> => {
     try {
       const tokenResponse = await axios.post(
         "https://github.com/login/oauth/access_token",
@@ -332,25 +390,27 @@ export class AuthService extends BaseService {
         ? error
         : new ServiceError("GitHub login failed");
     }
-  }
+  };
 
   //  refresh token
-   refreshToken = async(
+  refreshToken = async (
     refreshToken: string
-  ): Promise<{ newAccessToken: string }> =>{
+  ): Promise<{ newAccessToken: string }> => {
     try {
       const decoded = this.jwtservice.verifyRefreshToken(refreshToken);
-      const newAccessToken = this.jwtservice.generateAccessToken({ userId: decoded.userId });
+      const newAccessToken = this.jwtservice.generateAccessToken({
+        userId: decoded.userId,
+      });
       logger.info(`Refreshed access token for userId: ${decoded.userId}`);
       return { newAccessToken };
     } catch (error) {
       logger.error(`Error refreshing token: ${error}`);
       throw new ServiceError("Invalid or expired refresh token");
     }
-  }
+  };
 
   //  forgot password
-   forgotPassword = async(email: string): Promise<string> =>{
+  forgotPassword = async (email: string): Promise<string> => {
     try {
       const user = await this.userRepository.findUserByEmail(email);
       if (!user) {
@@ -367,10 +427,10 @@ export class AuthService extends BaseService {
         ? error
         : new ServiceError("Failed to send OTP");
     }
-  }
+  };
 
   //  verify OTP
-   verifyOTP = async(email: string, otp: string): Promise<string> =>{
+  verifyOTP = async (email: string, otp: string): Promise<string> => {
     try {
       if (otpStore[email] !== otp) {
         throw new ServiceError("Invalid or expired OTP");
@@ -385,10 +445,10 @@ export class AuthService extends BaseService {
         ? error
         : new ServiceError("Failed to verify OTP");
     }
-  }
+  };
 
   //  reset password
-   resetPassword = async(email: string, newPassword: string): Promise<void> =>{
+  resetPassword = async (email: string, newPassword: string): Promise<void> => {
     try {
       const user = await this.userRepository.findUserByEmail(email);
       if (!user) {
@@ -411,10 +471,10 @@ export class AuthService extends BaseService {
         ? error
         : new ServiceError("Failed to reset password");
     }
-  }
+  };
 
   //  logout
-   logout = async(email: string): Promise<void> =>{
+  logout = async (email: string): Promise<void> => {
     try {
       await this.userRepository.removeRefreshToken(email);
       logger.info(`User ${email} logged out`);
@@ -422,11 +482,13 @@ export class AuthService extends BaseService {
       logger.error(`Error logging out user ${email}: ${error}`);
       throw new ServiceError("Failed to logout user");
     }
-  }
+  };
 
   // Verify admin passkey
-   verifyAdminPasskey = async(passkey: string): Promise<boolean> => {
-    logger.info(`AdminPasskey from Server :${config.adminpasscode} and passkey from front end : ${passkey}`);
+  verifyAdminPasskey = async (passkey: string): Promise<boolean> => {
+    logger.info(
+      `AdminPasskey from Server :${config.adminpasscode} and passkey from front end : ${passkey}`
+    );
     try {
       if (passkey !== config.adminpasscode) {
         throw new ServiceError("Invalid admin passkey");
@@ -439,10 +501,10 @@ export class AuthService extends BaseService {
         ? error
         : new ServiceError("Failed to verify admin passkey");
     }
-  }
+  };
 
   // Check profile completion
-   checkProfileCompletion = async(userId: string): Promise<boolean> => {
+  checkProfileCompletion = async (userId: string): Promise<boolean> => {
     try {
       const user = await this.userRepository.findById(userId);
       if (!user) {
@@ -461,15 +523,12 @@ export class AuthService extends BaseService {
         ? error
         : new ServiceError("Failed to check profile completion");
     }
-  }
+  };
 
   // Get profile details
-   profileDetails = async(userId: string): Promise<IUser> => {
+  profileDetails = async (userId: string): Promise<IUser | null> => {
     try {
       const user = await this.userRepository.findById(userId);
-      if (!user) {
-        throw new ServiceError("User not found");
-      }
       logger.info(`Fetched profile details for user ${userId}`);
       return user;
     } catch (error) {
@@ -480,10 +539,10 @@ export class AuthService extends BaseService {
         ? error
         : new ServiceError("Failed to fetch profile details");
     }
-  }
+  };
 
   // Update user profile
-   updateUserProfile = async(
+  updateUserProfile = async (
     userId: string,
     data: ProfileUpdateData
   ): Promise<IUser> => {
@@ -535,23 +594,25 @@ export class AuthService extends BaseService {
         ? error
         : new ServiceError("Failed to update user profile");
     }
-  }
+  };
 
   //get All User Details
-   getAllUsers = async(): Promise<IUser[]> => {
+  getAllUsers = async (
+    query: UserQuery = {}
+  ): Promise<{ users: IUser[]; total: number }> => {
     try {
-      logger.debug(`Fetching all users`);
-      return await this.userRepository.getAllUsers();
+      logger.debug(`Fetching all users with query: ${JSON.stringify(query)}`);
+      return await this.userRepository.getAllUsers(query);
     } catch (error) {
       logger.error(`Error fetching all users: ${error}`);
       throw error instanceof ServiceError
         ? error
         : new ServiceError("Failed to fetch all users");
     }
-  }
+  };
 
   //block the given user
-   blockUser = async(id: string): Promise<void> => {
+  blockUser = async (id: string): Promise<void> => {
     try {
       this.checkData(id);
       const user = await this.userRepository.getUserById(id);
@@ -566,10 +627,10 @@ export class AuthService extends BaseService {
         ? error
         : new ServiceError(`Failed to block user ${id}`);
     }
-  }
+  };
 
   //Unblock the given User
-   unblockUser = async(id: string): Promise<void> => {
+  unblockUser = async (id: string): Promise<void> => {
     try {
       this.checkData(id);
       const user = await this.userRepository.getUserById(id);
@@ -584,10 +645,10 @@ export class AuthService extends BaseService {
         ? error
         : new ServiceError(`Failed to unblock user ${id}`);
     }
-  }
+  };
 
   //Change the user Role
-   changeRole = async(userId: string, role: string): Promise<IUser | null> => {
+  changeRole = async (userId: string, role: string): Promise<IUser | null> => {
     try {
       this.checkData({ userId, role });
       const user = await this.userRepository.getUserById(userId);
@@ -609,5 +670,5 @@ export class AuthService extends BaseService {
         ? error
         : new ServiceError(`Failed to update role for user ${userId}`);
     }
-  }
+  };
 }

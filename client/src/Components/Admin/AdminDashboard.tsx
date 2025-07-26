@@ -102,8 +102,8 @@ const AdminDashboard = () => {
           //pending mentor list
       const formattedPendingMentors = pendingMentorsList && pendingMentorsList.length > 0
         ? pendingMentorsList.map(mentor => ({
-            name: mentor.userId.name || 'Unknown',
-            email: mentor.userId.email || 'No email',
+            name: mentor?.userId?.name || 'Unknown',
+            email: mentor?.userId?.email || 'No email',
             requestId: mentor._id
           }))
         : [];
@@ -112,10 +112,10 @@ const AdminDashboard = () => {
       //top mentors
       const formattedTopMentors = topMentorsList && topMentorsList.length > 0
         ? topMentorsList.map(mentor => ({
-            name: mentor.name || 'Unknown',
+            name: mentor?.name || 'Unknown',
             sessionCount: mentor.collaborationCount || 0,
-            rating: mentor.rating || "No feedback",
-            userId: mentor._id
+            rating: mentor?.rating || "No feedback",
+            userId: mentor?._id
           }))
         : [];
       setTopMentors(formattedTopMentors);

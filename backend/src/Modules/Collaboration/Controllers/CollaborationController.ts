@@ -17,9 +17,10 @@ export class CollaborationController extends BaseController {
   TemporaryRequestController = async (req: Request, res: Response): Promise<void> =>{
     try {
       const { mentorId, userId, selectedSlot, price, timePeriod } = req.body;
-      if (!mentorId || !userId || !selectedSlot || !price || !timePeriod) {
-        this.throwError(400, 'All fields are required');
-      }
+      logger.info(req.body);
+      // if (!mentorId || !userId || !selectedSlot || !price || !timePeriod) {
+      //   this.throwError(400, 'All fields are required');
+      // }
       const requestData = { mentorId, userId, selectedSlot, price, timePeriod };
       const newRequest = await this.collabService.TemporaryRequestService(requestData);
       this.sendCreated(res, newRequest, 'Request created successfully');
@@ -35,6 +36,11 @@ export class CollaborationController extends BaseController {
         this.throwError(400, 'Mentor ID is required');
       }
       const mentorRequests = await this.collabService.getMentorRequests(mentorId);
+      if (mentorRequests.length === 0) {
+        this.sendSuccess(res, { requests: [] }, 'No mentor requests found');
+        logger.info(`No mentor requests found for mentorId: ${mentorId}`);
+        return;
+      }
       this.sendSuccess(res, { requests: mentorRequests }, 'Mentor requests retrieved successfully');
     } catch (error: any) {
       this.handleError(error, res);
@@ -65,6 +71,11 @@ export class CollaborationController extends BaseController {
     try {
       const { id } = req.params;
       const userRequest = await this.collabService.getRequestForUser(id);
+      if (userRequest.length === 0) {
+        this.sendSuccess(res, { requests: [] }, 'No mentor requests found');
+        logger.info(`No mentor requests found for userId: ${id}`);
+        return;
+      }
       this.sendSuccess(res, { requests: userRequest }, 'Request retrieved successfully');
     } catch (error: any) {
       this.handleError(error, res);
@@ -106,6 +117,11 @@ export class CollaborationController extends BaseController {
     try {
       const { id } = req.params;
       const collabData = await this.collabService.getCollabDataForUserService(id);
+      if (collabData.length === 0) {
+        this.sendSuccess(res, { collabData: [] }, 'No collaborations found');
+        logger.info(`No collaborations found for userId: ${id}`);
+        return;
+      }
       this.sendSuccess(res, { collabData }, 'Collaboration data retrieved successfully');
     } catch (error: any) {
       this.handleError(error, res);
@@ -116,22 +132,16 @@ export class CollaborationController extends BaseController {
     try {
       const { id } = req.params;
       const collabData = await this.collabService.getCollabDataForMentorService(id);
+      if (collabData.length === 0) {
+        this.sendSuccess(res, { collabData: [] }, 'No collaborations found');
+        logger.info(`No collaborations found for mentorId: ${id}`);
+        return;
+      }
       this.sendSuccess(res, { collabData }, 'Collaboration data retrieved successfully');
     } catch (error: any) {
       this.handleError(error, res);
     }
   }
-
-  // deleteCollab = async (req: Request, res: Response): Promise<void> =>{
-  //   try {
-  //     const { collabId } = req.params;
-  //     const { reason } = req.body;
-  //     const response = await this.collabService.removeCollab(collabId, reason);
-  //     this.sendSuccess(res, response, 'Collaboration deleted successfully');
-  //   } catch (error: any) {
-  //     this.handleError(error, res);
-  //   }
-  // }
 
   cancelAndRefundCollab = async (req: Request, res: Response): Promise<void> => {
     try {
@@ -151,13 +161,28 @@ export class CollaborationController extends BaseController {
   getAllMentorRequests = async(req: Request, res: Response): Promise<void> =>{
     try {
       const { page = '1', limit = '10', search = '' } = req.query;
+      const parsedPage = parseInt(page as string, 10);
+      const parsedLimit = parseInt(limit as string, 10);
+      if (isNaN(parsedPage) || parsedPage < 1) {
+        this.throwError(400, 'Invalid page number');
+      }
+      if (isNaN(parsedLimit) || parsedLimit < 1) {
+        this.throwError(400, 'Invalid limit value');
+      }
+      logger.debug(`Fetching all mentor requests with page: ${parsedPage}, limit: ${parsedLimit}, search: ${search}`);
       const mentorRequests = await this.collabService.getMentorRequestsService({
-        page: parseInt(page as string),
-        limit: parseInt(limit as string),
+        page: parsedPage,
+        limit: parsedLimit,
         search: search as string,
       });
+      if (mentorRequests.requests.length === 0) {
+        this.sendSuccess(res, { requests: [], total: 0, page: parsedPage, pages: 1 }, 'No mentor requests found');
+        logger.info(`No mentor requests found for search: ${search}`);
+        return;
+      }
       this.sendSuccess(res, mentorRequests, 'Mentor requests retrieved successfully');
     } catch (error: any) {
+      logger.error(`Error fetching all mentor requests: ${error.message}`);
       this.handleError(error, res);
     }
   }
@@ -165,33 +190,62 @@ export class CollaborationController extends BaseController {
   getAllCollabs = async (req: Request, res: Response): Promise<void> =>{
     try {
       const { page = '1', limit = '10', search = '' } = req.query;
+      const parsedPage = parseInt(page as string, 10);
+      const parsedLimit = parseInt(limit as string, 10);
+      if (isNaN(parsedPage) || parsedPage < 1) {
+        this.throwError(400, 'Invalid page number');
+      }
+      if (isNaN(parsedLimit) || parsedLimit < 1) {
+        this.throwError(400, 'Invalid limit value');
+      }
+      logger.debug(`Fetching all collaborations with page: ${parsedPage}, limit: ${parsedLimit}, search: ${search}`);
       const collaborations = await this.collabService.getCollabsService({
-        page: parseInt(page as string),
-        limit: parseInt(limit as string),
+        page: parsedPage,
+        limit: parsedLimit,
         search: search as string,
       });
+      if (collaborations.collabs.length === 0) {
+        this.sendSuccess(res, { collabs: [], total: 0, page: parsedPage, pages: 1 }, 'No collaborations found');
+        logger.info(`No collaborations found for search: ${search}`);
+        return;
+      }
       this.sendSuccess(res, collaborations, 'Collaborations retrieved successfully');
     } catch (error: any) {
+      logger.error(`Error fetching all collaborations: ${error.message}`);
       this.handleError(error, res);
     }
   }
 
   getCollabDetailsByCollabId = async (req: Request, res: Response): Promise<void> =>{
+    const { collabId } = req.params;
     try {
-      const { collabId } = req.params;
+      logger.debug(`Fetching collaboration details for collabId: ${collabId}`);
       const collabDetails = await this.collabService.fetchCollabById(collabId);
+      if (!collabDetails) {
+        this.sendSuccess(res, { collabData: null }, 'No collaboration found');
+        logger.info(`No collaboration found for collabId: ${collabId}`);
+        return;
+      }
       this.sendSuccess(res, collabDetails, 'Collaboration details accessed successfully');
     } catch (error: any) {
+      logger.error(`Error fetching collaboration details for collabId ${collabId || 'unknown'}: ${error.message}`);
       this.handleError(error, res);
     }
   }
 
   getRequestDetailsByRequestId = async(req: Request, res: Response): Promise<void> =>{
+    const { requestId } = req.params;
     try {
-      const { requestId } = req.params;
+      logger.debug(`Fetching request details for requestId: ${requestId}`);
       const requestDetails = await this.collabService.fetchRequestById(requestId);
+      if (!requestDetails) {
+        this.sendSuccess(res, { requests: null }, 'No mentor request found');
+        logger.info(`No mentor request found for requestId: ${requestId}`);
+        return;
+      }
       this.sendSuccess(res, requestDetails, 'Request details accessed successfully');
     } catch (error: any) {
+      logger.error(`Error fetching request details for requestId ${requestId || 'unknown'}: ${error.message}`);
       this.handleError(error, res);
     }
   }
@@ -247,29 +301,22 @@ export class CollaborationController extends BaseController {
   }
 
   getMentorLockedSlotsController = async (req: Request, res: Response): Promise<void> =>{
+    const { mentorId } = req.params;
     try {
-      const { mentorId } = req.params;
       if (!mentorId) {
         this.throwError(400, 'Mentor ID is required');
       }
+      logger.debug(`Fetching locked slots for mentorId: ${mentorId}`);
       const lockedSlots = await this.collabService.getMentorLockedSlots(mentorId);
+      if (lockedSlots.length === 0) {
+        this.sendSuccess(res, { lockedSlots: [] }, 'No locked slots found');
+        logger.info(`No locked slots found for mentorId: ${mentorId}`);
+        return;
+      }
       this.sendSuccess(res, { lockedSlots }, 'Locked slots retrieved successfully');
     } catch (error: any) {
+      logger.error(`Error fetching locked slots for mentorId ${mentorId || 'unknown'}: ${error.message}`);
       this.handleError(error, res);
     }
   }
-
-  //Process The Refund
-  // processRefund = async (req: Request, res: Response): Promise<void> => {
-  //   try {
-  //     const { collabId } = req.params;
-  //     const { reason, amount } = req.body;
-  //     logger.info( req.params);
-  //     logger.info( req.body);
-  //     logger.info('Parsed refund request:', { collabId, reason, amount });
-  //     this.sendSuccess(res, { collabId, reason, amount }, 'Refund data received for verification');
-  //   } catch (error: any) {
-  //     this.handleError(error, res);
-  //   }
-  // };
 }

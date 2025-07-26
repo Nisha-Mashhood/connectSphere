@@ -13,7 +13,7 @@ const Categories = () => {
   const fetchCategories = async () => {
     try {
       const data = await fetchCategoriesService();
-      setCategories(data);
+      setCategories(data.categories);
     } catch (error) {
       console.error("Error fetching categories:", error);
       toast.error("Failed to fetch categories");

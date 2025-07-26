@@ -40,7 +40,8 @@ export class ContactMessageService extends BaseService {
    getAllContactMessages = async(): Promise<IContactMessage[]> => {
     try {
       logger.debug('Fetching all contact messages');
-      return await this.contactMessageRepo.getAllContactMessages();
+      const messages = await this.contactMessageRepo.getAllContactMessages();
+      return  messages;
     } catch (error: any) {
       logger.error(`Error fetching contact messages: ${error.message}`);
       throw new ServiceError(`Error fetching contact messages: ${error.message}`);

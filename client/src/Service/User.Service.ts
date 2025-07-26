@@ -4,12 +4,12 @@ import toast from "react-hot-toast";
 import { handleError } from "./ErrorHandler";
 
 // Fetch all users
-export const fetchAllUsers = async () => {
+export const fetchAllUsers = async (params) => {
   try {
-    const response = await axiosInstance.get("/auth/getallusers");
-    return response.data.data.users;
+    const response = await axiosInstance.get("/auth/getallusers", { params });
+    return response.data.data;
   } catch (error) {
-    handleError(error)
+    handleError(error);
   }
 };
 

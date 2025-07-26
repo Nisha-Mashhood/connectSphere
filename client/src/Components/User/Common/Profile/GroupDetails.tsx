@@ -185,6 +185,8 @@ const GroupDetails = () => {
       } else {
         throw new Error("No response data received");
       }
+
+
     } catch (error) {
       console.error("Photo upload error:", error);
       toast.error(error.message || "Failed to update photo");

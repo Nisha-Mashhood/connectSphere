@@ -9,7 +9,7 @@ import logger from "../../../core/Utils/Logger";
 import { GroupDocument } from "../../../Interfaces/models/GroupDocument";
 import { GroupRequestDocument } from "../../../Interfaces/models/GroupRequestDocument";
 import { ServiceError } from "../../../core/Utils/ErrorHandler";
-import { GroupFormData } from "../Types/types";
+import { GroupFormData, GroupQuery } from "../Types/types";
 import { Types } from "mongoose";
 
 export class GroupService extends BaseService {
@@ -98,9 +98,9 @@ export class GroupService extends BaseService {
     return await this.groupRepo.getGroupById(groupId);
   };
 
-  getAllGroups = async (): Promise<GroupDocument[]> => {
-    logger.debug("Fetching all groups");
-    return await this.groupRepo.getAllGroups();
+  getAllGroups = async (query: GroupQuery = {}): Promise<{ groups: GroupDocument[]; total: number }> => {
+    logger.debug(`Fetching all groups with query: ${JSON.stringify(query)}`);
+    return await this.groupRepo.getAllGroups(query);
   };
 
   requestToJoinGroup = async (
@@ -447,9 +447,6 @@ export class GroupService extends BaseService {
     logger.debug(`Fetching group details for member: ${userId}`);
     this.checkData(userId);
     const groups = await this.groupRepo.getGroupDetailsByUserId(userId);
-    if (!groups || groups.length === 0) {
-      throw new ServiceError("User is not a member of any groups");
-    }
     return groups;
   };
 

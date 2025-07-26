@@ -40,7 +40,7 @@ const UserConnections = ({ currentUser, handleProfileClick }) => {
       console.log("connectionData :", connectionsData);
       console.log("requsetsdata : ", requestsData);
 
-      setConnections(connectionsData.data || []);
+      setConnections(connectionsData || []);
 
       // Combine sent and received requests
       const allRequests = [

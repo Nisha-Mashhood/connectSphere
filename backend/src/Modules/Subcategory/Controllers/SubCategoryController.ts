@@ -41,6 +41,11 @@ export class SubcategoryController extends BaseController {
     try {
       logger.debug(`Fetching subcategories for category: ${req.params.categoryId}`);
       const subcategories = await this.subcategoryService.getAllSubcategories(req.params.categoryId!);
+      if (subcategories.length === 0) {
+        this.sendSuccess(res, [], 'No subcategories found for this category');
+        logger.info(`No subcategories found for category: ${req.params.categoryId}`);
+        return;
+      }
       this.sendSuccess(res, subcategories, 'Subcategories fetched successfully');
     } catch (error) {
       this.handleError(error, res);

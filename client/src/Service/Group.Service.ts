@@ -22,9 +22,10 @@ export const groupDetailsWithAdminId = async (id) => {
 };
 
 //Get all groups 
-export const groupDetails = async () => {
+export const groupDetails = async (params) => {
   try {
-    const response = await axiosInstance.get(`/group/group-details`);
+    const response = await axiosInstance.get("/group/group-details", { params });
+    // console.log("Group.Service: Group details from backend:", JSON.stringify(response.data.data, null, 2));
     return response.data.data;
   } catch (error) {
     handleError(error);
@@ -135,9 +136,11 @@ export const removeGroup = async (groupId) => {
 export const uploadGroupPicture = async (groupId, formData) => {
   try {
     const response = await axiosInstance.put(`/group/upload-group-picture/${groupId}`,formData);
+    console.log("From backend :",response);
     return response.data.data;
   } catch (error) {
-    handleError(error);
+    console.error("Group.Service: Error in uploadGroupPicture:", error.response?.data?.message || error.message);
+    throw error
   }
 };
 

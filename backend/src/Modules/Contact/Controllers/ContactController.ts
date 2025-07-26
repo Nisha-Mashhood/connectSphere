@@ -20,6 +20,11 @@ export class ContactController extends BaseController {
       }
 
       const contacts = await this.contactService.getUserContacts(userId?.toString());
+      if (contacts.length === 0) {
+        this.sendSuccess(res, [], 'No contacts found');
+        logger.info(`No contacts found for userId: ${userId}`);
+        return;
+      }
       this.sendSuccess(res, contacts, 'Contacts retrieved successfully');
     } catch (error: any) {
       logger.error(`Error in getUserContacts: ${error.message}`);

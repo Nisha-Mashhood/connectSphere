@@ -27,7 +27,8 @@ export class ContactMessageRepository extends BaseRepository<IContactMessage> {
    getAllContactMessages = async(): Promise<IContactMessage[]> => {
     try {
       logger.debug('Fetching all contact messages');
-      return await this.model.find().sort({ createdAt: -1 }).exec();
+      const messages = await this.model.find().sort({ createdAt: -1 }).exec();
+      return  messages;
     } catch (error: any) {
       logger.error(`Error fetching contact messages: ${error.message}`);
       throw new RepositoryError(`Failed to fetch contact messages: ${error.message}`);

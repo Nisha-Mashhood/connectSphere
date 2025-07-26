@@ -49,15 +49,15 @@ export class CategoryService extends BaseService {
     }
   }
 
-   getAllCategories = async(): Promise<ICategory[]> =>{
+   getAllCategories = async (query: { search?: string; page?: number; limit?: number; sort?: string } = {}): Promise<{ categories: ICategory[]; total: number }> => {
     try {
-      logger.debug('Fetching all categories');
-      const categories = await this.categoryRepo.getAllCategories();
-      logger.info(`Fetched ${categories.length} categories`);
-      return categories;
+      logger.debug(`Fetching all categories with query: ${JSON.stringify(query)}`);
+      const result = await this.categoryRepo.getAllCategories(query);
+      logger.info(`Fetched ${result.categories.length} categories, total: ${result.total}`);
+      return result;
     } catch (error) {
       logger.error(`Error fetching categories: ${error}`);
-      throw new ServiceError(`Failed to fetch categories: ${error}`);
+      throw new ServiceError('Failed to fetch categories');
     }
   }
 

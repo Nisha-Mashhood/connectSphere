@@ -36,14 +36,10 @@ export class GroupController {
       const { adminId } = req.params;
       logger.debug(`Fetching groups for admin: ${adminId}`);
       const groups = await this.groupService.getGroupDetails(adminId);
-      if (groups.length === 0) {
-        res.status(404).json({ success: false, message: 'No groups found for this admin' });
-        return;
-      }
       logger.info("groups Fetched : ",groups);
       res.status(200).json({
         success: true,
-        message: 'Groups fetched successfully',
+        message: groups.length === 0 ? 'No groups found for this admin' : 'Groups fetched successfully',
         data: groups,
       });
     } catch (error: any) {
@@ -58,7 +54,10 @@ export class GroupController {
       logger.debug(`Fetching group by ID: ${groupId}`);
       const group = await this.groupService.getGroupById(groupId);
       if (!group) {
-        res.status(404).json({ success: false, message: 'No group found with the provided ID' });
+       res.status(200).json({
+          success: true,
+          message: "No groups found",
+        });
         return;
       }
       res.status(200).json({
@@ -72,22 +71,55 @@ export class GroupController {
     }
   }
 
-    getAllGroups = async(_req: Request, res: Response): Promise<void> =>{
+    getAllGroups = async (req: Request, res: Response): Promise<void> => {
     try {
-      logger.debug('Fetching all groups');
-      const groups = await this.groupService.getAllGroups();
-      if (groups.length === 0) {
-        res.status(404).json({ success: false, message: 'No groups found' });
+      const { search, page, limit } = req.query;
+      const query: any = {};
+      
+      if (search) query.search = search as string;
+      if (page) query.page = parseInt(page as string, 10);
+      if (limit) query.limit = parseInt(limit as string, 10);
+
+      logger.debug(`Fetching groups with query: ${JSON.stringify(query)}`);
+      const result = await this.groupService.getAllGroups(query);
+
+      // If no groups found, return 200 with empty array and message
+      if (result.groups.length === 0) {
+        res.status(200).json({
+          success: true,
+          message: "No groups found",
+          data: {
+            groups: [],
+            total: 0,
+            page: query.page || 1,
+            limit: query.limit || 10,
+          },
+        });
         return;
       }
-      res.status(200).json({
-        success: true,
-        message: 'Groups fetched successfully',
-        data: groups,
-      });
+
+      // If no query parameters, return all groups 
+      if (!search && !page && !limit) {
+        res.status(200).json({
+          success: true,
+          message: "Groups fetched successfully",
+          data: result.groups,
+        });
+      } else {
+        res.status(200).json({
+          success: true,
+          message: "Groups fetched successfully",
+          data: {
+            groups: result.groups,
+            total: result.total,
+            page: query.page || 1,
+            limit: query.limit || 10,
+          },
+        });
+      }
     } catch (error: any) {
       logger.error(`Error in getAllGroups: ${error.message}`);
-      res.status(500).json({ success: false, message: error.message });
+      res.status(500).json({ success: false, message: `Server error: ${error.message}` });
     }
   }
 
@@ -114,7 +146,7 @@ export class GroupController {
       const requests = await this.groupService.getGroupRequestsByGroupId(groupId);
       res.status(200).json({
         success: true,
-        message: 'Requests accessed successfully',
+        message: requests.length === 0 ? 'No group requests found for this group' : 'Requests accessed successfully',
         data: requests,
       });
     } catch (error: any) {
@@ -130,7 +162,7 @@ export class GroupController {
       const requests = await this.groupService.getGroupRequestsByAdminId(adminId);
       res.status(200).json({
         success: true,
-        message: 'Requests accessed successfully',
+        message: requests.length === 0 ? 'No group requests found for this Admin' : 'Requests accessed successfully',
         data: requests,
       });
     } catch (error: any) {
@@ -146,7 +178,7 @@ export class GroupController {
       const requests = await this.groupService.getGroupRequestsByUserId(userId);
       res.status(200).json({
         success: true,
-        message: 'Requests accessed successfully',
+        message: requests.length === 0 ? 'No group requests found for this user' : 'Requests accessed successfully',
         data: requests,
       });
     } catch (error: any) {
@@ -283,9 +315,19 @@ export class GroupController {
       const { userid } = req.params;
       logger.debug(`Fetching group details for member: ${userid}`);
       const groups = await this.groupService.getGroupDetailsForMembers(userid);
+      if (!groups) {
+        res.status(200).json({
+          success: true,
+          message: "No groups found",
+          data: {
+            groups: [],
+          },
+        });
+        return;
+      }
       res.status(200).json({
         success: true,
-        message: 'Group details fetched successfully',
+        message: groups.length === 0 ? 'No groups found for this user' : 'Group details fetched successfully',
         data: groups,
       });
     } catch (error: any) {
@@ -300,7 +342,7 @@ export class GroupController {
       const requests = await this.groupService.getAllGroupRequests();
       res.status(200).json({
         success: true,
-        message: 'Group requests fetched successfully',
+        message: requests.length === 0 ? 'No group requests found' : 'Group requests fetched successfully',
         data: requests,
       });
     } catch (error: any) {
@@ -315,7 +357,7 @@ export class GroupController {
       logger.debug(`Fetching group request by ID: ${requestId}`);
       const request = await this.groupService.getGroupRequestById(requestId);
       if (!request) {
-        res.status(404).json({ success: false, message: 'Group request not found' });
+        res.status(200).json({ success: true, message: 'Group request not found' });
         return;
       }
       res.status(200).json({

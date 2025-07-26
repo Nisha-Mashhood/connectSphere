@@ -182,9 +182,13 @@ const ProfileDisplay = () => {
         // First check if current user is a mentor
         const isMentor = await checkIfUserIsMentor(currentUser._id);
         setIsCurrentUserMentor(isMentor);
+        if(!isMentor){
+          console.log(`current user is not a mentor ${isMentor}`);
+        }
 
         // Fetch mentor or user details
         const mentorData = await fetchMentorById(Id);
+        console.log(`Mentor data :${mentorData}`);
         if (mentorData && mentorData.mentor) {
           setMentor(mentorData.mentor);
           setIsMentor(true);

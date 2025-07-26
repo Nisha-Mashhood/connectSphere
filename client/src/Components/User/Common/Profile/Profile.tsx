@@ -50,11 +50,13 @@ import {
 import toast from "react-hot-toast";
 import {
   checkMentorProfile,
+  // fetchMentorRequests,
   updateMentorProfile,
 } from "../../../../Service/Mentor.Service";
 import { updateMentorInfo } from "../../../../redux/Slice/profileSlice";
 import { updateUserProfile } from "../../../../redux/Slice/userSlice";
 import { checkProfile } from "../../../../Service/Auth.service";
+// import { fetchCollabDetails } from "../../../../Service/collaboration.Service";
 
 // Lazy load components
 const RequestsSection = lazy(() => import("./RequestSection"));
@@ -105,6 +107,21 @@ const Profile = () => {
   });
   const [selectedDay, setSelectedDay] = useState("");
   const [selectedTime, setSelectedTime] = useState("");
+
+  // useEffect(() => {
+  //   if (!currentUser?._id) return; 
+  //   dispatch(fetchMentorDetails(currentUser._id));
+  //   dispatch(fetchCollabDetails({ userId: currentUser._id, role: currentUser.role }));
+  //   dispatch(fetchMentorRequests({
+  //     userId: currentUser._id,
+  //     role: currentUser.role,
+  //     mentorId: mentorDetails?._id, 
+  //   }));
+  //   dispatch(fetchGroups(currentUser._id));
+  //   dispatch(fetchGroupRequests(currentUser._id));
+  //   dispatch(fetchGroupDetailsForMembers(currentUser._id));
+  //   dispatch(fetchUserConnections(currentUser._id));
+  // }, [dispatch, currentUser._id, currentUser.role, mentorDetails?._id]);
 
   const DAYS_OF_WEEK = [
     "Monday",

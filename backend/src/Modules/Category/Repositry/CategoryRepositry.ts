@@ -21,15 +21,52 @@ export class CategoryRepository extends BaseRepository<ICategory> {
     }
   }
 
-   getAllCategories = async(): Promise<ICategory[]> => {
+   getAllCategories = async (query: { search?: string; page?: number; limit?: number; sort?: string } = {}): Promise<{ categories: ICategory[]; total: number }> => {
     try {
-      logger.debug("Fetching all categories");
-      const categories = await this.findAll();
-      logger.info(`Fetched ${categories.length} categories`);
-      return categories;
+      logger.debug(`Fetching all categories with query: ${JSON.stringify(query)}`);
+      const { search, page = 1, limit = 10, sort } = query;
+
+      // If no search or sort, return all categories sorted by createdAt (descending)
+      if (!search && !sort) {
+        const categories = await this.model
+          .find()
+          .sort({ createdAt: -1 }) 
+          .exec();
+        logger.info(`Fetched ${categories.length} categories`);
+        return { categories, total: categories.length };
+      }
+
+      // Build aggregation pipeline for search, sort, and pagination
+      const matchStage: any = {};
+      if (search) {
+        matchStage.name = { $regex: `^${search}`, $options: 'i' };
+      }
+
+      const sortStage: any = sort === 'alphabetical' ? { name: 1 } : { createdAt: -1 };
+
+      const pipeline = [
+        { $match: matchStage },
+        { $sort: sortStage },
+        {
+          $facet: {
+            categories: [
+              { $skip: ((page - 1) * limit) },
+              { $limit: limit },
+            ],
+            total: [{ $count: 'count' }],
+          },
+        },
+      ];
+
+      const result = await this.model.aggregate(pipeline).exec();
+      const categories = result[0]?.categories || [];
+      const total = result[0]?.total[0]?.count || 0;
+
+      logger.info(`Fetched ${categories.length} categories, total: ${total}`);
+      return { categories, total };
     } catch (error) {
       logger.error(`Error fetching categories: ${error}`);
-      throw new RepositoryError(`Failed to fetch categories: ${error}`);
+      throw new RepositoryError('Failed to fetch categories');
     }
   }
 

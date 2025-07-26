@@ -170,7 +170,7 @@ const MentorDetailModal: React.FC<MentorDetailModalProps> = ({ mentor, onClose }
                     <h3 className="text-xl font-semibold mb-4">Professional Details</h3>
                     <div className="space-y-3">
                       <p><strong>Bio:</strong> {mentor.bio}</p>
-                      <p><strong>Price per Session:</strong> ${mentor.price}</p>
+                      <p><strong>Price per Session:</strong> ₹{mentor.price}</p>
                       <div>
                         <strong>Skills:</strong>
                         <div className="flex flex-wrap gap-2 mt-2">

@@ -43,6 +43,11 @@ export class SkillsController extends BaseController {
     try {
       logger.debug(`Fetching skills for subcategory: ${req.params.subcategoryId}`);
       const skills = await this.skillsService.getAllSkills(req.params.subcategoryId!);
+      if (skills.length === 0) {
+        this.sendSuccess(res, [], 'No skills found for this subcategory');
+        logger.info(`No skills found for subcategory: ${req.params.subcategoryId}`);
+        return;
+      }
       this.sendSuccess(res, skills, 'Skills fetched successfully');
     } catch (error) {
       this.handleError(error, res);
@@ -53,6 +58,11 @@ export class SkillsController extends BaseController {
     try {
       logger.debug(`Fetching skill: ${req.params.id}`);
       const skill = await this.skillsService.getSkillById(req.params.id!);
+      if (!skill) {
+        this.sendSuccess(res, '', 'No skills found');
+        logger.info('No skills found');
+        return;
+      }
       if (!skill) {
         this.throwError(404, 'Skill not found');
       }
@@ -102,6 +112,11 @@ export class SkillsController extends BaseController {
     try {
       logger.debug('Fetching all skills (name and ID only)');
       const skills = await this.skillsService.getSkills();
+      if (skills.length === 0) {
+        this.sendSuccess(res, [], 'No skills found');
+        logger.info('No skills found');
+        return;
+      }
       this.sendSuccess(res, skills, 'Skills fetched successfully');
     } catch (error) {
       logger.error(`Error fetching skills: ${error}`);

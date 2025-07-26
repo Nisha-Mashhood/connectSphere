@@ -44,20 +44,20 @@ export const fetchMentorRequests = async (
 //Fetch Mentor Deatils using mentor Id
 export const fetchMentorById = async (mentorId) => {
   try {
-    const { data } = await axiosInstance.get(`/mentors/getmentorDetails/${mentorId}`);
-    return data;
+    const response = await axiosInstance.get(`/mentors/getmentorDetails/${mentorId}`);
+    return response.data.data;
   } catch (error) {
     handleError(error)
   }
 }
 
 //Fetch All Mentors
-export const fetchAllMentors = async () =>{
+export const fetchAllMentors = async (params) => {
   try {
-    const response = await axiosInstance.get("/mentors/getAllMentors")
-    return response.data.data
+    const response = await axiosInstance.get("/mentors/getAllMentors", { params });
+    return response.data.data;
   } catch (error) {
-    handleError(error)
+    handleError(error);
   }
 }
 

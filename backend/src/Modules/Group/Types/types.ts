@@ -14,3 +14,9 @@ export interface GroupFormData {
   createdAt?: Date;
   members?: string[];
 }
+
+export interface GroupQuery {
+  search?: string;
+  page?: number;
+  limit?: number;
+}

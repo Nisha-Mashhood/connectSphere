@@ -74,6 +74,15 @@ export class UserConnectionController {
       const { userId } = req.params;
       logger.debug(`Fetching connections for user: ${userId}`);
       const connections = await this.userConnectionService.fetchUserConnections(userId);
+      if (connections.length === 0) {
+        res.status(200).json({
+          success: true,
+          message: 'No connections found for this user',
+          data: [],
+        });
+        logger.info(`No connections found for user: ${userId}`);
+        return;
+      }
       res.status(200).json({
         success: true,
         message: 'Connections fetched',
@@ -93,6 +102,15 @@ export class UserConnectionController {
       const { userId } = req.params;
       logger.debug(`Fetching user requests for user: ${userId}`);
       const { sentRequests, receivedRequests } = await this.userConnectionService.fetchUserRequests(userId);
+      if (sentRequests.length === 0 && receivedRequests.length === 0) {
+        res.status(200).json({
+          success: true,
+          message: 'No requests found for this user',
+          data: { sentRequests: [], receivedRequests: [] },
+        });
+        logger.info(`No requests found for user: ${userId}`);
+        return;
+      }
       res.status(200).json({
         success: true,
         message: 'User requests fetched successfully',
@@ -111,6 +129,15 @@ export class UserConnectionController {
     try {
       logger.debug('Fetching all user connections');
       const connections = await this.userConnectionService.fetchAllUserConnections();
+      if (connections.length === 0) {
+        res.status(200).json({
+          success: true,
+          message: 'No connections found ',
+          data: [],
+        });
+        logger.info(`No connections found`);
+        return;
+      }
       res.status(200).json({
         success: true,
         message: 'All user connections fetched',

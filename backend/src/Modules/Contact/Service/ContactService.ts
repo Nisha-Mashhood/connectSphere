@@ -11,10 +11,12 @@ export class ContactService extends BaseService {
     this.contactRepo = new ContactRepository();
   }
 
-   getUserContacts = async(userId?: string): Promise<FormattedContact[]> => {
+    getUserContacts = async (userId?: string): Promise<FormattedContact[]> => {
     if (!userId) {
-        this.throwError('User ID or role not provided');
-      }
+      logger.error('User ID not provided');
+      this.throwError('User ID not provided');
+    }
+
     logger.debug(`Fetching contacts for user: ${userId}`);
     this.checkData(userId);
 

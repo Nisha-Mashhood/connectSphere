@@ -4,6 +4,7 @@ import { MentorService } from "../Service/Mentorservice";
 import { AuthService } from "../../Auth/Service/AuthService";
 import { UserRepository } from "../../Auth/Repositry/UserRepositry";
 import { uploadMedia } from "../../../core/Utils/Cloudinary";
+import logger from "../../../core/Utils/Logger";
 
 export class MentorController extends BaseController {
   private mentorService: MentorService;
@@ -127,6 +128,18 @@ export class MentorController extends BaseController {
         status as string,
         sort as string
       );
+
+      if (mentorRequests.mentors.length === 0) {
+        res.status(200).json({
+          success: true,
+          message: "Mentor Request Not found",
+          data: {
+            mentors: [],
+            total: 0,
+          },
+        });
+        return;
+      }
       this.sendSuccess(
         res,
         {
@@ -142,12 +155,56 @@ export class MentorController extends BaseController {
     }
   };
 
-  getAllMentors = async (_req: Request, res: Response): Promise<void> => {
+  getAllMentors = async (req: Request, res: Response): Promise<void> => {
     try {
-      const mentors = await this.mentorService.getAllMentors();
-      this.sendSuccess(res, mentors, "Mentors retrieved successfully");
+      const { search, page, limit, skill } = req.query;
+      const query: any = {};
+
+      if (search) query.search = search as string;
+      if (page) query.page = parseInt(page as string, 10);
+      if (limit) query.limit = parseInt(limit as string, 10);
+      if (skill) query.skill = skill as string;
+
+      logger.debug(`Fetching mentors with query: ${JSON.stringify(query)}`);
+      const result = await this.mentorService.getAllMentors(query);
+
+      // If no mentors found, return 200 with empty array and message
+      if (result.mentors.length === 0) {
+        res.status(200).json({
+          success: true,
+          message: "No mentors found",
+          data: {
+            mentors: [],
+            total: 0,
+            page: query.page || 1,
+            limit: query.limit || 10,
+          },
+        });
+        return;
+      }
+
+      // If no query parameters, return all mentors
+      if (!search && !page && !limit && !skill) {
+        res.status(200).json({
+          success: true,
+          message: "Mentors fetched successfully",
+          data: result.mentors,
+        });
+      } else {
+        res.status(200).json({
+          success: true,
+          message: "Mentors fetched successfully",
+          data: {
+            mentors: result.mentors,
+            total: result.total,
+            page: query.page || 1,
+            limit: query.limit || 10,
+          },
+        });
+      }
     } catch (error: any) {
-      this.handleError(error, res);
+      logger.error(`Error in getAllMentors: ${error.message}`);
+      res.status(500).json({ success: false, message: `Server error: ${error.message}` });
     }
   };
 

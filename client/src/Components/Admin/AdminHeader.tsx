@@ -1,8 +1,7 @@
-import { ReactNode, useState } from 'react';
+import { ReactNode, useEffect, useState } from 'react';
 import { FaUser, FaTasks, FaSignOutAlt, FaLayerGroup, FaChalkboardTeacher, 
          FaUserFriends, FaTachometerAlt, FaBars, FaTimes, 
-         FaStar, FaEnvelope, 
-         FaChartLine} from 'react-icons/fa';
+         FaStar, FaEnvelope, FaChartLine } from 'react-icons/fa';
 import { Button, Avatar, Tooltip } from "@nextui-org/react";
 import { useDispatch, useSelector } from "react-redux";
 import { useNavigate, useLocation } from "react-router-dom";
@@ -11,6 +10,8 @@ import Logo from "../../assets/logo.svg";
 import { logout } from '../../Service/Auth.service';
 import toast from 'react-hot-toast';
 import { AdminLogout } from '../../redux/Slice/userSlice';
+import { getUnreadCount, markNotificationAsRead } from '../../Service/Notification.Service';
+import { socketService } from '../../Service/SocketService';
 
 export const ConnectSphereLogo = () => {
   return (
@@ -26,10 +27,68 @@ interface AdminSidebarProps {
 
 const AdminSidebar = ({ children }: AdminSidebarProps) => {
   const [collapsed, setCollapsed] = useState(false);
+  const [newUserCount, setNewUserCount] = useState(0);
+  const [newMentorCount, setNewMentorCount] = useState(0);
   const dispatch = useDispatch();
   const navigate = useNavigate();
   const location = useLocation();
   const { currentAdmin } = useSelector((state: RootState) => state.user);
+
+  useEffect(() => {
+    if (currentAdmin?._id) {
+      console.log(`AdminSidebar: Initializing for admin ID: ${currentAdmin._id}`);
+      const fetchUnreadCounts = async () => {
+        try {
+          const userCount = await getUnreadCount(currentAdmin._id, 'new_user');
+          const mentorCount = await getUnreadCount(currentAdmin._id, 'new_mentor');
+          console.log(`AdminSidebar: Initial unread counts - new_user: ${userCount}, new_mentor: ${mentorCount}`);
+          setNewUserCount(userCount);
+          setNewMentorCount(mentorCount);
+        } catch (error) {
+          console.error('AdminSidebar: Failed to fetch unread counts:', error);
+          toast.error('Failed to fetch notification counts');
+        }
+      };
+      fetchUnreadCounts();
+
+      socketService.connect(currentAdmin._id, currentAdmin.token);
+
+      const handleNewNotification = (notification: { type: string; userId: string }) => {
+        console.log(`Socket: Received notification.new for type ${notification.type}, user ${notification.userId}`);
+        if (notification.userId === currentAdmin._id) {
+          if (notification.type === 'new_user') {
+            setNewUserCount((prev) => {
+              const newCount = prev + 1;
+              console.log(`Socket: Updated newUserCount to ${newCount}`);
+              return newCount;
+            });
+          } else if (notification.type === 'new_mentor') {
+            setNewMentorCount((prev) => {
+              const newCount = prev + 1;
+              console.log(`Socket: Updated newMentorCount to ${newCount}`);
+              return newCount;
+            });
+          }
+        }
+      };
+
+      const handleNotificationRead = (data: { userId?: string; type?: string }) => {
+        if (data.userId === currentAdmin._id) {
+          console.log(`Socket: Notification read event for type ${data.type}, user ${data.userId}`);
+          fetchUnreadCounts();
+        }
+      };
+
+      socketService.onNotificationNew(handleNewNotification);
+      socketService.onNotificationRead(handleNotificationRead);
+
+      return () => {
+        socketService.offNotificationNew(handleNewNotification);
+        socketService.offNotificationRead(handleNotificationRead);
+        socketService.disconnect();
+      };
+    }
+  }, [currentAdmin?._id, currentAdmin?.token]);
 
   const handleLogout = async () => {
     const email = currentAdmin?.email;
@@ -40,6 +99,7 @@ const AdminSidebar = ({ children }: AdminSidebarProps) => {
       navigate("/admin/login", { replace: true });
     } catch (err) {
       console.error(err.response?.data?.message || "Logout Failed");
+      toast.error("Logout failed");
     }
   };
 
@@ -47,10 +107,53 @@ const AdminSidebar = ({ children }: AdminSidebarProps) => {
     return location.pathname === path;
   };
 
+  const handleUserManagementClick = async () => {
+    if (currentAdmin?._id && newUserCount > 0) {
+      console.log(`newUserCount ${newUserCount} and it is making the newuser count -1`);
+      try {
+        const response = await markNotificationAsRead(currentAdmin._id, undefined, 'new_user');
+        setNewUserCount(0);
+        if(response){
+          console.log(`AdminSidebar: Marked all new_user notifications as read for admin ${currentAdmin._id}`);
+        }
+      } catch (error) {
+        console.error('AdminSidebar: Failed to mark new_user notifications as read:', error);
+        toast.error('Failed to mark notifications as read');
+      }
+    }
+    navigate('/admin/user');
+  };
+
+  const handleMentorManagementClick = async () => {
+    if (currentAdmin?._id && newMentorCount > 0) {
+    try {
+      await markNotificationAsRead(currentAdmin._id, undefined, "new_mentor");
+      setNewMentorCount(0);
+      console.log(`AdminSidebar: Marked all new_mentor notifications as read for admin ${currentAdmin._id}`);
+    } catch (error) {
+      console.error("AdminSidebar: Failed to mark new_mentor notifications as read:", error);
+      toast.error("Failed to mark new_mentor notifications as read");
+    }
+  }
+  navigate("/admin/mentormange");
+  };
+
   const navigationItems = [
     { name: "Dashboard", path: "/admin/dashboard", icon: <FaTachometerAlt /> },
-    { name: "User Management", path: "/admin/user", icon: <FaUser /> },
-    { name: "Mentor Management", path: "/admin/mentormange", icon: <FaUser /> },
+    { 
+      name: 'User Management', 
+      path: '/admin/user', 
+      icon: <FaUser />, 
+      onClick: handleUserManagementClick, 
+      badge: newUserCount > 0 ? newUserCount : null 
+    },
+    { 
+      name: 'Mentor Management', 
+      path: '/admin/mentormange', 
+      icon: <FaUser />, 
+      onClick: handleMentorManagementClick, 
+      badge: newMentorCount > 0 ? newMentorCount : null 
+    },
     { name: "Skill Management", path: "/admin/categories", icon: <FaTasks /> },
     { name: "User-Mentor Management", path: "/admin/userMentorManagemnt", icon: <FaChalkboardTeacher /> },
     { name: "User-User Management", path: "/admin/userUserMangemnt", icon: <FaUserFriends /> },
@@ -63,14 +166,12 @@ const AdminSidebar = ({ children }: AdminSidebarProps) => {
 
   return (
     <div className="flex min-h-screen w-full">
-      {/* Sidebar */}
       <div 
         className={`bg-purple-100 text-white transition-all duration-300 flex flex-col justify-between ${
           collapsed ? 'w-20' : 'w-64'
         }`}
       >
         <div>
-          {/* Header with logo and collapse button */}
           <div className="flex items-center justify-between p-4 border-b border-gray-700">
             {!collapsed && <ConnectSphereLogo />}
             <Button
@@ -84,7 +185,6 @@ const AdminSidebar = ({ children }: AdminSidebarProps) => {
             </Button>
           </div>
 
-          {/* Admin Avatar and Info */}
           {currentAdmin && (
             <div className={`flex ${collapsed ? 'justify-center' : 'items-center'} p-4 mb-4 ${collapsed ? '' : 'space-x-4'}`}>
               <Tooltip content={currentAdmin.name} placement="right" isDisabled={!collapsed}>
@@ -106,30 +206,36 @@ const AdminSidebar = ({ children }: AdminSidebarProps) => {
             </div>
           )}
 
-          {/* Navigation Menu */}
           <div className="flex flex-col space-y-2 px-3">
-            {navigationItems.map((item, index) => (
-              <Tooltip 
-                key={index}
-                content={item.name} 
-                placement="right" 
-                isDisabled={!collapsed}
-              >
-                <Button
-                  color={isActive(item.path) ? "secondary" : "default"}
-                  variant={isActive(item.path) ? "flat" : "light"}
-                  className={`justify-${collapsed ? 'center' : 'start'} w-full`}
-                  onPress={() => navigate(item.path)}
-                  startContent={item.icon}
+            {navigationItems.map((item, index) => {
+              console.log(`Rendering navigation item: ${item.name}, badge: ${item.badge}`);
+              return (
+                <Tooltip 
+                  key={index}
+                  content={item.name} 
+                  placement="right" 
+                  isDisabled={!collapsed}
                 >
-                  {!collapsed && item.name}
-                </Button>
-              </Tooltip>
-            ))}
+                  <Button
+                    color={isActive(item.path) ? "secondary" : "default"}
+                    variant={isActive(item.path) ? "flat" : "light"}
+                    className={`justify-${collapsed ? 'center' : 'start'} w-full flex items-center`}
+                    onPress={item.onClick || (() => navigate(item.path))}
+                    startContent={item.icon}
+                  >
+                    {!collapsed && item.name}
+                    {item.badge && (
+                      <span className="ml-2 bg-red-500 text-white text-xs font-bold rounded-full px-2 py-1">
+                        {item.badge}
+                      </span>
+                    )}
+                  </Button>
+                </Tooltip>
+              );
+            })}
           </div>
         </div>
 
-        {/* Logout Button */}
         <div className="p-3 mb-2">
           <Tooltip content="Logout" placement="right" isDisabled={!collapsed}>
             <Button
@@ -144,7 +250,6 @@ const AdminSidebar = ({ children }: AdminSidebarProps) => {
         </div>
       </div>
 
-      {/* Main Content */}
       <div className="flex-1 w-full overflow-auto">
         <main className="min-h-screen w-full p-6">
           {children}

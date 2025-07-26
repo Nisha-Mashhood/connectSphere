@@ -59,6 +59,15 @@ export class ReviewController {
     try {
       logger.debug('Fetching all reviews');
       const reviews = await this.reviewService.getAllReviews();
+      if (reviews.length === 0) {
+        res.status(200).json({
+          success: true,
+          message: 'No reviews found',
+          data: [],
+        });
+        logger.info('No reviews found');
+        return;
+      }
       res.status(200).json({
         success: true,
         message: 'Reviews fetched successfully',
@@ -153,6 +162,15 @@ export class ReviewController {
     try {
       logger.debug('Fetching selected reviews');
       const reviews = await this.reviewService.getSelectedReviews();
+      if (reviews.length === 0) {
+        res.status(200).json({
+          success: true,
+          message: 'No selected reviews found',
+          data: [],
+        });
+        logger.info('No selected reviews found');
+        return;
+      }
       res.status(200).json({
         success: true,
         message: 'Selected reviews fetched successfully',

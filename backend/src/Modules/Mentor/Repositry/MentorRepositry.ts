@@ -5,6 +5,7 @@ import logger from "../../../core/Utils/Logger";
 import Mentor from "../../../models/mentor.model";
 import { IMentor } from "../../../Interfaces/models/IMentor";
 import { UserInterface } from "../../../Interfaces/models/IUser";
+import { MentorQuery } from "../Types/Types";
 
 export class MentorRepository extends BaseRepository<IMentor> {
   constructor() {
@@ -91,14 +92,67 @@ export class MentorRepository extends BaseRepository<IMentor> {
     }
   }
 
-   getAllMentors = async(): Promise<IMentor[]> => {
+  getAllMentors = async (query: MentorQuery = {}): Promise<{ mentors: IMentor[]; total: number }> => {
     try {
-      logger.debug(`Fetching all approved mentors`);
-      return await this.model
-        .find({ isApproved: "Completed" })
-        .populate("userId")
-        .populate("skills")
-        .exec();
+      logger.debug(`Fetching all approved mentors with query: ${JSON.stringify(query)}`);
+      const { search, page, limit, skill } = query;
+
+      // If no query parameters, return all mentors without pagination
+      if (!search && !page && !limit && !skill) {
+        const mentors = await this.model
+          .find({ isApproved: "Completed" })
+          .populate("userId")
+          .populate("skills")
+          .exec();
+        logger.info(`Fetched ${mentors.length} mentors (no query constraints)`);
+        return { mentors, total: mentors.length };
+      }
+
+      // Build aggregation pipeline for search, filtering, and pagination
+      const matchStage: any = { isApproved: "Completed" };
+      if (search) {
+        matchStage["userId.name"] = { $regex: `^${search}`, $options: "i" };
+      }
+      if (skill) {
+        matchStage.skills = { $in: [skill] };
+      }
+
+      const pipeline = [
+        {
+          $lookup: {
+            from: "users",
+            localField: "userId",
+            foreignField: "_id",
+            as: "userId",
+          },
+        },
+        { $unwind: "$userId" },
+        {
+          $lookup: {
+            from: "skills",
+            localField: "skills",
+            foreignField: "_id",
+            as: "skills",
+          },
+        },
+        { $match: matchStage },
+        {
+          $facet: {
+            mentors: [
+              { $skip: ((page || 1) - 1) * (limit || 10) },
+              { $limit: limit || 10 },
+            ],
+            total: [{ $count: "count" }],
+          },
+        },
+      ];
+
+      const result = await this.model.aggregate(pipeline).exec();
+      const mentors = result[0]?.mentors || [];
+      const total = result[0]?.total[0]?.count || 0;
+
+      logger.info(`Fetched ${mentors.length} mentors, total: ${total}`);
+      return { mentors, total };
     } catch (error: any) {
       logger.error(`Error fetching mentors: ${error.message}`);
       throw new RepositoryError(`Error fetching mentors: ${error.message}`);
@@ -121,16 +175,20 @@ export class MentorRepository extends BaseRepository<IMentor> {
     }
   }
 
-   approveMentorRequest = async(id: string): Promise<IMentor | null> => {
+   approveMentorRequest = async(id: string): Promise<IMentor> => {
     try {
       logger.debug(`Approving mentor request: ${id}`);
-      return await this.model
+      const updatedMentor = await this.model
         .findByIdAndUpdate(
           this.toObjectId(id),
           { isApproved: "Completed" },
           { new: true }
         )
         .lean();
+        if(!updatedMentor){
+          throw new RepositoryError(`Error approving mentor request`)
+        }
+        return updatedMentor
     } catch (error: any) {
       logger.error(`Error approving mentor request: ${error.message}`);
       throw new RepositoryError(

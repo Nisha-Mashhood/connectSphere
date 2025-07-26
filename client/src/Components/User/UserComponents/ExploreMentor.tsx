@@ -71,98 +71,114 @@ const ExploreMentors = () => {
   const [selectedCategory, setSelectedCategory] = useState("");
   const [selectedSkill, setSelectedSkill] = useState("");
   const [currentPage, setCurrentPage] = useState(1);
+  const [totalPages, setTotalPages] = useState(1);
   const [selectedMentor, setSelectedMentor] = useState(null);
   const [selectedUser, setSelectedUser] = useState(null);
   const [selectedGroup, setSelectedGroup] = useState(null);
   const [selectedSlot, setSelectedSlot] = useState("");
   const [lockedSlots, setLockedSlots] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
-  const [totalPages] = useState(10);
   const [activeTab, setActiveTab] = useState("mentors");
+  const limit = 10; // Items per page
 
   // Fetch data
-  useEffect(() => {
-    const fetchData = async () => {
+ // Fetch categories and skills only once
+useEffect(() => {
+  const fetchStaticData = async () => {
+    try {
+      setIsLoading(true);
+      const [categoriesData, skillsData] = await Promise.all([
+        fetchCategoriesService(),
+        getAllSkills(),
+      ]);
+      setCategories(Array.isArray(categoriesData.categories) ? categoriesData.categories : []);
+      setSkills(skillsData || []);
+    } catch (error) {
+      console.error("Error fetching static data:", error);
+      setCategories([]);
+      setSkills([]);
+    } finally {
+      setIsLoading(false);
+    }
+  };
+  fetchStaticData();
+}, []); // Empty dependency array since categories and skills are static
+
+// Fetch mentors, groups, and users
+useEffect(() => {
+  const fetchDynamicData = async () => {
+    try {
+      setIsLoading(true);
+      const [mentorsData, groupData, userData] = await Promise.all([
+        fetchAllMentors({
+          search: searchQuery,
+          page: currentPage,
+          limit,
+          skill: selectedSkill,
+        }),
+        groupDetails({ search: searchQuery, page: currentPage, limit }),
+        fetchAllUsers({ search: searchQuery, page: currentPage, limit }),
+      ]);
+
+      const filteredUsers = Array.isArray(userData.users)
+        ? userData.users.filter((user) => user._id !== currentUser._id)
+        : [];
+      const filteredMentors =
+        mentorDetails?._id && Array.isArray(mentorsData.mentors)
+          ? mentorsData.mentors.filter((mentor) => mentor._id !== mentorDetails._id)
+          : mentorsData.mentors || [];
+      const filteredGroups = Array.isArray(groupData.groups)
+        ? groupData.groups.filter((group) => group.adminId?._id !== currentUser._id)
+        : [];
+
+        
+
+      setMentors(filteredMentors);
+      setGroups(filteredGroups);
+      setUsers(filteredUsers.filter((user) => user.role === "user"));
+      setTotalPages(Math.ceil((mentorsData.total || 10) / limit));
+    } catch (error) {
+      console.error("Error fetching dynamic data:", error);
+      setMentors([]);
+      setGroups([]);
+      setUsers([]);
+    } finally {
+      setIsLoading(false);
+    }
+  };
+  fetchDynamicData();
+}, [searchQuery, currentPage, selectedCategory, selectedSkill, mentorDetails, currentUser._id]);
+
+// Fetch user-specific data
+useEffect(() => {
+  if (currentUser) {
+    const fetchUserData = async () => {
       try {
-        setIsLoading(true);
-        const [mentorsData, categoriesData, skillsData, groupData, userData] =
-          await Promise.all([
-            fetchAllMentors(),
-            fetchCategoriesService(),
-            getAllSkills(),
-            groupDetails(),
-            fetchAllUsers(),
-          ]);
-
-        console.log("Mentors Data:", mentorsData);
-        console.log("Categories Data:", categoriesData);
-        console.log("Skills Data:", skillsData);
-        console.log("Group Data:", groupData);
-        console.log("User Data:", userData);
-
-        if (currentUser) {
-          await Promise.all([
-            dispatch(
-              fetchRequests({
-                userId: currentUser._id,
-                role: currentUser.role,
-                mentorId: mentorDetails?._id,
-              })
-            ),
-            dispatch(
-              fetchCollabDetails({
-                userId: currentUser._id,
-                role: currentUser.role,
-              })
-            ),
-            dispatch(fetchGroupRequests(currentUser._id)),
-            dispatch(fetchGroupDetailsForMembers(currentUser._id)),
-            dispatch(fetchUserConnections(currentUser._id)),
-          ]);
-        }
-
-        const filteredUsers = Array.isArray(userData)
-          ? userData.filter((user) => user._id !== currentUser._id)
-          : [];
-        const filteredMentors =
-          mentorDetails?._id && Array.isArray(mentorsData)
-            ? mentorsData.filter((mentor) => mentor._id !== mentorDetails._id)
-            : mentorsData || [];
-        const filteredGroups = Array.isArray(groupData)
-          ? groupData.filter((group) => group.adminId?._id !== currentUser._id)
-          : [];
-
-        setMentors(filteredMentors);
-        setCategories(Array.isArray(categoriesData) ? categoriesData : []);
-        setSkills(skillsData?.skills || []);
-        setGroups(filteredGroups);
-        setUsers(filteredUsers.filter((user) => user.role === "user"));
+        await Promise.all([
+          dispatch(
+            fetchRequests({
+              userId: currentUser._id,
+              role: currentUser.role,
+              mentorId: mentorDetails?._id,
+            })
+          ),
+          dispatch(
+            fetchCollabDetails({
+              userId: currentUser._id,
+              role: currentUser.role,
+            })
+          ),
+          dispatch(fetchGroupRequests(currentUser._id)),
+          dispatch(fetchGroupDetailsForMembers(currentUser._id)),
+          dispatch(fetchUserConnections(currentUser._id)),
+        ]);
       } catch (error) {
-        console.error("Error fetching data:", error);
-        setMentors([]);
-        setCategories([]);
-        setSkills([]);
-        setGroups([]);
-        setUsers([]);
-      } finally {
-        setIsLoading(false);
+        console.error("Error fetching user data:", error);
       }
     };
-    fetchData();
-  }, [currentUser, mentorDetails, dispatch]);
-
-  // Filter mentors based on search and filters
-  const filteredMentors = mentors.filter((mentor) => {
-    const matchesSearch = mentor.userId?.name
-      .toLowerCase()
-      .includes(searchQuery.toLowerCase());
-    const matchesCategory =
-      !selectedCategory || mentor.category === selectedCategory;
-    const matchesSkill =
-      !selectedSkill ||
-      mentor.skills?.some((skill) => skill._id === selectedSkill);
-    return matchesSearch && matchesCategory && matchesSkill;
-  });
+    fetchUserData();
+  }
+}, [currentUser, mentorDetails, dispatch]);
 
   // Fetch locked slots when a mentor is selected
   useEffect(() => {
@@ -182,12 +198,8 @@ const ExploreMentors = () => {
 
   // Check if a slot is locked
   const isSlotLocked = (day: string, timeSlot: string) => {
-    // console.log("Checking slot for:", day, timeSlot);
-    // Extract start time (e.g., "09:00 AM" from "09:00 AM - 10:30 AM")
     const startTimeMatch = timeSlot.match(/^(\d{1,2}:\d{2}\s[AP]M)/);
     const startTime = startTimeMatch ? startTimeMatch[1] : timeSlot;
-    // console.log("Extracted startTime:", startTime);
-
     const normalizedDay = day.trim().toLowerCase();
     const normalizedStartTime = startTime.trim().toLowerCase();
 
@@ -198,30 +210,8 @@ const ExploreMentors = () => {
       );
       return lockedDay === normalizedDay && hasTimeSlot;
     });
-
-    // console.log(
-    //   `Result for ${day} ${timeSlot} (startTime: ${startTime}): isLocked=${isLocked}`
-    // );
-    // if (!isLocked) {
-    //   console.log(
-    //     "No match. Locked slots:",
-    //     lockedSlots.map((ls) => ({
-    //       day: ls.day,
-    //       timeSlots: ls.timeSlots,
-    //     }))
-    //   );
-    // }
     return isLocked;
   };
-
-  // Filter users and groups based on search
-  const filteredUsers = users.filter((user) =>
-    user.name.toLowerCase().includes(searchQuery.toLowerCase())
-  );
-
-  const filteredGroups = groups.filter((group) =>
-    group.name.toLowerCase().includes(searchQuery.toLowerCase())
-  );
 
   // Request handlers
   const handleRequestMentor = async () => {
@@ -240,6 +230,8 @@ const ExploreMentors = () => {
       price: selectedMentor.price,
       timePeriod: selectedMentor.timePeriod,
     };
+
+    console.log(`requestData ${requestData}`);
 
     try {
       const response = await SendRequsetToMentor(requestData);
@@ -260,19 +252,14 @@ const ExploreMentors = () => {
     }
   };
 
-  //Button configuration of user - user connection
   const getUserButtonConfig = (targetUser, userConnections) => {
-    // Check if there's a connection request sent by current user
     const sentRequest = userConnections.sent?.find(
       (conn) => conn.recipient._id === targetUser._id
     );
-
-    // Check if there's a connection request received from this user
     const receivedRequest = userConnections.received?.find(
       (conn) => conn.requester._id === targetUser._id
     );
 
-    // If there's an existing connection
     if (
       sentRequest?.connectionStatus === "Connected" ||
       receivedRequest?.connectionStatus === "Connected"
@@ -283,7 +270,6 @@ const ExploreMentors = () => {
       };
     }
 
-    // If there's a pending sent request
     if (sentRequest?.requestStatus === "Pending") {
       return {
         disabled: true,
@@ -291,7 +277,6 @@ const ExploreMentors = () => {
       };
     }
 
-    // If there's a pending received request
     if (receivedRequest?.requestStatus === "Pending") {
       return {
         disabled: true,
@@ -299,7 +284,6 @@ const ExploreMentors = () => {
       };
     }
 
-    // If request was rejected
     if (
       sentRequest?.requestStatus === "Rejected" ||
       sentRequest?.connectionStatus === "Disconnected"
@@ -310,14 +294,12 @@ const ExploreMentors = () => {
       };
     }
 
-    // Default state - can send connection request
     return {
       disabled: false,
       text: "Connect",
     };
   };
 
-  //user-user connection
   const handleRequestUser = async () => {
     try {
       console.log(`Sending request to user ${selectedUser._id}`);
@@ -326,7 +308,7 @@ const ExploreMentors = () => {
         selectedUser._id
       );
       if (newConnection) {
-        toast.success("Connection Requset send successfully");
+        toast.success("Connection Request sent successfully");
         setSelectedUser(null);
         dispatch(fetchUserConnections(currentUser._id));
       }
@@ -344,7 +326,7 @@ const ExploreMentors = () => {
       console.log(`Requesting to join group ${selectedGroup._id}`);
       const response = await sendRequsettoGroup(data);
       if (response) {
-        toast.success("Requset send successfully");
+        toast.success("Request sent successfully");
         const newRequest = {
           _id: response._id,
           groupId: { _id: selectedGroup._id },
@@ -362,10 +344,10 @@ const ExploreMentors = () => {
 
   const handleSelectionChange = (key: string) => {
     setActiveTab(key);
+    setCurrentPage(1); // Reset to first page on tab change
   };
 
   const getMentorButtonConfig = (mentor) => {
-    // If this is the current user's mentor card
     if (mentorDetails?._id === mentor._id) {
       return {
         disabled: true,
@@ -374,7 +356,6 @@ const ExploreMentors = () => {
       };
     }
 
-    // Check if there's an ongoing collaboration
     const ongoingCollab = collabDetails?.data?.find(
       (collab) => collab.mentorId._id === mentor._id && !collab.isCancelled && !collab.isCompleted
     );
@@ -386,7 +367,6 @@ const ExploreMentors = () => {
       };
     }
 
-    // Check if there's a pending request
     const pendingRequest = req?.sentRequests?.find(
       (request) => request.mentorId._id === mentor._id
     );
@@ -404,7 +384,6 @@ const ExploreMentors = () => {
       };
     }
 
-    // Default state - can book session
     return {
       disabled: false,
       hidden: false,
@@ -412,11 +391,11 @@ const ExploreMentors = () => {
     };
   };
 
-  //Get the count of members
   const getMemberCounts = (group) => {
     const totalMembers = group.maxMembers;
-    const currentMembers = group.members?.length || 0;
+    const currentMembers = group.members?.userId?.length || 0;
     const remainingSlots = totalMembers - currentMembers;
+
 
     return {
       total: totalMembers,
@@ -425,9 +404,7 @@ const ExploreMentors = () => {
     };
   };
 
-  // Helper function to determine group button state
   const getGroupButtonConfig = (group) => {
-    // Check if user is already a member
     const isMember = groupMemberships?.some(
       (membership) => membership._id === group._id
     );
@@ -438,7 +415,6 @@ const ExploreMentors = () => {
       };
     }
 
-    // Check if group is full
     const memberCounts = getMemberCounts(group);
     if (memberCounts.current >= memberCounts.total) {
       return {
@@ -447,7 +423,6 @@ const ExploreMentors = () => {
       };
     }
 
-    // Check if user has sent a request
     const existingRequest = groupRequests?.find(
       (request) => request.groupId._id === group._id
     );
@@ -455,7 +430,7 @@ const ExploreMentors = () => {
       const requestStatus = {
         Pending: "Request Pending",
         Accepted: "Request Accepted",
-        Rejected: "Join Group", // Allow resending if rejected
+        Rejected: "Join Group",
       };
       return {
         disabled: existingRequest.status !== "Rejected",
@@ -463,14 +438,12 @@ const ExploreMentors = () => {
       };
     }
 
-    // Default: can send a request
     return {
       disabled: false,
       text: "Join Group",
     };
   };
 
-  // JSX for mentor cards
   const renderMentorCard = (mentor) => {
     const buttonConfig = getMentorButtonConfig(mentor);
 
@@ -553,7 +526,6 @@ const ExploreMentors = () => {
     );
   };
 
-  // JSX for group cards
   const renderGroupCard = (group) => {
     const buttonConfig = getGroupButtonConfig(group);
     const memberCounts = getMemberCounts(group);
@@ -613,29 +585,26 @@ const ExploreMentors = () => {
     );
   };
 
-  // mentors tab content
   const renderMentorsTab = () => (
     <div className="py-4">
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
-        {filteredMentors.map(renderMentorCard)}
+        {mentors.map(renderMentorCard)}
       </div>
     </div>
   );
 
-  // users tab content
   const renderUsersTab = () => (
     <div className="py-4">
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
-        {filteredUsers.map(renderUserCard)}
+        {users.map(renderUserCard)}
       </div>
     </div>
   );
 
-  // groups tab content
   const renderGroupsTab = () => (
     <div className="py-4">
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
-        {filteredGroups.map(renderGroupCard)}
+        {groups.map(renderGroupCard)}
       </div>
     </div>
   );
@@ -643,7 +612,6 @@ const ExploreMentors = () => {
   return (
     <div className="container mx-auto px-4 py-8 max-w-7xl">
       <RequestStatusHandler currentUser={currentUser} />
-      {/* Header and Search Section */}
       <div className="mb-8 space-y-6">
         <div className="flex flex-col gap-2">
           <h1 className="text-3xl font-bold">Explore</h1>
@@ -657,7 +625,10 @@ const ExploreMentors = () => {
             type="text"
             placeholder="Search..."
             value={searchQuery}
-            onChange={(e) => setSearchQuery(e.target.value)}
+            onChange={(e) => {
+              setSearchQuery(e.target.value);
+              setCurrentPage(1); // Reset to first page on search
+            }}
             className="flex-1"
             size="lg"
             startContent={<FaSearch className="text-gray-400" />}
@@ -667,7 +638,10 @@ const ExploreMentors = () => {
               label="Category"
               placeholder="Select a category"
               value={selectedCategory}
-              onChange={(e) => setSelectedCategory(e.target.value)}
+              onChange={(e) => {
+                setSelectedCategory(e.target.value);
+                setCurrentPage(1); // Reset to first page on filter change
+              }}
               className="w-40"
             >
               {categories.map((category) => (
@@ -680,7 +654,10 @@ const ExploreMentors = () => {
               label="Skill"
               placeholder="Select a skill"
               value={selectedSkill}
-              onChange={(e) => setSelectedSkill(e.target.value)}
+              onChange={(e) => {
+                setSelectedSkill(e.target.value);
+                setCurrentPage(1); // Reset to first page on filter change
+              }}
               className="w-40"
             >
               {skills.map((skill) => (
@@ -737,8 +714,6 @@ const ExploreMentors = () => {
         </Tabs>
       </div>
 
-      {/* Mentor Modal */}
-      {/* Mentor Modal */}
       <Modal
         isOpen={!!selectedMentor}
         onClose={() => {
@@ -855,7 +830,6 @@ const ExploreMentors = () => {
         </ModalContent>
       </Modal>
 
-      {/* User Modal */}
       <Modal
         isOpen={!!selectedUser}
         onClose={() => setSelectedUser(null)}
@@ -897,7 +871,6 @@ const ExploreMentors = () => {
         </ModalContent>
       </Modal>
 
-      {/* Group Modal */}
       <Modal
         isOpen={!!selectedGroup}
         onClose={() => setSelectedGroup(null)}
@@ -916,7 +889,6 @@ const ExploreMentors = () => {
                       Price: ₹{selectedGroup.price}
                     </p>
                     <div className="space-y-2">
-                      {/* Use the getMemberCounts function here to get the member count */}
                       {(() => {
                         const memberCounts = getMemberCounts(selectedGroup);
                         return (
@@ -939,8 +911,6 @@ const ExploreMentors = () => {
                                 {memberCounts.remaining}
                               </span>
                             </div>
-
-                            {/* Progress bar */}
                             <div className="w-full bg-gray-200 rounded-full h-2 mt-2">
                               <div
                                 className="bg-blue-600 h-2 rounded-full"
@@ -973,7 +943,6 @@ const ExploreMentors = () => {
         </ModalContent>
       </Modal>
 
-      {/* Pagination */}
       <div className="flex justify-center mt-8">
         <Pagination
           total={totalPages}
@@ -982,7 +951,6 @@ const ExploreMentors = () => {
         />
       </div>
 
-      {/* Loading Spinner */}
       {isLoading && (
         <div className="flex justify-center items-center mt-16">
           <Spinner size="lg" />

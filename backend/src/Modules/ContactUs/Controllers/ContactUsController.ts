@@ -36,6 +36,15 @@ export class ContactMessageController {
     try {
       logger.debug('Fetching all contact messages');
       const messages = await this.contactMessageService.getAllContactMessages();
+      if (messages.length === 0) {
+        res.status(200).json({
+          success: true,
+          message: 'No contact messages found',
+          data: [],
+        });
+        logger.info('No contact messages found');
+        return;
+      }
       res.status(200).json({
         success: true,
         message: 'Contact messages fetched successfully',

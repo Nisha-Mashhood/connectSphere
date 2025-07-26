@@ -26,3 +26,11 @@ export interface SalesReport {
   mentorRevenue: number;
   mentorBreakdown: MentorBreakdown[];
 }
+
+export interface MentorQuery {
+  search?: string;
+  page?: number;
+  limit?: number;
+  category?: string;
+  skill?: string;
+}

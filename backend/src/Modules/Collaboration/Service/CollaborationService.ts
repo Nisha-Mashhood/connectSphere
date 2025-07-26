@@ -10,18 +10,142 @@ import { ICollaboration } from "../../../Interfaces/models/ICollaboration";
 import { IMentorRequest } from "../../../Interfaces/models/IMentorRequest";
 import { ServiceError } from "../../../core/Utils/ErrorHandler";
 import { LockedSlot } from "../Types/types";
+import { Types } from "mongoose";
+import { NotificationRepository } from "../../Notification/Repositry/NotificationRepositry";
+import { NotificationService } from "../../Notification/Service/NotificationService";
+import { UserRepository } from "../../Auth/Repositry/UserRepositry";
+// import { AppNotification } from "../../../Interfaces/models/AppNotification";
 
 export class CollaborationService extends BaseService {
   private collabRepo: CollaborationRepository;
   private contactRepo: ContactRepository;
   private mentorRepo: MentorRepository;
+  private notificationRepo: NotificationRepository;
+  private userRepo: UserRepository;
+  private notificationService: NotificationService;
 
   constructor() {
     super();
     this.collabRepo = new CollaborationRepository();
     this.contactRepo = new ContactRepository();
     this.mentorRepo = new MentorRepository();
+    this.notificationRepo = new NotificationRepository();
+    this.userRepo = new UserRepository();
+    this.notificationService = new NotificationService();
   }
+
+  //send/update notifications for user and mentor
+  private async sendCollaborationNotifications(
+  requestId: string,
+  collaborationId: string | null,
+  userContent: string,
+  mentorContent: string,
+  isPaymentUpdate: boolean
+): Promise<void> {
+  const request = await this.collabRepo.fetchMentorRequestDetails(requestId);
+  if (!request) {
+    logger.error(`Mentor request not found: ${requestId}`);
+    throw new ServiceError("Mentor request not found");
+  }
+
+  const userId = typeof request.userId === 'object' && request.userId?._id
+    ? request.userId._id.toString()
+    : request.userId?.toString();
+  if (!userId) {
+    logger.error(`Invalid userId for request ${requestId}`);
+    throw new ServiceError("User ID not found");
+  }
+
+  const user = await this.userRepo.findById(userId);
+  if (!user) {
+    logger.error(`User not found for userId: ${userId}`);
+    throw new ServiceError(`User details not found for userId: ${userId}`);
+  }
+
+  const mentor = await this.mentorRepo.getMentorById(request.mentorId._id.toString());
+  if (!mentor) {
+    logger.error(`Mentor not found for mentorId: ${request.mentorId}`);
+    throw new ServiceError("Mentor details not found");
+  }
+
+  const mentorUserId = typeof mentor.userId === 'object' && mentor.userId?._id
+    ? mentor.userId._id.toString()
+    : mentor.userId?.toString();
+  if (!mentorUserId) {
+    logger.error(`Mentor ${mentor._id} has no valid userId`);
+    throw new ServiceError("Mentor user ID not found");
+  }
+
+  const mentorUser = await this.userRepo.findById(mentorUserId);
+  if (!mentorUser) {
+    logger.error(`Mentor user not found for userId: ${mentorUserId}`);
+    throw new ServiceError(`Mentor user details not found for userId: ${mentorUserId}`);
+  }
+
+  // For user notification: mentor is the sender
+  const userNotification = isPaymentUpdate
+    ? await this.notificationRepo.findNotificationByRelatedId(requestId, {
+        userId: userId,
+        type: "collaboration_status",
+      })
+    : null;
+
+  if (isPaymentUpdate && userNotification && userNotification.status === "unread") {
+    await this.notificationService.sendNotification(
+      userId,
+      "collaboration_status",
+      mentorUserId,
+      collaborationId || requestId,
+      "profile",
+      undefined,
+      userContent.replace("[Mentor Name]", mentorUser.name)
+    );
+    logger.info(`Updated collaboration_status for user ${userId} to payment completion`);
+  } else {
+    await this.notificationService.sendNotification(
+      userId,
+      "collaboration_status",
+      mentorUserId,
+      collaborationId || requestId,
+      "profile",
+      undefined,
+      userContent.replace("[Mentor Name]", mentorUser.name)
+    );
+    logger.info(`Created collaboration_status notification for user ${userId}`);
+  }
+
+  // For mentor notification: user is the sender
+  const mentorNotification = isPaymentUpdate
+    ? await this.notificationRepo.findNotificationByRelatedId(requestId, {
+        userId: mentorUserId,
+        type: "collaboration_status",
+      })
+    : null;
+
+  if (isPaymentUpdate && mentorNotification && mentorNotification.status === "unread") {
+    await this.notificationService.sendNotification(
+      mentorUserId,
+      "collaboration_status",
+      userId,
+      collaborationId || requestId,
+      "profile",
+      undefined,
+      mentorContent.replace("[User Name]", user.name)
+    );
+    logger.info(`Updated collaboration_status for mentor ${mentorUserId} to payment completion`);
+  } else {
+    await this.notificationService.sendNotification(
+      mentorUserId,
+      "collaboration_status",
+      userId,
+      collaborationId || requestId,
+      "profile",
+      undefined,
+      mentorContent.replace("[User Name]", user.name)
+    );
+    logger.info(`Created collaboration_status notification for mentor ${mentorUserId}`);
+  }
+}
 
    TemporaryRequestService = async(
     requestData: Partial<IMentorRequest>
@@ -38,31 +162,100 @@ export class CollaborationService extends BaseService {
    getMentorRequests = async(mentorId: string): Promise<IMentorRequest[]> => {
     logger.debug(`Fetching mentor requests for mentor: ${mentorId}`);
     this.checkData(mentorId);
-    return await this.collabRepo.getMentorRequestsByMentorId(mentorId);
+    if (!Types.ObjectId.isValid(mentorId)) {
+      throw new ServiceError("Invalid mentor ID: must be a 24 character hex string");
+    }
+    const requests = await this.collabRepo.getMentorRequestsByMentorId(mentorId);
+    logger.info(`Fetched ${requests.length} mentor requests for mentorId: ${mentorId}`);
+    return requests;
   }
 
    acceptRequest = async(requestId: string): Promise<IMentorRequest | null> => {
     logger.debug(`Accepting mentor request: ${requestId}`);
     this.checkData(requestId);
-    return await this.collabRepo.updateMentorRequestStatus(
+    const updatedRequset = await this.collabRepo.updateMentorRequestStatus(
       requestId,
       "Accepted"
     );
+    if(!updatedRequset){
+      throw new ServiceError("Updating status of requset failed");
+    }
+
+   // Send notifications for user and mentor
+    await this.sendCollaborationNotifications(
+      requestId,
+      null,
+      "Your mentor request has been accepted by [Mentor Name]. Waiting for payment.",
+      "You have accepted the mentor request from [User Name].",
+      false
+    );
+
+    return updatedRequset;
   }
 
    rejectRequest = async(requestId: string): Promise<IMentorRequest | null> => {
     logger.debug(`Rejecting mentor request: ${requestId}`);
     this.checkData(requestId);
-    return await this.collabRepo.updateMentorRequestStatus(
+    const updatedRequset = await this.collabRepo.updateMentorRequestStatus(
       requestId,
       "Rejected"
-    );
+    )
+    if(!updatedRequset){
+      throw new ServiceError("Updating status of requset failed");
+    }
+
+    // Fetch user and mentor details for email and notifications
+    const user = await this.userRepo.findById(updatedRequset.userId.toString());
+    const mentor = await this.mentorRepo.getMentorById(updatedRequset.mentorId.toString());
+    if (!user || !mentor || !mentor.userId) {
+      throw new ServiceError("User or mentor details not found");
+    }
+    const mentorUser = await this.userRepo.findById(mentor.userId.toString());
+    if (!mentorUser) {
+      throw new ServiceError("Mentor user details not found");
+    }
+
+    // Send rejection emails
+    const userEmail = user.email;
+    const userName = user.name;
+    const mentorEmail = mentorUser.email;
+    const mentorName = mentorUser.name;
+
+    if (!userEmail || !mentorEmail) {
+      throw new ServiceError("User or mentor email not found");
+    }
+
+    const userSubject = "Mentor Request Rejection Notice";
+    const userText = `Dear ${userName},\n\nYour mentor request to ${mentorName} has been rejected.\nPlease contact support for more details.\n\nBest regards,\nConnectSphere Team`;
+    await sendEmail(userEmail, userSubject, userText);
+    logger.info(`Rejection email sent to user: ${userEmail}`);
+
+    const mentorSubject = "Mentor Request Rejection Notice";
+    const mentorText = `Dear ${mentorName},\n\nYou have rejected the mentor request from ${userName}.\nPlease contact support for more details.\n\nBest regards,\nConnectSphere Team`;
+    await sendEmail(mentorEmail, mentorSubject, mentorText);
+    logger.info(`Rejection email sent to mentor: ${mentorEmail}`);
+
+    // Send rejection notifications
+    await this.sendCollaborationNotifications(
+      requestId,
+      null,
+      "The mentor request has been rejected. Check your email for more details.",
+      "The mentor request has been rejected. Check your email for more details.",
+      false
+    )
+
+    return updatedRequset;
   }
 
    getRequestForUser = async(userId: string): Promise<IMentorRequest[]> =>{
     logger.debug(`Fetching requests for user: ${userId}`);
     this.checkData(userId);
-    return await this.collabRepo.getRequestByUserId(userId);
+    if (!Types.ObjectId.isValid(userId)) {
+      throw new ServiceError("Invalid user ID: must be a 24 character hex string");
+    }
+    const requests = await this.collabRepo.getRequestByUserId(userId);
+    logger.info(`Fetched ${requests.length} mentor requests for userId: ${userId}`);
+    return requests;
   }
 
    processPaymentService = async(
@@ -169,6 +362,15 @@ export class CollaborationService extends BaseService {
         }),
       ]);
 
+      // Send collaboration created notifications
+      await this.sendCollaborationNotifications(
+        requestId,
+        collaboration._id.toString(),
+        "Payment completed and collaboration created with [Mentor Name]!",
+        "[User Name]’s payment completed and collaboration created!",
+        true
+      );
+
       await this.collabRepo.deleteMentorRequest(requestId);
       return { paymentIntent, contacts: [contact1, contact2] };
     }
@@ -204,16 +406,20 @@ export class CollaborationService extends BaseService {
    getCollabDataForUserService = async(userId: string): Promise<ICollaboration[]> => {
     logger.debug(`Fetching collaboration data for user: ${userId}`);
     this.checkData(userId);
+    if (!Types.ObjectId.isValid(userId)) {
+      throw new ServiceError("Invalid user ID: must be a 24 character hex string");
+    }
     const collaborations = await this.collabRepo.getCollabDataForUser(userId);
     const updatedCollaborations = await Promise.all(
       collaborations.map(async (collab) => {
         return await this.checkAndCompleteCollaboration(collab);
       })
     );
-
-    return updatedCollaborations.filter(
-    (collab): collab is ICollaboration => collab !== null && !collab.isCompleted
-  );
+    const activeCollaborations = updatedCollaborations.filter(
+      (collab): collab is ICollaboration => collab !== null && !collab.isCompleted
+    );
+    logger.info(`Fetched ${activeCollaborations.length} active collaborations for userId: ${userId}`);
+    return activeCollaborations;
   }
 
    getCollabDataForMentorService = async(
@@ -221,48 +427,21 @@ export class CollaborationService extends BaseService {
   ): Promise<ICollaboration[]> => {
     logger.debug(`Fetching collaboration data for mentor: ${mentorId}`);
     this.checkData(mentorId);
+    if (!Types.ObjectId.isValid(mentorId)) {
+      throw new ServiceError("Invalid mentor ID: must be a 24 character hex string");
+    }
     const collaborations = await this.collabRepo.getCollabDataForMentor(mentorId);
     const updatedCollaborations = await Promise.all(
       collaborations.map(async (collab) => {
         return await this.checkAndCompleteCollaboration(collab);
       })
     );
-
-    return updatedCollaborations.filter(
-    (collab): collab is ICollaboration => collab !== null && !collab.isCompleted
-  );
+    const activeCollaborations = updatedCollaborations.filter(
+      (collab): collab is ICollaboration => collab !== null && !collab.isCompleted
+    );
+    logger.info(`Fetched ${activeCollaborations.length} active collaborations for mentorId: ${mentorId}`);
+    return activeCollaborations;
   }
-
-  //  removeCollab = async(
-  //   collabId: string,
-  //   reason: string
-  // ): Promise<ICollaboration | null> => {
-  //   logger.debug(`Removing collaboration: ${collabId}`);
-  //   this.checkData({ collabId, reason });
-  //   const collab = await this.collabRepo.findCollabById(collabId);
-  //   if (!collab) {
-  //     throw new ServiceError("Collaboration not found");
-  //   }
-
-  //   const mentorEmail = (collab.mentorId as any).userId?.email;
-  //   const mentorName = (collab.mentorId as any).userId?.name;
-  //   const userName = (collab.userId as any).name;
-
-  //   if (!mentorEmail) {
-  //     throw new ServiceError("Mentor email not found");
-  //   }
-
-  //   const subject = "Mentorship Session Cancellation Notice";
-  //   const text = `Dear ${mentorName},\n\nWe regret to inform you that your mentorship session with ${userName} has been cancelled.\nReason: ${reason}\n\nIf you have any questions, please contact support.\n\nBest regards,\nConnectSphere Team`;
-  //   await sendEmail(mentorEmail, subject, text);
-  //   logger.info(`Cancellation email sent to mentor: ${mentorEmail}`);
-
-  //   const updatedCollab = await this.collabRepo.markCollabAsCancelled(collabId);
-  //   await this.contactRepo.deleteContact(collabId, 'user-mentor');
-
-  //   logger.info(`Collaboration ${collabId} cancelled and associated contacts deleted`);
-  //   return updatedCollab;
-  // }
 
   cancelAndRefundCollab = async (
     collabId: string,
@@ -343,8 +522,10 @@ export class CollaborationService extends BaseService {
     page: number;
     pages: number;
   }> => {
-    logger.debug(`Fetching mentor requests for admin`);
-    return await this.collabRepo.findMentorRequest({ page, limit, search });
+    logger.debug(`Fetching mentor requests for admin with page: ${page}, limit: ${limit}, search: ${search}`);
+    const result = await this.collabRepo.findMentorRequest({ page, limit, search });
+    logger.info(`Fetched ${result.requests.length} mentor requests, total: ${result.total}`);
+    return result;
   }
 
    async getCollabsService({
@@ -361,38 +542,46 @@ export class CollaborationService extends BaseService {
     page: number;
     pages: number;
   }> {
-    logger.debug(`Fetching collaborations for admin`);
-
+    logger.debug(`Fetching collaborations for admin with page: ${page}, limit: ${limit}, search: ${search}`);
     const { collabs, total, page: currentPage, pages } = await this.collabRepo.findCollab({
       page,
       limit,
       search,
     });
-
     const updatedCollabs = await Promise.all(
       collabs.map(async (collab) => {
         return await this.checkAndCompleteCollaboration(collab);
       })
     );
-
-    return {
-      collabs: updatedCollabs.filter((collab): collab is ICollaboration => collab !== null),
-      total,
-      page: currentPage,
-      pages,
-    };
+    const filteredCollabs = updatedCollabs.filter((collab): collab is ICollaboration => collab !== null);
+    logger.info(`Fetched ${filteredCollabs.length} collaborations, total: ${total}`);
+    return { collabs: filteredCollabs, total, page: currentPage, pages };
   }
 
-   fetchCollabById = async(collabId: string): Promise<ICollaboration | null> => {
+  fetchCollabById = async (collabId: string): Promise<ICollaboration | null> => {
     logger.debug(`Fetching collaboration by ID: ${collabId}`);
     this.checkData(collabId);
-    return await this.collabRepo.findCollabDetails(collabId);
+    if (!Types.ObjectId.isValid(collabId)) {
+      throw new ServiceError("Invalid collaboration ID: must be a 24 character hex string");
+    }
+    const collab = await this.collabRepo.findCollabById(collabId);
+    if (collab && (collab.isCancelled || collab.isCompleted)) {
+      logger.info(`Collaboration ${collabId} is cancelled or completed`);
+      return null;
+    }
+    logger.info(`Collaboration ${collab ? 'found' : 'not found'} for collabId: ${collabId}`);
+    return collab;
   }
 
-   fetchRequestById = async(requestId: string): Promise<IMentorRequest | null> => {
+  fetchRequestById = async (requestId: string): Promise<IMentorRequest | null> => {
     logger.debug(`Fetching request by ID: ${requestId}`);
     this.checkData(requestId);
-    return await this.collabRepo.fetchMentorRequestDetails(requestId);
+    if (!Types.ObjectId.isValid(requestId)) {
+      throw new ServiceError("Invalid request ID: must be a 24 character hex string");
+    }
+    const request = await this.collabRepo.fetchMentorRequestDetails(requestId);
+    logger.info(`Mentor request ${request ? 'found' : 'not found'} for requestId: ${requestId}`);
+    return request;
   }
 
    markUnavailableDaysService = async(
@@ -531,7 +720,12 @@ export class CollaborationService extends BaseService {
    getMentorLockedSlots = async(mentorId: string): Promise<LockedSlot[]> => {
     logger.debug(`Fetching locked slots for mentor: ${mentorId}`);
     this.checkData(mentorId);
-    return await this.collabRepo.getLockedSlotsByMentorId(mentorId);
+    if (!Types.ObjectId.isValid(mentorId)) {
+      throw new ServiceError("Invalid mentor ID: must be a 24 character hex string");
+    }
+    const lockedSlots = await this.collabRepo.getLockedSlotsByMentorId(mentorId);
+    logger.info(`Fetched ${lockedSlots.length} locked slots for mentorId: ${mentorId}`);
+    return lockedSlots;
   }
 
   private calculateNewEndDate(

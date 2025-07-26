@@ -6,18 +6,22 @@ import { sendEmail } from "../../../core/Utils/Email";
 import logger from "../../../core/Utils/Logger";
 import { IMentor } from "../../../Interfaces/models/IMentor";
 import { UserInterface } from "../../../Interfaces/models/IUser";
-import { MentorAnalytics, SalesReport } from "../Types/Types";
+import { MentorAnalytics, MentorQuery, SalesReport } from "../Types/Types";
+import { ServiceError } from "../../../core/Utils/ErrorHandler";
+import { NotificationService } from "../../../Modules/Notification/Service/NotificationService";
 
 export class MentorService extends BaseService {
   private mentorRepo: MentorRepository;
   private authRepo: UserRepository;
   private collabRepo: CollaborationRepository;
+  private notificationService: NotificationService;
 
   constructor() {
     super();
     this.mentorRepo = new MentorRepository();
     this.authRepo = new UserRepository();
     this.collabRepo = new CollaborationRepository();
+    this.notificationService = new NotificationService();
   }
 
   submitMentorRequest = async (mentorData: {
@@ -32,7 +36,31 @@ export class MentorService extends BaseService {
   }): Promise<IMentor> => {
     logger.debug(`Submitting mentor request for user: ${mentorData.userId}`);
     this.checkData(mentorData);
-    return await this.mentorRepo.saveMentorRequest(mentorData);
+    const mentor = await this.mentorRepo.saveMentorRequest(mentorData);
+
+    const admins = await this.authRepo.getAllAdmins();
+
+    if (!admins) {
+      this.throwError("no admin Found");
+    }
+    if (admins.length === 0) {
+      logger.info("No admins found to notify for new user registration");
+    } else {
+      // Create notification for each admin
+      for (const admin of admins) {
+        const notification = await this.notificationService.sendNotification(
+          admin._id.toString(),
+          "new_mentor",
+          mentorData.userId, // senderId is the user submitting the request
+          mentor._id.toString(), // relatedId is the mentor request ID
+          "profile"
+        );
+        logger.info(
+          `Created new_mentor notification for admin ${admin._id}: ${notification._id}`
+        );
+      }
+    }
+    return mentor;
   };
 
   getAllMentorRequests = async (
@@ -57,9 +85,20 @@ export class MentorService extends BaseService {
     );
   };
 
-  getAllMentors = async (): Promise<IMentor[]> => {
-    logger.debug(`Fetching all approved mentors`);
-    return await this.mentorRepo.getAllMentors();
+  getAllMentors = async (
+    query: MentorQuery
+  ): Promise<{ mentors: IMentor[]; total: number }> => {
+    try {
+      logger.debug(
+        `Fetching all approved mentors with query: ${JSON.stringify(query)}`
+      );
+      return await this.mentorRepo.getAllMentors(query);
+    } catch (error) {
+      logger.error(`Error fetching mentors: ${error}`);
+      throw error instanceof ServiceError
+        ? error
+        : new ServiceError("Failed to fetch mentors");
+    }
   };
 
   getMentorByMentorId = async (mentorId: string): Promise<IMentor | null> => {
@@ -71,13 +110,11 @@ export class MentorService extends BaseService {
   approveMentorRequest = async (id: string): Promise<void> => {
     logger.debug(`Approving mentor request: ${id}`);
     this.checkData(id);
-    const mentor: IMentor | null = await this.mentorRepo.approveMentorRequest(
-      id
-    );
+    const mentor: IMentor = await this.mentorRepo.approveMentorRequest(id);
     if (!mentor) {
       this.throwError("Mentor not found");
     }
-    const user: UserInterface | null = await this.authRepo.getUserById(
+    const user: UserInterface = await this.authRepo.getUserById(
       mentor?.userId.toString()
     );
     if (!user) {
@@ -87,6 +124,17 @@ export class MentorService extends BaseService {
       user?.email,
       "Mentor Request Approved",
       `Hello ${user?.name},\n\nCongratulations! Your mentor request has been approved.\n\nBest regards,\n Admin \n ConnectSphere`
+    );
+
+    const notification = await this.notificationService.sendNotification(
+      user._id.toString(),
+      "mentor_approved",
+      user._id.toString(), 
+      user._id.toString(), // relatedId is the user's ID
+      "profile"
+    );
+    logger.info(
+      `Created mentor_approved notification for user ${user._id}: ${notification._id}`
     );
   };
 
@@ -169,10 +217,11 @@ export class MentorService extends BaseService {
     logger.debug(
       `Fetching mentor analytics with page: ${page}, limit: ${limit}, sortBy: ${sortBy}`
     );
-    const mentors = await this.mentorRepo.getAllMentors();
+    const { mentors }: { mentors: IMentor[]; total: number } =
+      await this.mentorRepo.getAllMentors();
     logger.info("MEntors: ", mentors);
     const analytics: MentorAnalytics[] = await Promise.all(
-      mentors.map(async (mentor) => {
+      mentors.map(async (mentor: IMentor) => {
         const collaborations = await this.collabRepo.findByMentorId(
           mentor._id.toString()
         );
@@ -187,12 +236,13 @@ export class MentorService extends BaseService {
 
         logger.info("mentor.userId:", mentor.userId._id);
 
-
         if (!mentor.userId) {
           logger.warn(`Mentor ${mentor._id} is missing userId`);
         }
         // Fetch user details
-        const user = await this.authRepo.getUserById(mentor.userId._id.toString());
+        const user = await this.authRepo.getUserById(
+          mentor.userId._id.toString()
+        );
         if (!user) {
           logger.warn(`User not found for mentor ID: ${mentor._id}`);
         }
@@ -246,90 +296,117 @@ export class MentorService extends BaseService {
   };
 
   getSalesReport = async (period: string): Promise<SalesReport> => {
-  logger.debug(`Fetching sales report for period: ${period}`);
-  const periods: { [key: string]: number } = {
-    '1month': 30 * 24 * 60 * 60 * 1000,
-    '1year': 365 * 24 * 60 * 60 * 1000,
-    '5years': 5 * 365 * 24 * 60 * 60 * 1000,
-  };
-  const timeFilter = periods[period] || periods['1month'];
-  const startDate = new Date(Date.now() - timeFilter);
+    logger.debug(`Fetching sales report for period: ${period}`);
+    const periods: { [key: string]: number } = {
+      "1month": 30 * 24 * 60 * 60 * 1000,
+      "1year": 365 * 24 * 60 * 60 * 1000,
+      "5years": 5 * 365 * 24 * 60 * 60 * 1000,
+    };
+    const timeFilter = periods[period] || periods["1month"];
+    const startDate = new Date(Date.now() - timeFilter);
 
-  const collaborations = await this.collabRepo.findByDateRange(startDate, new Date());
-  logger.info('Collaborations:', collaborations);
+    const collaborations = await this.collabRepo.findByDateRange(
+      startDate,
+      new Date()
+    );
+    logger.info("Collaborations:", collaborations);
 
-  const totalRevenue = collaborations.reduce((sum, collab) => sum + (collab.price || 0), 0);
-  const platformRevenue = collaborations.length * 100;
-  const mentorRevenue = totalRevenue - platformRevenue;
+    const totalRevenue = collaborations.reduce(
+      (sum, collab) => sum + (collab.price || 0),
+      0
+    );
+    const platformRevenue = collaborations.length * 100;
+    const mentorRevenue = totalRevenue - platformRevenue;
 
-  // Extract unique mentor IDs and ensure they are valid strings
-  const mentorIds = [...new Set(
-    collaborations.map((c) => {
-      // Handle cases where mentorId is an object or string
-      if (typeof c.mentorId === 'object' && c.mentorId !== null && '_id' in c.mentorId) {
-        return c.mentorId._id.toString();
-      } else if (typeof c.mentorId === 'string') {
-        return c.mentorId;
-      } else {
-        logger.warn(`Invalid mentorId format in collaboration: ${JSON.stringify(c.mentorId)}`);
-        return null;
-      }
-    }).filter((id): id is string => id !== null) // Filter out invalid IDs
-  )];
+    // Extract unique mentor IDs and ensure they are valid strings
+    const mentorIds = [
+      ...new Set(
+        collaborations
+          .map((c) => {
+            // Handle cases where mentorId is an object or string
+            if (
+              typeof c.mentorId === "object" &&
+              c.mentorId !== null &&
+              "_id" in c.mentorId
+            ) {
+              return c.mentorId._id.toString();
+            } else if (typeof c.mentorId === "string") {
+              return c.mentorId;
+            } else {
+              logger.warn(
+                `Invalid mentorId format in collaboration: ${JSON.stringify(
+                  c.mentorId
+                )}`
+              );
+              return null;
+            }
+          })
+          .filter((id): id is string => id !== null) // Filter out invalid IDs
+      ),
+    ];
 
-  const mentorBreakdown = await Promise.all(
-    mentorIds.map(async (mentorId) => {
-      try {
-        // Validate mentorId format (24-character hex string)
-        if (!/^[0-9a-fA-F]{24}$/.test(mentorId)) {
-          logger.warn(`Skipping invalid mentorId: ${mentorId}`);
+    const mentorBreakdown = await Promise.all(
+      mentorIds.map(async (mentorId) => {
+        try {
+          // Validate mentorId format (24-character hex string)
+          if (!/^[0-9a-fA-F]{24}$/.test(mentorId)) {
+            logger.warn(`Skipping invalid mentorId: ${mentorId}`);
+            return {
+              mentorId,
+              name: "Unknown",
+              email: "Unknown",
+              collaborations: 0,
+              mentorEarnings: 0,
+              platformFees: 0,
+            };
+          }
+
+          const mentor = await this.mentorRepo.getMentorById(mentorId);
+          const mentorCollabs = collaborations.filter(
+            (c) =>
+              (typeof c.mentorId === "string" && c.mentorId === mentorId) ||
+              (typeof c.mentorId === "object" &&
+                c.mentorId !== null &&
+                c.mentorId._id.toString() === mentorId)
+          );
+
+          const user = await this.authRepo.getUserById(
+            mentor?.userId?._id.toString()
+          );
+
           return {
             mentorId,
-            name: 'Unknown',
-            email: 'Unknown',
+            name: user?.name,
+            email: user?.email,
+            collaborations: mentorCollabs.length,
+            mentorEarnings: mentorCollabs.reduce(
+              (sum, c) => sum + (c.price - 100),
+              0
+            ),
+            platformFees: mentorCollabs.length * 100,
+          };
+        } catch (error: any) {
+          logger.error(
+            `Error processing mentorId ${mentorId}: ${error.message}`
+          );
+          return {
+            mentorId,
+            name: "Unknown",
+            email: "Unknown",
             collaborations: 0,
             mentorEarnings: 0,
             platformFees: 0,
           };
         }
+      })
+    );
 
-        const mentor = await this.mentorRepo.getMentorById(mentorId);
-        const mentorCollabs = collaborations.filter(
-          (c) =>
-            (typeof c.mentorId === 'string' && c.mentorId === mentorId) ||
-            (typeof c.mentorId === 'object' && c.mentorId !== null && c.mentorId._id.toString() === mentorId)
-        );
-
-        const user = await this.authRepo.getUserById(mentor?.userId?._id.toString())
-
-        return {
-          mentorId,
-          name: user?.name ,
-          email: user?.email,
-          collaborations: mentorCollabs.length,
-          mentorEarnings: mentorCollabs.reduce((sum, c) => sum + (c.price - 100), 0),
-          platformFees: mentorCollabs.length * 100,
-        };
-      } catch (error: any) {
-        logger.error(`Error processing mentorId ${mentorId}: ${error.message}`);
-        return {
-          mentorId,
-          name: 'Unknown',
-          email: 'Unknown',
-          collaborations: 0,
-          mentorEarnings: 0,
-          platformFees: 0,
-        };
-      }
-    })
-  );
-
-  return {
-    period,
-    totalRevenue,
-    platformRevenue,
-    mentorRevenue,
-    mentorBreakdown,
+    return {
+      period,
+      totalRevenue,
+      platformRevenue,
+      mentorRevenue,
+      mentorBreakdown,
+    };
   };
-};
 }

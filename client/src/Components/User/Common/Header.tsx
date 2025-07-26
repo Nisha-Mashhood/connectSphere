@@ -41,8 +41,67 @@ const Header = () => {
     (state: RootState) => state.notification
   );
 
-  // Check if user is authenticated and not an admin
   const showNotifications = currentUser && currentUser.role !== "admin" && !loading;
+
+  const handleNotificationClick = async (notification: Notification) => {
+    if (!currentUser || currentUser.role === "admin") {
+      navigate("/login");
+      return;
+    }
+    try {
+      console.log("Clicked on notification:", notification);
+      await markNotificationService(notification._id, currentUser._id);
+      dispatch(markNotificationAsRead(notification._id));
+      socketService.markNotificationAsRead(notification._id, currentUser._id);
+
+      if (notification.type === "mentor_approved" || notification.type === "collaboration_status") {
+        navigate("/profile");
+      } else if (notification.type === "task_reminder") {
+        if (!notification.taskContext) {
+          toast.error("Task context not found.");
+          return;
+        }
+        const { contextType, contextId } = notification.taskContext;
+        console.log(`Navigating to task context: ${contextType}, ID: ${contextId}`);
+        if (contextType === "profile") {
+          navigate(`/profile?taskId=${notification.relatedId}`);
+        } else if (contextType === "collaboration") {
+          navigate(`/collaboration/${contextId}?taskId=${notification.relatedId}`);
+        } else if (contextType === "group") {
+          navigate(`/group/${contextId}?taskId=${notification.relatedId}`);
+        } else if (contextType === "userconnection") {
+          navigate(`/profile?taskId=${notification.relatedId}`);
+        }
+      } else {
+        const [type] = notification.relatedId.split("_");
+        const id = notification.senderId;
+        const contactType = type === "group" ? "group" : type === "user-mentor" ? "user-mentor" : "user-user";
+        navigate(`/chat/${contactType}/${id}`);
+      }
+    } catch (error) {
+      console.error("Error handling notification click:", error);
+      toast.error("Failed to process notification.");
+    }
+  };
+
+  const handleChatClick = async () => {
+    if (!currentUser || currentUser.role === "admin") {
+      navigate("/login");
+      return;
+    }
+    try {
+      const unreadChatNotifications = chatNotifications.filter((n) => n.status === "unread");
+      for (const notification of unreadChatNotifications) {
+        await markNotificationService(notification._id, currentUser._id);
+        dispatch(markNotificationAsRead(notification._id));
+        socketService.markNotificationAsRead(notification._id, currentUser._id);
+      }
+      navigate("/chat");
+    } catch (error) {
+      console.error("Error marking chat notifications as read:", error);
+      toast.error("Failed to mark chat notifications as read.");
+    }
+  };
 
   const handleLogout = async () => {
     if (!currentUser) return;
@@ -50,12 +109,12 @@ const Header = () => {
     try {
       await logout(email);
       dispatch(signOut());
-      localStorage.removeItem("userId"); 
+      localStorage.removeItem("userId");
       toast.success("Logged out successfully!");
       navigate("/login", { replace: true });
     } catch (err) {
       toast.error("Logout failed");
-      console.log("Logout Failed :", err.response?.data?.message)
+      console.log("Logout Failed:", err.response?.data?.message);
     }
   };
 
@@ -106,74 +165,14 @@ const Header = () => {
       }
     } catch (error) {
       toast.error("Error checking mentor status.");
-      console.log("Error checking mentor status: ", error);
+      console.log("Error checking mentor status:", error);
     }
   };
 
-  const handleNotificationClick = async (notification: Notification) => {
-    if (!currentUser || currentUser.role === "admin") {
-      navigate("/login");
-      return;
-    }
-    try {
-      console.log("Clicked on notification:", notification);
-      await markNotificationService(notification._id, currentUser._id);
-      dispatch(markNotificationAsRead(notification._id));
-      socketService.markNotificationAsRead(notification._id, currentUser._id);
-
-      if (notification.type === "task_reminder") {
-        if (!notification.taskContext) {
-          toast.error("Task context not found.");
-          return;
-        }
-        const { contextType, contextId } = notification.taskContext;
-        console.log(`Navigating to task context: ${contextType}, ID: ${contextId}`);
-        if (contextType === "profile") {
-          navigate(`/profile?taskId=${notification.relatedId}`);
-        } else if (contextType === "collaboration") {
-          navigate(`/collaboration/${contextId}?taskId=${notification.relatedId}`);
-        } else if (contextType === "group") {
-          navigate(`/group/${contextId}?taskId=${notification.relatedId}`);
-        } else if (contextType === "userconnection") {
-          navigate(`/profile?taskId=${notification.relatedId}`);
-        }
-      } else {
-        const [type] = notification.relatedId.split("_");
-        const id = notification.senderId;
-        const contactType = type === "group" ? "group" : type === "user-mentor" ? "user-mentor" : "user-user";
-        navigate(`/chat/${contactType}/${id}`);
-      }
-    } catch (error) {
-      console.error("Error handling notification click:", error);
-      toast.error("Failed to process notification.");
-    }
-  };
-
-  const handleChatClick = async () => {
-    if (!currentUser || currentUser.role === "admin") {
-      navigate("/login");
-      return;
-    }
-    try {
-      const unreadChatNotifications = chatNotifications.filter(n => n.status === "unread");
-      for (const notification of unreadChatNotifications) {
-        await markNotificationService(notification._id, currentUser._id);
-        dispatch(markNotificationAsRead(notification._id));
-        socketService.markNotificationAsRead(notification._id, currentUser._id);
-      }
-      navigate("/chat");
-    } catch (error) {
-      console.error("Error marking chat notifications as read:", error);
-      toast.error("Failed to mark chat notifications as read.");
-    }
-  };
-
-  // Ensure taskNotifications is an array
   const safeTaskNotifications = Array.isArray(taskNotifications) ? taskNotifications : [];
 
-  // Skip rendering if loading
   if (loading) {
-    return null; 
+    return null;
   }
 
   return (
@@ -315,11 +314,7 @@ const Header = () => {
                     Become a Mentor
                   </DropdownItem>
                 )}
-                <DropdownItem
-                  key="logout"
-                  color="danger"
-                  onPress={handleLogout}
-                >
+                <DropdownItem key="logout" color="danger" onPress={handleLogout}>
                   Log Out
                 </DropdownItem>
               </DropdownMenu>

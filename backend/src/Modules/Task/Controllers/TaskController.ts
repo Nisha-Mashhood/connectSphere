@@ -51,6 +51,15 @@ export class TaskController {
       const { contextType, contextId, userId } = req.params;
       logger.debug(`Fetching tasks for contextType=${contextType}, contextId=${contextId}, userId=${userId}`);
       const tasks = await this.taskService.getTasksByContext(contextType, contextId, userId);
+      if (!tasks || tasks.length === 0) {
+        res.status(200).json({
+          success: true,
+          message: 'No tasks found for this context',
+          data: [],
+        });
+        logger.info(`No tasks found for contextType=${contextType}, contextId=${contextId}, userId=${userId}`);
+        return;
+      }
       res.status(200).json({
         success: true,
         message: 'Tasks fetched successfully',

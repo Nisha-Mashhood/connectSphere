@@ -16,7 +16,7 @@ const SubCategories = () => {
   const fetchSubCategories = async (categoryId: string) => {
     try {
       const data = await fetchSubCategoriesService(categoryId);
-      setSubCategories(data); // Update state with fetched data
+      setSubCategories(data); 
     } catch (error) {
       console.error("Error fetching categories:", error);
     }

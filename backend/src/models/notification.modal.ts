@@ -17,7 +17,7 @@ const AppNotificationSchema = new Schema<AppNotification>({
   },
   type: {
     type: String,
-    enum: ["message", "incoming_call", "missed_call", "task_reminder"],
+    enum: ["message", "incoming_call", "missed_call", "task_reminder", "new_user", 'new_mentor', 'mentor_approved', 'collaboration_status'],
     required: true,
   },
   content: {

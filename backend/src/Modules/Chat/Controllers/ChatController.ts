@@ -19,14 +19,43 @@ export class ChatController extends BaseController {
   getChatMessages = async(req: Request, res: Response): Promise<void> =>{
     try {
       const { contactId, groupId, page = '1', limit = '10' } = req.query;
-      const messages = await this.chatService.getChatMessages(
+      const parsedPage = parseInt(page as string, 10);
+      const parsedLimit = parseInt(limit as string, 10);
+
+      if (isNaN(parsedPage) || parsedPage < 1) {
+        this.throwError(400, 'Invalid page number');
+      }
+      if (isNaN(parsedLimit) || parsedLimit < 1) {
+        this.throwError(400, 'Invalid limit value');
+      }
+
+      logger.debug(`Fetching chat messages with contactId: ${contactId}, groupId: ${groupId}, page: ${parsedPage}, limit: ${parsedLimit}`);
+
+      const result = await this.chatService.getChatMessages(
         contactId as string | undefined,
         groupId as string | undefined,
-        parseInt(page as string),
-        parseInt(limit as string)
+        parsedPage,
+        parsedLimit
       );
-      this.sendSuccess(res, messages, 'Chat messages retrieved successfully');
+
+      if (result.messages.length === 0) {
+        this.sendSuccess(
+          res,
+          { messages: [], total: 0, page: parsedPage, limit: parsedLimit },
+          contactId ? 'No messages found for this contact' : 'No messages found for this group'
+        );
+        logger.info(`No messages found for contactId: ${contactId || 'none'}, groupId: ${groupId || 'none'}`);
+        return;
+      }
+
+      this.sendSuccess(
+        res,
+        { messages: result.messages, total: result.total, page: parsedPage, limit: parsedLimit },
+        'Chat messages retrieved successfully'
+      );
+      logger.info(`Fetched ${result.messages.length} messages, total: ${result.total}`);
     } catch (error: any) {
+      logger.error(`Error fetching chat messages: ${error.message}`);
       this.handleError(error, res);
     }
   }
@@ -84,6 +113,11 @@ export class ChatController extends BaseController {
         this.throwError(400, 'User ID is required');
       }
       const unreadCounts = await this.chatService.getUnreadMessageCounts(userId as string);
+      if (Object.keys(unreadCounts).length === 0) {
+        this.sendSuccess(res, { unreadCounts: {} }, 'No unread messages found');
+        logger.info(`No unread messages found for userId: ${userId}`);
+        return;
+      }
       logger.debug("Unread Counts: %s", JSON.stringify(unreadCounts, null, 2));
       this.sendSuccess(res, unreadCounts, 'Unread message counts retrieved successfully');
     } catch (error: any) {

@@ -3,6 +3,7 @@ import { UserInterface } from "../../../Interfaces/models/IUser";
 import { BaseRepository } from "../../../core/Repositries/BaseRepositry";
 import { RepositoryError } from "../../../core/Utils/ErrorHandler";
 import logger from "../../../core/Utils/Logger";
+import { UserQuery } from "../Types/types";
 
 // Repository for User-specific database operations
 export class UserRepository extends BaseRepository<UserInterface> {
@@ -31,12 +32,16 @@ export class UserRepository extends BaseRepository<UserInterface> {
   }
 
   //Find a User By id
-   getUserById=async(id?: string): Promise<UserInterface | null> =>{
+   getUserById=async(id?: string): Promise<UserInterface> =>{
     if(!id){
       throw new RepositoryError("id is not provided");
     }
     try {
-      return await this.findById(id);
+      const user = await this.findById(id);
+      if(!user){
+        throw new RepositoryError(`Failed to find user by id ${id}`);
+      }
+      return user;
     } catch (error) {
       logger.error(`Error finding user by id ${id}: ${error}`);
       throw new RepositoryError(`Failed to find user by id ${id}`);
@@ -157,16 +162,69 @@ export class UserRepository extends BaseRepository<UserInterface> {
     }
   }
 
-  //Fetch All User Details
-   getAllUsers=async(): Promise<UserInterface[]> =>{
+
+  getAllAdmins = async (): Promise<UserInterface[]> => {
     try {
-      logger.debug(`Fetching all users`);
-      return await this.model.find({ role: { $ne: "admin" } }).exec();
+      logger.debug(`Fetching all admin users`);
+      const users = await this.model
+        .find({ role: "admin" })
+        .exec();
+        if(!users){
+          throw new RepositoryError("Failed to fetch admin users");
+        }
+      logger.info(`Fetched ${users.length} admin users`);
+      return users ;
+    } catch (error) {
+      logger.error(`Error fetching admin users: ${error}`);
+      throw new RepositoryError("Failed to fetch admin users");
+    }
+  }
+
+  //Fetch All User Details
+   getAllUsers = async (query: UserQuery = {}): Promise<{ users: UserInterface[]; total: number }> => {
+    try {
+      logger.debug(`Fetching all users with query: ${JSON.stringify(query)}`);
+      const { search, page, limit } = query;
+
+      // If no query parameters, return all users without pagination
+      if (!search && !page && !limit) {
+        const users = await this.model
+          .find({ role: { $ne: "admin" } })
+          .exec();
+        logger.info(`Fetched ${users.length} users`);
+        return { users, total: users.length };
+      }
+
+      // Build aggregation pipeline for search and pagination
+      const matchStage: any = { role: { $ne: "admin" } };
+      if (search) {
+        matchStage.name = { $regex: `^${search}`, $options: "i" };
+      }
+
+      const pipeline = [
+        { $match: matchStage },
+        {
+          $facet: {
+            users: [
+              { $skip: ((page || 1) - 1) * (limit || 10) },
+              { $limit: limit || 10 },
+            ],
+            total: [{ $count: "count" }],
+          },
+        },
+      ];
+
+      const result = await this.model.aggregate(pipeline).exec();
+      const users = result[0]?.users || [];
+      const total = result[0]?.total[0]?.count || 0;
+
+      logger.info(`Fetched ${users.length} users, total: ${total}`);
+      return { users, total };
     } catch (error) {
       logger.error(`Error fetching all users: ${error}`);
       throw new RepositoryError("Failed to fetch all users");
     }
-  }
+  };
 
   //Update The User Profile
    updateUserProfile=async(

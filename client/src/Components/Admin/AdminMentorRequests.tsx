@@ -72,17 +72,17 @@ const AdminMentorRequests: React.FC = () => {
 
   const handleCloseModal = () => {
     setSelectedMentor(null);
-    fetchMentorRequests(); // Refresh list after modal close
+    fetchMentorRequests(); 
   };
 
   const handleSearchChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     setSearch(e.target.value);
-    setPage(1); // Reset to first page on search
+    setPage(1); 
   };
 
   const handleStatusChange = (value: string) => {
     setStatusFilter(value);
-    setPage(1); // Reset to first page on filter
+    setPage(1); 
   };
 
   return (

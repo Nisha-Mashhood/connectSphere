@@ -21,6 +21,7 @@ router.patch(
   notificationController.markAsRead.bind(notificationController)
 );
 
+
 router.get(
   NOTIFICATION_ROUTES.GetUnreadCount,
   [apiLimiter, authMiddleware.verifyToken],

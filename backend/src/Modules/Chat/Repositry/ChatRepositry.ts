@@ -56,8 +56,16 @@ export class ChatRepository extends BaseRepository<IChatMessage> {
   findChatMessageById = async (
     messageId: string
   ): Promise<IChatMessage | null> => {
-    return await this.findById(messageId);
-  };
+    try {
+      logger.debug(`Finding chat message by ID: ${messageId}`);
+      const message = await this.findById(messageId);
+      logger.info(`Chat message ${message ? 'found' : 'not found'}: ${messageId}`);
+      return message;
+    } catch (error: any) {
+      logger.error(`Error finding chat message by ID ${messageId}: ${error.message}`);
+      throw new RepositoryError(`Error finding chat message by ID: ${error.message}`);
+    }
+  }
 
   findChatMessagesByCollaborationId = async (
     collaborationId: string,
@@ -116,7 +124,7 @@ export class ChatRepository extends BaseRepository<IChatMessage> {
       logger.debug(`Finding messages for group: ${groupId}`);
       const id = this.toObjectId(groupId);
       return await this.model
-        .find({ _id: id })
+        .find({ groupId: id })
         .sort({ timestamp: -1 })
         .skip((page - 1) * limit)
         .limit(limit)

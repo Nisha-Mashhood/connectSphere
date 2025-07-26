@@ -49,6 +49,15 @@ export class FeedbackController {
       const { mentorId } = req.params;
       logger.debug(`Fetching feedbacks for mentor: ${mentorId}`);
       const feedbackData = await this.feedbackService.getMentorFeedbacks(mentorId);
+      if (feedbackData.feedbacks.length === 0) {
+        res.status(200).json({
+          success: true,
+          message: 'No feedbacks found',
+          data: { feedbacks: [], averageRating: 0, totalFeedbacks: 0 },
+        });
+        logger.info(`No feedbacks found for mentorId: ${mentorId}`);
+        return;
+      }
       res.status(200).json({
         success: true,
         message: 'Mentor feedbacks fetched successfully',
@@ -68,6 +77,15 @@ export class FeedbackController {
       const { userId } = req.params;
       logger.debug(`Fetching feedbacks for user: ${userId}`);
       const feedbacks = await this.feedbackService.getUserFeedbacks(userId);
+      if (feedbacks.length === 0) {
+        res.status(200).json({
+          success: true,
+          message: 'No feedbacks found',
+          data: [],
+        });
+        logger.info(`No feedbacks found for userId: ${userId}`);
+        return;
+      }
       res.status(200).json({
         success: true,
         message: 'User feedbacks fetched successfully',
@@ -91,6 +109,15 @@ export class FeedbackController {
         throw new Error('Invalid profile type');
       }
       const feedbackData = await this.feedbackService.getFeedbackForProfile(profileId, profileType as 'mentor' | 'user');
+      if (feedbackData.feedbacks.length === 0) {
+        res.status(200).json({
+          success: true,
+          message: 'No feedbacks found',
+          data: { feedbacks: [], totalFeedbacks: 0 },
+        });
+        logger.info(`No feedbacks found for profileId: ${profileId}, type: ${profileType}`);
+        return;
+      }
       res.status(200).json({
         success: true,
         message: 'Profile feedbacks fetched successfully',
@@ -110,6 +137,15 @@ export class FeedbackController {
       const { collabId } = req.params;
       logger.debug(`Fetching feedbacks for collaboration: ${collabId}`);
       const feedbacks = await this.feedbackService.getFeedbackByCollaborationId(collabId);
+      if (feedbacks.length === 0) {
+        res.status(200).json({
+          success: true,
+          message: 'No feedbacks found',
+          data: [],
+        });
+        logger.info(`No feedbacks found for collabId: ${collabId}`);
+        return;
+      }
       res.status(200).json({
         success: true,
         message: 'Collaboration feedbacks fetched successfully',
@@ -148,6 +184,15 @@ export class FeedbackController {
       const { mentorId } = req.params;
       logger.debug(`Fetching feedbacks by mentor ID: ${mentorId}`);
       const feedbacks = await this.feedbackService.getFeedbackByMentorId(mentorId);
+      if (feedbacks.length === 0) {
+        res.status(200).json({
+          success: true,
+          message: 'No feedbacks found',
+          data: [],
+        });
+        logger.info(`No feedbacks found for mentorId: ${mentorId}`);
+        return;
+      }
       res.status(200).json({
         success: true,
         message: 'Feedbacks fetched successfully',

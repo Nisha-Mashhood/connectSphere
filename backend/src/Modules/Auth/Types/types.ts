@@ -73,3 +73,11 @@ export interface ProfileUpdateData extends Partial<IUser> {
   profilePicFile?: Express.Multer.File;
   coverPicFile?: Express.Multer.File;
 }
+
+//Interface for Quesry for User Retrievel
+export interface UserQuery {
+  search?: string;
+  page?: number;
+  limit?: number;
+  role?:string;
+}

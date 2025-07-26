@@ -6,7 +6,7 @@ import Group from '../../../models/group.model';
 import GroupRequest from '../../../models/groupRequest.model';
 import { GroupDocument } from '../../../Interfaces/models/GroupDocument';
 import { GroupRequestDocument } from '../../../Interfaces/models/GroupRequestDocument';
-import { GroupFormData } from '../Types/types';
+import { GroupFormData, GroupQuery } from '../Types/types';
 
 
 export class GroupRepository extends BaseRepository<GroupDocument> {
@@ -85,14 +85,64 @@ export class GroupRepository extends BaseRepository<GroupDocument> {
     }
   }
 
-   getAllGroups = async(): Promise<GroupDocument[]> => {
+   getAllGroups = async (query: GroupQuery = {}): Promise<{ groups: GroupDocument[]; total: number }> => {
     try {
-      logger.debug('Fetching all groups');
-      return await this.model
-        .find()
-        .populate('members.userId', 'name email jobTitle profilePic')
-        .populate('adminId', 'name email jobTitle profilePic')
-        .exec();
+      logger.debug(`Fetching all groups with query: ${JSON.stringify(query)}`);
+      const { search, page, limit } = query;
+
+      // If no query parameters, return all groups without pagination
+      if (!search && !page && !limit) {
+        const groups = await this.model
+          .find()
+          .populate('members.userId', 'name email jobTitle profilePic')
+          .populate('adminId', 'name email jobTitle profilePic')
+          .exec();
+        logger.info(`Fetched ${groups.length} groups`);
+        return { groups, total: groups.length };
+      }
+
+      // Build aggregation pipeline for search and pagination
+      const matchStage: any = {};
+      if (search) {
+        matchStage.name = { $regex: `^${search}`, $options: "i" };
+      }
+
+      const pipeline = [
+        { $match: matchStage },
+        {
+          $lookup: {
+            from: "users",
+            localField: "members.userId",
+            foreignField: "_id",
+            as: "members.userId",
+          },
+        },
+        {
+          $lookup: {
+            from: "users",
+            localField: "adminId",
+            foreignField: "_id",
+            as: "adminId",
+          },
+        },
+        { $unwind: "$adminId" },
+        {
+          $facet: {
+            groups: [
+              { $skip: ((page || 1) - 1) * (limit || 10) },
+              { $limit: limit || 10 },
+            ],
+            total: [{ $count: "count" }],
+          },
+        },
+      ];
+
+      const result = await this.model.aggregate(pipeline).exec();
+      const groups = result[0]?.groups || [];
+      const total = result[0]?.total[0]?.count || 0;
+
+      logger.info(`Fetched ${groups.length} groups, total: ${total}`);
+      return { groups, total };
     } catch (error: any) {
       logger.error(`Error fetching all groups: ${error.message}`);
       throw new RepositoryError(`Error fetching all groups: ${error.message}`);

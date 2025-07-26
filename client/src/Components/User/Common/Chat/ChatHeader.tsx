@@ -236,7 +236,7 @@ const ChatHeader: React.FC<ChatHeaderProps> = ({
   // WebRTC and socket setup for one-on-one calls
   useEffect(() => {
     if (!selectedContact || selectedContact.type === "group") {
-      console.log('Skipping WebRTC and socket setup for group or no contact', { selectedContact });
+      console.log('Skipping WebRTC and socket setup for group or no contact', selectedContact );
       return;
     }
 
@@ -804,7 +804,7 @@ const ChatHeader: React.FC<ChatHeaderProps> = ({
               className="bg-white/20 text-white hover:bg-white/30 transition-all w-8 h-8 sm:w-10 sm:h-10"
               onPress={isAudioCallActive ? endAudioCall : startAudioCall}
               aria-label={isAudioCallActive ? "End audio call" : "Start audio call"}
-              // isDisabled={isVideoCallActive}
+              isDisabled={isVideoCallActive}
               // isDisabled={isVideoCallActive || !isCallEnabled}
             >
               <FaPhone size={14} />
@@ -823,7 +823,7 @@ const ChatHeader: React.FC<ChatHeaderProps> = ({
               <FaVideo size={14} />
             </Button>
           </Tooltip>
-          <Suspense fallback={<div className="text-white">Loading group call...</div>}>
+          <Suspense fallback={<div className="text-white">.</div>}>
             <GroupCall
               selectedContact={selectedContact}
               isVideoCallActive={isVideoCallActive}
