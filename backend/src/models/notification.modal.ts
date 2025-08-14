@@ -41,7 +41,12 @@ const AppNotificationSchema = new Schema<AppNotification>({
   callId: {
     type: String,
     required: false,
-  }, // Unique identifier for calls
+  }, 
+  callType: { 
+    type: String, 
+    enum: ["audio", "video"], 
+    required: false 
+  },
   notificationDate: {
     type: Date,
     required: false,

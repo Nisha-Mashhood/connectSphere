@@ -25,6 +25,7 @@ import chatRoutes from "./Modules/Chat/Routes/ChatRoutes";
 import contactsRoutes from "./Modules/Contact/Routes/ContactRoutes";
 import reviewsRoutes from "./Modules/Review/Routes/ReviewRoutes";
 import contactUsRoutes from "./Modules/ContactUs/Routes/ContactUsRoutes";
+import { errorHandler } from "./core/Utils/ErrorHandler";
 // import { CleanupRepository } from "./core/Repositries/CleanUpRepositry";
 
 dotenv.config();
@@ -52,6 +53,8 @@ const startServer = async () => {
     origin: process.env.FRONTEND_URL || "http://localhost:5173",
     credentials: true,
   }));
+
+  app.use(errorHandler);
 
   // Routes
   app.use("/api/auth", authRoutes);

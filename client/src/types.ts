@@ -94,6 +94,7 @@ export interface Notification {
   relatedId: string;
   status: "unread" | "read";
   callId?: string;
+  callType?: "audio" | "video";
   senderId: string;
   createdAt: string;
   updatedAt: string;
@@ -119,34 +120,31 @@ export interface IceCandidate {
   sdpMLineIndex: number | null;
 }
 
-export interface GroupCallOfferData {
+export interface GroupCallData {
   groupId: string;
-  offer: RTCSessionDescriptionInit;
-  callerId: string;
-  callType: "audio" | "video";
+  type: "group";
   callId: string;
-}
-export interface GroupCallAnswerData {
-  groupId: string;
-  answer: RTCSessionDescriptionInit;
-  answererId: string;
-  callerId: string;
   callType: "audio" | "video";
-  callId: string;
+  senderId?: string;
 }
-export interface GroupIceCandidateData {
-  groupId: string;
-  candidate: RTCIceCandidateInit;
+
+export interface GroupOfferData extends GroupCallData {
   senderId: string;
   recipientId: string;
-  callType: "audio" | "video";
-  callId: string;
+  offer: RTCSessionDescriptionInit;
+  senderName?: string;
 }
-export interface GroupCallEndedData {
-  groupId: string;
-  userId: string;
-  callType: "audio" | "video";
-  callId: string;
+
+export interface GroupAnswerData extends GroupCallData {
+  senderId: string;
+  recipientId: string;
+  answer: RTCSessionDescriptionInit;
+}
+
+export interface GroupIceCandidateData extends GroupCallData {
+  senderId: string;
+  recipientId: string;
+  candidate: RTCIceCandidateInit;
 }
 
 
@@ -298,10 +296,10 @@ export interface Collaboration {
   createdAt: string;
 }
 
-export interface sendGroupOffersAndAnswers {
-  groupId: string; 
-  callId: string; 
-  callType: 'audio' | 'video'; 
-  offerRecipients: string[]; 
-  answerRecipients: string[]
-}
+// export interface sendGroupOffersAndAnswers {
+//   groupId: string; 
+//   callId: string; 
+//   callType: 'audio' | 'video'; 
+//   offerRecipients: string[]; 
+//   answerRecipients: string[]
+// }

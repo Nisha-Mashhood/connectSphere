@@ -16,7 +16,7 @@ import { ForbiddenPage } from "../Components/ForebiddenPage";
 import GithubCallback from "../Components/User/Auth/GithubCallback";
 import ExploreMentor from "../Components/User/UserComponents/ExploreMentor";
 // import MyMentorProfilePage from "../Components/User/Mentor/MyMentorProfilePage";
-import UserProfile from "../Components/User/UserComponents/UserProfile";
+// import UserProfile from "../Components/User/UserComponents/UserProfile";
 import About from "../Components/User/Common/About";
 import CreateGroupForm from "../Components/Forms/CreateGroupForm";
 import GroupDetails from "../Components/User/Common/Profile/GroupDetails";
@@ -45,7 +45,7 @@ const UserRoutes = () => (
         <Route path="/mentorProfile" element={<MentorProfileForm />} />
         <Route path="/profileDispaly/:Id" element={< ProfileDisplay />} />
         <Route path="/explorementor" element={<ExploreMentor />} />
-        <Route path="/userProfile/:userId" element={<UserProfile />} />
+        {/* <Route path="/userProfile/:userId" element={<UserProfile />} /> */}
         <Route path="/create-group" element={<CreateGroupForm />} />
         <Route path="/groupDetails/:groupId" element={<GroupDetails />} />
         <Route path="/group/:groupId" element={<GroupDetailView />} />

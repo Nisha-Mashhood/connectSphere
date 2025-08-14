@@ -15,7 +15,9 @@ axiosRetry(axiosInstance, {
   retryDelay: (retryCount) => retryCount * 1000,
   retryCondition: (error) => {
     // Don't retry if it's a rate limit error
-    if (error.response?.status === 429) return false;
+    if (error.response?.status === 429 || axios.isCancel(error)) {
+      return false;
+    }
     return axiosRetry.isNetworkOrIdempotentRequestError(error);
   },
 });
@@ -47,14 +49,15 @@ export const setupInterceptors = (navigate) => {
       config.signal = controller.signal;
 
       // Add auth token
-      // const token = document.cookie
-      //   .split("; ")
-      //   .find((row) => row.startsWith("accessToken="))
-      //   ?.split("=")[1];
+      const token = localStorage.getItem("authToken") || 
+        document.cookie
+          .split("; ")
+          .find((row) => row.startsWith("accessToken="))
+          ?.split("=")[1];
 
-      // if (token) {
-      //   config.headers.Authorization = `Bearer ${token}`;
-      // }
+      if (token) {
+        config.headers.Authorization = `Bearer ${token}`;
+      }
 
       return config;
     },
@@ -69,16 +72,15 @@ export const setupInterceptors = (navigate) => {
       return response;
     },
     async (error) => {
-      const originalRequest = error.config;
-
-      // Clean up the pending request on error
-      if (originalRequest) {
-        const requestKey = getRequestKey(originalRequest);
+  
+      if (error?.config) {
+        const requestKey = getRequestKey(error.config);
         pendingRequests.delete(requestKey);
       }
 
       if (axios.isCancel(error)) {
-        throw new Error("Request cancelled - previous request was still pending");
+        console.warn("Request cancelled - previous request was still pending");
+        return Promise.reject(error);
       }
 
       if (error.response?.status === 429) {
@@ -99,13 +101,14 @@ export const setupInterceptors = (navigate) => {
         throw new Error("Your account has been blocked. Please contact support.");
       }
 
-      if (error.response?.status === 401 && !originalRequest._retry) {
-        originalRequest._retry = true;
+      if (error.response?.status === 401 && !error.config?._retry) {
+        error.config._retry = true;
         try {
-          await axiosInstance.post("/auth/refresh-token");
-          // const { newAccessToken } = response.data;
-          // originalRequest.headers.Authorization = `Bearer ${newAccessToken}`;
-          return axiosInstance(originalRequest);
+          const response = await axiosInstance.post("/auth/refresh-token");
+          const { newAccessToken } = response.data;
+          document.cookie = `accessToken=${newAccessToken}; path=/;`;
+          error.config.headers.Authorization = `Bearer ${newAccessToken}`;
+          return axiosInstance(error.config);
         } catch (refreshError) {
           store.dispatch(signOut());
           navigate("/login");
@@ -114,8 +117,8 @@ export const setupInterceptors = (navigate) => {
       }
 
       // Let the error handler deal with specific error cases
-      console.log(error.response?.data?.message);
-      throw new Error(error.response?.data?.message || "An error occurred");
+      console.error(error);
+      throw new Error(error || "An error occurred");
     }
   );
 };

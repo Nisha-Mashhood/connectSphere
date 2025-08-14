@@ -79,7 +79,7 @@ const ExploreMentors = () => {
   const [lockedSlots, setLockedSlots] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
   const [activeTab, setActiveTab] = useState("mentors");
-  const limit = 10; // Items per page
+  const limit = 4; // Items per page
 
   // Fetch data
  // Fetch categories and skills only once

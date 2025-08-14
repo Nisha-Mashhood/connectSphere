@@ -1,5 +1,5 @@
 import { axiosInstance } from "../lib/axios";
-import { AxiosProgressEvent } from "axios";
+import  { AxiosProgressEvent } from "axios";
 import { IChatMessage } from "../types";
 
 
@@ -7,16 +7,22 @@ export const fetchChatMessages = async (
   contactId?: string,
   groupId?: string,
   page: number = 1,
-  limit: number = 10
+  limit: number = 10,
+  signal?: AbortSignal
 ): Promise<{ messages: IChatMessage[]; total: number }> => {
   try {
     const response = await axiosInstance.get("/chat/messages", {
       params: { contactId, groupId, page, limit },
+      signal,
     });
     return response.data.data;
   } catch (error) {
-    console.error("Error fetching chat messages:", error.message);
+    if (error.name === "CanceledError") {
+      return { messages: [], total: 0 };
+    }else{
+    console.error("Error fetching chat messages:", error);
     throw error;
+    }
   }
 };
 

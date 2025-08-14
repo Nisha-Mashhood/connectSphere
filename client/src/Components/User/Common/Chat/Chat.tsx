@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef, useCallback } from "react";
+import React, { useState, useEffect, useRef, useCallback, useMemo } from "react";
 import { useSelector } from "react-redux";
 import { RootState } from "../../../../redux/store";
 import { useNavigate, useParams } from "react-router-dom";
@@ -63,13 +63,17 @@ const Chat: React.FC = () => {
   } | null>(null);
   const ringtone = useRef<HTMLAudioElement | null>(null);
   const isRingtonePlaying = useRef(false);
+  const fetchAbortControllerRef = useRef<AbortController | null>(null);
 
-  const getChatKey = (contact: Contact) =>
-    contact.type === "group"
-      ? `group_${contact.groupId}`
-      : contact.type === "user-mentor"
-      ? `user-mentor_${contact.collaborationId}`
-      : `user-user_${contact.userConnectionId}`;
+  const getChatKey = (contact: Contact): string => {
+  if (contact.type === "group") {
+    return `group_${contact.groupId}`;
+  } else if (contact.type === "user-mentor") {
+    return `user-mentor_${contact.collaborationId}`;
+  } else {
+    return `user-user_${contact.userConnectionId}`;
+  }
+}
 
 
  const fetchUnreadCounts = useCallback(
@@ -93,7 +97,8 @@ const Chat: React.FC = () => {
         !error.message.includes("HTTP 404") &&
         !error.message.includes("No messages")
       ) {
-        toast.error(`Error fetching unread counts`);
+        // toast.error(`Error fetching unread counts`);
+        console.log(error);
       } else {
         console.log("Non-critical error, setting empty unread counts");
         setUnreadCounts({});
@@ -117,11 +122,51 @@ const Chat: React.FC = () => {
     []
   );
 
+
+  const debouncedFetchMessages = useMemo(() => debounce(async (contact: Contact) => {
+  const chatKey = getChatKey(contact);
+
+  // Abort any previous fetch
+  if (fetchAbortControllerRef.current) {
+    fetchAbortControllerRef.current.abort();
+  }
+
+  // Create new controller for new request
+  const controller = new AbortController();
+  fetchAbortControllerRef.current = controller;
+
+  try {
+    const { messages } = await fetchChatMessages(
+      contact.type !== "group" ? contact.contactId : undefined,
+      contact.type === "group" ? contact.groupId : undefined,
+      1,
+      10,
+      controller.signal
+    );
+    console.log("Messages fetched:", messages);
+    setAllMessages((prev: Map<string, IChatMessage[]>) => {
+      const currentMessages = prev.get(chatKey) || [];
+      const updatedMessages = [...messages, ...currentMessages];
+      return new Map(prev).set(chatKey, deduplicateMessages(updatedMessages));
+    });
+
+    if (messages.length > 0 && currentUser?._id) {
+      socketService.markAsRead(chatKey, currentUser._id, contact.type);
+    }
+  } catch (error) {
+    if (error.name !== "CanceledError") {
+      console.error("Error preloading messages:", error);
+    }
+  }
+}, 300), [currentUser?._id]);
+
+
   useEffect(() => {
     if (ringtone.current) {
       console.log("Preloading audio element");
       ringtone.current.src = ringTone; // Set src to imported file
       ringtone.current.load(); // Force preload
+
       ringtone.current.onloadeddata = () => {
         console.log(
           "Audio element loaded, readyState:",
@@ -417,6 +462,7 @@ const Chat: React.FC = () => {
     fetchContacts();
     fetchUnreadCounts();
 
+    const currentRingTone = ringtone.current;
     return () => {
       console.log("Cleaning up socket listeners in Chat.tsx");
       sessionStorage.removeItem("isInChatComponent");
@@ -433,9 +479,14 @@ const Chat: React.FC = () => {
       socketService.socket?.off("callEnded", handleCallEnded);
       // socketService.disconnect();
 
-      if (ringtone.current && isRingtonePlaying.current) {
-        ringtone.current.pause();
-        ringtone.current.currentTime = 0;
+      debouncedFetchMessages.cancel();
+    if (fetchAbortControllerRef.current) {
+      fetchAbortControllerRef.current.abort();
+    }
+
+      if (currentRingTone && isRingtonePlaying.current) {
+        currentRingTone.pause();
+        currentRingTone.currentTime = 0;
         isRingtonePlaying.current = false;
       }
     };
@@ -472,60 +523,73 @@ const Chat: React.FC = () => {
   };
 
   const handleContactSelect = useCallback(
-    async (contact: Contact) => {
-      setSelectedContact(contact);
-      const chatKey = getChatKey(contact);
-      //wait for message to be load
-      try {
-        const { messages } = await fetchChatMessages(
-          contact.type !== "group" ? contact.contactId : undefined,
-          contact.type === "group" ? contact.groupId : undefined,
-          1
-        );
-        setAllMessages((prev) => {
-          const currentMessages = prev.get(chatKey) || [];
-          const updatedMessages = [...messages, ...currentMessages];
-          return new Map(prev).set(
-            chatKey,
-            deduplicateMessages(updatedMessages)
-          );
-        });
-      } catch (error) {
-        console.error("Error preloading messages:", error);
+  async (
+    contact: Contact,
+  ) => {
+    console.log("Contact is selected:", contact);
+    if (!contact.contactId && !contact.groupId) {
+      console.warn("Invalid contact: missing contactId or groupId", { contact });
+      return;
+    }
+    if (contact.type === "user-user" && !contact.userConnectionId) {
+      console.warn("Invalid user-user contact: missing userConnectionId", { contact });
+      return;
+    }
+    if (contact.type === "user-mentor" && !contact.collaborationId) {
+      console.warn("Invalid user-mentor contact: missing collaborationId", { contact });
+      return;
+    }
+    setSelectedContact(contact);
+    const chatKey = getChatKey(contact);
+    console.log("Token:", localStorage.getItem("authToken"), document.cookie);
+    // try {
+      // const { messages } = await fetchChatMessages(
+      //   contact.type !== "group" ? contact.contactId : undefined,
+      //   contact.type === "group" ? contact.groupId : undefined,
+      //   1
+      // );
+      debouncedFetchMessages(contact);
+      // console.log("Messages fetched:", messages);
+      // setAllMessages((prev: Map<string, IChatMessage[]>) => {
+      //   const currentMessages = prev.get(chatKey) || [];
+      //   const updatedMessages = [...messages, ...currentMessages];
+      //   return new Map(prev).set(chatKey, deduplicateMessages(updatedMessages));
+      // });
+      // if (messages.length > 0 && currentUser?._id) {
+      //   socketService.markAsRead(chatKey, currentUser._id, contact.type);
+      // }
+    // } catch (error) {
+    //   console.error("Error preloading messages:", {
+    //     message: error.message,
+    //     status: error.response?.status,
+    //     data: error.response?.data,
+    //     contact,
+    //   });
+    // }
+    dispatch(setActiveChatKey(chatKey));
+    socketService.emitActiveChat(currentUser._id, chatKey);
+    dispatch(setSelectedContactRedux(contact));
+    try {
+      const relevantNotifications = chatNotifications.filter(
+        (n) =>
+          n.relatedId === chatKey &&
+          n.status === "unread" &&
+          ["message", "missed_call", "incoming_call"].includes(n.type)
+      );
+      for (const notification of relevantNotifications) {
+        await markNotificationService(notification._id, currentUser?._id || "");
+        dispatch(markNotificationAsRead(notification._id));
+        socketService.markNotificationAsRead(notification._id, currentUser?._id || "");
       }
-      //// Mark as read after loading messages
-      dispatch(setActiveChatKey(chatKey));
-      socketService.emitActiveChat(currentUser._id, chatKey);
-      socketService.markAsRead(chatKey, currentUser?._id || "", contact.type);
-      dispatch(setSelectedContactRedux(contact));
-      // Mark relevant notifications as read
-      try {
-        const relevantNotifications = chatNotifications.filter(
-          (n) =>
-            n.relatedId === chatKey &&
-            n.status === "unread" &&
-            ["message", "missed_call", "incoming_call"].includes(n.type)
-        );
-        for (const notification of relevantNotifications) {
-          await markNotificationService(
-            notification._id,
-            currentUser?._id || ""
-          );
-          dispatch(markNotificationAsRead(notification._id));
-          socketService.markNotificationAsRead(
-            notification._id,
-            currentUser?._id || ""
-          );
-        }
-        navigate(`/chat/${contact.type}/${contact.id}`);
-      } catch (error) {
-        console.error("Error marking notifications as read:", error);
-      }
-      fetchUnreadCounts();
-      setIsSidebarOpen(false);
-    },
-    [currentUser?._id, chatNotifications, dispatch, navigate, fetchUnreadCounts]
-  );
+      navigate(`/chat/${contact.type}/${contact.id}`);
+    } catch (error) {
+      console.error("Error marking notifications as read:", error);
+    }
+    fetchUnreadCounts();
+    setIsSidebarOpen(false);
+  },
+  [currentUser?._id, chatNotifications, dispatch, navigate, fetchUnreadCounts]
+);
 
   const toggleSidebar = () => setIsSidebarOpen((prev) => !prev);
   const toggleDetailsSidebar = () => setIsDetailsSidebarOpen((prev) => !prev);

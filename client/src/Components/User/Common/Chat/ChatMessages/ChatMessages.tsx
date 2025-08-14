@@ -1,4 +1,4 @@
-import React, { useEffect, useRef, useCallback, useState } from "react";
+import React, { useEffect, useRef, useCallback, useState, useMemo } from "react";
 import { debounce } from "lodash";
 import { Contact, IChatMessage } from "../../../../../types";
 import { fetchChatMessages } from "../../../../../Service/Chat.Service";
@@ -36,6 +36,33 @@ const ChatMessages: React.FC<ChatMessagesProps> = ({
   const [showScrollDown, setShowScrollDown] = useState(false);
   const [isContainerScrollable, setIsContainerScrollable] = useState(false);
   const isUserScrolling = useRef(false);
+  const fetchAbortControllerRef = useRef<AbortController | null>(null);
+
+ const fetchMessages = useMemo(
+    () => async (
+      contact: Contact,
+      page: number,
+      signal: AbortSignal
+    ): Promise<{ messages: IChatMessage[]; total: number }> => {
+      try {
+        const response = await fetchChatMessages(
+          contact.type !== "group" ? contact.contactId : undefined,
+          contact.type === "group" ? contact.groupId : undefined,
+          page,
+          10,
+          signal
+        );
+        console.log("Messages fetched:", response.messages);
+        return response;
+      } catch (error) {
+        if (error.name !== "CanceledError") {
+          console.warn("Fetching Messages Cancelled Error:", error);
+        }else
+        throw error;
+      }
+    },
+    []
+  );
 
   const loadMessages = useCallback(
     async (resetPage = false) => {
@@ -44,15 +71,25 @@ const ChatMessages: React.FC<ChatMessagesProps> = ({
       const chatKey = getChatKey(selectedContact);
       const container = messagesContainerRef.current;
       const previousScrollHeight = container?.scrollHeight || 0;
+      const currentPage = resetPage ? 1 : page;
+
+      // Abort any previous fetch
+      if (fetchAbortControllerRef.current) {
+        fetchAbortControllerRef.current.abort();
+      }
+
+      // Create new AbortController
+      const controller = new AbortController();
+      fetchAbortControllerRef.current = controller;
 
       setIsFetching(true);
-      const currentPage = resetPage ? 1 : page;
       try {
-        const { messages: newMessages, total } = await fetchChatMessages(
-          selectedContact.type !== "group" ? selectedContact.contactId : undefined,
-          selectedContact.type === "group" ? selectedContact.groupId : undefined,
-          currentPage
+        const { messages: newMessages, total } = await fetchMessages(
+          selectedContact,
+          currentPage,
+          controller.signal
         );
+
         setAllMessages((prev) => {
           const currentMessages = prev.get(chatKey) || [];
           const updatedMessages = resetPage
@@ -60,9 +97,15 @@ const ChatMessages: React.FC<ChatMessagesProps> = ({
             : [...newMessages, ...currentMessages];
           return new Map(prev).set(chatKey, updatedMessages);
         });
+
         setHasMore(currentPage * 10 < total && newMessages.length > 0);
         setPage(currentPage + 1);
         if (resetPage) setInitialLoadDone(true);
+
+        // Mark messages as read
+        if (newMessages.length > 0 && currentUser?._id) {
+          socketService.markAsRead(chatKey, currentUser._id, selectedContact.type);
+        }
 
         if (!resetPage && container && isContainerScrollable) {
           requestAnimationFrame(() => {
@@ -71,12 +114,15 @@ const ChatMessages: React.FC<ChatMessagesProps> = ({
           });
         }
       } catch (error) {
-        console.error("Error loading messages:", error);
+        if (error.name !== "CanceledError") {
+          console.warn("Fetching Messages Cancelled Error:", error);
+        }
       } finally {
-        setTimeout(() => setIsFetching(false), 100);
+        setIsFetching(false);
+        fetchAbortControllerRef.current = null;
       }
     },
-    [selectedContact, page, isFetching, hasMore, getChatKey, setAllMessages, isContainerScrollable]
+    [selectedContact, page, isFetching, hasMore, getChatKey, setAllMessages, isContainerScrollable, currentUser?._id, fetchMessages]
   );
 
   const scrollToBottom = useCallback(
@@ -99,13 +145,13 @@ const ChatMessages: React.FC<ChatMessagesProps> = ({
       setPage(1);
       setHasMore(true);
     }
-  }, [selectedContact?.id]);
+  }, [selectedContact]);
 
   useEffect(() => {
     if (selectedContact && !initialLoadDone) {
       loadMessages(true);
     }
-  }, [selectedContact?.id, initialLoadDone, loadMessages]);
+  }, [selectedContact, initialLoadDone, loadMessages]);
 
   useEffect(() => {
     if (
@@ -117,7 +163,7 @@ const ChatMessages: React.FC<ChatMessagesProps> = ({
       console.log("Triggering scrollToBottom for chatKey:", getChatKey(selectedContact));
       scrollToBottom();
     }
-  }, [selectedContact, getChatKey, initialLoadDone, scrollToBottom]);
+  }, [selectedContact, getChatKey, initialLoadDone, scrollToBottom, allMessages]);
 
   useEffect(() => {
     const checkScrollable = () => {
@@ -271,6 +317,12 @@ const ChatMessages: React.FC<ChatMessagesProps> = ({
       socketService.socket?.off("receiveMessage", handleReceiveMessage);
       socketService.socket?.off("messageSaved", handleMessageSaved);
       socketService.socket?.off("messagesRead", debouncedHandleMessagesRead);
+
+      // fetchMessages.cancel();
+      if (fetchAbortControllerRef.current) {
+        fetchAbortControllerRef.current.abort();
+        fetchAbortControllerRef.current = null;
+      }
     };
   }, [selectedContact, getChatKey, setAllMessages, scrollToBottom]);
 

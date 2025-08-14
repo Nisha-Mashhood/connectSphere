@@ -28,6 +28,7 @@ export interface TaskNotificationPayload {
   senderId: string;
   status: "unread" | "read";
   callId?: string;
+  callType?: 'audio' | 'video';
   notificationDate?: string;
   notificationTime?: string;
   createdAt: Date;
@@ -318,6 +319,7 @@ export class NotificationService extends BaseService {
     relatedId: string,
     contentType?: string,
     callId?: string,
+    callType?: IAppNotification["callType"],
     customContent?: string
   ): Promise<IAppNotification> => {
     try {
@@ -380,6 +382,7 @@ export class NotificationService extends BaseService {
         senderId,
         status: "unread",
         callId,
+        callType,
         taskContext: contentType
           ? {
               contextType: contentType as
@@ -408,6 +411,7 @@ export class NotificationService extends BaseService {
             senderId: notification.senderId.toString(),
             status: notification.status,
             callId: notification.callId,
+            callType: notification.callType,
             notificationDate: notification.notificationDate
               ?.toISOString()
               .split("T")[0],
@@ -469,7 +473,12 @@ export class NotificationService extends BaseService {
           updatedAt: notification.updatedAt,
           taskContext: notification.taskContext,
         };
-        SocketService.notificationEmitter.emit("notification.updated", payload);
+        try {
+          SocketService.notificationEmitter.emit("notification.updated", payload);
+        } catch (socketError: any) {
+          logger.error(`Socket emission error: ${socketError.message}`);
+        }
+        // SocketService.notificationEmitter.emit("notification.updated", payload);
       }
       return notification;
     } catch (error: any) {

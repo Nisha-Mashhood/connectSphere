@@ -54,3 +54,13 @@ export const errorHandler = (
   }
   next();
 };
+
+process.on("uncaughtException", (error: Error) => {
+  logger.error(`Uncaught Exception: ${error.message}\nStack: ${error.stack}`);
+  // res.status(500).json({ status: "error", message: "Internal server error" });
+});
+
+process.on("unhandledRejection", (reason: any, promise: Promise<any>) => {
+  logger.error(`Unhandled Rejection at: ${promise}\nReason: ${reason?.message || reason}\nStack: ${reason?.stack || "No stack trace"}`);
+  // res.status(500).json({ status: "error", message: "Internal server error" });
+});

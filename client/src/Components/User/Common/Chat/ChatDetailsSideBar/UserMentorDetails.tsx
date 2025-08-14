@@ -99,7 +99,7 @@ const UserMentorDetails: React.FC<UserMentorDetailsProps> = ({ selectedContact, 
             <div>
               <p className="text-xs text-gray-500 dark:text-gray-400">Mentorship Fee</p>
               <p className="text-gray-700 dark:text-gray-300 font-medium text-xs sm:text-sm">
-                ${targetDetails.price}
+                ₹{targetDetails.price}
               </p>
             </div>
           </div>

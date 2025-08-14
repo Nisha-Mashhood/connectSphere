@@ -1,228 +1,457 @@
 export class WebRTCService {
-  private peerConnection: RTCPeerConnection | null = null;//  Peer connection instance
-  private localStream: MediaStream | null = null;// Local media stream (video/audio)
-  private hasCreatedOffer: boolean = false;// Flag to ensure offer is created only once
-  private addedTrackIds: Set<string> = new Set(); // Set to track added track IDs and avoid duplicates
+  private peerConnections: Map<string, RTCPeerConnection> = new Map();
+  private singlePeerConnection: RTCPeerConnection | null = null;
+  private localStream: MediaStream | null = null;
+  private addedTrackIds: Set<string> = new Set();
+  private onTrackCallbacks: Map<string, (event: RTCTrackEvent, targetId: string) => void> = new Map();
+  private onIceCandidateCallbacks: Map<string, (candidate: RTCIceCandidateInit) => void> = new Map();
+  private isOffererMap: Map<string, boolean> = new Map();
+  public onNegotiationNeeded: ((targetId: string, offer: RTCSessionDescriptionInit) => void) | undefined;
+  private pendingIceCandidates: Map<string, RTCIceCandidateInit[]> = new Map();
 
   constructor() {
     console.log("WebRTCService initialized");
   }
- // Initialize the peer connection with ICE servers
-  async initPeerConnection(): Promise<void> {
-    // Skip if already initialized and not closed
-    if (this.peerConnection && this.peerConnection.connectionState !== "closed") {
-      console.log("Peer connection already initialized, skipping");
-      return;
-    }
 
-    // STUN and TURN server configuration
-    const config: RTCConfiguration = {
-      iceServers: [
-        { urls: "stun:stun.l.google.com:19302" },
-        {
-          urls: "turn:openrelay.metered.ca:80",
-          username: "openrelayproject",
-          credential: "openrelayproject",
-        },
-      ],
-    };
-    console.log("Initializing peer connection with config:", config);
-
-    try {
-      this.peerConnection = new RTCPeerConnection(config);
-
-      // Detects ICE failures and can trigger reconnection.
-      this.peerConnection.oniceconnectionstatechange = () => {
-        console.log("ICE connection state:", this.peerConnection!.iceConnectionState);
-        if (this.peerConnection!.iceConnectionState === "failed") {
-          console.error("ICE connection failed, restarting ICE");
-          this.peerConnection!.restartIce();// Try to reconnect ICE
-        }
+  async initPeerConnection(targetId?: string, isOfferer: boolean = false): Promise<RTCPeerConnection> {
+    if (!targetId) {
+      if (this.singlePeerConnection && this.singlePeerConnection.connectionState !== "closed") {
+        console.log("Single peer connection already initialized, returning existing");
+        return this.singlePeerConnection;
+      }
+      const config: RTCConfiguration = {
+        iceServers: [
+          { urls: "stun:stun.l.google.com:19302" },
+          {
+            urls: "turn:openrelay.metered.ca:80",
+            username: "openrelayproject",
+            credential: "openrelayproject",
+          },
+        ],
       };
-      // Logs connection state (e.g., connected, failed).
-      this.peerConnection.onconnectionstatechange = () => {
-        console.log("Connection state:", this.peerConnection!.connectionState);
+      console.log("Initializing single peer connection with config:", config);
+      try {
+        this.singlePeerConnection = new RTCPeerConnection(config);
+        this.isOffererMap.set("single", isOfferer);
+        this.setupPeerConnectionEvents(this.singlePeerConnection, "single");
+        console.log("Single peer connection initialized successfully");
+        return this.singlePeerConnection;
+      } catch (error) {
+        console.error("Error initializing single peer connection:", error);
+        throw error;
+      }
+    } else {
+      if (this.peerConnections.has(targetId) && this.peerConnections.get(targetId)!.connectionState !== "closed") {
+        console.log(`Peer connection for ${targetId} already initialized, returning existing`);
+        return this.peerConnections.get(targetId)!;
+      }
+      const config: RTCConfiguration = {
+        iceServers: [
+          { urls: "stun:stun.l.google.com:19302" },
+          {
+            urls: "turn:openrelay.metered.ca:80",
+            username: "openrelayproject",
+            credential: "openrelayproject",
+          },
+        ],
       };
-
-      // When a new media track is added, it creates an offer (if not already done).
-      this.peerConnection.onnegotiationneeded = async () => {
-        if (this.hasCreatedOffer) {
-          console.log("Ignoring onnegotiationneeded: Initial offer already created");
-          return;
-        }
-        console.log("Negotiation needed, creating offer");
-        try {
-          const offer = await this.peerConnection!.createOffer();
-          await this.peerConnection!.setLocalDescription(offer);
-          console.log("Local description set for negotiation:", offer);
-        } catch (error) {
-          console.error("Error handling negotiation:", error);
-        }
-      };
-      console.log("Peer connection initialized successfully");
-    } catch (error) {
-      console.error("Error initializing peer connection:", error);
-      throw error;
+      console.log(`Initializing peer connection for ${targetId} with config:`, config);
+      try {
+        const peerConnection = new RTCPeerConnection(config);
+        this.peerConnections.set(targetId, peerConnection);
+        this.isOffererMap.set(targetId, isOfferer);
+        this.setupPeerConnectionEvents(peerConnection, targetId);
+        console.log(`Peer connection initialized for ${targetId}`);
+        return peerConnection;
+      } catch (error) {
+        console.error(`Error initializing peer connection for ${targetId}:`, error);
+        throw error;
+      }
     }
   }
 
-   // Checks if the remote offer/answer is already set
-  hasRemoteDescription(): boolean {
-    if (!this.peerConnection) {
-      console.log("No peer connection exists");
+
+  private setupPeerConnectionEvents(peerConnection: RTCPeerConnection, targetId: string) {
+  peerConnection.oniceconnectionstatechange = () => {
+    console.log(`ICE connection state for ${targetId}: ${peerConnection.iceConnectionState}`);
+    if (peerConnection.iceConnectionState === "failed") {
+      console.error(`ICE connection failed for ${targetId}, restarting ICE`);
+      try {
+        peerConnection.restartIce();
+      } catch (error) {
+        console.error(`Error restarting ICE for ${targetId}:`, error);
+      }
+    }
+  };
+
+  peerConnection.onconnectionstatechange = () => {
+    console.log(`Connection state for ${targetId}: ${peerConnection.connectionState}`);
+    if (peerConnection.connectionState === "connected") {
+      console.log(`Peer connection established for ${targetId}`);
+    } else if (peerConnection.connectionState === "failed") {
+      console.error(`Connection failed for ${targetId}, attempting to restart ICE`);
+      try {
+        peerConnection.restartIce();
+      } catch (error) {
+        console.error(`Error restarting ICE for ${targetId}:`, error);
+      }
+    }
+  };
+
+  peerConnection.onsignalingstatechange = () => {
+    console.log(`Signaling state for ${targetId}: ${peerConnection.signalingState}`);
+  };
+
+  peerConnection.ontrack = (event) => {
+    console.log(`Received remote track from ${targetId}, streams:`, event.streams);
+    if (event.streams[0]) {
+      const tracks = event.streams[0].getTracks();
+      console.log(`Remote stream tracks for ${targetId}:`, tracks.map(t => ({
+        kind: t.kind,
+        id: t.id,
+        enabled: t.enabled,
+        readyState: t.readyState,
+        label: t.label
+      })));
+      const callback = this.onTrackCallbacks.get(targetId);
+      if (callback) {
+        callback(event, targetId);
+      } else {
+        console.warn(`No onTrack callback registered for ${targetId}`);
+      }
+    } else {
+      console.warn(`No stream received in ontrack for ${targetId}`);
+    }
+  };
+
+  peerConnection.onicecandidate = (event) => {
+    if (event.candidate) {
+      console.log(`Generated ICE candidate for ${targetId}:`, event.candidate.toJSON());
+      const callback = this.onIceCandidateCallbacks.get(targetId);
+      if (callback) {
+        callback(event.candidate.toJSON());
+      }
+    }
+  };
+
+  peerConnection.onnegotiationneeded = async () => {
+    if (!this.isOffererMap.get(targetId)) {
+      console.log(`Negotiation needed for ${targetId}, but not an offerer, skipping`);
+      return;
+    }
+    console.log(`Negotiation needed for ${targetId}, creating offer`);
+    try {
+      const offer = await peerConnection.createOffer();
+      await peerConnection.setLocalDescription(offer);
+      console.log(`Offer created and local description set for ${targetId}:`, offer);
+      if (this.onNegotiationNeeded) {
+        this.onNegotiationNeeded(targetId, offer);
+        console.log(`Called onNegotiationNeeded for ${targetId}`);
+      } else {
+        console.warn(`No onNegotiationNeeded callback set for ${targetId}`);
+      }
+    } catch (error) {
+      console.error(`Error handling negotiation for ${targetId}:`, error);
+    }
+  };
+}
+
+
+  // Check remote description
+  hasRemoteDescription(targetId?: string): boolean {
+    if (!targetId) {
+      if (!this.singlePeerConnection) {
+        console.log("No single peer connection exists");
+        return false;
+      }
+      const hasRemoteDesc = !!this.singlePeerConnection.remoteDescription;
+      console.log(`Remote description for single: ${hasRemoteDesc}, signalingState: ${this.singlePeerConnection.signalingState}`);
+      return hasRemoteDesc;
+    }
+    const peerConnection = this.peerConnections.get(targetId);
+    if (!peerConnection) {
+      console.log(`No peer connection exists for ${targetId}`);
       return false;
     }
-    const hasRemoteDesc = !!this.peerConnection.remoteDescription;
-    console.log(`Remote description exists: ${hasRemoteDesc}, signalingState: ${this.peerConnection.signalingState}`);
+    const hasRemoteDesc = !!peerConnection.remoteDescription;
+    console.log(`Remote description for ${targetId}: ${hasRemoteDesc}, signalingState: ${peerConnection.signalingState}`);
     return hasRemoteDesc;
   }
 
-  // Accesses the user’s camera and microphone
-  async getLocalStream(): Promise<MediaStream> {
-    console.log("Requesting user media (video and audio)");
-    try {
-      // If not already fetched, request stream
-      if (!this.localStream) {
-        this.localStream = await navigator.mediaDevices.getUserMedia({
-          video: { facingMode: "user", width: 640, height: 480 },
-          audio: true,
-        });
-      }
-      const tracks = this.localStream.getTracks();
-      console.log("Local stream acquired, track details:");
-      tracks.forEach((track, index) => {  //Logs each track.
-        console.log(`Track ${index}: kind=${track.kind}, id=${track.id}, enabled=${track.enabled}, readyState=${track.readyState}`);
-      });
-      if (tracks.length === 0) {
-        console.error("No tracks found in local stream");
-      }
-
-       // Adds tracks to the peer connection if they aren’t already added.
-      if (this.peerConnection) {
-        tracks.forEach((track) => {
-          if (!this.addedTrackIds.has(track.id)) {
-            console.log("Adding local track to peer connection:", track);
-            this.peerConnection!.addTrack(track, this.localStream!);
-            this.addedTrackIds.add(track.id);
-          } else {
-            console.log("Skipping already added track:", track.id);
-          }
-        });
-      }
-
-      return this.localStream;
-    } catch (error) {
-      console.error("Error getting local stream:", error);
-      throw error;
-    }
-  }
-
-  // Get audio-only stream and attach it to peer connection
-  async getLocalAudioStream(): Promise<MediaStream> {
-    console.log("Requesting audio-only user media");
-    try {
-      const stream = await navigator.mediaDevices.getUserMedia({
+async getLocalStream(): Promise<MediaStream> {
+  console.log("Requesting user media (video and audio)");
+  try {
+    if (!this.localStream) {
+      this.localStream = await navigator.mediaDevices.getUserMedia({
+        video: { facingMode: "user", width: 640, height: 480 },
         audio: true,
-        video: false,
       });
-      const tracks = stream.getTracks();
-      console.log("Local audio stream acquired, track details:");
-      tracks.forEach((track, index) => {
-        console.log(`Track ${index}: kind=${track.kind}, id=${track.id}, enabled=${track.enabled}, readyState=${track.readyState}`);
+    }
+    const tracks = this.localStream.getTracks();
+    console.log("Local stream acquired, track details:");
+    tracks.forEach((track, index) => {
+      console.log(`Track ${index}: kind=${track.kind}, id=${track.id}, enabled=${track.enabled}, readyState=${track.readyState}`);
+    });
+    if (tracks.length === 0) {
+      console.error("No tracks found in local stream");
+      throw new Error("No tracks found in local stream");
+    }
+
+    // Add tracks
+    if (this.singlePeerConnection) {
+      tracks.forEach((track) => {
+        if (!this.addedTrackIds.has(`single:${track.id}`)) {
+          console.log(`Adding local track to single peer connection:`, track);
+          this.singlePeerConnection.addTrack(track, this.localStream!);
+          this.addedTrackIds.add(`single:${track.id}`);
+        } else {
+          console.log(`Skipping already added track for single:`, track.id);
+        }
       });
-      if (tracks.length === 0) {
-        console.error("No tracks found in local audio stream");
-      }
+    }
 
-      if (this.peerConnection) {
-        tracks.forEach((track) => {
-          if (!this.addedTrackIds.has(track.id)) {
-            console.log("Adding local audio track to peer connection:", track);
-            this.peerConnection!.addTrack(track, stream);
-            this.addedTrackIds.add(track.id);
-          } else {
-            console.log("Skipping already added audio track:", track.id);
-          }
-        });
-      }
+    return this.localStream;
+  } catch (error) {
+    console.error("Error getting local stream:", error);
+    throw error;
+  }
+}
 
-      return stream;
+async getLocalAudioStream(): Promise<MediaStream> {
+  console.log("Requesting audio-only user media");
+  try {
+    const stream = await navigator.mediaDevices.getUserMedia({
+      audio: true,
+      video: false,
+    });
+    const tracks = stream.getTracks();
+    console.log("Local audio stream acquired, track details:");
+    tracks.forEach((track, index) => {
+      console.log(`Track ${index}: kind=${track.kind}, id=${track.id}, enabled=${track.enabled}, readyState=${track.readyState}`);
+    });
+    if (tracks.length === 0) {
+      console.error("No tracks found in local audio stream");
+      throw new Error("No tracks found in local audio stream");
+    }
+
+    // Add tracks 
+    if (this.singlePeerConnection) {
+      tracks.forEach((track) => {
+        if (!this.addedTrackIds.has(`single:${track.id}`)) {
+          console.log(`Adding local audio track to single peer connection:`, track);
+          this.singlePeerConnection.addTrack(track, stream);
+          this.addedTrackIds.add(`single:${track.id}`);
+        } else {
+          console.log(`Skipping already added audio track for single:`, track.id);
+        }
+      });
+    }
+
+    return stream;
+  } catch (error) {
+    console.error("Error getting local audio stream:", error);
+    throw error;
+  }
+}
+
+  addTrack(targetId: string, track: MediaStreamTrack, stream: MediaStream): void {
+    const peerConnection = this.peerConnections.get(targetId);
+    if (!peerConnection) {
+      console.error(`[ERROR] No peer connection for ${targetId}`);
+      return;
+    }
+    try {
+      peerConnection.addTrack(track, stream);
+      console.log(`[DEBUG] Added track ${track.kind}:${track.id} to peer connection for ${targetId}`);
+      console.log(`[DEBUG] Senders after addTrack for ${targetId}:`, peerConnection.getSenders().map(s => ({
+        track: s.track ? { kind: s.track.kind, id: s.track.id } : null,
+      })));
     } catch (error) {
-      console.error("Error getting local audio stream:", error);
-      throw error;
+      console.error(`[ERROR] Failed to add track ${track.kind}:${track.id} for ${targetId}:`, error);
     }
   }
 
-  // Creates a WebRTC offer to start a connection
-  async createOffer(): Promise<RTCSessionDescriptionInit> {
-    if (!this.peerConnection) throw new Error("Peer connection not initialized");
-    if (this.hasCreatedOffer) {
-      console.warn("Offer already created, returning existing offer");
-      return this.peerConnection.localDescription!;
-    }
+  // Create offer
+  async createOffer(targetId?: string): Promise<RTCSessionDescriptionInit> {
+    const peerConnection = targetId ? this.peerConnections.get(targetId) : this.singlePeerConnection;
+    if (!peerConnection) throw new Error(`Peer connection not initialized for ${targetId || "single"}`);
     try {
-      const offer = await this.peerConnection.createOffer();  //generate an SDP.
-      await this.peerConnection.setLocalDescription(offer);
-      console.log("Offer created and local description set:", offer);
-      this.hasCreatedOffer = true;  //prevent duplicates.
+      const offer = await peerConnection.createOffer();
+      await peerConnection.setLocalDescription(offer);
+      console.log(`Offer created and local description set for ${targetId || "single"}:`, offer);
+      console.log(`[DEBUG] Transceivers before offer for ${targetId}:`, peerConnection.getTransceivers().map(t => ({
+        mid: t.mid,
+        direction: t.direction,
+        currentDirection: t.currentDirection,
+        senderTrack: t.sender.track ? { kind: t.sender.track.kind, id: t.sender.track.id } : null,
+      })));
       return offer;
     } catch (error) {
-      console.error("Error creating offer:", error);
+      console.error(`Error creating offer for ${targetId || "single"}:`, error);
       throw error;
     }
   }
 
-  // Responds to an offer from a remote peer
-  async createAnswer(): Promise<RTCSessionDescriptionInit> {
-    if (!this.peerConnection) {
-      throw new Error("Peer connection not initialized");
-    }
-    console.log("Creating answer");
+  // Create answer
+  async createAnswer(targetId?: string): Promise<RTCSessionDescriptionInit> {
+    const peerConnection = targetId ? this.peerConnections.get(targetId) : this.singlePeerConnection;
+    if (!peerConnection) throw new Error(`Peer connection not initialized for ${targetId || "single"}`);
     try {
-      const answer = await this.peerConnection.createAnswer();
-      await this.peerConnection.setLocalDescription(answer);
-      console.log("Answer created and set as local description:", answer);
+      const answer = await peerConnection.createAnswer();
+      await peerConnection.setLocalDescription(answer);
+      console.log(`Answer created and set as local description for ${targetId || "single"}:`, answer);
       return answer;
     } catch (error) {
-      console.error("Error creating answer:", error);
+      console.error(`Error creating answer for ${targetId || "single"}:`, error);
       throw error;
     }
   }
 
-  // Applies an offer or answer received from the remote peer
-  //Used after receiving the other peer's SDP via a signaling server.
-  async setRemoteDescription(description: RTCSessionDescriptionInit): Promise<void> {
-    if (!this.peerConnection) {
-      throw new Error("Peer connection not initialized");
+  // Set remote description
+  async setRemoteDescription(descriptionOrTargetId: string | RTCSessionDescriptionInit, description?: RTCSessionDescriptionInit): Promise<void> {
+    if (typeof descriptionOrTargetId === "string") {
+    const peerConnection = this.peerConnections.get(descriptionOrTargetId);
+    if (!peerConnection) throw new Error(`Peer connection not initialized for ${descriptionOrTargetId}`);
+    if (!description) throw new Error("Description is required for group calls");
+    if (description.type === "answer" && peerConnection.signalingState === "stable") {
+      console.log(`Ignoring duplicate answer for ${descriptionOrTargetId} in stable state`);
+      return;
     }
-    console.log("Setting remote description:", description);
+    console.log(`Setting remote description for ${descriptionOrTargetId}:`, description);
     try {
-      await this.peerConnection.setRemoteDescription(new RTCSessionDescription(description));
-      console.log("Remote description set successfully, signalingState:", this.peerConnection.signalingState);
+      await peerConnection.setRemoteDescription(new RTCSessionDescription(description));
+      console.log(`Remote description set successfully for ${descriptionOrTargetId}, signalingState:`, peerConnection.signalingState);
+      // Process queued ICE candidates
+      const queuedCandidates = this.pendingIceCandidates.get(descriptionOrTargetId);
+      if (queuedCandidates) {
+        for (const candidate of queuedCandidates) {
+          console.log(`Processing queued ICE candidate for ${descriptionOrTargetId}:`, candidate);
+          await peerConnection.addIceCandidate(new RTCIceCandidate(candidate));
+          console.log(`Queued ICE candidate added successfully for ${descriptionOrTargetId}`);
+        }
+        this.pendingIceCandidates.delete(descriptionOrTargetId);
+      }
     } catch (error) {
-      console.error("Error setting remote description:", error);
+      console.error(`Error setting remote description for ${descriptionOrTargetId}:`, error);
       throw error;
     }
-  }
-
-   // Adds a discovered ICE candidate received from the signaling server
-   //ICE candidates = IP + port combinations used to connect peers.
-  //These are exchanged to help devices find the best network path to each other.
-  async addIceCandidate(candidate: RTCIceCandidate): Promise<void> {
-    if (!this.peerConnection) {
-      throw new Error("Peer connection not initialized");
+  } else {
+    if (!this.singlePeerConnection) throw new Error("Single peer connection not initialized");
+    if (descriptionOrTargetId.type === "answer" && this.singlePeerConnection.signalingState === "stable") {
+      console.log(`Ignoring duplicate answer for single peer connection in stable state`);
+      return;
     }
-    console.log("Adding ICE candidate:", candidate);
+    console.log("Setting remote description for single peer connection:", descriptionOrTargetId);
     try {
-      await this.peerConnection.addIceCandidate(candidate);
-      console.log("ICE candidate added successfully");
+      await this.singlePeerConnection.setRemoteDescription(new RTCSessionDescription(descriptionOrTargetId));
+      console.log(`Remote description set successfully for single, signalingState:`, this.singlePeerConnection.signalingState);
+      // Process queued ICE candidates
+      const queuedCandidates = this.pendingIceCandidates.get("single");
+      if (queuedCandidates) {
+        for (const candidate of queuedCandidates) {
+          console.log(`Processing queued ICE candidate for single:`, candidate);
+          await this.singlePeerConnection.addIceCandidate(new RTCIceCandidate(candidate));
+          console.log(`Queued ICE candidate added successfully for single`);
+        }
+        this.pendingIceCandidates.delete("single");
+      }
     } catch (error) {
-      console.error("Error adding ICE candidate:", error);
+      console.error("Error setting remote description for single peer connection:", error);
       throw error;
     }
   }
+  }
 
-   // Stop and cleanup everything: media streams and peer connection
+  // Add ICE candidate
+  async addIceCandidate(candidateOrTargetId: string | RTCIceCandidateInit, candidate?: RTCIceCandidateInit): Promise<void> {
+    if (typeof candidateOrTargetId === "string") {
+      const peerConnection = this.peerConnections.get(candidateOrTargetId);
+      if (!peerConnection) throw new Error(`Peer connection not initialized for ${candidateOrTargetId}`);
+      if (!candidate) throw new Error("Candidate is required for group calls");
+      if (!peerConnection.remoteDescription) {
+        console.log(`Queueing ICE candidate for ${candidateOrTargetId}, no remote description yet`);
+        this.pendingIceCandidates.set(candidateOrTargetId, [
+          ...(this.pendingIceCandidates.get(candidateOrTargetId) || []),
+          candidate,
+        ]);
+        return;
+      }
+      console.log(`Adding ICE candidate for ${candidateOrTargetId}:`, candidate);
+      try {
+        await peerConnection.addIceCandidate(new RTCIceCandidate(candidate));
+        console.log(`ICE candidate added successfully for ${candidateOrTargetId}`);
+      } catch (error) {
+        console.error(`Error adding ICE candidate for ${candidateOrTargetId}:`, error);
+        throw error;
+      }
+    } else {
+      if (!this.singlePeerConnection) throw new Error("Single peer connection not initialized");
+      if (!this.singlePeerConnection.remoteDescription) {
+        console.log(`Queueing ICE candidate for single, no remote description yet`);
+        this.pendingIceCandidates.set("single", [
+          ...(this.pendingIceCandidates.get("single") || []),
+          candidateOrTargetId,
+        ]);
+        return;
+      }
+      console.log("Adding ICE candidate for single peer connection:", candidateOrTargetId);
+      try {
+        await this.singlePeerConnection.addIceCandidate(new RTCIceCandidate(candidateOrTargetId));
+        console.log("ICE candidate added successfully for single");
+      } catch (error) {
+        console.error("Error adding ICE candidate for single peer connection:", error);
+        throw error;
+      }
+    }
+  }
+
+  // Register ontrack callback
+  onTrack(targetId: string, callback: (event: RTCTrackEvent, targetId: string) => void) {
+    console.log(`[DEBUG] Registering ontrack callback for ${targetId}`);
+    this.onTrackCallbacks.set(targetId, callback);
+    const peerConnection = this.peerConnections.get(targetId);
+    if (peerConnection) {
+      peerConnection.ontrack = (event) => {
+        console.log(`[DEBUG] ontrack event for ${targetId}:`, {
+          streams: event.streams.map(s => ({
+            id: s.id,
+            tracks: s.getTracks().map(t => ({ kind: t.kind, id: t.id, enabled: t.enabled, readyState: t.readyState })),
+          })),
+          track: { kind: event.track.kind, id: event.track.id, enabled: event.track.enabled, readyState: event.track.readyState },
+        });
+        callback(event, targetId);
+      };
+    }
+  }
+
+  // Register onicecandidate callback
+  onIceCandidate(targetId: string, callback: (candidate: RTCIceCandidateInit) => void) {
+    console.log(`Registering onicecandidate callback for ${targetId}`);
+    this.onIceCandidateCallbacks.set(targetId, callback);
+  }
+
+  // Close a specific peer connection
+  closePeerConnection(targetId: string): void {
+    const peerConnection = this.peerConnections.get(targetId);
+    if (!peerConnection) {
+      console.log(`No peer connection found for ${targetId}, skipping close`);
+      return;
+    }
+    try {
+      peerConnection.close();
+      console.log(`Closed peer connection for ${targetId}, connectionState: ${peerConnection.connectionState}`);
+      this.peerConnections.delete(targetId);
+      this.onTrackCallbacks.delete(targetId);
+      this.onIceCandidateCallbacks.delete(targetId);
+      this.isOffererMap.delete(targetId);
+      this.pendingIceCandidates.delete(targetId);
+      console.log(`Cleaned up peer connection resources for ${targetId}`);
+    } catch (error) {
+      console.error(`Error closing peer connection for ${targetId}:`, error);
+    }
+  }
+
+  // Stop all peer connections and clear callbacks
   stop(): void {
     console.log("Stopping WebRTC service");
     if (this.localStream) {
@@ -232,18 +461,35 @@ export class WebRTCService {
       });
       this.localStream = null;
     }
-    if (this.peerConnection) {
-      console.log("Closing peer connection");
-      this.peerConnection.close();
-      this.peerConnection = null;
+    if (this.singlePeerConnection) {
+      console.log("Closing single peer connection");
+      this.singlePeerConnection.close();
+      this.singlePeerConnection = null;
     }
-    this.hasCreatedOffer = false;
+    this.peerConnections.forEach((peerConnection, targetId) => {
+      console.log(`Closing peer connection for ${targetId}`);
+      peerConnection.close();
+    });
+    this.peerConnections.clear();
     this.addedTrackIds.clear();
+    this.onTrackCallbacks.clear();
+    this.onIceCandidateCallbacks.clear();
+    this.isOffererMap.clear();
+    this.onNegotiationNeeded = undefined;
+    this.pendingIceCandidates.clear();
     console.log("WebRTC service stopped");
   }
 
-  // Get current peer connection instance
-  getPeerConnection(): RTCPeerConnection | null {
-    return this.peerConnection;
+  // Get peer connection
+  getPeerConnection(targetId?: string): RTCPeerConnection | null {
+    if (!targetId) {
+      return this.singlePeerConnection;
+    }
+    return this.peerConnections.get(targetId) || null;
+  }
+
+  // Get local stream
+  getCurrentLocalStream(): MediaStream | null {
+    return this.localStream;
   }
 }

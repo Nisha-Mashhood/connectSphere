@@ -1,12 +1,11 @@
 import React, { useState, useRef, useEffect, useCallback, lazy, Suspense } from "react";
-import { Button, Tooltip, Avatar, Dropdown, DropdownTrigger, DropdownMenu, DropdownItem, Modal, ModalContent, ModalHeader, ModalBody, ModalFooter } from "@nextui-org/react";
+import { Button, Tooltip, Avatar, Dropdown, DropdownTrigger, DropdownMenu, DropdownItem, Modal, ModalContent, ModalHeader, ModalBody, ModalFooter, Spinner } from "@nextui-org/react";
 import { FaArrowLeft, FaPhone, FaVideo, FaBars, FaEllipsisV, FaUserFriends, FaInfoCircle, FaMicrophone, FaMicrophoneSlash, FaVideoSlash, FaDesktop } from "react-icons/fa";
 import { Contact } from "../../../../types";
 import { WebRTCService } from "../../../../Service/WebRTCService";
 import { socketService } from "../../../../Service/SocketService";
 import toast from "react-hot-toast";
-
-const GroupCall = lazy(() => import("./GroupCall"));
+const GroupCall = lazy(() => import("./Groups/GroupCall"));
 
 const webrtcService = new WebRTCService();
 
@@ -117,6 +116,8 @@ const ChatHeader: React.FC<ChatHeaderProps> = ({
   const [hasProcessedAnswer, setHasProcessedAnswer] = useState(false);
   const [isCallTerminated, setIsCallTerminated] = useState(false);
   const groupCallRef = useRef<{ startGroupCall: (type: 'audio' | 'video') => void } | null>(null);
+  const isGroupCallInitiated = useRef<boolean>(false);
+
   // const [isCallEnabled, setIsCallEnabled] = useState(true);
 
   // // Update call enabled status every minute for slot validation
@@ -153,7 +154,14 @@ const ChatHeader: React.FC<ChatHeaderProps> = ({
           console.log("Sending ICE candidate:", event.candidate);
           const targetId = selectedContact.targetId || selectedContact.groupId || "";
           const callType = isAudioCallActive ? "audio" : "video";
-          socketService.sendIceCandidate(targetId, selectedContact.type, getChatKey(selectedContact), event.candidate, callType);
+          socketService.sendIceCandidate({
+            userId: selectedContact.userId || "",
+            targetId,
+            type: selectedContact.type,
+            chatKey: getChatKey(selectedContact),
+            candidate: event.candidate,
+            callType,
+          })
         }
       };
       newPeerConnection.onicecandidateerror = (event) => {
@@ -181,6 +189,7 @@ const ChatHeader: React.FC<ChatHeaderProps> = ({
     if (!selectedContact) return;
     console.log("Ending audio call");
     stopWebRTC();
+    isGroupCallInitiated.current = true;
     if (localAudioRef.current) localAudioRef.current.srcObject = null;
     if (remoteAudioRef.current) remoteAudioRef.current.srcObject = null;
     setIsAudioCallActive(false);
@@ -188,7 +197,13 @@ const ChatHeader: React.FC<ChatHeaderProps> = ({
     setIsCallTerminated(true);
     const chatKey = getChatKey(selectedContact);
     const targetId = selectedContact.targetId || selectedContact.groupId || "";
-    socketService.emitCallEnded(targetId, selectedContact.type, chatKey, "audio");
+    socketService.emitCallEnded({
+      userId: selectedContact.userId || "",
+      targetId,
+      type: selectedContact.type,
+      chatKey,
+      callType: "audio",
+    });
     // toast.success("Audio call ended");
   }, [getChatKey, selectedContact, stopWebRTC]);
 
@@ -196,6 +211,7 @@ const ChatHeader: React.FC<ChatHeaderProps> = ({
     if (!selectedContact) return;
     console.log("Ending video call");
     stopWebRTC();
+    isGroupCallInitiated.current = true;
     if (localVideoRef.current) localVideoRef.current.srcObject = null;
     if (remoteVideoRef.current) remoteVideoRef.current.srcObject = null;
     setIsVideoCallActive(false);
@@ -205,7 +221,13 @@ const ChatHeader: React.FC<ChatHeaderProps> = ({
     setIsCallTerminated(true);
     const chatKey = getChatKey(selectedContact);
     const targetId = selectedContact.targetId || selectedContact.groupId || "";
-    socketService.emitCallEnded(targetId, selectedContact.type, chatKey, "video");
+    socketService.emitCallEnded({
+      userId: selectedContact.userId || "",
+      targetId,
+      type: selectedContact.type,
+      chatKey,
+      callType: "video",
+    })
     // toast.success("Video call ended");
   }, [getChatKey, selectedContact, setIsVideoCallActive, stopWebRTC]);
 
@@ -220,12 +242,13 @@ const ChatHeader: React.FC<ChatHeaderProps> = ({
       ringtone.current.currentTime = 0;
       isRingtonePlaying.current = false;
     }
-    socketService.emitCallEnded(
-      incomingCallData.userId,
-      selectedContact.type,
-      incomingCallData.chatKey,
-      incomingCallData.callType
-    );
+    socketService.emitCallEnded({
+      userId: selectedContact.userId || "",
+      targetId: incomingCallData.userId,
+      type: selectedContact.type,
+      chatKey: incomingCallData.chatKey,
+      callType: incomingCallData.callType,
+    })
     setIsIncomingCall(false);
     setIncomingCallData(null);
     setIsCallTerminated(true);
@@ -235,8 +258,10 @@ const ChatHeader: React.FC<ChatHeaderProps> = ({
 
   // WebRTC and socket setup for one-on-one calls
   useEffect(() => {
-    if (!selectedContact || selectedContact.type === "group") {
-      console.log('Skipping WebRTC and socket setup for group or no contact', selectedContact );
+    if (!selectedContact) return;
+
+    if (selectedContact.type === "group") {
+      console.log('Initializing group call for contact :', selectedContact );
       return;
     }
 
@@ -255,14 +280,14 @@ const ChatHeader: React.FC<ChatHeaderProps> = ({
       chatKey: string;
       offer: RTCSessionDescriptionInit;
       callType: "audio" | "video";
-      senderName: string;
+      senderName?: string;
     }) => {
       if (data.chatKey === chatKey && !isVideoCallActive && !isAudioCallActive) {
         console.log(`Incoming ${data.callType} call offer:`, data);
         setIncomingCallData(data);
         setIsIncomingCall(true);
         setIsCallTerminated(false);
-        // toast(`Incoming ${data.callType} call from ${data.senderName}`, { duration: 30000 });
+        // toast(`Incoming ${data.callType} call from ${data.senderName || "Unknown"}`, { duration: 30000 });
       }
     };
 
@@ -617,9 +642,14 @@ const ChatHeader: React.FC<ChatHeaderProps> = ({
       toast.error("No contact selected");
       return;
     }
-    if (selectedContact.type === "group" && groupCallRef.current) {
+    if (selectedContact.type === "group" && groupCallRef.current && !isVideoCallActive && !isAudioCallActive && !isGroupCallInitiated.current) {
       console.log("Starting group video call");
+      isGroupCallInitiated.current = true;
       groupCallRef.current.startGroupCall("video");
+      return;
+    }
+    if (isVideoCallActive || isAudioCallActive) {
+      console.log("Call already active, ignoring video call request");
       return;
     }
 
@@ -642,7 +672,14 @@ const ChatHeader: React.FC<ChatHeaderProps> = ({
       const chatKey = getChatKey(selectedContact);
       const targetId = selectedContact.targetId || selectedContact.groupId || "";
       const offer = await webrtcService.createOffer();
-      socketService.sendOffer(targetId, selectedContact.type, chatKey, offer, "video");
+      socketService.sendOffer({
+        userId: selectedContact.userId || "",
+        targetId,
+        type: selectedContact.type,
+        chatKey,
+        offer,
+        callType: "video",
+      });
       setIsVideoCallActive(true);
       // toast.success("Video call started");
     } catch (error) {
@@ -659,9 +696,14 @@ const ChatHeader: React.FC<ChatHeaderProps> = ({
       toast.error("No contact selected");
       return;
     }
-    if (selectedContact.type === "group" && groupCallRef.current) {
+    if (selectedContact.type === "group" && groupCallRef.current && !isVideoCallActive && !isAudioCallActive && !isGroupCallInitiated.current) {
       console.log("Starting group audio call");
+      isGroupCallInitiated.current = true;
       groupCallRef.current.startGroupCall("audio");
+      return;
+    }
+    if (isVideoCallActive || isAudioCallActive) {
+      console.log("Call already active, ignoring audio call request");
       return;
     }
 
@@ -684,7 +726,14 @@ const ChatHeader: React.FC<ChatHeaderProps> = ({
       const chatKey = getChatKey(selectedContact);
       const targetId = selectedContact.targetId || selectedContact.groupId || "";
       const offer = await webrtcService.createOffer();
-      socketService.sendOffer(targetId, selectedContact.type, chatKey, offer, "audio");
+      socketService.sendOffer({
+        userId: selectedContact.userId || "",
+        targetId,
+        type: selectedContact.type,
+        chatKey,
+        offer,
+        callType: "audio",
+      });
       setIsAudioCallActive(true);
       // toast.success("Audio call started");
     } catch (error) {
@@ -719,7 +768,14 @@ const ChatHeader: React.FC<ChatHeaderProps> = ({
         : await webrtcService.getLocalStream();
       setLocalStream(stream);
       const answer = await webrtcService.createAnswer();
-      socketService.sendAnswer(incomingCallData.userId, selectedContact.type, incomingCallData.chatKey, answer, incomingCallData.callType);
+      socketService.sendAnswer({
+        userId: selectedContact.userId || "",
+        targetId: incomingCallData.userId,
+        type: selectedContact.type,
+        chatKey: incomingCallData.chatKey,
+        answer,
+        callType: incomingCallData.callType,
+      });
       while (iceCandidateQueue.current.length > 0) {
         const candidate = iceCandidateQueue.current.shift();
         if (candidate) {
@@ -797,42 +853,75 @@ const ChatHeader: React.FC<ChatHeaderProps> = ({
       </div>
       {selectedContact && (
         <div className="flex items-center gap-1 sm:gap-2">
-          <Tooltip content={isAudioCallActive ? "End audio call" : "Voice call"} placement="bottom">
+          <Tooltip content={
+              selectedContact.type === "group"
+                ? isAudioCallActive
+                  ? "End group audio call"
+                  : "Group audio call"
+                : isAudioCallActive
+                ? "End audio call"
+                : "Audio call"
+            }
+            placement="bottom">
             <Button
               isIconOnly
               variant="flat"
               className="bg-white/20 text-white hover:bg-white/30 transition-all w-8 h-8 sm:w-10 sm:h-10"
               onPress={isAudioCallActive ? endAudioCall : startAudioCall}
-              aria-label={isAudioCallActive ? "End audio call" : "Start audio call"}
+              aria-label={
+                selectedContact.type === "group"
+                  ? isAudioCallActive
+                    ? "End group audio call"
+                    : "Group audio call"
+                  : isAudioCallActive
+                  ? "End audio call"
+                  : "Audio call"
+              }
               isDisabled={isVideoCallActive}
-              // isDisabled={isVideoCallActive || !isCallEnabled}
             >
               <FaPhone size={14} />
             </Button>
           </Tooltip>
-          <Tooltip content={isVideoCallActive ? "End video call" : "Video call"} placement="bottom">
+          <Tooltip content={
+              selectedContact.type === "group"
+                ? isVideoCallActive
+                  ? "End group video call"
+                  : "Group video call"
+                : isVideoCallActive
+                ? "End video call"
+                : "Video call"
+            }
+            placement="bottom">
             <Button
               isIconOnly
               variant="flat"
               className="bg-white/20 text-white hover:bg-white/30 transition-all w-8 h-8 sm:w-10 sm:h-10"
               onPress={isVideoCallActive ? endVideoCall : startVideoCall}
-              aria-label={isVideoCallActive ? "End video call" : "Start video call"}
-              // isDisabled={isAudioCallActive || !isCallEnabled}
-              isDisabled={isVideoCallActive}
+              aria-label={
+                selectedContact.type === "group"
+                  ? isVideoCallActive
+                    ? "End group video call"
+                    : "Group video call"
+                  : isVideoCallActive
+                  ? "End video call"
+                  : "Video call"
+              }
+              isDisabled={isAudioCallActive}
             >
               <FaVideo size={14} />
             </Button>
           </Tooltip>
-          <Suspense fallback={<div className="text-white">.</div>}>
-            <GroupCall
-              selectedContact={selectedContact}
-              isVideoCallActive={isVideoCallActive}
-              setIsVideoCallActive={setIsVideoCallActive}
-              getChatKey={getChatKey}
-              currentUserId={selectedContact?.userId}
-              ref={groupCallRef}
-            />
-          </Suspense>
+          {selectedContact.type === "group" && (
+            <Suspense fallback={<Spinner size="sm" color="primary" />}>
+              <GroupCall
+                groupId={selectedContact.groupId || ""}
+                userId={selectedContact.userId || ""}
+                // chatKey={getChatKey(selectedContact)}
+                callType={isVideoCallActive ? "video" : "audio"}
+                ref={groupCallRef}
+              />
+            </Suspense>
+          )}
           <Dropdown>
             <DropdownTrigger>
               <Button

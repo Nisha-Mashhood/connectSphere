@@ -63,12 +63,15 @@ export const formatContact = (contact): Contact => ({
 });
 
 // Generates a unique chat key for a message based on its type (group, user-mentor, user-user)
-export const getChatKeyFromMessage = (message: IChatMessage) =>
-  message.groupId
-    ? `group_${message.groupId}`
-    : message.collaborationId
-    ? `user-mentor_${message.collaborationId}`
-    : `user-user_${message.userConnectionId}`;
+export const getChatKeyFromMessage = (message: IChatMessage): string => {
+  if (message.groupId) {
+    return `group_${message.groupId}`;
+  } else if (message.collaborationId) {
+    return `user-mentor_${message.collaborationId}`;
+  } else {
+    return `user-user_${message.userConnectionId}`;
+  }
+}
 
 // Removes duplicate messages by keeping the latest message with each _id
 export const deduplicateMessages = (messages: IChatMessage[]) =>

@@ -59,8 +59,8 @@ export const getUserContacts = async (): Promise<Contact[]> => {
     const response = await axiosInstance.get(`/contacts/user`, {
       headers: { Authorization: `Bearer ${token}` },
     });
-    // console.log("API response status:", response.status);
-    // console.log("API response data:", response.data);
+    console.log("API response status:", response.status);
+    console.log("API response data:", response.data);
 
     if (!response.data) {
       console.warn("Response data is empty or undefined");
@@ -68,7 +68,7 @@ export const getUserContacts = async (): Promise<Contact[]> => {
     }
 
     const contacts = response.data.data || response.data;
-    // console.log("Extracted contacts:", contacts);
+    console.log("Extracted contacts:", contacts);
     return contacts;
   } catch (error) {
     console.error("Error fetching contacts:", {

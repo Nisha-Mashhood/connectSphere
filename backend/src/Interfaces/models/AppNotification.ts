@@ -10,6 +10,7 @@ export interface AppNotification extends Document {
   senderId: string | Types.ObjectId;
   status: 'unread' | 'read';
   callId?: string;
+  callType?: 'audio' | 'video';
   notificationDate?: Date;
   notificationTime?: string;
   createdAt: Date;
