@@ -36,15 +36,14 @@ import { getFeedbackForProfile } from "../../../Service/Feedback.service";
 const ProfileDisplay = () => {
   const { currentUser } = useSelector((state: RootState) => state.user);
   const { userConnections } = useSelector((state: RootState) => state.profile);
-  const { Id } = useParams(); // mentorId
+  const { Id } = useParams(); // mentorId or userId
   const [mentor, setMentor] = useState<any>(null);
   const [user, setUser] = useState<any>(null);
-  const [isMentor, setIsMentor] = useState<boolean>(true);
+  const [isMentor, setIsMentor] = useState<boolean>(false);
   const [collabData, setCollabData] = useState<any>(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [selectedSlot, setSelectedSlot] = useState("");
-  const [hasExistingCollaboration, setHasExistingCollaboration] =
-    useState(false);
+  const [hasExistingCollaboration, setHasExistingCollaboration] = useState(false);
   const [existingRequest, setExistingRequest] = useState<any>(null);
   const [isCurrentUserMentor, setIsCurrentUserMentor] = useState(false);
   const [expandedFeedback, setExpandedFeedback] = useState(null);
@@ -59,6 +58,9 @@ const ProfileDisplay = () => {
       const mentorData = await fetchMentorById(userId);
       return !!(mentorData && mentorData.mentor);
     } catch (error) {
+      if (error.message === "Mentor not found") {
+        return false;
+      }
       console.error("Error checking mentor status:", error);
       return false;
     }
@@ -68,11 +70,9 @@ const ProfileDisplay = () => {
   const fetchExistingRequest = async () => {
     try {
       const response = await getTheRequestByUser(currentUser._id);
-      console.log(response);
       const filteredRequest = response.requests.find(
-        (req: any) => req.mentorId._id === Id
+        (req: any) => req.mentorId?._id === Id
       );
-
       setExistingRequest(filteredRequest || null);
     } catch (error) {
       console.error("Error fetching existing requests:", error);
@@ -85,21 +85,15 @@ const ProfileDisplay = () => {
 
     return collabData.collabData.some((collab: any) => {
       if (isMentor) {
-        // If viewing mentor profile
         if (isCurrentUserMentor) {
-          // Current user is a mentor, check mentor ID
           return collab.mentorId?._id === mentor._id;
         } else {
-          // Current user is regular user, check user ID
           return collab.userId?._id === currentUser._id;
         }
       } else {
-        // If viewing user profile
         if (isCurrentUserMentor) {
-          // Current user is a mentor, check mentor ID
           return collab.mentorId?._id === currentUser._id;
         } else {
-          // Current user is regular user, check user ID
           return collab.userId?._id === currentUser._id;
         }
       }
@@ -115,16 +109,15 @@ const ProfileDisplay = () => {
   };
 
   // Fetch feedback for the profile
-  const fetchFeedback = async () => {
+  const fetchFeedback = async (profileType: "mentor" | "user") => {
     try {
-      console.log("fetching feedback data");
-      const profileType = isMentor ? "mentor" : "user";
       const feedbackData = await getFeedbackForProfile(Id, profileType);
-      console.log(feedbackData);
-      setFeedbacks(feedbackData.feedbacks);
+      console.log(`Feedback data for ${profileType}:`, feedbackData);
+      setFeedbacks(feedbackData.feedbacks || []);
     } catch (error) {
-      console.error("Error fetching feedback:", error);
+      console.error(`Error fetching ${profileType} feedback:`, error);
       toast.error("Failed to load feedback");
+      setFeedbacks([]);
     }
   };
 
@@ -132,21 +125,19 @@ const ProfileDisplay = () => {
   const fetchLockedSlots = async (mentorId: string) => {
     try {
       const response = await getLockedMentorSlot(mentorId);
-      // console.log("response :", response);
+      console.log("Locked slots:", response);
       setLockedSlots(response.lockedSlots || []);
     } catch (error) {
       console.error("Error fetching locked slots:", error);
       toast.error("Failed to load locked slots");
+      setLockedSlots([]);
     }
   };
 
   // Check if a slot is locked
   const isSlotLocked = (day: string, timeSlot: string) => {
-    // console.log("Checking slot for:", day, timeSlot);
-    // Extract start time (e.g., "09:00 AM" from "09:00 AM - 10:30 AM")
     const startTimeMatch = timeSlot.match(/^(\d{1,2}:\d{2}\s[AP]M)/);
     const startTime = startTimeMatch ? startTimeMatch[1] : timeSlot;
-    // console.log("Extracted startTime:", startTime);
 
     const normalizedDay = day.trim().toLowerCase();
     const normalizedStartTime = startTime.trim().toLowerCase();
@@ -159,74 +150,105 @@ const ProfileDisplay = () => {
       return lockedDay === normalizedDay && hasTimeSlot;
     });
 
-    // console.log(
-    //   // `Result for ${day} ${timeSlot} (startTime: ${startTime}): isLocked=${isLocked}`
-    // );
-    // if (!isLocked) {
-    //   console.log(
-    //     "No match. Locked slots:",
-    //     lockedSlots.map((ls) => ({
-    //       day: ls.day,
-    //       timeSlots: ls.timeSlots,
-    //     }))
-    //   );
-    // }
     return isLocked;
   };
 
   useEffect(() => {
     const fetchData = async () => {
-      if (!currentUser?._id) return;
+      if (!currentUser?._id || !Id) {
+        console.error("Missing currentUser._id or Id");
+        toast.error("Invalid user or profile ID");
+        return;
+      }
 
       try {
-        // First check if current user is a mentor
-        const isMentor = await checkIfUserIsMentor(currentUser._id);
-        setIsCurrentUserMentor(isMentor);
-        if(!isMentor){
-          console.log(`current user is not a mentor ${isMentor}`);
-        }
+        // Check if current user is a mentor
+        const isCurrentUserMentorStatus = await checkIfUserIsMentor(currentUser._id);
+        setIsCurrentUserMentor(isCurrentUserMentorStatus);
 
-        // Fetch mentor or user details
-        const mentorData = await fetchMentorById(Id);
-        console.log(`Mentor data :${mentorData}`);
-        if (mentorData && mentorData.mentor) {
-          setMentor(mentorData.mentor);
-          setIsMentor(true);
+        // Check if profile ID is a mentor
+        const isProfileMentor = await checkIfUserIsMentor(Id);
+        setIsMentor(isProfileMentor);
 
-          const collabDataForMentor = await getCollabDataforMentor(Id);
-          setCollabData(collabDataForMentor);
-          setHasExistingCollaboration(
-            checkExistingCollaboration(collabDataForMentor)
-          );
+        if (isProfileMentor) {
+          // Fetch mentor details
+          try {
+            const mentorData = await fetchMentorById(Id);
+            console.log("Mentor data:", mentorData);
+            if (mentorData?.mentor) {
+              setMentor(mentorData.mentor);
 
-          // Fetch locked slots for mentor
-          await fetchLockedSlots(Id);
+              // Fetch mentor-specific data in parallel
+              await Promise.all([
+                getCollabDataforMentor(Id)
+                  .then((collabResponse) => {
+                    console.log("Mentor collab data:", collabResponse);
+                    setCollabData(collabResponse);
+                    setHasExistingCollaboration(checkExistingCollaboration(collabResponse));
+                  })
+                  .catch((err) => {
+                    console.error("Error fetching mentor collab data:", err);
+                    setCollabData({ collabData: [] });
+                  }),
+                fetchLockedSlots(Id),
+                fetchFeedback("mentor"),
+              ]);
+            } else {
+              console.error("No mentor data found in response");
+              toast.error("Failed to load mentor data");
+            }
+          } catch (error) {
+            console.error("Error fetching mentor details:", error);
+            toast.error("Failed to load mentor profile");
+          }
         } else {
-          const userData = await fetchUserDetails(Id);
-          setUser(userData);
-          setIsMentor(false);
+          // Fetch user details
+          try {
+            const userData = await fetchUserDetails(Id);
+            console.log("User data:", userData);
+            if (userData?.user) {
+              setUser(userData.user);
+            } else {
+              console.error("No user data found in response");
+              toast.error("Failed to load user data");
+              return;
+            }
 
-          const collabDataForUser = await getCollabDataforUser(Id);
-          setCollabData(collabDataForUser);
-          setHasExistingCollaboration(
-            checkExistingCollaboration(collabDataForUser)
-          );
+            // Fetch user-specific data in parallel
+            await Promise.all([
+              getCollabDataforUser(Id)
+                .then((collabResponse) => {
+                  console.log("User collab data:", collabResponse);
+                  setCollabData(collabResponse);
+                  setHasExistingCollaboration(checkExistingCollaboration(collabResponse));
+                })
+                .catch((err) => {
+                  console.error("Error fetching user collab data:", err);
+                  setCollabData({ collabData: [] });
+                }),
+              fetchFeedback("user"),
+            ]);
+          } catch (error) {
+            console.error("Error fetching user details:", error);
+            toast.error("Failed to load user profile");
+          }
         }
 
-        // Fetch existing requests and feedback
-        fetchExistingRequest();
-        fetchFeedback();
+        // Fetch existing requests and connections
+        try {
+          await fetchExistingRequest();
+          dispatch(fetchUserConnections(currentUser._id));
+        } catch (error) {
+          console.error("Error fetching requests/connections:", error);
+        }
       } catch (error) {
-        console.error("Error fetching details:", error);
+        console.error("Unexpected error in fetchData:", error);
+        toast.error("Failed to load profile data");
       }
     };
-    fetchData();
-    // Fetch user connections
-    dispatch(fetchUserConnections(currentUser._id));
-  }, [Id, currentUser?._id]);
 
-  console.log("existingRequest :", existingRequest);
-  console.log("lockedSlots :", lockedSlots);
+    fetchData();
+  }, [Id, currentUser?._id, dispatch]);
 
   if (!mentor && !user) {
     return (
@@ -269,7 +291,6 @@ const ProfileDisplay = () => {
 
   const handleConnect = async () => {
     try {
-      console.log(`Sending request to user ${Id}`);
       const newConnection = await sendUser_UserRequset(currentUser._id, Id);
       if (newConnection) {
         toast.success("Connection Request sent successfully");
@@ -277,9 +298,9 @@ const ProfileDisplay = () => {
       }
     } catch (error) {
       console.error("Error sending user request:", error);
+      toast.error("Failed to send connection request");
     }
   };
-  console.log("User connections :", userConnections);
 
   const handleRequestResponse = async (requestId, action) => {
     try {
@@ -289,31 +310,25 @@ const ProfileDisplay = () => {
         dispatch(fetchUserConnections(currentUser._id));
       }
     } catch (error) {
-      console.log(error);
+      console.error(`Error responding to request (${action}):`, error);
       toast.error(`Failed to ${action} request`);
     }
   };
 
-  // Navigate to user profile page
   const handleUserProfileClick = (userId: string) => {
     navigate(`/profileDisplay/${userId}`);
   };
 
-  // Render stars for rating
   const renderStars = (rating) => {
     return (
       <div className="flex space-x-1">
         {[1, 2, 3, 4, 5].map((star) => (
           <FaStar
             key={star}
-            className={`w-4 h-4 ${
-              star <= rating ? "text-yellow-400" : "text-gray-200"
-            }`}
+            className={`w-4 h-4 ${star <= rating ? "text-yellow-400" : "text-gray-200"}`}
           />
         ))}
-        <span className="text-sm font-medium text-gray-700 ml-1">
-          {rating}/5
-        </span>
+        <span className="text-sm font-medium text-gray-700 ml-1">{rating}/5</span>
       </div>
     );
   };
@@ -347,8 +362,7 @@ const ProfileDisplay = () => {
                   <img
                     src={
                       isMentor
-                        ? mentor.userId?.profilePic ||
-                          "/api/placeholder/1200/400"
+                        ? mentor.userId?.profilePic || "/api/placeholder/1200/400"
                         : user.profilePic || "/api/placeholder/1200/400"
                     }
                     alt={isMentor ? mentor.userId?.name : user.name}
@@ -366,23 +380,18 @@ const ProfileDisplay = () => {
               </div>
               <div className="mt-5 sm:mt-0">
                 {currentUser?._id === Id ? (
-                  <p className="text-gray-500 font-semibold">
-                    This is your profile
-                  </p>
+                  <p className="text-gray-500 font-semibold">This is your profile</p>
                 ) : !mentor ? (
                   <div>
                     {userConnections?.received?.find(
-                      (req) =>
-                        req.requester === Id && req.requestStatus === "Pending"
+                      (req) => req.requester._id === Id && req.requestStatus === "Pending"
                     ) ? (
                       <div className="flex gap-2">
                         <button
                           onClick={() =>
                             handleRequestResponse(
                               userConnections.received.find(
-                                (req) =>
-                                  req.requester === Id &&
-                                  req.requestStatus === "Pending"
+                                (req) => req.requester._id === Id && req.requestStatus === "Pending"
                               )._id,
                               "Accepted"
                             )
@@ -395,9 +404,7 @@ const ProfileDisplay = () => {
                           onClick={() =>
                             handleRequestResponse(
                               userConnections.received.find(
-                                (req) =>
-                                  req.requester === Id &&
-                                  req.requestStatus === "Pending"
+                                (req) => req.requester._id === Id && req.requestStatus === "Pending"
                               )._id,
                               "Rejected"
                             )
@@ -408,9 +415,7 @@ const ProfileDisplay = () => {
                         </button>
                       </div>
                     ) : userConnections?.sent?.find(
-                        (req) =>
-                          req.recipient?._id === Id &&
-                          req.requestStatus === "Pending"
+                        (req) => req.recipient?._id === Id && req.requestStatus === "Pending"
                       ) ? (
                       <button
                         className="bg-yellow-600 text-white px-4 py-2 rounded-md"
@@ -421,14 +426,12 @@ const ProfileDisplay = () => {
                     ) : userConnections?.sent?.find(
                         (req) =>
                           req.recipient?._id === Id &&
-                          (req.connectionStatus === "Connected" ||
-                            req.requestStatus === "Accepted")
+                          (req.connectionStatus === "Connected" || req.requestStatus === "Accepted")
                       ) ||
                       userConnections?.received?.find(
                         (req) =>
-                          req.requester === Id &&
-                          (req.connectionStatus === "Connected" ||
-                            req.requestStatus === "Accepted")
+                          req.requester._id === Id &&
+                          (req.connectionStatus === "Connected" || req.requestStatus === "Accepted")
                       ) ? (
                       <button
                         className="bg-green-600 text-white px-4 py-2 rounded-md"
@@ -437,9 +440,7 @@ const ProfileDisplay = () => {
                         Connected
                       </button>
                     ) : userConnections?.sent?.find(
-                        (req) =>
-                          req.recipient?._id === Id &&
-                          req.requestStatus === "Rejected"
+                        (req) => req.recipient?._id === Id && req.requestStatus === "Rejected"
                       ) ? (
                       <button
                         className="bg-gray-600 text-white px-4 py-2 rounded-md hover:bg-blue-700"
@@ -457,20 +458,14 @@ const ProfileDisplay = () => {
                     )}
                   </div>
                 ) : hasExistingCollaboration ? (
-                  <p className="text-green-600 font-semibold">
-                    ✅ Already in Collaboration
-                  </p>
+                  <p className="text-green-600 font-semibold">✅ Already in Collaboration</p>
                 ) : existingRequest ? (
                   <p
                     className={`font-semibold ${
-                      existingRequest.isAccepted === "Pending"
-                        ? "text-yellow-600"
-                        : "text-green-600"
+                      existingRequest.isAccepted === "Pending" ? "text-yellow-600" : "text-green-600"
                     }`}
                   >
-                    {existingRequest.isAccepted === "Pending"
-                      ? "⏳ Request Pending"
-                      : "✔️ Request Approved"}
+                    {existingRequest.isAccepted === "Pending" ? "⏳ Request Pending" : "✔️ Request Approved"}
                   </p>
                 ) : (
                   <button
@@ -495,9 +490,7 @@ const ProfileDisplay = () => {
                   <FaStar className="text-red-500 text-xl" />
                 </div>
                 <p className="text-gray-600">
-                  {isMentor
-                    ? mentor.bio || "No bio available."
-                    : user.reasonForJoining}
+                  {isMentor ? mentor.bio || "No bio available." : user.reasonForJoining || "No reason provided."}
                 </p>
               </div>
 
@@ -506,7 +499,7 @@ const ProfileDisplay = () => {
                 <div className="bg-white rounded-lg shadow p-6">
                   <div className="flex items-center justify-between">
                     <h2 className="text-xl font-semibold mb-4">Expertise</h2>
-                    <FaGraduationCap className="text-black-500 text-xl" />
+                    <FaGraduationCap className="text-blue-500 text-xl" />
                   </div>
                   <div className="flex flex-wrap gap-2">
                     {mentor.skills?.map((skill: any) => (
@@ -516,7 +509,7 @@ const ProfileDisplay = () => {
                       >
                         {skill.name}
                       </span>
-                    ))}
+                    )) || <p className="text-gray-600">No skills listed.</p>}
                   </div>
                 </div>
               )}
@@ -527,26 +520,17 @@ const ProfileDisplay = () => {
                   <h2 className="text-xl font-semibold mb-4">Collaboration</h2>
                   <FaUsers className="text-green-500 text-xl" />
                 </div>
-
-                {collabData &&
-                collabData.collabData &&
-                collabData.collabData.length > 0 ? (
+                {collabData?.collabData?.length > 0 ? (
                   <div className="space-y-4">
                     {collabData.collabData.map((collab, index) => (
                       <div key={index} className="flex items-center space-x-4">
                         <img
                           src={
                             isMentor
-                              ? collab.userId?.profilePic ||
-                                "/api/placeholder/150/150"
-                              : collab.mentorId?.userId?.profilePic ||
-                                "/api/placeholder/150/150"
+                              ? collab.userId?.profilePic || "/api/placeholder/150/150"
+                              : collab.mentorId?.userId?.profilePic || "/api/placeholder/150/150"
                           }
-                          alt={
-                            isMentor
-                              ? collab.userId?.name
-                              : collab.mentorId?.userId?.name
-                          }
+                          alt={isMentor ? collab.userId?.name : collab.mentorId?.userId?.name}
                           className="h-12 w-12 rounded-full border-2 border-gray-200"
                         />
                         <div>
@@ -558,14 +542,10 @@ const ProfileDisplay = () => {
                                 : handleUserProfileClick(collab.mentorId._id)
                             }
                           >
-                            {isMentor
-                              ? collab.userId?.name
-                              : collab.mentorId?.userId?.name}
+                            {isMentor ? collab.userId?.name : collab.mentorId?.userId?.name}
                           </p>
                           <p className="text-sm text-gray-600">
-                            {isMentor
-                              ? collab.userId?.email
-                              : collab.mentorId?.specialization}
+                            {isMentor ? collab.userId?.email : collab.mentorId?.specialization}
                           </p>
                         </div>
                       </div>
@@ -582,7 +562,6 @@ const ProfileDisplay = () => {
                   <h2 className="text-xl font-semibold">Feedback & Reviews</h2>
                   <FaStar className="text-yellow-500 text-xl" />
                 </div>
-
                 {feedbacks.length > 0 ? (
                   <div className="space-y-6">
                     {feedbacks.map((feedback) => (
@@ -591,26 +570,17 @@ const ProfileDisplay = () => {
                         className="bg-gray-50 rounded-lg p-5 hover:shadow-md transition duration-300"
                       >
                         <div className="flex flex-col md:flex-row md:items-start gap-4">
-                          {/* Avatar and user info */}
                           <div className="flex-shrink-0">
                             <img
                               src={
                                 feedback.givenBy === "user"
-                                  ? feedback.userId?.profilePic ||
-                                    "/api/placeholder/150/150"
-                                  : feedback.mentorId?.userId?.profilePic ||
-                                    "/api/placeholder/150/150"
+                                  ? feedback.userId?.profilePic || "/api/placeholder/150/150"
+                                  : feedback.mentorId?.userId?.profilePic || "/api/placeholder/150/150"
                               }
-                              alt={
-                                feedback.givenBy === "user"
-                                  ? feedback.userId?.name
-                                  : feedback.mentorId?.userId?.name
-                              }
+                              alt={feedback.givenBy === "user" ? feedback.userId?.name : feedback.mentorId?.userId?.name}
                               className="h-14 w-14 rounded-full border-2 border-white shadow-sm"
                             />
                           </div>
-
-                          {/* Feedback content */}
                           <div className="flex-1">
                             <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-2">
                               <div>
@@ -618,15 +588,11 @@ const ProfileDisplay = () => {
                                   className="font-medium text-gray-900 hover:text-blue-600 cursor-pointer"
                                   onClick={() =>
                                     handleUserProfileClick(
-                                      feedback.givenBy === "user"
-                                        ? feedback.userId._id
-                                        : feedback.mentorId.userId._id
+                                      feedback.givenBy === "user" ? feedback.userId._id : feedback.mentorId.userId._id
                                     )
                                   }
                                 >
-                                  {feedback.givenBy === "user"
-                                    ? feedback.userId?.name
-                                    : feedback.mentorId?.userId?.name}
+                                  {feedback.givenBy === "user" ? feedback.userId?.name : feedback.mentorId?.userId?.name}
                                   <span className="inline-flex items-center ml-2 px-2 py-0.5 rounded text-xs font-medium bg-blue-100 text-blue-800">
                                     {feedback.givenBy === "user" ? (
                                       <FaUser className="mr-1 text-xs" />
@@ -637,73 +603,48 @@ const ProfileDisplay = () => {
                                   </span>
                                 </p>
                               </div>
-
                               <div className="flex items-center space-x-2">
-                                <div className="hidden md:flex">
-                                  {renderStars(feedback.rating)}
-                                </div>
+                                <div className="hidden md:flex">{renderStars(feedback.rating)}</div>
                                 <div className="flex items-center text-sm text-gray-500">
                                   <FaCalendarAlt className="mr-1" />
-                                  {new Date(
-                                    feedback.createdAt
-                                  ).toLocaleDateString()}
+                                  {new Date(feedback.createdAt).toLocaleDateString()}
                                 </div>
                               </div>
                             </div>
-
-                            <div className="md:hidden mt-2">
-                              {renderStars(feedback.rating)}
-                            </div>
-
-                            <p className="mt-3 text-gray-700">
-                              {feedback.comments}
-                            </p>
-
-                            {/* Rating details */}
+                            <div className="md:hidden mt-2">{renderStars(feedback.rating)}</div>
+                            <p className="mt-3 text-gray-700">{feedback.comments}</p>
                             <div
                               className="mt-4 pt-3 border-t border-gray-200 cursor-pointer"
                               onClick={() => toggleExpandedFeedback(feedback._id)}
                             >
                               <div className="flex items-center justify-between">
                                 <p className="text-sm font-medium text-blue-600">
-                                  {expandedFeedback === feedback._id
-                                    ? "Hide details"
-                                    : "Show rating details"}
+                                  {expandedFeedback === feedback._id ? "Hide details" : "Show rating details"}
                                 </p>
                                 <div className="flex items-center">
                                   <span className="text-sm text-gray-500 mr-2">
                                     {feedback.wouldRecommend ? (
                                       <span className="text-green-600 flex items-center">
-                                        <FaThumbsUp className="mr-1" /> Would
-                                        recommend
+                                        <FaThumbsUp className="mr-1" /> Would recommend
                                       </span>
                                     ) : (
-                                      <span className="text-red-600">
-                                        Would not recommend
-                                      </span>
+                                      <span className="text-red-600">Would not recommend</span>
                                     )}
                                   </span>
                                 </div>
                               </div>
-
                               {expandedFeedback === feedback._id && (
                                 <div className="mt-4 grid grid-cols-1 md:grid-cols-3 gap-4">
                                   <div className="bg-white p-3 rounded-lg shadow-sm">
-                                    <p className="text-sm text-gray-500 mb-1">
-                                      Communication
-                                    </p>
+                                    <p className="text-sm text-gray-500 mb-1">Communication</p>
                                     {renderStars(feedback.communication)}
                                   </div>
                                   <div className="bg-white p-3 rounded-lg shadow-sm">
-                                    <p className="text-sm text-gray-500 mb-1">
-                                      {isMentor ? "Expertise" : "Engagement"}
-                                    </p>
+                                    <p className="text-sm text-gray-500 mb-1">{isMentor ? "Expertise" : "Engagement"}</p>
                                     {renderStars(feedback.expertise)}
                                   </div>
                                   <div className="bg-white p-3 rounded-lg shadow-sm">
-                                    <p className="text-sm text-gray-500 mb-1">
-                                      Punctuality
-                                    </p>
+                                    <p className="text-sm text-gray-500 mb-1">Punctuality</p>
                                     {renderStars(feedback.punctuality)}
                                   </div>
                                 </div>
@@ -732,9 +673,7 @@ const ProfileDisplay = () => {
                     <h2 className="text-xl font-semibold">Session Price</h2>
                     <FaMoneyBillWave className="text-green-500 text-xl" />
                   </div>
-                  <p className="mt-2 text-3xl font-bold text-gray-900">
-                    ₹{mentor.price}
-                  </p>
+                  <p className="mt-2 text-3xl font-bold text-gray-900">₹{mentor.price}</p>
                   <p className="text-sm text-gray-500">per session</p>
                 </div>
 
@@ -745,23 +684,21 @@ const ProfileDisplay = () => {
                     <FaClock className="text-blue-500 text-xl" />
                   </div>
                   <div className="space-y-3">
-                    {mentor.availableSlots.map((slot: any, index: number) => (
+                    {mentor.availableSlots?.map((slot: any, index: number) => (
                       <div key={index} className="bg-gray-50 rounded-lg p-3">
                         <p className="font-medium text-gray-900">{slot.day}</p>
                         <div className="mt-1 flex flex-wrap gap-2">
-                          {slot.timeSlots.map(
-                            (time: string, timeIndex: number) => (
-                              <span
-                                key={timeIndex}
-                                className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-800"
-                              >
-                                {time}
-                              </span>
-                            )
-                          )}
+                          {slot.timeSlots.map((time: string, timeIndex: number) => (
+                            <span
+                              key={timeIndex}
+                              className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-800"
+                            >
+                              {time}
+                            </span>
+                          ))}
                         </div>
                       </div>
-                    ))}
+                    )) || <p className="text-gray-600">No slots available.</p>}
                   </div>
                 </div>
               </div>
@@ -782,66 +719,49 @@ const ProfileDisplay = () => {
           <div className="space-y-6">
             <div className="flex justify-between items-center">
               <h2 className="text-2xl font-bold text-gray-900">Book Session</h2>
-              <button
-                onClick={closeModal}
-                className="text-gray-400 hover:text-gray-500"
-              >
+              <button onClick={closeModal} className="text-gray-400 hover:text-gray-500">
                 <FaTimes size={24} />
               </button>
             </div>
-
             <div className="border-t border-gray-200 pt-4">
               <div className="grid grid-cols-1 gap-4">
                 <div>
-                  <h3 className="text-lg font-medium text-gray-900">
-                    Select a Time Slot
-                  </h3>
+                  <h3 className="text-lg font-medium text-gray-900">Select a Time Slot</h3>
                   <div className="mt-4 space-y-4">
-                    {mentor.availableSlots.map((slot: any, dayIndex: number) =>
-                      slot.timeSlots.map(
-                        (timeSlot: string, slotIndex: number) => {
-                          const isLocked = isSlotLocked(slot.day, timeSlot);
-                          return (
-                            <label
-                              key={`${dayIndex}-${slotIndex}`}
-                              className={`flex items-center space-x-3 p-3 border rounded-lg ${
-                                isLocked
-                                  ? "bg-gray-100 cursor-not-allowed"
-                                  : "hover:bg-gray-50 cursor-pointer"
-                              }`}
-                            >
-                              <input
-                                type="radio"
-                                name="slot"
-                                value={`${slot.day} - ${timeSlot}`}
-                                onChange={(e) => setSelectedSlot(e.target.value)}
-                                checked={
-                                  selectedSlot === `${slot.day} - ${timeSlot}`
-                                }
-                                disabled={isLocked}
-                                className="h-4 w-4 text-blue-600 focus:ring-blue-500"
-                              />
-                              <span
-                                className={`flex-1 ${
-                                  isLocked ? "text-gray-500" : "text-gray-800"
-                                }`}
-                              >
-                                {slot.day} - {timeSlot}
-                                {isLocked && (
-                                  <span className="ml-2 text-xs text-red-600 lowercase">
-                                    already locked by another user
-                                  </span>
-                                )}
-                              </span>
-                            </label>
-                          );
-                        }
-                      )
+                    {mentor.availableSlots?.map((slot: any, dayIndex: number) =>
+                      slot.timeSlots.map((timeSlot: string, slotIndex: number) => {
+                        const isLocked = isSlotLocked(slot.day, timeSlot);
+                        return (
+                          <label
+                            key={`${dayIndex}-${slotIndex}`}
+                            className={`flex items-center space-x-3 p-3 border rounded-lg ${
+                              isLocked ? "bg-gray-100 cursor-not-allowed" : "hover:bg-gray-50 cursor-pointer"
+                            }`}
+                          >
+                            <input
+                              type="radio"
+                              name="slot"
+                              value={`${slot.day} - ${timeSlot}`}
+                              onChange={(e) => setSelectedSlot(e.target.value)}
+                              checked={selectedSlot === `${slot.day} - ${timeSlot}`}
+                              disabled={isLocked}
+                              className="h-4 w-4 text-blue-600 focus:ring-blue-500"
+                            />
+                            <span className={`flex-1 ${isLocked ? "text-gray-500" : "text-gray-800"}`}>
+                              {slot.day} - {timeSlot}
+                              {isLocked && (
+                                <span className="ml-2 text-xs text-red-600 lowercase">
+                                  already locked by another user
+                                </span>
+                              )}
+                            </span>
+                          </label>
+                        );
+                      })
                     )}
                   </div>
                 </div>
               </div>
-
               <button
                 onClick={handleRequest}
                 className="mt-6 w-full px-6 py-3 bg-blue-600 text-white font-bold rounded-lg"

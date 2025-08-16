@@ -180,6 +180,23 @@ export class UserRepository extends BaseRepository<UserInterface> {
     }
   }
 
+    fetchAllUsers = async (): Promise<UserInterface[]> => {
+    try {
+      logger.debug(`Fetching all users`);
+      const users = await this.model
+        .find({ role: { $ne: "admin" } })
+        .exec();
+        if(!users){
+          throw new RepositoryError("Failed to fetch users");
+        }
+      logger.info(`Fetched ${users.length} users`);
+      return users ;
+    } catch (error) {
+      logger.error(`Error fetching users: ${error}`);
+      throw new RepositoryError("Failed to fetch admin users");
+    }
+  }
+
   //Fetch All User Details
    getAllUsers = async (query: UserQuery = {}): Promise<{ users: UserInterface[]; total: number }> => {
     try {
@@ -189,16 +206,16 @@ export class UserRepository extends BaseRepository<UserInterface> {
       // If no query parameters, return all users without pagination
       if (!search && !page && !limit) {
         const users = await this.model
-          .find({ role: { $ne: "admin" } })
+          .find({ role: "user" })
           .exec();
         logger.info(`Fetched ${users.length} users`);
         return { users, total: users.length };
       }
 
       // Build aggregation pipeline for search and pagination
-      const matchStage: any = { role: { $ne: "admin" } };
+      const matchStage: any = { role: "user" };
       if (search) {
-        matchStage.name = { $regex: `^${search}`, $options: "i" };
+        matchStage.name = { $regex: search, $options: "i" };
       }
 
       const pipeline = [

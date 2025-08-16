@@ -3,7 +3,8 @@ import { AuthService } from '../Service/AuthService';
 import { Request, Response } from 'express';
 import { AuthService as JWTService } from  '../Utils/JWT';
 import logger from '../../../core/Utils/Logger';
-import { ForgotPasswordRequestBody, LoginRequestBody, LogoutRequestBody, OAuthRequestBody, RefreshTokenRequestBody, ResetPasswordRequestBody, SignupRequestBody, UpdateProfileRequestBody, VerifyOTPRequestBody, VerifyPasskeyRequestBody } from '../Types/types';
+import { ForgotPasswordRequestBody, LoginRequestBody, LogoutRequestBody, OAuthRequestBody, RefreshTokenRequestBody, ResetPasswordRequestBody, SignupRequestBody, UpdateProfileRequestBody, VerifyOTPRequestBody, VerifyPasskeyRequestBody, UpdatePasswordRequestBody } from '../Types/types';
+
 
 
 // Controller for authentication and user profile endpoints
@@ -201,6 +202,27 @@ export class AuthController extends BaseController {
     }
   }
 
+  // Update user password
+  updatePassword = async (req: Request<{ id: string }, {}, UpdatePasswordRequestBody>, res: Response) => {
+    try {
+      const userId = req.params.id;
+      logger.debug(`Updating password for userId: ${userId}`);
+      if (!userId) {
+        this.throwError(400, "User ID is required");
+      }
+      const { currentPassword, newPassword } = req.body;
+      if (!currentPassword || !newPassword) {
+        this.throwError(400, "Current and new passwords are required");
+      }
+      const updatedUser = await this.authService.updatePassword(userId, currentPassword, newPassword);
+      this.sendSuccess(res, { user: updatedUser }, "Password updated successfully");
+      logger.info(`Password updated for userId: ${userId}`);
+    } catch (error) {
+      logger.error(`Error updating password for userId ${req.params.id || "unknown"}: ${error}`);
+      this.handleError(error, res);
+    }
+  };
+
   // Handle logout
    logout = async(req: Request<{}, {}, LogoutRequestBody>, res: Response) =>{
     try {
@@ -337,6 +359,32 @@ export class AuthController extends BaseController {
     } catch (error: any) {
       logger.error(`Error in getAllUsers: ${error.message}`);
       res.status(500).json({ success: false, message: `Server error: ${error.message}` });
+    }
+  }
+
+  fetchAllUsers = async(_req: Request, res: Response): Promise<void> =>{
+    try {
+      const users = await this.authService.fetchAllUsers();
+      if (users.length === 0) {
+        res.status(200).json({
+          success: true,
+          message: "No users found",
+          data: {
+            users: [],
+          },
+        });
+        return;
+      }else {
+        res.status(200).json({
+          success: true,
+          message: "Users fetched successfully",
+          data: {
+            users: users,
+          },
+        });
+      }
+    } catch (error) {
+      
     }
   }
 

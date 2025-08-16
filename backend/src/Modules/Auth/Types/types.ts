@@ -81,3 +81,9 @@ export interface UserQuery {
   limit?: number;
   role?:string;
 }
+
+//Upadte Password 
+export interface UpdatePasswordRequestBody {
+  currentPassword: string;
+  newPassword: string;
+}

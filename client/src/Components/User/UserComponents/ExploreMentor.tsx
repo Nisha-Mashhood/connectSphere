@@ -24,7 +24,7 @@ import {
 } from "@nextui-org/react";
 import { fetchAllMentors } from "../../../Service/Mentor.Service";
 import {
-  fetchCategoriesService,
+  // fetchCategoriesService,
   getAllSkills,
 } from "../../../Service/Category.Service";
 import {
@@ -63,15 +63,31 @@ const ExploreMentors = () => {
   } = useSelector((state: RootState) => state.profile);
   const dispatch = useDispatch<AppDispatch>();
   const [mentors, setMentors] = useState([]);
-  const [categories, setCategories] = useState([]);
+  // const [categories, setCategories] = useState([]);
   const [skills, setSkills] = useState([]);
   const [groups, setGroups] = useState([]);
   const [users, setUsers] = useState([]);
   const [searchQuery, setSearchQuery] = useState("");
-  const [selectedCategory, setSelectedCategory] = useState("");
+  // const [selectedCategory, setSelectedCategory] = useState("");
   const [selectedSkill, setSelectedSkill] = useState("");
-  const [currentPage, setCurrentPage] = useState(1);
-  const [totalPages, setTotalPages] = useState(1);
+  // With these:
+  const [mentorPagination, setMentorPagination] = useState({
+    currentPage: 1,
+    totalPages: 1,
+    totalItems: 0,
+  });
+
+  const [userPagination, setUserPagination] = useState({
+    currentPage: 1,
+    totalPages: 1,
+    totalItems: 0,
+  });
+
+  const [groupPagination, setGroupPagination] = useState({
+    currentPage: 1,
+    totalPages: 1,
+    totalItems: 0,
+  });
   const [selectedMentor, setSelectedMentor] = useState(null);
   const [selectedUser, setSelectedUser] = useState(null);
   const [selectedGroup, setSelectedGroup] = useState(null);
@@ -82,103 +98,144 @@ const ExploreMentors = () => {
   const limit = 4; // Items per page
 
   // Fetch data
- // Fetch categories and skills only once
-useEffect(() => {
-  const fetchStaticData = async () => {
-    try {
-      setIsLoading(true);
-      const [categoriesData, skillsData] = await Promise.all([
-        fetchCategoriesService(),
-        getAllSkills(),
-      ]);
-      setCategories(Array.isArray(categoriesData.categories) ? categoriesData.categories : []);
-      setSkills(skillsData || []);
-    } catch (error) {
-      console.error("Error fetching static data:", error);
-      setCategories([]);
-      setSkills([]);
-    } finally {
-      setIsLoading(false);
-    }
-  };
-  fetchStaticData();
-}, []); // Empty dependency array since categories and skills are static
-
-// Fetch mentors, groups, and users
-useEffect(() => {
-  const fetchDynamicData = async () => {
-    try {
-      setIsLoading(true);
-      const [mentorsData, groupData, userData] = await Promise.all([
-        fetchAllMentors({
-          search: searchQuery,
-          page: currentPage,
-          limit,
-          skill: selectedSkill,
-        }),
-        groupDetails({ search: searchQuery, page: currentPage, limit }),
-        fetchAllUsers({ search: searchQuery, page: currentPage, limit }),
-      ]);
-
-      const filteredUsers = Array.isArray(userData.users)
-        ? userData.users.filter((user) => user._id !== currentUser._id)
-        : [];
-      const filteredMentors =
-        mentorDetails?._id && Array.isArray(mentorsData.mentors)
-          ? mentorsData.mentors.filter((mentor) => mentor._id !== mentorDetails._id)
-          : mentorsData.mentors || [];
-      const filteredGroups = Array.isArray(groupData.groups)
-        ? groupData.groups.filter((group) => group.adminId?._id !== currentUser._id)
-        : [];
-
-        
-
-      setMentors(filteredMentors);
-      setGroups(filteredGroups);
-      setUsers(filteredUsers.filter((user) => user.role === "user"));
-      setTotalPages(Math.ceil((mentorsData.total || 10) / limit));
-    } catch (error) {
-      console.error("Error fetching dynamic data:", error);
-      setMentors([]);
-      setGroups([]);
-      setUsers([]);
-    } finally {
-      setIsLoading(false);
-    }
-  };
-  fetchDynamicData();
-}, [searchQuery, currentPage, selectedCategory, selectedSkill, mentorDetails, currentUser._id]);
-
-// Fetch user-specific data
-useEffect(() => {
-  if (currentUser) {
-    const fetchUserData = async () => {
+  // Fetch categories and skills only once
+  useEffect(() => {
+    const fetchStaticData = async () => {
       try {
-        await Promise.all([
-          dispatch(
-            fetchRequests({
-              userId: currentUser._id,
-              role: currentUser.role,
-              mentorId: mentorDetails?._id,
-            })
-          ),
-          dispatch(
-            fetchCollabDetails({
-              userId: currentUser._id,
-              role: currentUser.role,
-            })
-          ),
-          dispatch(fetchGroupRequests(currentUser._id)),
-          dispatch(fetchGroupDetailsForMembers(currentUser._id)),
-          dispatch(fetchUserConnections(currentUser._id)),
+        setIsLoading(true);
+        const [skillsData] = await Promise.all([
+          // fetchCategoriesService(),
+          getAllSkills(),
         ]);
+        // setCategories(Array.isArray(categoriesData.categories) ? categoriesData.categories : []);
+        setSkills(skillsData || []);
       } catch (error) {
-        console.error("Error fetching user data:", error);
+        console.error("Error fetching static data:", error);
+        // setCategories([]);
+        setSkills([]);
+      } finally {
+        setIsLoading(false);
       }
     };
-    fetchUserData();
-  }
-}, [currentUser, mentorDetails, dispatch]);
+    fetchStaticData();
+  }, []); // Empty dependency array since categories and skills are static
+
+  // Fetch mentors, groups, and users
+  useEffect(() => {
+    const fetchDynamicData = async () => {
+      try {
+        setIsLoading(true);
+        const [mentorsData, groupData, userData] = await Promise.all([
+          fetchAllMentors({
+            search: searchQuery,
+            page: mentorPagination.currentPage,
+            limit,
+            skill: activeTab === "mentors" ? selectedSkill : "",
+          }),
+          groupDetails({
+            search: searchQuery,
+            page: groupPagination.currentPage,
+            limit,
+          }),
+          fetchAllUsers({
+            search: searchQuery,
+            page: userPagination.currentPage,
+            limit,
+          }),
+        ]);
+
+        const filteredUsers = Array.isArray(userData.users)
+          ? userData.users.filter(
+              (user) => user._id !== currentUser._id && user.role === "user"
+            )
+          : [];
+        const filteredMentors =
+          mentorDetails?._id && Array.isArray(mentorsData.mentors)
+            ? mentorsData.mentors.filter(
+                (mentor) => mentor._id !== mentorDetails._id
+              )
+            : mentorsData.mentors || [];
+        const filteredGroups = Array.isArray(groupData.groups)
+          ? groupData.groups.filter(
+              (group) => group.adminId?._id !== currentUser._id
+            )
+          : [];
+
+        console.log("Mentor Data : ", mentorsData);
+        console.log("userData : ", userData);
+        console.log("group Data : ", groupData);
+
+        setMentors(filteredMentors);
+        setGroups(filteredGroups);
+        setUsers(filteredUsers.filter((user) => user.role === "user"));
+        setMentorPagination((prev) => ({
+          ...prev,
+          totalPages: Math.ceil(mentorsData.total / limit),
+          totalItems: mentorsData.total,
+        }));
+
+        setUserPagination((prev) => ({
+          ...prev,
+          totalPages: Math.ceil(userData.total / limit),
+          totalItems: userData.total,
+        }));
+
+        setGroupPagination((prev) => ({
+          ...prev,
+          totalPages: Math.ceil(groupData.total / limit),
+          totalItems: groupData.total,
+        }));
+      } catch (error) {
+        console.error("Error fetching dynamic data:", error);
+        setMentors([]);
+        setGroups([]);
+        setUsers([]);
+      } finally {
+        setIsLoading(false);
+      }
+    };
+    fetchDynamicData();
+  }, [
+    searchQuery,
+    selectedSkill,
+    mentorDetails,
+    activeTab,
+    currentUser._id,
+    mentorPagination.currentPage,
+    userPagination.currentPage,
+    groupPagination.currentPage,
+  ]);
+
+  // Fetch user-specific data
+  useEffect(() => {
+    if (currentUser) {
+      const fetchUserData = async () => {
+        try {
+          await Promise.all([
+            dispatch(
+              fetchRequests({
+                userId: currentUser._id,
+                role: currentUser.role,
+                mentorId: mentorDetails?._id,
+              })
+            ),
+            dispatch(
+              fetchCollabDetails({
+                userId: currentUser._id,
+                role: currentUser.role,
+              })
+            ),
+            dispatch(fetchGroupRequests(currentUser._id)),
+            dispatch(fetchGroupDetailsForMembers(currentUser._id)),
+            dispatch(fetchUserConnections(currentUser._id)),
+          ]);
+        } catch (error) {
+          console.error("Error fetching user data:", error);
+        }
+      };
+      fetchUserData();
+    }
+  }, [currentUser, mentorDetails, dispatch]);
 
   // Fetch locked slots when a mentor is selected
   useEffect(() => {
@@ -212,6 +269,19 @@ useEffect(() => {
     });
     return isLocked;
   };
+
+  const handleSelectionChange = (key: string) => {
+  setActiveTab(key);
+  if (key === "mentors") {
+    setMentorPagination((prev) => ({ ...prev, currentPage: 1 }));
+  } else if (key === "users") {
+    setUserPagination((prev) => ({ ...prev, currentPage: 1 }));
+    setSelectedSkill(""); 
+  } else {
+    setGroupPagination((prev) => ({ ...prev, currentPage: 1 }));
+    setSelectedSkill("");
+  }
+};
 
   // Request handlers
   const handleRequestMentor = async () => {
@@ -342,10 +412,10 @@ useEffect(() => {
     }
   };
 
-  const handleSelectionChange = (key: string) => {
-    setActiveTab(key);
-    setCurrentPage(1); // Reset to first page on tab change
-  };
+  // const handleSelectionChange = (key: string) => {
+  //   setActiveTab(key);
+  //   setCurrentPage(1); // Reset to first page on tab change
+  // };
 
   const getMentorButtonConfig = (mentor) => {
     if (mentorDetails?._id === mentor._id) {
@@ -357,7 +427,10 @@ useEffect(() => {
     }
 
     const ongoingCollab = collabDetails?.data?.find(
-      (collab) => collab.mentorId._id === mentor._id && !collab.isCancelled && !collab.isCompleted
+      (collab) =>
+        collab.mentorId._id === mentor._id &&
+        !collab.isCancelled &&
+        !collab.isCompleted
     );
     if (ongoingCollab) {
       return {
@@ -395,7 +468,6 @@ useEffect(() => {
     const totalMembers = group.maxMembers;
     const currentMembers = group.members?.userId?.length || 0;
     const remainingSlots = totalMembers - currentMembers;
-
 
     return {
       total: totalMembers,
@@ -627,45 +699,37 @@ useEffect(() => {
             value={searchQuery}
             onChange={(e) => {
               setSearchQuery(e.target.value);
-              setCurrentPage(1); // Reset to first page on search
+              if (activeTab === "mentors") {
+                setMentorPagination((prev) => ({ ...prev, currentPage: 1 }));
+              } else if (activeTab === "users") {
+                setUserPagination((prev) => ({ ...prev, currentPage: 1 }));
+              } else {
+                setGroupPagination((prev) => ({ ...prev, currentPage: 1 }));
+              }
             }}
             className="flex-1"
             size="lg"
             startContent={<FaSearch className="text-gray-400" />}
           />
           <div className="flex gap-4">
-            <Select
-              label="Category"
-              placeholder="Select a category"
-              value={selectedCategory}
-              onChange={(e) => {
-                setSelectedCategory(e.target.value);
-                setCurrentPage(1); // Reset to first page on filter change
-              }}
-              className="w-40"
-            >
-              {categories.map((category) => (
-                <SelectItem key={category._id} value={category._id}>
-                  {category.name}
-                </SelectItem>
-              ))}
-            </Select>
-            <Select
-              label="Skill"
-              placeholder="Select a skill"
-              value={selectedSkill}
-              onChange={(e) => {
-                setSelectedSkill(e.target.value);
-                setCurrentPage(1); // Reset to first page on filter change
-              }}
-              className="w-40"
-            >
-              {skills.map((skill) => (
-                <SelectItem key={skill._id} value={skill._id}>
-                  {skill.name}
-                </SelectItem>
-              ))}
-            </Select>
+            {activeTab === "mentors" && (
+              <Select
+                label="Skill"
+                placeholder="Select a skill"
+                value={selectedSkill}
+                onChange={(e) => {
+                  setSelectedSkill(e.target.value);
+                  setMentorPagination((prev) => ({ ...prev, currentPage: 1 }));
+                }}
+                className="w-40"
+              >
+                {skills.map((skill) => (
+                  <SelectItem key={skill._id} value={skill._id}>
+                    {skill.name}
+                  </SelectItem>
+                ))}
+              </Select>
+            )}
           </div>
         </div>
 
@@ -945,9 +1009,29 @@ useEffect(() => {
 
       <div className="flex justify-center mt-8">
         <Pagination
-          total={totalPages}
-          initialPage={currentPage}
-          onChange={(page) => setCurrentPage(page)}
+          total={
+            activeTab === "mentors"
+              ? mentorPagination.totalPages
+              : activeTab === "users"
+              ? userPagination.totalPages
+              : groupPagination.totalPages
+          }
+          initialPage={
+            activeTab === "mentors"
+              ? mentorPagination.currentPage
+              : activeTab === "users"
+              ? userPagination.currentPage
+              : groupPagination.currentPage
+          }
+          onChange={(page) => {
+            if (activeTab === "mentors") {
+              setMentorPagination((prev) => ({ ...prev, currentPage: page }));
+            } else if (activeTab === "users") {
+              setUserPagination((prev) => ({ ...prev, currentPage: page }));
+            } else {
+              setGroupPagination((prev) => ({ ...prev, currentPage: page }));
+            }
+          }}
         />
       </div>
 

@@ -15,7 +15,7 @@ import { FaEye } from "react-icons/fa";
 import { useNavigate } from 'react-router-dom';
 import { 
   blockUserService, 
-  fetchAllUsers, 
+  getAllUsers, 
   unblockUserService 
 } from "../../Service/User.Service";
 import { toast } from "react-hot-toast";
@@ -30,9 +30,9 @@ const UserManagementList = () => {
   useEffect(() => {
     const getUsers = async () => {
       try {
-        const data = await fetchAllUsers();
-        console.log("Users: ",data);
-        setUsers(data);
+        const data = await getAllUsers();
+        console.log("Users: ",data.users);
+        setUsers(data.users);
       } catch (error) {
         console.log(error)
         toast.error("Failed to fetch users");
@@ -55,8 +55,8 @@ const UserManagementList = () => {
         await blockUserService(userId);
       }
       // Refresh user list
-      const updatedUsers = await fetchAllUsers();
-      setUsers(updatedUsers);
+      const updatedUsers = await getAllUsers();
+      setUsers(updatedUsers.users);
       toast.success(`User ${currentBlockStatus ? 'unblocked' : 'blocked'} successfully`);
     } catch (error) {
       console.log(error)

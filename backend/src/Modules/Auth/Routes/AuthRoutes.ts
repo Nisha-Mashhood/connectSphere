@@ -34,12 +34,15 @@ router.put(
   authController.updateUserDetails.bind(authController)
 );
 router.get(AUTH_ROUTES.GetAllUsers, [apiLimiter, authMiddleware.verifyToken], authController.getAllUsers.bind(authController));
+router.get(AUTH_ROUTES.FetchAllUsers, [apiLimiter, authMiddleware.verifyToken], authController.fetchAllUsers.bind(authController))
 router.get(AUTH_ROUTES.GetUser, [apiLimiter, authMiddleware.verifyToken], authController.getUserById.bind(authController));
 router.put(
   AUTH_ROUTES.UpdateUser,
   [apiLimiter, authMiddleware.verifyToken, authMiddleware.checkBlockedStatus, upload.fields([{ name: 'profilePhoto', maxCount: 1 }, { name: 'coverPhoto', maxCount: 1 }])],
   authController.updateUserDetails.bind(authController)
 );
+router.put(AUTH_ROUTES.UpdatePassword, [apiLimiter, authMiddleware.verifyToken, authMiddleware.checkBlockedStatus, upload.fields([{ name: 'profilePhoto', maxCount: 1 }, { name: 'coverPhoto', maxCount: 1 }])],
+  authController.updatePassword.bind(authController))
 router.put(AUTH_ROUTES.BlockUser, [apiLimiter, authMiddleware.verifyToken, authMiddleware.authorize('admin')], authController.blockUser.bind(authController));
 router.put(AUTH_ROUTES.UnblockUser, [apiLimiter, authMiddleware.verifyToken, authMiddleware.authorize('admin')], authController.unblockUser.bind(authController));
 router.put(AUTH_ROUTES.ChangeRole, [apiLimiter, authMiddleware.verifyToken, authMiddleware.authorize('admin')], authController.changeRole.bind(authController));

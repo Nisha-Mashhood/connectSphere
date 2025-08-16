@@ -104,7 +104,7 @@ export class GroupRepository extends BaseRepository<GroupDocument> {
       // Build aggregation pipeline for search and pagination
       const matchStage: any = {};
       if (search) {
-        matchStage.name = { $regex: `^${search}`, $options: "i" };
+        matchStage.name = { $regex: search, $options: "i" };
       }
 
       const pipeline = [

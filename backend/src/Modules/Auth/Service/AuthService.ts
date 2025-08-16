@@ -596,6 +596,44 @@ export class AuthService extends BaseService {
     }
   };
 
+  // Update user password
+  updatePassword = async (userId: string, currentPassword: string, newPassword: string): Promise<IUser> => {
+    try {
+      const user = await this.userRepository.findById(userId);
+      if (!user) {
+        throw new ServiceError("Cannot Update password");
+      }
+      if(!user.password){
+        throw new ServiceError("Cannot update Password");
+      }
+
+      // Verify current password
+      const isMatch = await bcrypt.compare(currentPassword, user.password);
+      if (!isMatch) {
+        throw new ServiceError("Current password is incorrect");
+      }
+
+      // Hash new password
+      const hashedPassword = await bcrypt.hash(newPassword, 10);
+      const updatedUser = await this.userRepository.update(userId, { password: hashedPassword });
+      if (!updatedUser) {
+        throw new ServiceError("Failed to update password");
+      }
+
+      logger.info(`Updated password for user ${userId}`);
+      return updatedUser;
+    } catch (error) {
+      logger.error(`Error updating password for user ${userId}: ${error}`);
+      throw error instanceof ServiceError ? error : new ServiceError("Failed to update password");
+    }
+  };
+
+
+
+  fetchAllUsers = async(): Promise<IUser[]> => {
+    return await this.userRepository.fetchAllUsers();
+  }
+
   //get All User Details
   getAllUsers = async (
     query: UserQuery = {}

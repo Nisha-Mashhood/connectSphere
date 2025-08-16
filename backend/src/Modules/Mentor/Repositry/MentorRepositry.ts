@@ -111,7 +111,7 @@ export class MentorRepository extends BaseRepository<IMentor> {
       // Build aggregation pipeline for search, filtering, and pagination
       const matchStage: any = { isApproved: "Completed" };
       if (search) {
-        matchStage["userId.name"] = { $regex: `^${search}`, $options: "i" };
+        matchStage["userId.name"] = { $regex: search, $options: "i" };
       }
       if (skill) {
         matchStage.skills = { $in: [skill] };

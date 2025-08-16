@@ -130,7 +130,7 @@ export class MentorService extends BaseService {
       user._id.toString(),
       "mentor_approved",
       user._id.toString(), 
-      user._id.toString(), // relatedId is the user's ID
+      user._id.toString(),
       "profile"
     );
     logger.info(

@@ -13,6 +13,15 @@ export const fetchAllUsers = async (params) => {
   }
 };
 
+export const getAllUsers = async () => {
+  try {
+    const response = await axiosInstance.get("/auth/fetchallusers");
+    return response.data.data;
+  } catch (error) {
+    handleError(error);
+  }
+};
+
 // Fetch user details by userId
 export const fetchUserDetails = async (userId) => {
   try {
@@ -94,5 +103,17 @@ export const updateContactInfo = async (userId: string, data: { email: string; p
     return response.data.data;
   } catch (error) {
     handleError(error)
+  }
+};
+
+// Update user password
+export const updateUserPassword = async (userId, data) => {
+  try {
+    const response = await axiosInstance.put(`/auth/updatePassword/${userId}`, data);
+    toast.success("Password updated successfully");
+    return response.data.data;
+  } catch (error) {
+    handleError(error);
+    throw error; 
   }
 };

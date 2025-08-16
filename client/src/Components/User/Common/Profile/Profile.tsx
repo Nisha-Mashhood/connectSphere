@@ -1,11 +1,11 @@
-import { lazy, Suspense } from "react"; 
+import { lazy, Suspense, useEffect, useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import { useNavigate } from "react-router-dom";
-import { useState } from "react";
 import {
   Card,
   CardHeader,
   CardBody,
+  CardFooter,
   Avatar,
   Button,
   Chip,
@@ -25,7 +25,7 @@ import {
   Tab,
   Accordion,
   AccordionItem,
-  Spinner, 
+  Spinner,
 } from "@nextui-org/react";
 import {
   FaCalendarAlt,
@@ -40,23 +40,28 @@ import {
   FaUserFriends,
   FaLayerGroup,
   FaUserGraduate,
+  FaLock,
+  FaCreditCard,
 } from "react-icons/fa";
-import { RootState } from "../../../../redux/store";
+import { RootState, AppDispatch } from "../../../../redux/store";
 import {
   updateContactInfo,
   updateUserImages,
   updateUserProfessionalInfo,
+  updateUserPassword,
+  // fetchUserDetails,
 } from "../../../../Service/User.Service";
 import toast from "react-hot-toast";
 import {
   checkMentorProfile,
-  // fetchMentorRequests,
   updateMentorProfile,
 } from "../../../../Service/Mentor.Service";
-import { updateMentorInfo } from "../../../../redux/Slice/profileSlice";
+import {
+  fetchCollabDetails,
+  updateMentorInfo,
+} from "../../../../redux/Slice/profileSlice";
 import { updateUserProfile } from "../../../../redux/Slice/userSlice";
 import { checkProfile } from "../../../../Service/Auth.service";
-// import { fetchCollabDetails } from "../../../../Service/collaboration.Service";
 
 // Lazy load components
 const RequestsSection = lazy(() => import("./RequestSection"));
@@ -67,12 +72,18 @@ const TaskManagement = lazy(() => import("../../TaskManagement/TaskManagemnt"));
 const UserConnections = lazy(() => import("./UserConnections"));
 
 const Profile = () => {
-  const { currentUser } = useSelector((state: RootState) => state.user);
-  const { mentorDetails, collabDetails, userConnections } = useSelector(
-    (state: RootState) => state.profile
+  const { currentUser } = useSelector(
+    (state: RootState) => state.user
   );
+  const {
+    mentorDetails,
+    collabDetails,
+    userConnections,
+    loading: profileLoading,
+    error: profileError,
+  } = useSelector((state: RootState) => state.profile);
   const navigate = useNavigate();
-  const dispatch = useDispatch();
+  const dispatch = useDispatch<AppDispatch>();
 
   // Modal states
   const {
@@ -86,6 +97,11 @@ const Profile = () => {
     onClose: onContactModalClose,
   } = useDisclosure();
   const {
+    isOpen: isPasswordModalOpen,
+    onOpen: onPasswordModalOpen,
+    onClose: onPasswordModalClose,
+  } = useDisclosure();
+  const {
     isOpen: isMentorModalOpen,
     onOpen: onMentorModalOpen,
     onClose: onMentorModalClose,
@@ -93,35 +109,95 @@ const Profile = () => {
 
   // Form states
   const [professionalInfo, setProfessionalInfo] = useState({
-    industry: currentUser.industry || "",
-    reasonForJoining: currentUser.reasonForJoining || "",
+    industry: currentUser?.industry || "",
+    reasonForJoining: currentUser?.reasonForJoining || "",
   });
   const [contactInfo, setContactInfo] = useState({
-    email: currentUser.email || "",
-    phone: currentUser.phone || "",
-    dateOfBirth: currentUser.dateOfBirth || "",
+    email: currentUser?.email || "",
+    phone: currentUser?.phone || "",
+    dateOfBirth: currentUser?.dateOfBirth || "",
+  });
+  const [passwordInfo, setPasswordInfo] = useState({
+    currentPassword: "",
+    newPassword: "",
+    confirmPassword: "",
   });
   const [mentorshipInfo, setMentorshipInfo] = useState({
     bio: mentorDetails?.bio || "",
     availableSlots: mentorDetails?.availableSlots || [],
   });
   const [selectedDay, setSelectedDay] = useState("");
-  const [selectedTime, setSelectedTime] = useState("");
+  const [startHour, setStartHour] = useState("");
+  const [startMin, setStartMin] = useState("");
+  const [endHour, setEndHour] = useState("");
+  const [endMin, setEndMin] = useState("");
+  const [ampm, setAmpm] = useState("AM");
+  const [mentorNames, setMentorNames] = useState<{ [key: string]: string }>({});
+  const [isPaymentLoading, setIsPaymentLoading] = useState(false);
 
-  // useEffect(() => {
-  //   if (!currentUser?._id) return; 
-  //   dispatch(fetchMentorDetails(currentUser._id));
-  //   dispatch(fetchCollabDetails({ userId: currentUser._id, role: currentUser.role }));
-  //   dispatch(fetchMentorRequests({
-  //     userId: currentUser._id,
-  //     role: currentUser.role,
-  //     mentorId: mentorDetails?._id, 
-  //   }));
-  //   dispatch(fetchGroups(currentUser._id));
-  //   dispatch(fetchGroupRequests(currentUser._id));
-  //   dispatch(fetchGroupDetailsForMembers(currentUser._id));
-  //   dispatch(fetchUserConnections(currentUser._id));
-  // }, [dispatch, currentUser._id, currentUser.role, mentorDetails?._id]);
+  // Currency formatter
+  const formatCurrency = (amount: number) =>
+  new Intl.NumberFormat("en-IN", {
+    style: "currency",
+    currency: "INR",
+  }).format(amount);
+
+  // Fetch collaboration details
+  useEffect(() => {
+    if (currentUser?._id) {
+      dispatch(
+        fetchCollabDetails({ userId: currentUser._id, role: currentUser.role })
+      );
+    }
+  }, [dispatch, currentUser?._id, currentUser?.role]);
+
+  useEffect(() => {
+    if (
+      collabDetails?.data &&
+      collabDetails.data.length > 0 &&
+      currentUser?.role === "user"
+    ) {
+      setIsPaymentLoading(true);
+
+      console.log("Raw collabDetails.data:", collabDetails.data);
+
+      const names = collabDetails.data.reduce(
+        (acc: { [key: string]: string }, c) => {
+          if (typeof c.mentorId === "object" && c.mentorId.userId?.name) {
+            console.log(
+              `Mapping mentor ID ${c.mentorId._id} to name: ${c.mentorId.userId.name}`
+            );
+            acc[c.mentorId._id] = c.mentorId.userId.name;
+          } else if (typeof c.mentorId === "string") {
+            console.log(
+              `No name available for mentor ID ${c.mentorId}, using fallback`
+            );
+            acc[c.mentorId] = "Unknown Mentor";
+          } else {
+            console.warn(
+              "Invalid mentorId data for collaboration",
+              c._id,
+              ":",
+              c.mentorId
+            );
+            acc[c.mentorId?._id || c._id] = "Unknown Mentor";
+          }
+          return acc;
+        },
+        {}
+      );
+
+      console.log("Final Mentor Names:", names);
+      setMentorNames(names);
+      setIsPaymentLoading(false);
+    } else {
+      console.log("Skipping mentor names mapping - conditions not met:", {
+        hasCollabDetails: !!collabDetails?.data,
+        collabDetailsLength: collabDetails?.data?.length,
+        userRole: currentUser?.role,
+      });
+    }
+  }, [collabDetails, currentUser?.role]);
 
   const DAYS_OF_WEEK = [
     "Monday",
@@ -132,16 +208,16 @@ const Profile = () => {
     "Saturday",
     "Sunday",
   ];
-  const TIME_SLOTS = [
-    "09:00 AM - 10:00 AM",
-    "10:00 AM - 11:00 AM",
-    "11:00 AM - 12:00 PM",
-    "02:00 PM - 03:00 PM",
-    "03:00 PM - 04:00 PM",
-    "04:00 PM - 05:00 PM",
-  ];
 
-  const formatDate = (dateString) =>
+  const HOURS = Array.from({ length: 12 }, (_, i) =>
+    (i + 1).toString().padStart(2, "0")
+  );
+  const MINUTES = Array.from({ length: 12 }, (_, i) =>
+    (i * 5).toString().padStart(2, "0")
+  );
+  const AMPM = ["AM", "PM"];
+
+  const formatDate = (dateString: string) =>
     dateString
       ? new Date(dateString).toLocaleDateString("en-US", {
           year: "numeric",
@@ -151,10 +227,30 @@ const Profile = () => {
       : "Not specified";
 
   console.log("COLLAB DETAILS OF THIS CURRENT USER : ", collabDetails);
-  console.log("USER CONNECTION DETAILS OF THIS CURRENT USER : ", userConnections);
+  console.log(
+    "USER CONNECTION DETAILS OF THIS CURRENT USER : ",
+    userConnections
+  );
+
+  // Time utility functions
+  const toMinutes = (h: string, m: string, ampm: string) => {
+    let hh = parseInt(h);
+    if (ampm === "PM" && hh < 12) hh += 12;
+    if (ampm === "AM" && hh === 12) hh = 0;
+    return hh * 60 + parseInt(m);
+  };
+
+  const parseTime = (timeStr: string) => {
+    const [hm, ampm] = timeStr.split(" ");
+    const [h, m] = hm.split(":");
+    return toMinutes(h, m, ampm);
+  };
 
   // Handlers
-  const handleImageUpload = async (file: File, type: "profilePic" | "coverPic") => {
+  const handleImageUpload = async (
+    file: File,
+    type: "profilePic" | "coverPic"
+  ) => {
     const formData = new FormData();
     formData.append(type, file);
     try {
@@ -222,39 +318,88 @@ const Profile = () => {
   };
 
   const handleAddSlot = () => {
-    if (!selectedDay || !selectedTime) {
-      toast.error("Please select both day and time");
+    console.log("Selected Day : ", selectedDay);
+    console.log("Selected Start Hour : ", startHour);
+    console.log("Selected Start Minute : ", startMin);
+    console.log("Selected End Hour : ", endHour);
+    console.log("Selected End Minute : ", endMin);
+    console.log("Selected AM/PM : ", ampm);
+
+    if (!selectedDay || !startHour || !startMin || !endHour || !endMin) {
+      toast.error("Please select day and all time fields");
       return;
     }
+
+    const startTime = `${startHour}:${startMin} ${ampm}`;
+    const endTime = `${endHour}:${endMin} ${ampm}`;
+    const timeSlot = `${startTime} - ${endTime}`;
+
+    const startM = toMinutes(startHour, startMin, ampm);
+    const endM = toMinutes(endHour, endMin, ampm);
+
+    if (startM >= endM) {
+      toast.error("Start time must be before end time");
+      return;
+    }
+
     setMentorshipInfo((prev) => {
       const existingDaySlot = prev.availableSlots.find(
         (slot) => slot.day === selectedDay
       );
+
+      let newTimeSlots;
       if (existingDaySlot) {
-        if (existingDaySlot.timeSlots.includes(selectedTime)) return prev;
+        const existingTimeSlots = existingDaySlot.timeSlots;
+
+        // Check for overlaps
+        for (const ex of existingTimeSlots) {
+          const [exStart, exEnd] = ex.split(" - ");
+          const exStartM = parseTime(exStart);
+          const exEndM = parseTime(exEnd);
+          if (startM < exEndM && endM > exStartM) {
+            toast.error("Time slot overlaps with an existing slot");
+            return prev;
+          }
+        }
+
+        newTimeSlots = [...existingTimeSlots, timeSlot].sort((a, b) => {
+          const aStart = parseTime(a.split(" - ")[0]);
+          const bStart = parseTime(b.split(" - ")[0]);
+          return aStart - bStart;
+        });
+
         return {
           ...prev,
           availableSlots: prev.availableSlots.map((slot) =>
             slot.day === selectedDay
-              ? { ...slot, timeSlots: [...slot.timeSlots, selectedTime].sort() }
+              ? { ...slot, timeSlots: newTimeSlots }
               : slot
           ),
         };
-      }
-      return {
-        ...prev,
-        availableSlots: [
+      } else {
+        newTimeSlots = [timeSlot];
+        const newAvailableSlots = [
           ...prev.availableSlots,
-          { day: selectedDay, timeSlots: [selectedTime] },
+          { day: selectedDay, timeSlots: newTimeSlots },
         ].sort(
           (a, b) => DAYS_OF_WEEK.indexOf(a.day) - DAYS_OF_WEEK.indexOf(b.day)
-        ),
-      };
+        );
+        return {
+          ...prev,
+          availableSlots: newAvailableSlots,
+        };
+      }
     });
-    setSelectedTime("");
+
+    // Reset time fields after adding
+    setStartHour("");
+    setStartMin("");
+    setEndHour("");
+    setEndMin("");
+    setAmpm("AM");
   };
 
-  const handleRemoveSlot = (day, time) => {
+  const handleRemoveSlot = (day: string, time: string) => {
     setMentorshipInfo((prev) => ({
       ...prev,
       availableSlots: prev.availableSlots
@@ -265,6 +410,41 @@ const Profile = () => {
         )
         .filter((slot) => slot.timeSlots.length > 0),
     }));
+  };
+
+  const handlePasswordSubmit = async () => {
+    if (
+      !passwordInfo.currentPassword ||
+      !passwordInfo.newPassword ||
+      !passwordInfo.confirmPassword
+    ) {
+      toast.error("Please fill all password fields");
+      return;
+    }
+    if (passwordInfo.newPassword !== passwordInfo.confirmPassword) {
+      toast.error("New password and confirm password do not match");
+      return;
+    }
+    if (passwordInfo.newPassword.length < 8) {
+      toast.error("New password must be at least 8 characters long");
+      return;
+    }
+    try {
+      await updateUserPassword(currentUser._id, {
+        currentPassword: passwordInfo.currentPassword,
+        newPassword: passwordInfo.newPassword,
+      });
+      toast.success("Password updated successfully");
+      setPasswordInfo({
+        currentPassword: "",
+        newPassword: "",
+        confirmPassword: "",
+      });
+      onPasswordModalClose();
+    } catch (error) {
+      toast.error("Failed to update password");
+      console.error("Failed to update password", error);
+    }
   };
 
   const handleBecomeMentor = async () => {
@@ -299,13 +479,19 @@ const Profile = () => {
     }
   };
 
+  const totalPayments =
+    collabDetails?.data?.reduce(
+      (sum: number, collab) => sum + collab.price,
+      0
+    ) || 0;
+
   return (
     <div className="max-w-7xl mx-auto p-6 space-y-8">
       {/* Header Section */}
       <Card className="relative overflow-hidden rounded-xl shadow-lg">
         <div className="relative h-48">
           <Image
-            src={currentUser.coverPic || "/default-cover.jpg"}
+            src={currentUser?.coverPic || "/default-cover.jpg"}
             alt="Cover"
             className="w-full h-full object-cover opacity-90"
             removeWrapper
@@ -335,7 +521,7 @@ const Profile = () => {
         <div className="p-6 flex flex-col sm:flex-row items-center sm:items-start gap-6">
           <div className="relative">
             <Avatar
-              src={currentUser.profilePic}
+              src={currentUser?.profilePic}
               className="w-28 h-28 border-4 border-white shadow-md"
               fallback={<FaUsers className="w-14 h-14 text-gray-400" />}
             />
@@ -364,17 +550,17 @@ const Profile = () => {
           </div>
           <div className="flex-1 text-center sm:text-left">
             <div className="flex items-center gap-2 justify-center sm:justify-start">
-              <h1 className="text-3xl font-bold">{currentUser.name}</h1>
+              <h1 className="text-3xl font-bold">{currentUser?.name}</h1>
               <Chip
-                color={currentUser.role === "mentor" ? "success" : "primary"}
+                color={currentUser?.role === "mentor" ? "success" : "primary"}
                 variant="flat"
                 size="sm"
               >
-                {currentUser.role === "mentor" ? "Mentor" : "User"}
+                {currentUser?.role === "mentor" ? "Mentor" : "User"}
               </Chip>
             </div>
             <p className="text-lg text-gray-600">
-              {currentUser.jobTitle || "No job title"}
+              {currentUser?.jobTitle || "No job title"}
             </p>
             <div className="flex items-center justify-around sm:justify-around">
               <Button
@@ -400,6 +586,9 @@ const Profile = () => {
               <h2 className="text-xl font-semibold">Profile Details</h2>
             </CardHeader>
             <CardBody className="p-6">
+              {profileError && (
+                <p className="text-red-500 mb-4">Error: {profileError}</p>
+              )}
               <Accordion variant="light">
                 <AccordionItem
                   key="professional"
@@ -413,11 +602,11 @@ const Profile = () => {
                   <div className="space-y-4">
                     <p>
                       <strong>Industry:</strong>{" "}
-                      {currentUser.industry || "Not specified"}
+                      {currentUser?.industry || "Not specified"}
                     </p>
                     <p>
                       <strong>Reason for Joining:</strong>{" "}
-                      {currentUser.reasonForJoining || "Not specified"}
+                      {currentUser?.reasonForJoining || "Not specified"}
                     </p>
                     <Button
                       size="sm"
@@ -441,13 +630,13 @@ const Profile = () => {
                 >
                   <div className="space-y-4">
                     <p className="flex items-center gap-2">
-                      <FaEnvelope /> {currentUser.email || "No email"}
+                      <FaEnvelope /> {currentUser?.email || "No email"}
                     </p>
                     <p className="flex items-center gap-2">
-                      <FaPhone /> {currentUser.phone || "No phone"}
+                      <FaPhone /> {currentUser?.phone || "No phone"}
                     </p>
                     <p className="flex items-center gap-2">
-                      <FaBirthdayCake /> {formatDate(currentUser.dateOfBirth)}
+                      <FaBirthdayCake /> {formatDate(currentUser?.dateOfBirth)}
                     </p>
                     <Button
                       size="sm"
@@ -460,7 +649,142 @@ const Profile = () => {
                     </Button>
                   </div>
                 </AccordionItem>
-                {currentUser.role === "mentor" && mentorDetails ? (
+                <AccordionItem
+                  key="password"
+                  title={
+                    <span className="flex items-center gap-2">
+                      <FaLock /> Change Password
+                    </span>
+                  }
+                  className="text-base"
+                >
+                  <div className="space-y-4">
+                    <p>Update your account password</p>
+                    <Button
+                      size="sm"
+                      variant="flat"
+                      color="primary"
+                      onPress={onPasswordModalOpen}
+                      startContent={<FaPencilAlt />}
+                    >
+                      Change Password
+                    </Button>
+                  </div>
+                </AccordionItem>
+                {currentUser?.role === "user" && (
+                  <AccordionItem
+                    key="payments"
+                    title={
+                      <span className="flex items-center gap-2">
+                        <FaCreditCard /> Payment History
+                      </span>
+                    }
+                    className="text-base"
+                  >
+                    <div className="space-y-4">
+                      {profileLoading || isPaymentLoading ? (
+                        <div className="flex justify-center items-center h-32">
+                          <Spinner
+                            size="lg"
+                            label="Loading Payment History..."
+                          />
+                        </div>
+                      ) : collabDetails?.data?.length > 0 ? (
+                        <>
+                          {collabDetails.data
+                            .filter((c) => c.payment)
+                            .map((collab, i: number) => (
+                              <Card key={i}>
+                                <CardBody>
+                                  <p>
+                                    <strong>Collaboration ID:</strong>{" "}
+                                    {collab.collaborationId}
+                                  </p>
+                                  <p>
+                                    <strong>Mentor:</strong>{" "}
+                                    {typeof collab.mentorId === "string"
+                                      ? mentorNames[collab.mentorId] ||
+                                        "Unknown Mentor"
+                                      : mentorNames[collab.mentorId._id] ||
+                                        collab.mentorId.userId?.name ||
+                                        "Unknown Mentor"}
+                                  </p>
+                                  <p>
+                                    <strong> Price:</strong>{" "}
+                                    {formatCurrency(collab.price)}
+                                  </p>
+                                  {/* <p>
+                                    <strong>Payment Intent ID:</strong>{" "}
+                                    {collab.paymentIntentId}
+                                  </p> */}
+                                  <p>
+                                    <strong>Start Date:</strong>{" "}
+                                    {formatDate(collab.startDate)}
+                                  </p>
+                                  <p>
+                                    <strong>End Date:</strong>{" "}
+                                    {formatDate(collab.endDate)}
+                                  </p>
+                                  <p>
+                                    <strong>Status:</strong>{" "}
+                                    {collab.isCancelled
+                                      ? "Cancelled"
+                                      : collab.isCompleted
+                                      ? "Completed"
+                                      : "Ongoing"}
+                                  </p>
+                                  {collab.selectedSlot &&
+                                    collab.selectedSlot.length > 0 && (
+                                      <div>
+                                        <strong>Selected Slot:</strong>{" "}
+                                        <div className="flex flex-wrap gap-2 mt-2">
+                                          {collab.selectedSlot.map(
+                                            (slot, j) => (
+                                              <Chip
+                                                key={j}
+                                                variant="flat"
+                                                color="primary"
+                                              >
+                                                {slot.day}:{" "}
+                                                {slot.timeSlots.join(", ")}
+                                              </Chip>
+                                            )
+                                          )}
+                                        </div>
+                                      </div>
+                                    )}
+                                </CardBody>
+                                {collab.paymentIntentId && (
+                                  <CardFooter>
+                                    <Button
+                                      variant="light"
+                                      color="primary"
+                                      onPress={() => {
+                                        toast.error(
+                                          "Receipt viewing is not yet implemented"
+                                        );
+                                      }}
+                                    >
+                                      View Receipt
+                                    </Button>
+                                  </CardFooter>
+                                )}
+                              </Card>
+                            ))}
+                          <p>
+                            <strong>Total Payments:</strong>{" "}
+                            {formatCurrency(totalPayments)}
+                          </p>
+                        </>
+                      ) : (
+                        <p className="text-gray-500">
+                          You haven't made any payments yet.
+                        </p>
+                      )}
+                    </div>
+                  </AccordionItem>
+                )}
+                {currentUser?.role === "mentor" && mentorDetails ? (
                   <AccordionItem
                     key="mentorship"
                     title={
@@ -478,11 +802,13 @@ const Profile = () => {
                         <strong>Available Slots:</strong>
                         {mentorDetails.availableSlots?.length ? (
                           <div className="mt-2 space-y-2">
-                            {mentorDetails.availableSlots.map((slot, i) => (
-                              <Chip key={i} variant="flat" color="primary">
-                                {slot.day}: {slot.timeSlots.join(", ")}
-                              </Chip>
-                            ))}
+                            {mentorDetails.availableSlots.map(
+                              (slot: any, i: number) => (
+                                <Chip key={i} variant="flat" color="primary">
+                                  {slot.day}: {slot.timeSlots.join(", ")}
+                                </Chip>
+                              )
+                            )}
                           </div>
                         ) : (
                           <p className="text-sm text-gray-500">No slots set</p>
@@ -574,7 +900,7 @@ const Profile = () => {
                         }
                       >
                         <RequestsSection
-                          handleProfileClick={(id) =>
+                          handleProfileClick={(id: string) =>
                             navigate(`/profileDispaly/${id}`)
                           }
                         />
@@ -595,7 +921,7 @@ const Profile = () => {
                         }
                       >
                         <ActiveCollaborations
-                          handleProfileClick={(id) =>
+                          handleProfileClick={(id: string) =>
                             navigate(`/profileDispaly/${id}`)
                           }
                         />
@@ -611,7 +937,7 @@ const Profile = () => {
                       >
                         <UserConnections
                           currentUser={currentUser}
-                          handleProfileClick={(id) =>
+                          handleProfileClick={(id: string) =>
                             navigate(`/profileDispaly/${id}`)
                           }
                         />
@@ -651,7 +977,7 @@ const Profile = () => {
                         }
                       >
                         <GroupCollaborations
-                          handleProfileClick={(id) =>
+                          handleProfileClick={(id: string) =>
                             navigate(`/profileDispaly/${id}`)
                           }
                         />
@@ -763,6 +1089,59 @@ const Profile = () => {
       </Modal>
 
       <Modal
+        isOpen={isPasswordModalOpen}
+        onClose={onPasswordModalClose}
+        size="lg"
+      >
+        <ModalContent>
+          <ModalHeader>Change Password</ModalHeader>
+          <ModalBody>
+            <Input
+              type="password"
+              label="Current Password"
+              value={passwordInfo.currentPassword}
+              onChange={(e) =>
+                setPasswordInfo({
+                  ...passwordInfo,
+                  currentPassword: e.target.value,
+                })
+              }
+            />
+            <Input
+              type="password"
+              label="New Password"
+              value={passwordInfo.newPassword}
+              onChange={(e) =>
+                setPasswordInfo({
+                  ...passwordInfo,
+                  newPassword: e.target.value,
+                })
+              }
+            />
+            <Input
+              type="password"
+              label="Confirm New Password"
+              value={passwordInfo.confirmPassword}
+              onChange={(e) =>
+                setPasswordInfo({
+                  ...passwordInfo,
+                  confirmPassword: e.target.value,
+                })
+              }
+            />
+          </ModalBody>
+          <ModalFooter>
+            <Button variant="flat" onPress={onPasswordModalClose}>
+              Cancel
+            </Button>
+            <Button color="primary" onPress={handlePasswordSubmit}>
+              Save
+            </Button>
+          </ModalFooter>
+        </ModalContent>
+      </Modal>
+
+      <Modal
         isOpen={isMentorModalOpen}
         onClose={onMentorModalClose}
         size="2xl"
@@ -779,29 +1158,86 @@ const Profile = () => {
               }
             />
             <div className="space-y-4 mt-4">
-              <div className="grid grid-cols-2 gap-4">
-                <Select
-                  label="Day"
-                  value={selectedDay}
-                  onChange={(e) => setSelectedDay(e.target.value)}
-                >
-                  {DAYS_OF_WEEK.map((day) => (
-                    <SelectItem key={day} value={day}>
-                      {day}
-                    </SelectItem>
-                  ))}
-                </Select>
-                <Select
-                  label="Time"
-                  value={selectedTime}
-                  onChange={(e) => setSelectedTime(e.target.value)}
-                >
-                  {TIME_SLOTS.map((time) => (
-                    <SelectItem key={time} value={time}>
-                      {time}
-                    </SelectItem>
-                  ))}
-                </Select>
+              <Select
+                label="Day"
+                value={selectedDay}
+                onChange={(e) => setSelectedDay(e.target.value)}
+              >
+                {DAYS_OF_WEEK.map((day) => (
+                  <SelectItem key={day} value={day}>
+                    {day}
+                  </SelectItem>
+                ))}
+              </Select>
+              <div className="space-y-4">
+                <div>
+                  <p className="font-medium mb-2">Start Time</p>
+                  <div className="grid grid-cols-2 gap-2">
+                    <Select
+                      label="Hour"
+                      value={startHour}
+                      onChange={(e) => setStartHour(e.target.value)}
+                    >
+                      {HOURS.map((hour) => (
+                        <SelectItem key={hour} value={hour}>
+                          {hour}
+                        </SelectItem>
+                      ))}
+                    </Select>
+                    <Select
+                      label="Minute"
+                      value={startMin}
+                      onChange={(e) => setStartMin(e.target.value)}
+                    >
+                      {MINUTES.map((min) => (
+                        <SelectItem key={min} value={min}>
+                          {min}
+                        </SelectItem>
+                      ))}
+                    </Select>
+                  </div>
+                </div>
+                <div>
+                  <p className="font-medium mb-2">End Time</p>
+                  <div className="grid grid-cols-2 gap-2">
+                    <Select
+                      label="Hour"
+                      value={endHour}
+                      onChange={(e) => setEndHour(e.target.value)}
+                    >
+                      {HOURS.map((hour) => (
+                        <SelectItem key={hour} value={hour}>
+                          {hour}
+                        </SelectItem>
+                      ))}
+                    </Select>
+                    <Select
+                      label="Minute"
+                      value={endMin}
+                      onChange={(e) => setEndMin(e.target.value)}
+                    >
+                      {MINUTES.map((min) => (
+                        <SelectItem key={min} value={min}>
+                          {min}
+                        </SelectItem>
+                      ))}
+                    </Select>
+                  </div>
+                </div>
+                <div>
+                  <p className="font-medium mb-2">AM/PM</p>
+                  <Select
+                    label="AM/PM"
+                    value={ampm}
+                    onChange={(e) => setAmpm(e.target.value)}
+                  >
+                    {AMPM.map((period) => (
+                      <SelectItem key={period} value={period}>
+                        {period}
+                      </SelectItem>
+                    ))}
+                  </Select>
+                </div>
               </div>
               <Button
                 color="primary"
@@ -811,11 +1247,11 @@ const Profile = () => {
                 Add Slot
               </Button>
               <div className="space-y-2">
-                {mentorshipInfo.availableSlots.map((slot, i) => (
+                {mentorshipInfo.availableSlots.map((slot: any, i: number) => (
                   <div key={i} className="flex flex-col gap-2">
                     <p className="font-medium">{slot.day}</p>
                     <div className="flex flex-wrap gap-2">
-                      {slot.timeSlots.map((time) => (
+                      {slot.timeSlots.map((time: string) => (
                         <Chip
                           key={time}
                           variant="flat"
