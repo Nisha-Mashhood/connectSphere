@@ -60,6 +60,9 @@ export const formatContact = (contact): Contact => ({
         })),
       }
     : undefined,
+    lastMessageTimestamp: contact.lastMessage?.timestamp
+    ? new Date(contact.lastMessage.timestamp).toISOString()
+    : undefined,
 });
 
 // Generates a unique chat key for a message based on its type (group, user-mentor, user-user)

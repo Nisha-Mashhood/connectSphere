@@ -5,11 +5,15 @@ import logger from '../../../core/Utils/Logger';
 import Contact from '../../../models/contacts.model';
 import { IContact } from '../../../Interfaces/models/IContact';
 import { PopulatedContact } from '../Types/types';
+import { ChatRepository } from '../../Chat/Repositry/ChatRepositry';
 
 
 export class ContactRepository extends BaseRepository<IContact> {
+  private chatRepo: ChatRepository;
+
   constructor() {
     super(Contact as Model<IContact>);
+    this.chatRepo = new ChatRepository();
   }
 
   private toObjectId(id?: string | Types.ObjectId): Types.ObjectId {
@@ -68,14 +72,16 @@ export class ContactRepository extends BaseRepository<IContact> {
     }
   }
 
-   findContactsByUserId = async(userId?: string): Promise<PopulatedContact[]> => {
+   findContactsByUserId = async (userId?: string): Promise<PopulatedContact[]> => {
     if (!userId) {
-         throw new RepositoryError('User ID not provided');
-      }
+      throw new RepositoryError('User ID not provided');
+    }
     try {
       logger.debug(`Finding contacts for user: ${userId}`);
       const uId = this.toObjectId(userId);
-      return await this.model
+
+      // Fetch contacts with populated fields
+      const contacts = await this.model
         .find({
           $or: [{ userId: uId }, { targetUserId: uId }],
         })
@@ -118,6 +124,42 @@ export class ContactRepository extends BaseRepository<IContact> {
         })
         .lean()
         .exec() as unknown as PopulatedContact[];
+
+      // Fetch the latest message for each contact
+      const contactsWithMessages = await Promise.all(
+        contacts.map(async (contact) => {
+          let lastMessage: { timestamp: Date } | null = null;
+          if (contact.type === 'group' && contact.groupId?._id) {
+            lastMessage = await this.chatRepo.findLatestMessageByGroupId(contact.groupId._id.toString());
+          } else if (contact.type === 'user-mentor' && contact.collaborationId?._id) {
+            lastMessage = await this.chatRepo.findLatestMessageByCollaborationId(contact.collaborationId._id.toString());
+          } else if (contact.type === 'user-user' && contact.userConnectionId?._id) {
+            lastMessage = await this.chatRepo.findLatestMessageByUserConnectionId(contact.userConnectionId._id.toString());
+          }
+          return { ...contact, lastMessage: lastMessage || undefined };
+        })
+      );
+
+      // Sort contacts by lastMessage.timestamp (descending)
+      const sortedContacts = contactsWithMessages.sort((a, b) => {
+        const aTimestamp = a.lastMessage?.timestamp ? new Date(a.lastMessage.timestamp).getTime() : 0;
+        const bTimestamp = b.lastMessage?.timestamp ? new Date(b.lastMessage.timestamp).getTime() : 0;
+        return bTimestamp - aTimestamp || a._id.toString().localeCompare(b._id.toString());
+      });
+
+      logger.info(`Retrieved ${sortedContacts.length} sorted contacts for user: ${userId}`);
+      logger.debug(`Sorted contacts for user ${userId}: ${JSON.stringify(
+        sortedContacts.map(c => ({
+          _id: c._id,
+          type: c.type,
+          lastMessageTimestamp: c.lastMessage?.timestamp,
+          targetUserId: c.targetUserId?._id,
+          groupId: c.groupId?._id,
+        })),
+        null,
+        2
+      )}`);
+      return sortedContacts;
     } catch (error: any) {
       logger.error(`Error finding contacts by user ID: ${error.message}`);
       throw new RepositoryError(`Error finding contacts by user ID: ${error.message}`);

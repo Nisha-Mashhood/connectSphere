@@ -4,6 +4,7 @@ import { BaseRepository } from "../../../core/Repositries/BaseRepositry";
 import { RepositoryError } from "../../../core/Utils/ErrorHandler";
 import logger from "../../../core/Utils/Logger";
 import { UserQuery } from "../Types/types";
+import { Types } from "mongoose";
 
 // Repository for User-specific database operations
 export class UserRepository extends BaseRepository<UserInterface> {
@@ -201,7 +202,7 @@ export class UserRepository extends BaseRepository<UserInterface> {
    getAllUsers = async (query: UserQuery = {}): Promise<{ users: UserInterface[]; total: number }> => {
     try {
       logger.debug(`Fetching all users with query: ${JSON.stringify(query)}`);
-      const { search, page, limit } = query;
+      const { search, page, limit, excludeId } = query;
 
       // If no query parameters, return all users without pagination
       if (!search && !page && !limit) {
@@ -216,6 +217,9 @@ export class UserRepository extends BaseRepository<UserInterface> {
       const matchStage: any = { role: "user" };
       if (search) {
         matchStage.name = { $regex: search, $options: "i" };
+      }
+      if(excludeId) {
+        matchStage._id = { $ne: new Types.ObjectId(excludeId) };
       }
 
       const pipeline = [

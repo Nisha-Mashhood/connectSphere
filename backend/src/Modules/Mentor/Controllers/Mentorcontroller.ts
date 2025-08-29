@@ -157,13 +157,24 @@ export class MentorController extends BaseController {
 
   getAllMentors = async (req: Request, res: Response): Promise<void> => {
     try {
-      const { search, page, limit, skill } = req.query;
+      const {
+        search,
+        page,
+        limit,
+        skill,
+        category,
+        sortBy,
+        sortOrder,
+      } = req.query;
       const query: any = {};
 
       if (search) query.search = search as string;
       if (page) query.page = parseInt(page as string, 10);
       if (limit) query.limit = parseInt(limit as string, 10);
       if (skill) query.skill = skill as string;
+      if (category) query.category = category as string;
+      if (sortBy) query.sortBy = sortBy as string;
+      if (sortOrder) query.sortOrder = sortOrder as string;
 
       logger.debug(`Fetching mentors with query: ${JSON.stringify(query)}`);
       const result = await this.mentorService.getAllMentors(query);
@@ -204,7 +215,9 @@ export class MentorController extends BaseController {
       }
     } catch (error: any) {
       logger.error(`Error in getAllMentors: ${error.message}`);
-      res.status(500).json({ success: false, message: `Server error: ${error.message}` });
+      res
+        .status(500)
+        .json({ success: false, message: `Server error: ${error.message}` });
     }
   };
 
@@ -330,7 +343,7 @@ export class MentorController extends BaseController {
     } catch (error: any) {
       this.handleError(error, res);
     }
-  }
+  };
 
   getSalesReport = async (req: Request, res: Response): Promise<void> => {
     try {
@@ -340,5 +353,5 @@ export class MentorController extends BaseController {
     } catch (error: any) {
       this.handleError(error, res);
     }
-  }
+  };
 }

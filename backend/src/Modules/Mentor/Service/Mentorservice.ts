@@ -9,12 +9,17 @@ import { UserInterface } from "../../../Interfaces/models/IUser";
 import { MentorAnalytics, MentorQuery, SalesReport } from "../Types/Types";
 import { ServiceError } from "../../../core/Utils/ErrorHandler";
 import { NotificationService } from "../../../Modules/Notification/Service/NotificationService";
+import { CategoryRepository } from "../../Category/Repositry/CategoryRepositry";
+import { SkillsRepository } from "../../Skills/Repositry/SkillsRepositry";
+import { Types } from "mongoose";
 
 export class MentorService extends BaseService {
   private mentorRepo: MentorRepository;
   private authRepo: UserRepository;
   private collabRepo: CollaborationRepository;
   private notificationService: NotificationService;
+  private CategoryRepo: CategoryRepository;
+  private SkillRepo: SkillsRepository;
 
   constructor() {
     super();
@@ -22,6 +27,8 @@ export class MentorService extends BaseService {
     this.authRepo = new UserRepository();
     this.collabRepo = new CollaborationRepository();
     this.notificationService = new NotificationService();
+    this.CategoryRepo = new CategoryRepository();
+    this.SkillRepo = new SkillsRepository();
   }
 
   submitMentorRequest = async (mentorData: {
@@ -92,7 +99,36 @@ export class MentorService extends BaseService {
       logger.debug(
         `Fetching all approved mentors with query: ${JSON.stringify(query)}`
       );
-      return await this.mentorRepo.getAllMentors(query);
+      const modifiedQuery: MentorQuery = { ...query };
+      if (query.category && Types.ObjectId.isValid(query.category)) {
+        const categoryDoc = await this.CategoryRepo.getCategoryById(query.category);
+        if (categoryDoc) {
+          modifiedQuery.category = categoryDoc.name;
+          logger.info(`Mapped category ID: ${query.category} to name: ${categoryDoc.name}`);
+        } else {
+          logger.warn(`Category ID not found: ${query.category}`);
+          modifiedQuery.category = query.category; 
+        }
+      } else if (query.category) {
+        logger.info(`Using provided category name: ${query.category}`);
+      }
+
+      // Map skill ID to name
+      if (query.skill && Types.ObjectId.isValid(query.skill)) {
+        const skillDoc = await this.SkillRepo.getSkillById(query.skill);
+        if (skillDoc) {
+          modifiedQuery.skill = skillDoc.name;
+          logger.info(`Mapped skill ID: ${query.skill} to name: ${skillDoc.name}`);
+        } else {
+          logger.warn(`Skill ID not found: ${query.skill}`);
+          modifiedQuery.skill = query.skill;
+        }
+      } else if (query.skill) {
+        logger.info(`Using provided skill name: ${query.skill}`);
+      }
+
+      logger.debug(`Modified query: ${JSON.stringify(modifiedQuery, null, 2)}`);
+      return await this.mentorRepo.getAllMentors(modifiedQuery);
     } catch (error) {
       logger.error(`Error fetching mentors: ${error}`);
       throw error instanceof ServiceError
@@ -104,7 +140,7 @@ export class MentorService extends BaseService {
   getMentorByMentorId = async (mentorId: string): Promise<IMentor | null> => {
     logger.debug(`Fetching mentor by ID: ${mentorId}`);
     this.checkData(mentorId);
-    return await this.mentorRepo.getMentorDetails(mentorId);
+    return await this.mentorRepo.getMentorById(mentorId);
   };
 
   approveMentorRequest = async (id: string): Promise<void> => {

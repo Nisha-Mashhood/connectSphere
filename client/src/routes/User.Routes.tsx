@@ -23,6 +23,8 @@ import GroupDetails from "../Components/User/Common/Profile/GroupDetails";
 import GroupDetailView from "../Components/User/Common/Profile/GroupDetailView";
 import CollaborationDetails from "../Components/User/Common/Profile/CollaboartionDetails/CollaborationDetails";
 import Chat from "../Components/User/Common/Chat/Chat";
+// import { path } from 'path';
+import MentorDashBoard from "../Components/User/Common/Profile/MentorDashBoard";
 
 
 
@@ -52,6 +54,7 @@ const UserRoutes = () => (
         <Route path="/collaboration/:collabId" element={<CollaborationDetails />} />
         <Route path="/chat" element={<Chat />} />
         <Route path="/chat/:type/:id" element={<Chat />} />
+        <Route path="/mentor-dashboard" element={<MentorDashBoard />} />
       </Route>
 
       <Route path="*" element={<PageNotFound />} />

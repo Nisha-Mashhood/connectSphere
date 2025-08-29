@@ -31,6 +31,8 @@ export interface MentorQuery {
   search?: string;
   page?: number;
   limit?: number;
-  category?: string;
   skill?: string;
+  category?: string;
+  sortBy?: 'rating' | 'price' | 'feedbackCount' | 'name';
+  sortOrder?: 'asc' | 'desc';
 }

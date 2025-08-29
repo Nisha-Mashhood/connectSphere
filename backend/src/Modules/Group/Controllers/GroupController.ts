@@ -73,12 +73,13 @@ export class GroupController {
 
     getAllGroups = async (req: Request, res: Response): Promise<void> => {
     try {
-      const { search, page, limit } = req.query;
+      const { search, page, limit, excludeAdminId } = req.query;
       const query: any = {};
       
       if (search) query.search = search as string;
       if (page) query.page = parseInt(page as string, 10);
       if (limit) query.limit = parseInt(limit as string, 10);
+      if (excludeAdminId) query.excludeAdminId = excludeAdminId as string;
 
       logger.debug(`Fetching groups with query: ${JSON.stringify(query)}`);
       const result = await this.groupService.getAllGroups(query);

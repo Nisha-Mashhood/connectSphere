@@ -1,4 +1,10 @@
-import React, { useState, useEffect, useRef, useCallback, useMemo } from "react";
+import React, {
+  useState,
+  useEffect,
+  useRef,
+  useCallback,
+  useMemo,
+} from "react";
 import { useSelector } from "react-redux";
 import { RootState } from "../../../../redux/store";
 import { useNavigate, useParams } from "react-router-dom";
@@ -10,7 +16,7 @@ import ChatDetailsSidebar from "./ChatDetailsSideBar/ChatDetailsSidebar";
 import ChatMessages from "./ChatMessages/ChatMessages";
 import ChatInput from "./ChatInput/ChatInput";
 import { Card } from "@nextui-org/react";
-import { Contact, IChatMessage } from "../../../../types";
+import { Contact, ICallLog, IChatMessage } from "../../../../types";
 import {
   deduplicateMessages,
   formatContact,
@@ -32,6 +38,7 @@ import { setSelectedContact as setSelectedContactRedux } from "../../../../redux
 import { useDispatch } from "react-redux";
 import { fetchUserDetails } from "../../../../Service/Auth.service";
 import ringTone from "../../../../assets/ringTone.mp3";
+import { getCallLogs } from "../../../../Service/Call.Service";
 const Chat: React.FC = () => {
   const { type, id } = useParams<{ type?: string; id?: string }>();
   const navigate = useNavigate();
@@ -51,6 +58,10 @@ const Chat: React.FC = () => {
   const [typingUsers, setTypingUsers] = useState<{ [key: string]: string[] }>(
     {}
   );
+  const [lastMessages, setLastMessages] = useState<{
+    [key: string]: IChatMessage | null;
+  }>({});
+  const [callLogs, setCallLogs] = useState<ICallLog[]>([]);
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
   const [isDetailsSidebarOpen, setIsDetailsSidebarOpen] = useState(false);
   const [isVideoCallActive, setIsVideoCallActive] = useState(false);
@@ -66,47 +77,67 @@ const Chat: React.FC = () => {
   const fetchAbortControllerRef = useRef<AbortController | null>(null);
 
   const getChatKey = (contact: Contact): string => {
-  if (contact.type === "group") {
-    return `group_${contact.groupId}`;
-  } else if (contact.type === "user-mentor") {
-    return `user-mentor_${contact.collaborationId}`;
-  } else {
-    return `user-user_${contact.userConnectionId}`;
-  }
-}
-
-
- const fetchUnreadCounts = useCallback(
-  debounce(async () => {
-    if (!currentUser?._id) {
-      console.warn("No current user ID, skipping unread counts fetch");
-      return;
+    if (contact.type === "group") {
+      return `group_${contact.groupId}`;
+    } else if (contact.type === "user-mentor") {
+      return `user-mentor_${contact.collaborationId}`;
+    } else {
+      return `user-user_${contact.userConnectionId}`;
     }
-    try {
-      console.log("Fetching unread counts for user:", currentUser._id);
-      const data = await getUnreadMessages(currentUser._id);
-      console.log("Unread Messages:", data);
-      setUnreadCounts(data);
-    } catch (error) {
-      console.error("Error fetching unread counts:", {
-        message: error.message,
-        error,
-      });
-      if (
-        !error.message.includes("No unread messages") &&
-        !error.message.includes("HTTP 404") &&
-        !error.message.includes("No messages")
-      ) {
-        // toast.error(`Error fetching unread counts`);
-        console.log(error);
-      } else {
-        console.log("Non-critical error, setting empty unread counts");
-        setUnreadCounts({});
+  };
+
+  const sortedContacts = useMemo(() => {
+    return [...contacts].sort((a, b) => {
+      const chatKeyA = getChatKey(a);
+      const chatKeyB = getChatKey(b);
+      const lastMessageA = lastMessages[chatKeyA];
+      const lastMessageB = lastMessages[chatKeyB];
+
+      const timeA = lastMessageA?.timestamp
+        ? new Date(lastMessageA.timestamp).getTime()
+        : a.lastMessageTimestamp
+        ? new Date(a.lastMessageTimestamp).getTime()
+        : 0;
+      const timeB = lastMessageB?.timestamp
+        ? new Date(lastMessageB.timestamp).getTime()
+        : b.lastMessageTimestamp
+        ? new Date(b.lastMessageTimestamp).getTime()
+        : 0;
+
+      return timeB - timeA;
+    });
+  }, [contacts, lastMessages]);
+
+  const fetchUnreadCounts = useCallback(
+    debounce(async () => {
+      if (!currentUser?._id) {
+        console.warn("No current user ID, skipping unread counts fetch");
+        return;
       }
-    }
-  }, 500),
-  [currentUser?._id]
-)
+      try {
+        console.log("Fetching unread counts for user:", currentUser._id);
+        const data = await getUnreadMessages(currentUser._id);
+        console.log("Unread Messages:", data);
+        setUnreadCounts(data);
+      } catch (error) {
+        console.error("Error fetching unread counts:", {
+          message: error.message,
+          error,
+        });
+        if (
+          !error.message.includes("No unread messages") &&
+          !error.message.includes("HTTP 404") &&
+          !error.message.includes("No messages")
+        ) {
+          console.log(error);
+        } else {
+          console.log("Non-critical error, setting empty unread counts");
+          setUnreadCounts({});
+        }
+      }
+    }, 500),
+    [currentUser?._id]
+  );
 
   const updateMessages = useCallback(
     debounce((chatKey: string, newMessages: IChatMessage[]) => {
@@ -122,44 +153,49 @@ const Chat: React.FC = () => {
     []
   );
 
+  const debouncedFetchMessages = useMemo(
+    () =>
+      debounce(async (contact: Contact) => {
+        const chatKey = getChatKey(contact);
 
-  const debouncedFetchMessages = useMemo(() => debounce(async (contact: Contact) => {
-  const chatKey = getChatKey(contact);
+        // Abort any previous fetch
+        if (fetchAbortControllerRef.current) {
+          fetchAbortControllerRef.current.abort();
+        }
 
-  // Abort any previous fetch
-  if (fetchAbortControllerRef.current) {
-    fetchAbortControllerRef.current.abort();
-  }
+        // Create new controller for new request
+        const controller = new AbortController();
+        fetchAbortControllerRef.current = controller;
 
-  // Create new controller for new request
-  const controller = new AbortController();
-  fetchAbortControllerRef.current = controller;
+        try {
+          const { messages } = await fetchChatMessages(
+            contact.type !== "group" ? contact.contactId : undefined,
+            contact.type === "group" ? contact.groupId : undefined,
+            1,
+            10,
+            controller.signal
+          );
+          console.log("Messages fetched:", messages);
+          setAllMessages((prev: Map<string, IChatMessage[]>) => {
+            const currentMessages = prev.get(chatKey) || [];
+            const updatedMessages = [...messages, ...currentMessages];
+            return new Map(prev).set(
+              chatKey,
+              deduplicateMessages(updatedMessages)
+            );
+          });
 
-  try {
-    const { messages } = await fetchChatMessages(
-      contact.type !== "group" ? contact.contactId : undefined,
-      contact.type === "group" ? contact.groupId : undefined,
-      1,
-      10,
-      controller.signal
-    );
-    console.log("Messages fetched:", messages);
-    setAllMessages((prev: Map<string, IChatMessage[]>) => {
-      const currentMessages = prev.get(chatKey) || [];
-      const updatedMessages = [...messages, ...currentMessages];
-      return new Map(prev).set(chatKey, deduplicateMessages(updatedMessages));
-    });
-
-    if (messages.length > 0 && currentUser?._id) {
-      socketService.markAsRead(chatKey, currentUser._id, contact.type);
-    }
-  } catch (error) {
-    if (error.name !== "CanceledError") {
-      console.error("Error preloading messages:", error);
-    }
-  }
-}, 300), [currentUser?._id]);
-
+          if (messages.length > 0 && currentUser?._id) {
+            socketService.markAsRead(chatKey, currentUser._id, contact.type);
+          }
+        } catch (error) {
+          if (error.name !== "CanceledError") {
+            console.error("Error preloading messages:", error);
+          }
+        }
+      }, 300),
+    [currentUser?._id]
+  );
 
   useEffect(() => {
     if (ringtone.current) {
@@ -176,7 +212,6 @@ const Chat: React.FC = () => {
       };
       ringtone.current.onerror = (e) => {
         console.error("Audio element error:", e);
-        toast.error("Failed to load ringtone audio. Check file path.");
       };
     }
   }, []);
@@ -258,6 +293,16 @@ const Chat: React.FC = () => {
     }
   }, []);
 
+  const fetchCallLogs = useCallback(async () => {
+    try {
+      const data = await getCallLogs();
+      console.log("Raw Call Logs Data:", JSON.stringify(data, null, 2));
+      setCallLogs(data);
+    } catch (error) {
+      console.error("Error fetching call logs:", error.message);
+    }
+  }, []);
+
   useEffect(() => {
     if (!currentUser?._id) return;
 
@@ -271,6 +316,7 @@ const Chat: React.FC = () => {
     const handleReceiveMessage = async (message: IChatMessage) => {
       const chatKey = getChatKeyFromMessage(message);
       updateMessages(chatKey, [message]);
+      setLastMessages((prev) => ({ ...prev, [chatKey]: message }));
       fetchUnreadCounts();
 
       if (isInChatComponent) {
@@ -310,6 +356,7 @@ const Chat: React.FC = () => {
         }
         return new Map(prev).set(chatKey, deduplicateMessages(updatedMessages));
       });
+      setLastMessages((prev) => ({ ...prev, [chatKey]: message }));
     };
 
     const handleTyping = ({
@@ -411,7 +458,6 @@ const Chat: React.FC = () => {
         }
       } catch (error) {
         console.error("Error handling offer:", error);
-        toast.error("Failed to process incoming call.");
       }
     };
 
@@ -443,13 +489,69 @@ const Chat: React.FC = () => {
           ringtone.current.currentTime = 0;
           isRingtonePlaying.current = false;
         }
-        toast.success(
-          `${callType.charAt(0).toUpperCase() + callType.slice(1)} call ended`,
-          { duration: 3000 }
-        );
+        // toast.success(
+        //   `${callType.charAt(0).toUpperCase() + callType.slice(1)} call ended`,
+        //   { duration: 3000 }
+        // );
       }
-    };
+    }
 
+    const handleCallLogCreated = (callLog: ICallLog) => {
+    setCallLogs((prev) => {
+      if (prev.some((log) => log._id === callLog._id)) {
+        return prev; 
+      }
+      return [callLog, ...prev];
+    });
+    if (callLog.senderId._id !== currentUser._id) {
+      playRingtone();
+      // toast.success(
+      //   `Incoming ${callLog.callType} call from ${callLog.callerName || "Unknown"}`,
+      //   { duration: 3000 }
+      // );
+    } else {
+      toast.success(`Outgoing ${callLog.callType} call started`, {
+        duration: 3000,
+      });
+    }
+  };
+
+  const handleCallLogUpdated = (callLog: ICallLog) => {
+  setCallLogs((prev) =>
+    prev.map((log) => (log._id === callLog._id ? callLog : log))
+  );
+  if (
+    (callLog.status === "missed" || callLog.status === "completed") &&
+    ringtone.current &&
+    isRingtonePlaying.current
+  ) {
+    ringtone.current.pause();
+    ringtone.current.currentTime = 0;
+    isRingtonePlaying.current = false;
+    console.log("Stopped ringtone for callLog:", callLog._id);
+  }
+  setIncomingCall(null);
+
+  const isSender = typeof callLog.senderId === "string"
+    ? callLog.senderId === currentUser._id
+    : callLog.senderId._id === currentUser._id;
+  const callerName = typeof callLog.senderId === "string"
+    ? callLog.callerName || "Unknown"
+    : callLog.senderId.name || callLog.callerName || "Unknown";
+
+  if (callLog.status === "missed" && !isSender) {
+    console.log("Showing missed call toast for:", callerName);
+    // toast.error(`Missed ${callLog.callType} call from ${callerName}`, {
+    //   duration: 3000,
+    // });
+  } else if (callLog.status === "completed") {
+    console.log("Showing completed call toast for:", callerName);
+    // toast.success(
+    //   `${callLog.callType.charAt(0).toUpperCase() + callLog.callType.slice(1)} call completed (Duration: ${callLog.duration || 0}s)`,
+    //   { duration: 3000 }
+    // );
+  }
+}
     socketService.onReceiveMessage(handleReceiveMessage);
     socketService.onMessageSaved(handleMessageSaved);
     socketService.onTyping(handleTyping);
@@ -458,9 +560,13 @@ const Chat: React.FC = () => {
     socketService.onOffer(handleOffer);
     socketService.onAnswer(handleAnswer);
     socketService.onCallEnded(handleCallEnded);
+    socketService.onCallLogCreated(handleCallLogCreated);
+    socketService.onCallLogUpdated(handleCallLogUpdated);
+    socketService.socket?.on("contactsUpdated", handleContactsUpdated);
 
     fetchContacts();
     fetchUnreadCounts();
+    fetchCallLogs();
 
     const currentRingTone = ringtone.current;
     return () => {
@@ -477,12 +583,15 @@ const Chat: React.FC = () => {
       socketService.socket?.off("offer", handleOffer);
       socketService.socket?.off("answer", handleAnswer);
       socketService.socket?.off("callEnded", handleCallEnded);
+      socketService.socket?.off("contactsUpdated", handleContactsUpdated);
+      socketService.offCallLogCreated(handleCallLogCreated);
+      socketService.offCallLogUpdated(handleCallLogUpdated);
       // socketService.disconnect();
 
       debouncedFetchMessages.cancel();
-    if (fetchAbortControllerRef.current) {
-      fetchAbortControllerRef.current.abort();
-    }
+      if (fetchAbortControllerRef.current) {
+        fetchAbortControllerRef.current.abort();
+      }
 
       if (currentRingTone && isRingtonePlaying.current) {
         currentRingTone.pause();
@@ -497,12 +606,69 @@ const Chat: React.FC = () => {
       const contactData = await getUserContacts();
       console.log("Fetched Contacts : ", contactData);
       const formattedContacts = contactData.map(formatContact);
-      console.log("Received contacts :", formattedContacts);
+      console.log(
+        "Received contacts: ",
+        JSON.stringify(
+          formattedContacts.map((c) => ({
+            _id: c._id,
+            contactId: c.contactId,
+            type: c.type,
+            name: c.name,
+            targetId: c.targetId,
+            lastMessageTimestamp: c.lastMessageTimestamp,
+          })),
+          null,
+          2
+        )
+      );
       setContacts(formattedContacts);
       setInitialContact(formattedContacts);
     } catch (error) {
       console.error("Error fetching contacts:", error);
     }
+  };
+
+  useEffect(() => {
+    if (contacts.length > 0 && currentUser?._id) {
+      const fetchLastMessages = async () => {
+        // setIsLastMessagesLoading(true);
+        const promises = contacts.map(async (contact) => {
+          const chatKey = getChatKey(contact);
+          try {
+            const { messages } = await fetchChatMessages(
+              contact.type !== "group" ? contact.contactId : undefined,
+              contact.type === "group" ? contact.groupId : undefined,
+              1,
+              1
+            );
+            return { chatKey, lastMessage: messages[0] || null };
+          } catch (error) {
+            console.error(`Error fetching last message for ${chatKey}:`, error);
+            return { chatKey, lastMessage: null };
+          }
+        });
+
+        const results = await Promise.all(promises);
+        const lastMsgs = results.reduce((acc, { chatKey, lastMessage }) => {
+          acc[chatKey] = lastMessage;
+          return acc;
+        }, {} as { [key: string]: IChatMessage | null });
+
+        setLastMessages(lastMsgs);
+        // setIsLastMessagesLoading(false);
+      };
+
+      fetchLastMessages();
+    }
+  }, [contacts, currentUser?._id]);
+
+  const debouncedFetchContacts = useCallback(debounce(fetchContacts, 300), [
+    currentUser?._id,
+  ]);
+
+  const handleContactsUpdated = () => {
+    console.log("Chat: Received contactsUpdated event, refetching contacts");
+    debouncedFetchContacts();
   };
 
   const setInitialContact = (contacts: Contact[]) => {
@@ -523,26 +689,30 @@ const Chat: React.FC = () => {
   };
 
   const handleContactSelect = useCallback(
-  async (
-    contact: Contact,
-  ) => {
-    console.log("Contact is selected:", contact);
-    if (!contact.contactId && !contact.groupId) {
-      console.warn("Invalid contact: missing contactId or groupId", { contact });
-      return;
-    }
-    if (contact.type === "user-user" && !contact.userConnectionId) {
-      console.warn("Invalid user-user contact: missing userConnectionId", { contact });
-      return;
-    }
-    if (contact.type === "user-mentor" && !contact.collaborationId) {
-      console.warn("Invalid user-mentor contact: missing collaborationId", { contact });
-      return;
-    }
-    setSelectedContact(contact);
-    const chatKey = getChatKey(contact);
-    console.log("Token:", localStorage.getItem("authToken"), document.cookie);
-    // try {
+    async (contact: Contact) => {
+      console.log("Contact is selected:", contact);
+      if (!contact.contactId && !contact.groupId) {
+        console.warn("Invalid contact: missing contactId or groupId", {
+          contact,
+        });
+        return;
+      }
+      if (contact.type === "user-user" && !contact.userConnectionId) {
+        console.warn("Invalid user-user contact: missing userConnectionId", {
+          contact,
+        });
+        return;
+      }
+      if (contact.type === "user-mentor" && !contact.collaborationId) {
+        console.warn("Invalid user-mentor contact: missing collaborationId", {
+          contact,
+        });
+        return;
+      }
+      setSelectedContact(contact);
+      const chatKey = getChatKey(contact);
+      console.log("Token:", localStorage.getItem("authToken"), document.cookie);
+      // try {
       // const { messages } = await fetchChatMessages(
       //   contact.type !== "group" ? contact.contactId : undefined,
       //   contact.type === "group" ? contact.groupId : undefined,
@@ -558,38 +728,44 @@ const Chat: React.FC = () => {
       // if (messages.length > 0 && currentUser?._id) {
       //   socketService.markAsRead(chatKey, currentUser._id, contact.type);
       // }
-    // } catch (error) {
-    //   console.error("Error preloading messages:", {
-    //     message: error.message,
-    //     status: error.response?.status,
-    //     data: error.response?.data,
-    //     contact,
-    //   });
-    // }
-    dispatch(setActiveChatKey(chatKey));
-    socketService.emitActiveChat(currentUser._id, chatKey);
-    dispatch(setSelectedContactRedux(contact));
-    try {
-      const relevantNotifications = chatNotifications.filter(
-        (n) =>
-          n.relatedId === chatKey &&
-          n.status === "unread" &&
-          ["message", "missed_call", "incoming_call"].includes(n.type)
-      );
-      for (const notification of relevantNotifications) {
-        await markNotificationService(notification._id, currentUser?._id || "");
-        dispatch(markNotificationAsRead(notification._id));
-        socketService.markNotificationAsRead(notification._id, currentUser?._id || "");
+      // } catch (error) {
+      //   console.error("Error preloading messages:", {
+      //     message: error.message,
+      //     status: error.response?.status,
+      //     data: error.response?.data,
+      //     contact,
+      //   });
+      // }
+      dispatch(setActiveChatKey(chatKey));
+      socketService.emitActiveChat(currentUser._id, chatKey);
+      dispatch(setSelectedContactRedux(contact));
+      try {
+        const relevantNotifications = chatNotifications.filter(
+          (n) =>
+            n.relatedId === chatKey &&
+            n.status === "unread" &&
+            ["message", "missed_call", "incoming_call"].includes(n.type)
+        );
+        for (const notification of relevantNotifications) {
+          await markNotificationService(
+            notification._id,
+            currentUser?._id || ""
+          );
+          dispatch(markNotificationAsRead(notification._id));
+          socketService.markNotificationAsRead(
+            notification._id,
+            currentUser?._id || ""
+          );
+        }
+        navigate(`/chat/${contact.type}/${contact.id}`);
+      } catch (error) {
+        console.error("Error marking notifications as read:", error);
       }
-      navigate(`/chat/${contact.type}/${contact.id}`);
-    } catch (error) {
-      console.error("Error marking notifications as read:", error);
-    }
-    fetchUnreadCounts();
-    setIsSidebarOpen(false);
-  },
-  [currentUser?._id, chatNotifications, dispatch, navigate, fetchUnreadCounts]
-);
+      fetchUnreadCounts();
+      setIsSidebarOpen(false);
+    },
+    [currentUser?._id, chatNotifications, dispatch, navigate, fetchUnreadCounts]
+  );
 
   const toggleSidebar = () => setIsSidebarOpen((prev) => !prev);
   const toggleDetailsSidebar = () => setIsDetailsSidebarOpen((prev) => !prev);
@@ -602,11 +778,14 @@ const Chat: React.FC = () => {
         }`}
       >
         <ChatSidebar
-          contacts={contacts}
+          contacts={sortedContacts}
           selectedContact={selectedContact}
           onContactSelect={handleContactSelect}
           chatNotifications={chatNotifications}
           unreadCounts={unreadCounts}
+          lastMessages={lastMessages}
+          currentUserId={currentUser?._id || ""}
+          callLogs={callLogs}
         />
       </div>
       <div className="flex-1 flex flex-col min-w-0">

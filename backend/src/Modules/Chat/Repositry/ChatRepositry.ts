@@ -315,5 +315,53 @@ export class ChatRepository extends BaseRepository<IChatMessage> {
         `Error marking messages as read: ${error.message}`
       );
     }
-  };
+  }
+
+  async findLatestMessageByGroupId(groupId: string): Promise<{ timestamp: Date } | null> {
+    try {
+      logger.debug(`Finding latest message for groupId: ${groupId}`);
+      const message = await this.model
+        .findOne({ groupId: this.toObjectId(groupId) })
+        .sort({ timestamp: -1 })
+        .select('timestamp')
+        .lean()
+        .exec();
+      return message ? { timestamp: message.timestamp } : null;
+    } catch (error: any) {
+      logger.error(`Error finding latest message by groupId ${groupId}: ${error.message}`);
+      throw new RepositoryError(`Error finding latest message: ${error.message}`);
+    }
+  }
+
+  async findLatestMessageByCollaborationId(collaborationId: string): Promise<{ timestamp: Date } | null> {
+    try {
+      logger.debug(`Finding latest message for collaborationId: ${collaborationId}`);
+      const message = await this.model
+        .findOne({ collaborationId: this.toObjectId(collaborationId) })
+        .sort({ timestamp: -1 })
+        .select('timestamp')
+        .lean()
+        .exec();
+      return message ? { timestamp: message.timestamp } : null;
+    } catch (error: any) {
+      logger.error(`Error finding latest message by collaborationId ${collaborationId}: ${error.message}`);
+      throw new RepositoryError(`Error finding latest message: ${error.message}`);
+    }
+  }
+
+  async findLatestMessageByUserConnectionId(userConnectionId: string): Promise<{ timestamp: Date } | null> {
+    try {
+      logger.debug(`Finding latest message for userConnectionId: ${userConnectionId}`);
+      const message = await this.model
+        .findOne({ userConnectionId: this.toObjectId(userConnectionId) })
+        .sort({ timestamp: -1 })
+        .select('timestamp')
+        .lean()
+        .exec();
+      return message ? { timestamp: message.timestamp } : null;
+    } catch (error: any) {
+      logger.error(`Error finding latest message by userConnectionId ${userConnectionId}: ${error.message}`);
+      throw new RepositoryError(`Error finding latest message: ${error.message}`);
+    }
+  }
 }

@@ -312,12 +312,13 @@ export class AuthController extends BaseController {
   //get all User Details
    getAllUsers = async (req: Request, res: Response): Promise<void> => {
     try {
-      const { search, page, limit } = req.query;
+      const { search, page, limit, excludeId } = req.query;
       const query: any = {};
 
       if (search) query.search = search as string;
       if (page) query.page = parseInt(page as string, 10);
       if (limit) query.limit = parseInt(limit as string, 10);
+      if(excludeId) query.excludeId = excludeId as string
 
       logger.debug(`Fetching users with query: ${JSON.stringify(query)}`);
       const result = await this.authService.getAllUsers(query);

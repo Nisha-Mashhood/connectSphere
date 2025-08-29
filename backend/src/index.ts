@@ -25,6 +25,7 @@ import chatRoutes from "./Modules/Chat/Routes/ChatRoutes";
 import contactsRoutes from "./Modules/Contact/Routes/ContactRoutes";
 import reviewsRoutes from "./Modules/Review/Routes/ReviewRoutes";
 import contactUsRoutes from "./Modules/ContactUs/Routes/ContactUsRoutes";
+import callLogRoutes from "./Modules/Call/Routes/CallRoutes";
 import { errorHandler } from "./core/Utils/ErrorHandler";
 // import { CleanupRepository } from "./core/Repositries/CleanUpRepositry";
 
@@ -73,6 +74,7 @@ const startServer = async () => {
   app.use("/api/contacts", contactsRoutes);
   app.use("/api/reviews", reviewsRoutes);
   app.use("/api/contactUs", contactUsRoutes);
+  app.use("/api/callLog",callLogRoutes);
 
   // Placeholder route
   app.get("/", (_req, res) => {

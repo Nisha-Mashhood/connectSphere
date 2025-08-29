@@ -17,4 +17,5 @@ export const COLLABORATION_ROUTES = {
   GetAllMentorRequests: '/getAllRequest',
   GetAllCollabs: '/getAllCollab',
   // RefundCollab: '/refund/:collabId',
+  GetReceiptDownload: '/receipt/:collabId',
 } as const;

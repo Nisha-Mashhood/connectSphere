@@ -86,10 +86,12 @@ const GroupCall = React.forwardRef<
       }
       localStream.current = stream;
       isStreamReady.current = true;
+      console.log(`Stream acquired, isStreamReady set to true`);
       return stream;
     } catch (error) {
       console.error(` Error acquiring ${type} stream:`, error);
       toast.error(`Failed to acquire ${type} stream. Check permissions.`);
+      isStreamReady.current = false;
       return null;
     }
   };
@@ -181,6 +183,7 @@ const GroupCall = React.forwardRef<
           `Failed to initialize peer connection for ${remoteUserId}`
         );
       }
+
       console.log(
         `Local stream before transceiver setup for ${remoteUserId}:`,
         localStream.current
@@ -193,8 +196,8 @@ const GroupCall = React.forwardRef<
           : null
       );
 
-      // Add tracks for both offerer and callee to enable bidirectional streaming
-      if (localStream.current && callTypeRef.current) {
+      // Only add tracks/transceivers for offerer (before creating offer)
+      if (isOfferer && localStream.current && callTypeRef.current) {
         console.log(
           ` Setting up sendrecv transceivers and tracks for ${remoteUserId}`
         );
@@ -215,45 +218,43 @@ const GroupCall = React.forwardRef<
           toast.error(`No tracks available for ${remoteUserId}`);
           return;
         }
-        const existingTransceivers = peerConnection.getTransceivers();
-        const audioTransceiver = existingTransceivers.find(
-          (t) => t.sender.track?.kind === "audio"
-        );
-        const videoTransceiver =
-          callTypeRef.current === "video"
-            ? existingTransceivers.find((t) => t.sender.track?.kind === "video")
-            : null;
 
-        if (!audioTransceiver) {
+        // Add transceivers if needed
+        const existingTransceivers = peerConnection.getTransceivers();
+        if (
+          !existingTransceivers.some((t) => t.sender.track?.kind === "audio")
+        ) {
           peerConnection.addTransceiver("audio", { direction: "sendrecv" });
         }
-        if (callTypeRef.current === "video" && !videoTransceiver) {
+        if (
+          callTypeRef.current === "video" &&
+          !existingTransceivers.some((t) => t.sender.track?.kind === "video")
+        ) {
           peerConnection.addTransceiver("video", { direction: "sendrecv" });
         }
+
+        // Add tracks
         tracks.forEach((track) => {
-          try {
-            const existingSender = peerConnection
-              .getSenders()
-              .find((s) => s.track?.id === track.id);
-            if (!existingSender) {
-              webRTCServiceRef.current.addTrack(
-                remoteUserId,
-                track,
-                localStream.current!
-              );
-              console.log(
-                ` Added track ${track.kind}:${track.id} for ${remoteUserId}`
-              );
-            } else {
-              console.log(
-                ` Skipping already added track ${track.kind}:${track.id} for ${remoteUserId}`
-              );
-            }
-          } catch (error) {
-            console.error(` Error adding track for ${remoteUserId}:`, error);
-            toast.error(`Failed to add track for ${remoteUserId}`);
+          const existingSender = peerConnection
+            .getSenders()
+            .find((s) => s.track?.id === track.id);
+          if (!existingSender) {
+            webRTCServiceRef.current.addTrack(
+              remoteUserId,
+              track,
+              localStream.current!
+            );
+            console.log(
+              ` Added track ${track.kind}:${track.id} for ${remoteUserId}`
+            );
+          } else {
+            console.log(
+              ` Skipping already added track ${track.kind}:${track.id} for ${remoteUserId}`
+            );
           }
         });
+
+        // Set directions
         const transceivers = peerConnection.getTransceivers();
         transceivers.forEach((t) => {
           if (t.sender.track && t.direction !== "sendrecv") {
@@ -263,6 +264,7 @@ const GroupCall = React.forwardRef<
             t.direction = "sendrecv";
           }
         });
+
         console.log(
           ` Transceivers after setup for ${remoteUserId}:`,
           transceivers.map((t) => ({
@@ -273,6 +275,10 @@ const GroupCall = React.forwardRef<
               ? { kind: t.sender.track.kind, id: t.sender.track.id }
               : null,
           }))
+        );
+      } else if (!isOfferer) {
+        console.log(
+          `Skipping track addition for answerer ${remoteUserId}; will add after setRemoteDescription`
         );
       } else {
         console.error(
@@ -357,10 +363,10 @@ const GroupCall = React.forwardRef<
       };
 
       webRTCServiceRef.current.onIceCandidate(remoteUserId, (candidate) => {
-        if (candidate.candidate === '') {
-    console.log(`ICE gathering complete for ${remoteUserId}`);
-    return;
-  }
+        if (candidate.candidate === "") {
+          console.log(`ICE gathering complete for ${remoteUserId}`);
+          return;
+        }
         console.log(
           `Emitting ICE candidate to ${remoteUserId} for callId: ${callIdToUse}`
         );
@@ -386,6 +392,37 @@ const GroupCall = React.forwardRef<
             tracks: s.getTracks().map((t) => ({ kind: t.kind, id: t.id })),
           })),
         });
+        if (event.track.kind === "video") {
+          console.log(`Video track details for ${targetId}:`, {
+            muted: event.track.muted,
+            enabled: event.track.enabled,
+            readyState: event.track.readyState,
+            width: event.track.getSettings().width,
+            height: event.track.getSettings().height,
+            frameRate: event.track.getSettings().frameRate,
+          });
+          // Log negotiated codec
+          const peerConnection =
+            webRTCServiceRef.current.getPeerConnection(targetId);
+          if (peerConnection) {
+            const transceiver = peerConnection
+              .getTransceivers()
+              .find((t) => t.receiver.track === event.track);
+            if (transceiver) {
+              const capabilities = RTCRtpReceiver.getCapabilities("video");
+              if (capabilities && capabilities.codecs) {
+                console.log(
+                  `Available video codecs for ${targetId}:`,
+                  capabilities.codecs.map((c) => c.mimeType)
+                );
+              } else {
+                console.log(
+                  `No video codec capabilities available for ${targetId}`
+                );
+              }
+            }
+          }
+        }
         if (!event.streams || event.streams.length === 0) {
           console.warn(`No streams received for ${targetId}, track:`, {
             kind: event.track.kind,
@@ -406,6 +443,11 @@ const GroupCall = React.forwardRef<
           }))
         );
         remoteStreams.current.set(targetId, remoteStream);
+
+        setJoinedMembers((prev) =>
+          prev.includes(targetId) ? prev : [...prev, targetId]
+        );
+
         const remoteVideo = remoteVideoRefs.current.get(targetId);
         if (remoteVideo) {
           if (remoteVideo.srcObject !== remoteStream) {
@@ -434,6 +476,26 @@ const GroupCall = React.forwardRef<
           console.log(
             ` No video element yet for ${targetId}, stream stored for later attachment`
           );
+        }
+        if (peerConnection && event.track.kind === "video") {
+          setInterval(() => {
+            peerConnection.getStats().then((stats) => {
+              stats.forEach((report) => {
+                if (
+                  report.type === "track" &&
+                  report.kind === "video" &&
+                  report.trackId === event.track.id
+                ) {
+                  console.log(`Video track stats for ${targetId}:`, {
+                    framesReceived: report.framesReceived,
+                    bytesReceived: report.bytesReceived,
+                    packetsReceived: report.packetsReceived,
+                    packetsLost: report.packetsLost,
+                  });
+                }
+              });
+            });
+          }, 2000);
         }
       });
     } catch (error) {
@@ -492,53 +554,57 @@ const GroupCall = React.forwardRef<
         );
         await peerConnection.setLocalDescription({ type: "rollback" });
       }
-      // Add tracks and set transceivers before setting remote offer
+
+      // Set remote description FIRST
+      await webRTCServiceRef.current.setRemoteDescription(
+        data.senderId,
+        data.offer
+      );
+      console.log(
+        `Remote offer set for ${data.senderId}, signalingState=${peerConnection.signalingState}`
+      );
+
+      // Add local tracks AFTER setRemoteDescription
       if (localStream.current && callTypeRef.current) {
         console.log(
-          ` Adding local tracks for ${data.senderId} before handling offer`
+          ` Adding local tracks for ${data.senderId} AFTER setRemoteDescription`
         );
         const tracks = localStream.current.getTracks();
+        const transceivers = peerConnection.getTransceivers();
+
         tracks.forEach((track) => {
-          const existingSender = peerConnection!
-            .getSenders()
-            .find((s) => s.track?.id === track.id);
-          if (!existingSender) {
+          // Find matching transceiver (created by setRemoteDescription, with receiver but no sender)
+          const transceiver = transceivers.find(
+            (t) => t.receiver.track.kind === track.kind && !t.sender.track
+          );
+          if (transceiver) {
+            // Associate local track with sender
+            transceiver.sender.replaceTrack(track);
+            if (transceiver.direction !== "sendrecv") {
+              console.log(
+                ` Setting transceiver to sendrecv for ${track.kind} track: ${track.id}`
+              );
+              transceiver.direction = "sendrecv";
+            }
+            console.log(
+              ` Associated track ${track.kind}:${track.id} with transceiver for ${data.senderId}`
+            );
+          } else {
+            // Fallback: add new track (shouldn't happen if offer has matching m-lines)
             webRTCServiceRef.current.addTrack(
               data.senderId,
               track,
               localStream.current!
             );
             console.log(
-              ` Added track ${track.kind}:${track.id} for ${data.senderId}`
-            );
-          } else {
-            console.log(
-              ` Skipping already added track ${track.kind}:${track.id} for ${data.senderId}`
+              ` Added new track ${track.kind}:${track.id} for ${data.senderId} (no matching transceiver)`
             );
           }
         });
-        const transceivers = peerConnection.getTransceivers();
-        transceivers.forEach((t) => {
-          if (t.sender.track) {
-            console.log(
-              ` Setting transceiver to sendrecv for ${t.sender.track.kind} track: ${t.sender.track.id}`
-            );
-            t.direction = "sendrecv";
-          } else {
-            console.log(
-              ` Setting transceiver to recvonly for ${t.sender.track.kind} track: ${t.sender.track.id}`
-            );
-            t.direction = "recvonly";
-          }
-        });
-        // transceivers.forEach((t) => {
-        //   if (t.sender.track && t.direction !== "sendrecv") {
-        //     console.log(` Setting transceiver to sendrecv for ${t.sender.track.kind} track: ${t.sender.track.id}`);
-        //     t.direction = "sendrecv";
-        //   }
-        // });
+
+        // Log transceivers after adding tracks
         console.log(
-          ` Transceivers before setting remote offer for ${data.senderId}:`,
+          ` Transceivers after adding tracks for ${data.senderId}:`,
           transceivers.map((t) => ({
             mid: t.mid,
             direction: t.direction,
@@ -555,59 +621,7 @@ const GroupCall = React.forwardRef<
         toast.error(`Cannot send media to ${data.senderId}: stream not ready`);
         return;
       }
-      await webRTCServiceRef.current.setRemoteDescription(
-        data.senderId,
-        data.offer
-      );
-      console.log(
-        `Remote offer set for ${data.senderId}, signalingState=${peerConnection.signalingState}`
-      );
-      // Re-verify tracks and transceivers after setting remote description
-      if (localStream.current && callTypeRef.current) {
-        console.log(
-          ` Re-verifying local tracks for ${data.senderId} after setting remote offer`
-        );
-        const tracks = localStream.current.getTracks();
-        tracks.forEach((track) => {
-          const existingSender = peerConnection!
-            .getSenders()
-            .find((s) => s.track?.id === track.id);
-          if (!existingSender) {
-            webRTCServiceRef.current.addTrack(
-              data.senderId,
-              track,
-              localStream.current!
-            );
-            console.log(
-              ` Re-added track ${track.kind}:${track.id} for ${data.senderId} after remote description`
-            );
-          } else {
-            console.log(
-              ` Track ${track.kind}:${track.id} already present for ${data.senderId}`
-            );
-          }
-        });
-        const transceivers = peerConnection.getTransceivers();
-        transceivers.forEach((t) => {
-          if (t.sender.track && t.direction !== "sendrecv") {
-            console.log(
-              ` Re-setting transceiver to sendrecv for ${t.sender.track.kind} track: ${t.sender.track.id}`
-            );
-            t.direction = "sendrecv";
-          }
-        });
-        console.log(
-          ` Transceivers after setting remote offer for ${data.senderId}:`,
-          transceivers.map((t) => ({
-            mid: t.mid,
-            direction: t.direction,
-            currentDirection: t.currentDirection,
-            senderTrack: t.sender.track
-              ? { kind: t.sender.track.kind, id: t.sender.track.id }
-              : null,
-          }))
-        );
-      }
+
       const answer = await webRTCServiceRef.current.createAnswer(data.senderId);
       console.log(
         `Created and set local answer for ${data.senderId}, signalingState=${peerConnection.signalingState}`,
@@ -1100,7 +1114,29 @@ const GroupCall = React.forwardRef<
     return () => {
       currentWebRTCServiceRef.onNegotiationNeeded = undefined;
     };
-  }, [groupId, userId])
+  }, [groupId, userId]);
+
+  useEffect(() => {
+    joinedMembers.forEach((memberId) => {
+      if (memberId !== userId) {
+        const remoteVideo = remoteVideoRefs.current.get(memberId);
+        const stream = remoteStreams.current.get(memberId);
+        if (remoteVideo && stream && remoteVideo.srcObject !== stream) {
+          console.log(
+            `Re-attaching stream for ${memberId}, stream: ${stream.id}`
+          );
+          remoteVideo.srcObject = stream;
+          remoteVideo.play().catch((err) => {
+            console.error(
+              `Error re-playing remote video for ${memberId}:`,
+              err
+            );
+            toast.error(`Failed to render video for ${memberId}`);
+          });
+        }
+      }
+    });
+  }, [joinedMembers]);
 
   React.useImperativeHandle(
     ref as RefObject<{ startGroupCall: (type: "audio" | "video") => void }>,
@@ -1201,21 +1237,37 @@ const GroupCall = React.forwardRef<
                                 `Attaching stored stream to video element for ${memberId}, stream: ${stream.id}`
                               );
                               el.srcObject = stream;
-                              el.play()
-                                .then(() => {
-                                  console.log(
-                                    `Remote video playing for ${memberId}`
-                                  );
-                                })
-                                .catch((err) => {
-                                  console.error(
-                                    `Error playing remote video for ${memberId}:`,
-                                    err
-                                  );
-                                  toast.error(
-                                    `Failed to render video for ${memberId}`
-                                  );
-                                });
+                              const attemptPlay = (
+                                attempts = 3,
+                                delay = 500
+                              ) => {
+                                el.play()
+                                  .then(() => {
+                                    console.log(
+                                      `Remote video playing for ${memberId}`
+                                    );
+                                  })
+                                  .catch((err) => {
+                                    console.error(
+                                      `Error playing remote video for ${memberId}:`,
+                                      err
+                                    );
+                                    if (attempts > 0) {
+                                      console.log(
+                                        `Retrying play for ${memberId}, attempts left: ${attempts}`
+                                      );
+                                      setTimeout(
+                                        () => attemptPlay(attempts - 1, delay),
+                                        delay
+                                      );
+                                    } else {
+                                      toast.error(
+                                        `Failed to render video for ${memberId}`
+                                      );
+                                    }
+                                  });
+                              };
+                              attemptPlay();
                             }
                           } else {
                             remoteVideoRefs.current.delete(memberId);
@@ -1224,7 +1276,10 @@ const GroupCall = React.forwardRef<
                         autoPlay
                         playsInline
                         className="w-full h-full object-cover"
-                        style={{ backgroundColor: "black" }}
+                        style={{
+                          backgroundColor: "black",
+                          border: "2px solid red",
+                        }}
                         onError={(e) => {
                           console.error(
                             `Video element error for ${memberId}:`,

@@ -88,9 +88,9 @@ export class GroupRepository extends BaseRepository<GroupDocument> {
    getAllGroups = async (query: GroupQuery = {}): Promise<{ groups: GroupDocument[]; total: number }> => {
     try {
       logger.debug(`Fetching all groups with query: ${JSON.stringify(query)}`);
-      const { search, page, limit } = query;
+      const { search, page, limit, excludeAdminId } = query;
 
-      // If no query parameters, return all groups without pagination
+      // If no query parameters, return all groups
       if (!search && !page && !limit) {
         const groups = await this.model
           .find()
@@ -106,6 +106,9 @@ export class GroupRepository extends BaseRepository<GroupDocument> {
       if (search) {
         matchStage.name = { $regex: search, $options: "i" };
       }
+      if (excludeAdminId) {
+      matchStage.adminId = { $ne: new Types.ObjectId(excludeAdminId) };
+    }
 
       const pipeline = [
         { $match: matchStage },

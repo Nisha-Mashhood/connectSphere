@@ -28,6 +28,7 @@ router.get(COLLABORATION_ROUTES.GetLockedSlots, [apiLimiter, authMiddleware.veri
 router.get(COLLABORATION_ROUTES.GetAllMentorRequests, [apiLimiter, authMiddleware.verifyToken, authMiddleware.authorize('admin')], collabController.getAllMentorRequests);
 router.get(COLLABORATION_ROUTES.GetAllCollabs, [apiLimiter, authMiddleware.verifyToken, authMiddleware.authorize('admin')], collabController.getAllCollabs);
 // router.post(COLLABORATION_ROUTES.RefundCollab, [apiLimiter, authMiddleware.verifyToken, authMiddleware.checkBlockedStatus,], collabController.processRefund);
+router.get(COLLABORATION_ROUTES.GetReceiptDownload,[apiLimiter, authMiddleware.verifyToken, authMiddleware.checkBlockedStatus,], collabController.downloadReceiptController);
 export default router;
 
 

@@ -13,6 +13,7 @@ import { LockedSlot } from "../Types/types";
 import { Types } from "mongoose";
 import { NotificationService } from "../../Notification/Service/NotificationService";
 import { UserRepository } from "../../Auth/Repositry/UserRepositry";
+import PDFDocument from 'pdfkit';
 
 export class CollaborationService extends BaseService {
   private collabRepo: CollaborationRepository;
@@ -889,5 +890,97 @@ export class CollaborationService extends BaseService {
     }
 
     return currentDate;
+  }
+
+  async getReceiptData(collabId: string) {
+    logger.debug(`Fetching receipt data for collaboration: ${collabId}`);
+    this.checkData(collabId);
+    if (!Types.ObjectId.isValid(collabId)) {
+      throw new ServiceError("Invalid collaboration ID: must be a 24 character hex string");
+    }
+
+    const collab = await this.collabRepo.findCollabById(collabId);
+    if (!collab || !collab.paymentIntentId) {
+      throw new ServiceError("Collaboration or payment not found");
+    }
+
+    const paymentIntent = await stripe.paymentIntents.retrieve(collab.paymentIntentId);
+    if (!paymentIntent) {
+      throw new ServiceError("Payment intent not found");
+    }
+
+    const mentor = await this.mentorRepo.getMentorById(
+      this.collabRepo["toObjectId"](collab.mentorId).toString()
+    );
+    if (!mentor || !mentor.userId) {
+      throw new ServiceError("Mentor or mentor’s userId not found");
+    }
+    const mentorUser = mentor.userId as { name: string; email: string };
+
+    const user = await this.userRepo.findById(
+      this.collabRepo["toObjectId"](collab.userId).toString()
+    );
+    if (!user) {
+      throw new ServiceError("User not found");
+    }
+
+    return { mentorUser, user, paymentIntent, collab };
+  }
+
+
+  async generateReceiptPDF(collabId: string): Promise<Buffer> {
+    logger.debug(`Generating PDF receipt for collaboration: ${collabId}`);
+    this.checkData(collabId);
+
+    const { mentorUser, user, paymentIntent, collab } = await this.getReceiptData(collabId);
+
+    return new Promise((resolve, reject) => {
+      const doc = new PDFDocument();
+      const buffers: Buffer[] = [];
+
+      // Collect PDF data into buffers
+      doc.on('data', buffers.push.bind(buffers));
+      doc.on('end', () => {
+        const pdfBuffer = Buffer.concat(buffers);
+        resolve(pdfBuffer);
+      });
+      doc.on('error', (error: Error) => {
+        logger.error(`Error generating PDF for collabId ${collabId}: ${error}`);
+        reject(new ServiceError('Failed to generate PDF'));
+      });
+
+      // Add content to PDF
+      doc.fontSize(20).text('Payment Receipt', { align: 'center' });
+      doc.fontSize(14).text('ConnectSphere Mentorship Platform', { align: 'center' });
+      doc.fontSize(10).text(`Issued on: ${new Date().toLocaleDateString("en-US", { year: "numeric", month: "long", day: "numeric" })}`, { align: 'center' });
+      doc.moveDown(2);
+
+      doc.fontSize(12).text('Receipt Details', { underline: true });
+      doc.moveDown(0.5);
+      doc.fontSize(10).text(`Collaboration ID: ${collab.collaborationId || collab._id}`);
+      doc.text(`Mentor: ${mentorUser.name}`);
+      doc.text(`User: ${user.name}`);
+      doc.text(`Amount: INR ${(collab.price || 0).toFixed(2)}`);
+      doc.text(`Payment Date: ${paymentIntent.created ? new Date(paymentIntent.created * 1000).toLocaleDateString("en-US", { year: "numeric", month: "long", day: "numeric" }) : "Unknown"}`);
+      doc.text(`Payment ID: ${paymentIntent.id}`);
+      doc.text(`Status: ${paymentIntent.status.charAt(0).toUpperCase() + paymentIntent.status.slice(1)}`);
+      doc.moveDown(2);
+
+      doc.fontSize(12).text('Description', { underline: true });
+      doc.moveDown(0.5);
+      doc.fontSize(10).text(
+        `Payment for mentorship session with ${mentorUser.name} from ` +
+        `${collab.startDate ? collab.startDate.toLocaleDateString("en-US", { year: "numeric", month: "long", day: "numeric" }) : "Not specified"} to ` +
+        `${collab.endDate ? collab.endDate.toLocaleDateString("en-US", { year: "numeric", month: "long", day: "numeric" }) : "Not specified"}`
+      );
+      doc.moveDown(2);
+
+      doc.fontSize(12).text('Contact Information', { underline: true });
+      doc.moveDown(0.5);
+      doc.fontSize(10).text('For any inquiries, please contact ConnectSphere support at support@connectsphere.com.');
+
+      // Finalize PDF
+      doc.end();
+    })
   }
 }

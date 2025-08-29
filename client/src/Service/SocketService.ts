@@ -5,6 +5,7 @@ import {
   GroupCallData,
   GroupIceCandidateData,
   GroupOfferData,
+  ICallLog,
   IChatMessage,
   Notification,
 } from "../types";
@@ -721,6 +722,49 @@ public offUserRoomLeft(callback: (data: { userId: string }) => void): void {
     });
     this.socket?.emit("notification.read", { notificationId, userId, type });
   }
+
+  public onContactsUpdated(callback: () => void) {
+    this.socket?.on("contactsUpdated", () => {
+      console.log("Received contactsUpdated event");
+      callback();
+    });
+  }
+
+  public offContactsUpdated(callback: () => void) {
+    if (this.socket) {
+      this.socket.off("contactsUpdated", callback);
+      console.log("Unregistered contactsUpdated listener");
+    }
+  }
+
+  public onCallLogCreated(callback: (callLog: ICallLog) => void) {
+  this.socket?.on("callLog.created", (callLog: ICallLog) => {
+    console.log("Received callLog.created:", callLog);
+    callback(callLog);
+  });
+}
+
+public offCallLogCreated(callback: (callLog: ICallLog) => void) {
+  if (this.socket) {
+    this.socket.off("callLog.created", callback);
+    console.log("[SocketService] Unregistered callLog.created listener");
+  }
+}
+
+public onCallLogUpdated(callback: (callLog: ICallLog) => void) {
+  this.socket?.on("callLog.updated", (callLog: ICallLog) => {
+    console.log("Received callLog.updated:", callLog);
+    callback(callLog);
+  });
+}
+
+public offCallLogUpdated(callback: (callLog: ICallLog) => void) {
+  if (this.socket) {
+    this.socket.off("callLog.updated", callback);
+    console.log("[SocketService] Unregistered callLog.updated listener");
+  }
+}
+  
 }
 
 export const socketService = new SocketService();

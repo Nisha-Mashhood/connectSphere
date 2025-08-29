@@ -109,7 +109,8 @@ const CollaborationSchema: Schema<ICollaboration> = new Schema(
     },
     endDate: {
       type: Date,
-      default: null,
+      required: true,
+      default: Date.now,
     },
     feedbackGiven: {
       type: Boolean,

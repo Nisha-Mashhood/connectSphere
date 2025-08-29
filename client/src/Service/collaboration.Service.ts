@@ -227,4 +227,31 @@ export const processRefund = async (collabId: string, reason: string, amount: nu
     console.error('Refund request error:', error); 
     handleError(error);
   }
-};
+}
+
+  export const downloadReceipt = async (collabId: string) => {
+  try {
+    const response = await axiosInstance.get(`/collaboration/receipt/${collabId}`, {
+      responseType: "blob",
+    });
+
+    console.log("Download Receipt Response:", response);
+
+    //blob URL and trigger download
+    const blob = new Blob([response.data], { type: "application/pdf" });
+    const url = window.URL.createObjectURL(blob);
+    const link = document.createElement("a");
+    link.href = url;
+    link.download = `receipt-${collabId}.pdf`;
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+    window.URL.revokeObjectURL(url);
+
+    return true;
+  } catch (error) {
+    console.error("Receipt download error:", error);
+    handleError(error);
+    throw error;
+  }
+}

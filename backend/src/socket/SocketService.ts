@@ -6,6 +6,7 @@ import { GroupRepository } from "../Modules/Group/Repositry/GroupRepositry";
 import { ChatRepository } from "../Modules/Chat/Repositry/ChatRepositry";
 import { UserRepository } from "../Modules/Auth/Repositry/UserRepositry";
 import { NotificationService } from "../Modules/Notification/Service/NotificationService";
+import { CallLogRepository } from "../Modules/Call/Repositry/CallRepositry";
 import { ChatSocketHandler } from "./ChatSocketHandler";
 import { CallSocketHandler } from "./CallSocketHandler";
 import { GroupCallSocketHandler } from "./GroupCallSocketHandler";
@@ -53,10 +54,11 @@ export class SocketService {
     const chatRepo = new ChatRepository();
     const userRepo = new UserRepository();
     const notificationService = new NotificationService();
+    const callLogRepo = new CallLogRepository();
 
     this.chatHandler = new ChatSocketHandler(contactRepo, groupRepo, chatRepo, notificationService);
-    this.callHandler = new CallSocketHandler(contactRepo, groupRepo, userRepo, notificationService);
-    this.groupCallHandler = new GroupCallSocketHandler(groupRepo, userRepo, notificationService);
+    this.callHandler = new CallSocketHandler(contactRepo, groupRepo, userRepo, notificationService, callLogRepo);
+    this.groupCallHandler = new GroupCallSocketHandler(groupRepo, userRepo, notificationService, callLogRepo);
     this.notificationHandler = new NotificationSocketHandler(notificationService);
   }
 

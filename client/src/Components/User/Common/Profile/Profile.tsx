@@ -5,11 +5,9 @@ import {
   Card,
   CardHeader,
   CardBody,
-  CardFooter,
   Avatar,
   Button,
   Chip,
-  Tooltip,
   Image,
   Modal,
   ModalContent,
@@ -31,9 +29,7 @@ import {
   FaCalendarAlt,
   FaUsers,
   FaEnvelope,
-  FaPhone,
   FaBriefcase,
-  FaBirthdayCake,
   FaPencilAlt,
   FaPlus,
   FaCamera,
@@ -42,6 +38,10 @@ import {
   FaUserGraduate,
   FaLock,
   FaCreditCard,
+  FaMapMarkerAlt,
+  FaCalendar,
+  FaFileDownload,
+  FaChartBar,
 } from "react-icons/fa";
 import { RootState, AppDispatch } from "../../../../redux/store";
 import {
@@ -62,6 +62,7 @@ import {
 } from "../../../../redux/Slice/profileSlice";
 import { updateUserProfile } from "../../../../redux/Slice/userSlice";
 import { checkProfile } from "../../../../Service/Auth.service";
+import { downloadReceipt } from "../../../../Service/collaboration.Service";
 
 // Lazy load components
 const RequestsSection = lazy(() => import("./RequestSection"));
@@ -72,15 +73,12 @@ const TaskManagement = lazy(() => import("../../TaskManagement/TaskManagemnt"));
 const UserConnections = lazy(() => import("./UserConnections"));
 
 const Profile = () => {
-  const { currentUser } = useSelector(
-    (state: RootState) => state.user
-  );
+  const { currentUser } = useSelector((state: RootState) => state.user);
   const {
     mentorDetails,
     collabDetails,
     userConnections,
     loading: profileLoading,
-    error: profileError,
   } = useSelector((state: RootState) => state.profile);
   const navigate = useNavigate();
   const dispatch = useDispatch<AppDispatch>();
@@ -134,13 +132,19 @@ const Profile = () => {
   const [ampm, setAmpm] = useState("AM");
   const [mentorNames, setMentorNames] = useState<{ [key: string]: string }>({});
   const [isPaymentLoading, setIsPaymentLoading] = useState(false);
+  const [selectedCollab, setSelectedCollab] = useState<any | null>(null);
+  const {
+    isOpen: isReceiptModalOpen,
+    onOpen: onReceiptModalOpen,
+    onClose: onReceiptModalClose,
+  } = useDisclosure();
 
   // Currency formatter
   const formatCurrency = (amount: number) =>
-  new Intl.NumberFormat("en-IN", {
-    style: "currency",
-    currency: "INR",
-  }).format(amount);
+    new Intl.NumberFormat("en-IN", {
+      style: "currency",
+      currency: "INR",
+    }).format(amount);
 
   // Fetch collaboration details
   useEffect(() => {
@@ -477,7 +481,18 @@ const Profile = () => {
       toast.error("Error checking mentor status");
       console.error("Error checking mentor status", error);
     }
+  }
+
+  const handleDownloadReceipt = async (collabId: string) => {
+    try {
+      await downloadReceipt(collabId);
+      toast.success("Receipt downloaded successfully!");
+    } catch (error) {
+      toast.error("Failed to download receipt. Please try again.");
+      console.error("Error downloading receipt:", error);
+    }
   };
+
 
   const totalPayments =
     collabDetails?.data?.reduce(
@@ -486,52 +501,29 @@ const Profile = () => {
     ) || 0;
 
   return (
-    <div className="max-w-7xl mx-auto p-6 space-y-8">
-      {/* Header Section */}
-      <Card className="relative overflow-hidden rounded-xl shadow-lg">
-        <div className="relative h-48">
-          <Image
-            src={currentUser?.coverPic || "/default-cover.jpg"}
-            alt="Cover"
-            className="w-full h-full object-cover opacity-90"
-            removeWrapper
-          />
-          <Tooltip content="Change Cover Photo">
-            <Button
-              isIconOnly
-              color="primary"
-              className="absolute top-4 right-4 bg-white/90 hover:bg-white z-10 shadow-md"
-              radius="full"
-            >
-              <label className="cursor-pointer">
-                <input
-                  type="file"
-                  className="hidden"
-                  accept="image/*"
-                  onChange={(e) =>
-                    e.target.files?.[0] &&
-                    handleImageUpload(e.target.files[0], "coverPic")
-                  }
-                />
-                <FaCamera />
-              </label>
-            </Button>
-          </Tooltip>
-        </div>
-        <div className="p-6 flex flex-col sm:flex-row items-center sm:items-start gap-6">
-          <div className="relative">
-            <Avatar
-              src={currentUser?.profilePic}
-              className="w-28 h-28 border-4 border-white shadow-md"
-              fallback={<FaUsers className="w-14 h-14 text-gray-400" />}
-            />
-            <Tooltip content="Change Profile Photo">
+    <div className="min-h-screen bg-gray-50/30">
+      <div className="max-w-6xl mx-auto p-4 space-y-6">
+        {/* Header Section - Clean and minimal */}
+        <Card className="border-none shadow-lg overflow-hidden mb-0">
+          <div className="relative h-48 bg-gradient-to-br from-blue-600 via-purple-600 to-pink-500">
+            {currentUser?.coverPic && (
+              <Image
+                src={currentUser.coverPic}
+                alt="Cover"
+                className="w-full h-full object-cover"
+                removeWrapper
+              />
+            )}
+            {/* Overlay gradient for better text readability */}
+            <div className="absolute inset-0 bg-gradient-to-t from-black/20 via-transparent to-transparent" />
+
+            {/* Cover photo edit button */}
+            <div className="absolute top-4 right-4 z-10">
               <Button
                 isIconOnly
-                color="primary"
                 size="sm"
-                className="absolute bottom-0 right-0 bg-white/90 hover:bg-white z-10 shadow-md"
-                radius="full"
+                variant="flat"
+                className="bg-black/20 backdrop-blur-md text-white border-white/20 hover:bg-black/30"
               >
                 <label className="cursor-pointer">
                   <input
@@ -540,641 +532,867 @@ const Profile = () => {
                     accept="image/*"
                     onChange={(e) =>
                       e.target.files?.[0] &&
-                      handleImageUpload(e.target.files[0], "profilePic")
+                      handleImageUpload(e.target.files[0], "coverPic")
                     }
                   />
                   <FaCamera size={14} />
                 </label>
               </Button>
-            </Tooltip>
-          </div>
-          <div className="flex-1 text-center sm:text-left">
-            <div className="flex items-center gap-2 justify-center sm:justify-start">
-              <h1 className="text-3xl font-bold">{currentUser?.name}</h1>
-              <Chip
-                color={currentUser?.role === "mentor" ? "success" : "primary"}
-                variant="flat"
-                size="sm"
-              >
-                {currentUser?.role === "mentor" ? "Mentor" : "User"}
-              </Chip>
             </div>
-            <p className="text-lg text-gray-600">
-              {currentUser?.jobTitle || "No job title"}
-            </p>
-            <div className="flex items-center justify-around sm:justify-around">
+          </div>
+        </Card>
+
+        {/* Profile Information Section */}
+        <Card className="border-none shadow-lg -mt-16 relative z-10 mx-4">
+          <div className="p-8">
+            <div className="flex flex-col lg:flex-row lg:items-end gap-6">
+              {/* Left side - Avatar and basic info */}
+              <div className="flex flex-col sm:flex-row sm:items-end gap-6 flex-1">
+                {/* Profile Avatar */}
+                <div className="relative flex-shrink-0">
+                  <Avatar
+                    src={currentUser?.profilePic}
+                    className="w-32 h-32 border-4 border-white shadow-xl ring-4 ring-gray-100"
+                    fallback={<FaUsers className="w-16 h-16 text-gray-400" />}
+                  />
+                  <Button
+                    isIconOnly
+                    size="sm"
+                    variant="flat"
+                    className="absolute -bottom-2 -right-2 w-8 h-8 min-w-0 bg-white border-2 border-gray-200 shadow-md hover:shadow-lg"
+                  >
+                    <label className="cursor-pointer">
+                      <input
+                        type="file"
+                        className="hidden"
+                        accept="image/*"
+                        onChange={(e) =>
+                          e.target.files?.[0] &&
+                          handleImageUpload(e.target.files[0], "profilePic")
+                        }
+                      />
+                      <FaCamera size={12} />
+                    </label>
+                  </Button>
+                </div>
+
+                {/* Name and Title */}
+                <div className="flex-1 min-w-0">
+                  <div className="flex flex-col sm:flex-row sm:items-center gap-3 mb-3">
+                    <h1 className="text-3xl font-bold text-gray-900 truncate">
+                      {currentUser?.name}
+                    </h1>
+                    <Chip
+                      color={
+                        currentUser?.role === "mentor" ? "success" : "primary"
+                      }
+                      variant="flat"
+                      size="md"
+                      className="w-fit"
+                    >
+                      {currentUser?.role === "mentor" ? "Mentor" : "User"}
+                    </Chip>
+                  </div>
+
+                  <p className="text-lg text-gray-600 mb-3 font-medium">
+                    {currentUser?.jobTitle || "No job title"}
+                  </p>
+
+                  {/* Additional info */}
+                  <div className="flex flex-wrap gap-4 text-sm text-gray-500">
+                    {currentUser?.location && (
+                      <div className="flex items-center gap-1">
+                        <FaMapMarkerAlt size={12} />
+                        <span>{currentUser.location}</span>
+                      </div>
+                    )}
+                    {currentUser?.joinDate && (
+                      <div className="flex items-center gap-1">
+                        <FaCalendar size={12} />
+                        <span>Joined {currentUser.joinDate}</span>
+                      </div>
+                    )}
+                  </div>
+                </div>
+              </div>
+
+              {/* Right side - Action buttons */}
               <Button
                 color="primary"
-                size="sm"
-                className="mt-4"
-                startContent={<FaPlus />}
+                size="lg"
+                variant="solid"
+                startContent={<FaPlus size={16} />}
                 onPress={() => navigate("/create-group")}
+                className="font-semibold shadow-lg hover:shadow-xl transition-shadow"
               >
                 Create Group
               </Button>
             </div>
           </div>
-        </div>
-      </Card>
+        </Card>
 
-      {/* Main Content */}
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-        {/* Profile Details */}
-        <div className="space-y-6">
-          <Card className="rounded-xl shadow-md">
-            <CardHeader className="bg-gray-100 p-4 rounded-t-xl">
-              <h2 className="text-xl font-semibold">Profile Details</h2>
-            </CardHeader>
-            <CardBody className="p-6">
-              {profileError && (
-                <p className="text-red-500 mb-4">Error: {profileError}</p>
-              )}
-              <Accordion variant="light">
-                <AccordionItem
-                  key="professional"
-                  title={
-                    <span className="flex items-center gap-2">
-                      <FaBriefcase /> Professional Info
-                    </span>
-                  }
-                  className="text-base"
+        {/* Main Content Grid */}
+        <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
+          {/* Left Sidebar - Profile Details */}
+          <div className="lg:col-span-4 space-y-4">
+            <Card className="border-none shadow-sm bg-white">
+              <CardHeader className="pb-3">
+                <h2 className="text-lg font-medium text-gray-900">Profile</h2>
+              </CardHeader>
+              <CardBody className="pt-0 space-y-3">
+                {/* Professional Info */}
+                <div
+                  className="group cursor-pointer"
+                  onClick={onProfessionalModalOpen}
                 >
-                  <div className="space-y-4">
-                    <p>
-                      <strong>Industry:</strong>{" "}
-                      {currentUser?.industry || "Not specified"}
-                    </p>
-                    <p>
-                      <strong>Reason for Joining:</strong>{" "}
-                      {currentUser?.reasonForJoining || "Not specified"}
-                    </p>
-                    <Button
-                      size="sm"
-                      variant="flat"
-                      color="primary"
-                      onPress={onProfessionalModalOpen}
-                      startContent={<FaPencilAlt />}
-                    >
-                      Edit
-                    </Button>
+                  <div className="flex items-start justify-between p-3 rounded-lg hover:bg-gray-50 transition-colors">
+                    <div className="flex items-start gap-3">
+                      <div className="p-1.5 rounded-lg bg-blue-50 text-blue-600">
+                        <FaBriefcase size={14} />
+                      </div>
+                      <div className="min-w-0 flex-1">
+                        <p className="text-sm font-medium text-gray-900 mb-1">
+                          Professional
+                        </p>
+                        <p className="text-xs text-gray-500 truncate">
+                          {currentUser?.industry || "Not specified"}
+                        </p>
+                      </div>
+                    </div>
+                    <FaPencilAlt
+                      size={12}
+                      className="text-gray-400 opacity-0 group-hover:opacity-100 transition-opacity"
+                    />
                   </div>
-                </AccordionItem>
-                <AccordionItem
-                  key="contact"
-                  title={
-                    <span className="flex items-center gap-2">
-                      <FaEnvelope /> Contact Info
-                    </span>
-                  }
-                  className="text-base"
+                </div>
+
+                {/* Contact Info */}
+                <div
+                  className="group cursor-pointer"
+                  onClick={onContactModalOpen}
                 >
-                  <div className="space-y-4">
-                    <p className="flex items-center gap-2">
-                      <FaEnvelope /> {currentUser?.email || "No email"}
-                    </p>
-                    <p className="flex items-center gap-2">
-                      <FaPhone /> {currentUser?.phone || "No phone"}
-                    </p>
-                    <p className="flex items-center gap-2">
-                      <FaBirthdayCake /> {formatDate(currentUser?.dateOfBirth)}
-                    </p>
-                    <Button
-                      size="sm"
-                      variant="flat"
-                      color="primary"
-                      onPress={onContactModalOpen}
-                      startContent={<FaPencilAlt />}
-                    >
-                      Edit
-                    </Button>
+                  <div className="flex items-start justify-between p-3 rounded-lg hover:bg-gray-50 transition-colors">
+                    <div className="flex items-start gap-3">
+                      <div className="p-1.5 rounded-lg bg-green-50 text-green-600">
+                        <FaEnvelope size={14} />
+                      </div>
+                      <div className="min-w-0 flex-1">
+                        <p className="text-sm font-medium text-gray-900 mb-1">
+                          Contact
+                        </p>
+                        <p className="text-xs text-gray-500 truncate">
+                          {currentUser?.email || "No email"}
+                        </p>
+                      </div>
+                    </div>
+                    <FaPencilAlt
+                      size={12}
+                      className="text-gray-400 opacity-0 group-hover:opacity-100 transition-opacity"
+                    />
                   </div>
-                </AccordionItem>
-                <AccordionItem
-                  key="password"
-                  title={
-                    <span className="flex items-center gap-2">
-                      <FaLock /> Change Password
-                    </span>
-                  }
-                  className="text-base"
+                </div>
+
+                {/* Security */}
+                <div
+                  className="group cursor-pointer"
+                  onClick={onPasswordModalOpen}
                 >
-                  <div className="space-y-4">
-                    <p>Update your account password</p>
-                    <Button
-                      size="sm"
-                      variant="flat"
-                      color="primary"
-                      onPress={onPasswordModalOpen}
-                      startContent={<FaPencilAlt />}
-                    >
-                      Change Password
-                    </Button>
+                  <div className="flex items-start justify-between p-3 rounded-lg hover:bg-gray-50 transition-colors">
+                    <div className="flex items-start gap-3">
+                      <div className="p-1.5 rounded-lg bg-red-50 text-red-600">
+                        <FaLock size={14} />
+                      </div>
+                      <div className="min-w-0 flex-1">
+                        <p className="text-sm font-medium text-gray-900 mb-1">
+                          Security
+                        </p>
+                        <p className="text-xs text-gray-500">Change password</p>
+                      </div>
+                    </div>
+                    <FaPencilAlt
+                      size={12}
+                      className="text-gray-400 opacity-0 group-hover:opacity-100 transition-opacity"
+                    />
                   </div>
-                </AccordionItem>
-                {currentUser?.role === "user" && (
-                  <AccordionItem
-                    key="payments"
-                    title={
-                      <span className="flex items-center gap-2">
-                        <FaCreditCard /> Payment History
-                      </span>
-                    }
-                    className="text-base"
+                </div>
+
+                {/* Mentorship or Become Mentor */}
+                {currentUser?.role === "mentor" && mentorDetails ? (
+                  <div
+                    className="group cursor-pointer"
+                    onClick={onMentorModalOpen}
                   >
-                    <div className="space-y-4">
-                      {profileLoading || isPaymentLoading ? (
-                        <div className="flex justify-center items-center h-32">
-                          <Spinner
-                            size="lg"
-                            label="Loading Payment History..."
-                          />
+                    <div className="flex items-start justify-between p-3 rounded-lg hover:bg-gray-50 transition-colors">
+                      <div className="flex items-start gap-3">
+                        <div className="p-1.5 rounded-lg bg-purple-50 text-purple-600">
+                          <FaUserGraduate size={14} />
                         </div>
-                      ) : collabDetails?.data?.length > 0 ? (
-                        <>
-                          {collabDetails.data
-                            .filter((c) => c.payment)
-                            .map((collab, i: number) => (
-                              <Card key={i}>
-                                <CardBody>
-                                  <p>
-                                    <strong>Collaboration ID:</strong>{" "}
-                                    {collab.collaborationId}
-                                  </p>
-                                  <p>
-                                    <strong>Mentor:</strong>{" "}
-                                    {typeof collab.mentorId === "string"
-                                      ? mentorNames[collab.mentorId] ||
-                                        "Unknown Mentor"
-                                      : mentorNames[collab.mentorId._id] ||
-                                        collab.mentorId.userId?.name ||
-                                        "Unknown Mentor"}
-                                  </p>
-                                  <p>
-                                    <strong> Price:</strong>{" "}
-                                    {formatCurrency(collab.price)}
-                                  </p>
-                                  {/* <p>
-                                    <strong>Payment Intent ID:</strong>{" "}
-                                    {collab.paymentIntentId}
-                                  </p> */}
-                                  <p>
-                                    <strong>Start Date:</strong>{" "}
-                                    {formatDate(collab.startDate)}
-                                  </p>
-                                  <p>
-                                    <strong>End Date:</strong>{" "}
-                                    {formatDate(collab.endDate)}
-                                  </p>
-                                  <p>
-                                    <strong>Status:</strong>{" "}
-                                    {collab.isCancelled
-                                      ? "Cancelled"
-                                      : collab.isCompleted
-                                      ? "Completed"
-                                      : "Ongoing"}
-                                  </p>
-                                  {collab.selectedSlot &&
-                                    collab.selectedSlot.length > 0 && (
-                                      <div>
-                                        <strong>Selected Slot:</strong>{" "}
-                                        <div className="flex flex-wrap gap-2 mt-2">
-                                          {collab.selectedSlot.map(
-                                            (slot, j) => (
-                                              <Chip
-                                                key={j}
-                                                variant="flat"
-                                                color="primary"
-                                              >
-                                                {slot.day}:{" "}
-                                                {slot.timeSlots.join(", ")}
-                                              </Chip>
-                                            )
-                                          )}
-                                        </div>
-                                      </div>
-                                    )}
-                                </CardBody>
-                                {collab.paymentIntentId && (
-                                  <CardFooter>
+                        <div className="min-w-0 flex-1">
+                          <p className="text-sm font-medium text-gray-900 mb-1">
+                            Mentorship
+                          </p>
+                          <p className="text-xs text-gray-500 line-clamp-2">
+                            {mentorDetails.bio || "No bio"}
+                          </p>
+                        </div>
+                      </div>
+                      <FaPencilAlt
+                        size={12}
+                        className="text-gray-400 opacity-0 group-hover:opacity-100 transition-opacity"
+                      />
+                    </div>
+                  </div>
+                ) : (
+                  <div className="p-4 border border-dashed border-gray-300 rounded-lg text-center">
+                    <div className="p-2 rounded-lg bg-purple-50 text-purple-600 w-fit mx-auto mb-2">
+                      <FaUserGraduate size={16} />
+                    </div>
+                    <p className="text-sm font-medium text-gray-900 mb-1">
+                      Become a Mentor
+                    </p>
+                    <p className="text-xs text-gray-500 mb-3">
+                      Share your expertise with others
+                    </p>
+                    <Button
+                      color="success"
+                      size="sm"
+                      variant="flat"
+                      onPress={handleBecomeMentor}
+                    >
+                      Apply Now
+                    </Button>
+                  </div>
+                )}
+
+                {/* Payments for users */}
+                {currentUser?.role === "user" ? (
+                  <Accordion variant="light" className="px-0">
+                    <AccordionItem
+                      key="payments"
+                      title={
+                        <div className="flex items-center gap-3">
+                          <div className="p-1.5 rounded-lg bg-orange-50 text-orange-600">
+                            <FaCreditCard size={14} />
+                          </div>
+                          <span className="text-sm font-medium text-gray-900">
+                            Payment History
+                          </span>
+                        </div>
+                      }
+                      className="text-base"
+                    >
+                      <div className="space-y-3 pt-2">
+                        {profileLoading || isPaymentLoading ? (
+                          <div className="flex justify-center py-8">
+                            <Spinner size="sm" />
+                          </div>
+                        ) : collabDetails?.data?.length > 0 ? (
+                          <>
+                            {collabDetails.data
+                              .filter((c) => c.payment)
+                              .map((collab, i: number) => (
+                                <div
+                                  key={i}
+                                  className="p-3 bg-gray-50 rounded-lg"
+                                >
+                                  <div className="flex justify-between items-start mb-2">
+                                    <p className="text-sm font-medium text-gray-900">
+                                      {typeof collab.mentorId === "string"
+                                        ? mentorNames[collab.mentorId] ||
+                                          "Unknown Mentor"
+                                        : mentorNames[collab.mentorId._id] ||
+                                          collab.mentorId.userId?.name ||
+                                          "Unknown Mentor"}
+                                    </p>
+                                    <p className="text-sm font-semibold text-gray-900">
+                                      {formatCurrency(collab.price)}
+                                    </p>
+                                  </div>
+                                  <div className="text-xs text-gray-500 space-y-1">
+                                    <p>ID: {collab.collaborationId}</p>
+                                    <p>
+                                      {formatDate(collab.startDate)} -{" "}
+                                      {formatDate(collab.endDate)}
+                                    </p>
+                                    <p>
+                                      Status:{" "}
+                                      {collab.isCancelled
+                                        ? "Cancelled"
+                                        : collab.isCompleted
+                                        ? "Completed"
+                                        : "Ongoing"}
+                                    </p>
                                     <Button
+                                      size="sm"
                                       variant="light"
                                       color="primary"
+                                      className="p-0 h-auto min-w-0 text-sm font-medium text-blue-600 hover:text-blue-800 transition-colors"
                                       onPress={() => {
-                                        toast.error(
-                                          "Receipt viewing is not yet implemented"
-                                        );
+                                        setSelectedCollab(collab);
+                                        onReceiptModalOpen();
                                       }}
                                     >
                                       View Receipt
                                     </Button>
-                                  </CardFooter>
-                                )}
-                              </Card>
-                            ))}
-                          <p>
-                            <strong>Total Payments:</strong>{" "}
-                            {formatCurrency(totalPayments)}
-                          </p>
-                        </>
-                      ) : (
-                        <p className="text-gray-500">
-                          You haven't made any payments yet.
-                        </p>
-                      )}
-                    </div>
-                  </AccordionItem>
-                )}
-                {currentUser?.role === "mentor" && mentorDetails ? (
-                  <AccordionItem
-                    key="mentorship"
-                    title={
-                      <span className="flex items-center gap-2">
-                        <FaUserGraduate /> Mentorship Details
-                      </span>
-                    }
-                    className="text-base"
-                  >
-                    <div className="space-y-4">
-                      <p>
-                        <strong>Bio:</strong> {mentorDetails.bio || "No bio"}
-                      </p>
-                      <div>
-                        <strong>Available Slots:</strong>
-                        {mentorDetails.availableSlots?.length ? (
-                          <div className="mt-2 space-y-2">
-                            {mentorDetails.availableSlots.map(
-                              (slot: any, i: number) => (
-                                <Chip key={i} variant="flat" color="primary">
-                                  {slot.day}: {slot.timeSlots.join(", ")}
-                                </Chip>
-                              )
-                            )}
-                          </div>
+                                  </div>
+                                </div>
+                              ))}
+                            <div className="pt-2 border-t border-gray-200">
+                              <p className="text-sm font-semibold text-gray-900">
+                                Total: {formatCurrency(totalPayments)}
+                              </p>
+                            </div>
+
+                            {/* Receipt Modal */}
+                            <Modal
+                              isOpen={isReceiptModalOpen}
+                              onClose={() => {
+                                setSelectedCollab(null);
+                                onReceiptModalClose();
+                              }}
+                              size="md"
+                              classNames={{
+                                base: "bg-white",
+                                header: "border-b border-gray-100",
+                                footer: "border-t border-gray-100",
+                              }}
+                            >
+                              <ModalContent>
+                                <ModalHeader className="text-lg font-medium">
+                                  Payment Receipt
+                                </ModalHeader>
+                                <ModalBody className="py-6">
+                                  {selectedCollab ? (
+                                    <div className="space-y-4">
+                                      <div className="flex justify-between">
+                                        <p className="text-sm font-medium text-gray-900">
+                                          Mentor
+                                        </p>
+                                        <p className="text-sm text-gray-600">
+                                          {typeof selectedCollab.mentorId ===
+                                          "string"
+                                            ? mentorNames[
+                                                selectedCollab.mentorId
+                                              ] || "Unknown Mentor"
+                                            : mentorNames[
+                                                selectedCollab.mentorId._id
+                                              ] ||
+                                              selectedCollab.mentorId.userId
+                                                ?.name ||
+                                              "Unknown Mentor"}
+                                        </p>
+                                      </div>
+                                      <div className="flex justify-between">
+                                        <p className="text-sm font-medium text-gray-900">
+                                          Amount
+                                        </p>
+                                        <p className="text-sm text-gray-600">
+                                          {formatCurrency(selectedCollab.price)}
+                                        </p>
+                                      </div>
+                                      <div className="flex justify-between">
+                                        <p className="text-sm font-medium text-gray-900">
+                                          Collaboration ID
+                                        </p>
+                                        <p className="text-sm text-gray-600">
+                                          {selectedCollab.collaborationId}
+                                        </p>
+                                      </div>
+                                      <div className="flex justify-between">
+                                        <p className="text-sm font-medium text-gray-900">
+                                          Date
+                                        </p>
+                                        <p className="text-sm text-gray-600">
+                                          {formatDate(selectedCollab.startDate)}
+                                        </p>
+                                      </div>
+                                      <div className="pt-4">
+                                        <Button
+                                          color="primary"
+                                          variant="flat"
+                                          startContent={
+                                            <FaFileDownload size={14} />
+                                          }
+                                          className="w-full"
+                                          onPress={() =>
+                                            handleDownloadReceipt(
+                                              selectedCollab._id
+                                            )
+                                          }
+                                        >
+                                          Download Receipt
+                                        </Button>
+                                      </div>
+                                    </div>
+                                  ) : (
+                                    <p className="text-sm text-gray-600 text-center">
+                                      No payment selected
+                                    </p>
+                                  )}
+                                </ModalBody>
+                                <ModalFooter>
+                                  <Button
+                                    variant="light"
+                                    onPress={() => {
+                                      setSelectedCollab(null);
+                                      onReceiptModalClose();
+                                    }}
+                                  >
+                                    Close
+                                  </Button>
+                                </ModalFooter>
+                              </ModalContent>
+                            </Modal>
+                          </>
                         ) : (
-                          <p className="text-sm text-gray-500">No slots set</p>
+                          <p className="text-sm text-gray-500 text-center py-4">
+                            No payments yet
+                          </p>
                         )}
                       </div>
-                      <Button
-                        size="sm"
-                        variant="flat"
-                        color="primary"
-                        onPress={onMentorModalOpen}
-                        startContent={<FaPencilAlt />}
-                      >
-                        Edit
-                      </Button>
-                    </div>
-                  </AccordionItem>
-                ) : (
-                  <AccordionItem
-                    key="become-mentor"
-                    title={
-                      <span className="flex items-center gap-2">
-                        <FaUserGraduate /> Become a Mentor
-                      </span>
-                    }
-                    className="text-base"
-                  >
-                    <div className="text-center">
-                      <p className="mb-4">Share your expertise with others!</p>
-                      <Button
-                        color="success"
-                        size="sm"
-                        onPress={handleBecomeMentor}
-                      >
-                        Apply Now
-                      </Button>
-                    </div>
-                  </AccordionItem>
-                )}
-              </Accordion>
-            </CardBody>
-          </Card>
-        </div>
-
-        {/* Tasks & Activity */}
-        <div className="lg:col-span-2 space-y-6">
-          <Card className="rounded-xl shadow-md">
-            <CardHeader className="bg-gray-100 p-4 rounded-t-xl flex items-center gap-2">
-              <FaCalendarAlt className="text-primary" />
-              <h2 className="text-xl font-semibold">My Tasks</h2>
-            </CardHeader>
-            <CardBody className="p-6">
-              <Suspense
-                fallback={
-                  <div className="flex justify-center items-center h-32">
-                    <Spinner size="lg" label="Loading Tasks..." />
-                  </div>
-                }
-              >
-                <TaskManagement
-                  context="profile"
-                  currentUser={currentUser}
-                  contextData={currentUser}
-                />
-              </Suspense>
-            </CardBody>
-          </Card>
-
-          <Card className="rounded-xl shadow-md">
-            <CardHeader className="bg-gray-100 p-4 rounded-t-xl">
-              <h2 className="text-xl font-semibold">Activity & Connections</h2>
-            </CardHeader>
-            <CardBody className="p-6">
-              <Tabs variant="solid" color="primary" className="mb-4">
-                <Tab
-                  key="connections"
-                  title={
-                    <span className="flex items-center gap-2">
-                      <FaUserFriends /> Connections
-                    </span>
-                  }
-                >
-                  <Accordion variant="light">
-                    <AccordionItem key="requests" title="Pending Requests">
-                      <Suspense
-                        fallback={
-                          <div className="flex justify-center items-center h-32">
-                            <Spinner size="lg" label="Loading Requests..." />
-                          </div>
-                        }
-                      >
-                        <RequestsSection
-                          handleProfileClick={(id: string) =>
-                            navigate(`/profileDispaly/${id}`)
-                          }
-                        />
-                      </Suspense>
-                    </AccordionItem>
-                    <AccordionItem
-                      key="collaborations"
-                      title="Active Collaborations"
-                    >
-                      <Suspense
-                        fallback={
-                          <div className="flex justify-center items-center h-32">
-                            <Spinner
-                              size="lg"
-                              label="Loading Collaborations..."
-                            />
-                          </div>
-                        }
-                      >
-                        <ActiveCollaborations
-                          handleProfileClick={(id: string) =>
-                            navigate(`/profileDispaly/${id}`)
-                          }
-                        />
-                      </Suspense>
-                    </AccordionItem>
-                    <AccordionItem key="network" title="My Network">
-                      <Suspense
-                        fallback={
-                          <div className="flex justify-center items-center h-32">
-                            <Spinner size="lg" label="Loading Network..." />
-                          </div>
-                        }
-                      >
-                        <UserConnections
-                          currentUser={currentUser}
-                          handleProfileClick={(id: string) =>
-                            navigate(`/profileDispaly/${id}`)
-                          }
-                        />
-                      </Suspense>
                     </AccordionItem>
                   </Accordion>
-                </Tab>
-                <Tab
-                  key="groups"
-                  title={
-                    <span className="flex items-center gap-2">
-                      <FaLayerGroup /> Groups
-                    </span>
-                  }
-                >
-                  <Accordion variant="light">
-                    <AccordionItem key="invitations" title="Group Invitations">
-                      <Suspense
-                        fallback={
-                          <div className="flex justify-center items-center h-32">
-                            <Spinner
-                              size="lg"
-                              label="Loading Group Invitations..."
-                            />
-                          </div>
-                        }
-                      >
-                        <GroupRequests />
-                      </Suspense>
-                    </AccordionItem>
-                    <AccordionItem key="my-groups" title="My Groups">
-                      <Suspense
-                        fallback={
-                          <div className="flex justify-center items-center h-32">
-                            <Spinner size="lg" label="Loading Groups..." />
-                          </div>
-                        }
-                      >
-                        <GroupCollaborations
-                          handleProfileClick={(id: string) =>
-                            navigate(`/profileDispaly/${id}`)
-                          }
-                        />
-                      </Suspense>
-                    </AccordionItem>
-                  </Accordion>
-                </Tab>
-                {mentorDetails && (
-                  <Tab
-                    key="mentoring"
-                    title={
-                      <span className="flex items-center gap-2">
-                        <FaUserGraduate /> Mentoring
-                      </span>
-                    }
-                  >
-                    <p className="text-center text-gray-500">
-                      Manage your mentoring activities here.
+                ) : currentUser?.role === "mentor" ? (
+                  <div className="p-4 border border-dashed border-gray-300 rounded-lg text-center">
+                    <div className="p-2 rounded-lg bg-blue-50 text-blue-600 w-fit mx-auto mb-2">
+                      <FaChartBar size={16} />
+                    </div>
+                    <p className="text-sm font-medium text-gray-900 mb-1">
+                      Mentor Dashboard
                     </p>
+                    <p className="text-xs text-gray-500 mb-3">
+                      View your collaborations, requests, graphs, and more
+                    </p>
+                    <Button
+                      color="primary"
+                      size="sm"
+                      variant="flat"
+                      onPress={() => navigate("/mentor-dashboard")}
+                    >
+                      Go to Dashboard
+                    </Button>
+                  </div>
+                ) : null}
+              </CardBody>
+            </Card>
+          </div>
+
+          {/* Right Content - Tasks & Activity */}
+          <div className="lg:col-span-8 space-y-6">
+            {/* Tasks Card */}
+            <Card className="border-none shadow-sm bg-white">
+              <CardHeader className="pb-3 border-b border-gray-100">
+                <div className="flex items-center gap-3">
+                  <div className="p-2 rounded-lg bg-blue-50 text-blue-600">
+                    <FaCalendarAlt size={16} />
+                  </div>
+                  <h2 className="text-lg font-medium text-gray-900">Tasks</h2>
+                </div>
+              </CardHeader>
+              <CardBody className="pt-4">
+                <Suspense
+                  fallback={
+                    <div className="flex justify-center py-8">
+                      <Spinner size="md" />
+                    </div>
+                  }
+                >
+                  <TaskManagement
+                    context="profile"
+                    currentUser={currentUser}
+                    contextData={currentUser}
+                  />
+                </Suspense>
+              </CardBody>
+            </Card>
+
+            {/* Activity & Connections */}
+            <Card className="border-none shadow-sm bg-white">
+              <CardHeader className="pb-3 border-b border-gray-100">
+                <h2 className="text-lg font-medium text-gray-900">Activity</h2>
+              </CardHeader>
+              <CardBody className="pt-4">
+                <Tabs variant="underlined" color="primary" className="w-full">
+                  <Tab
+                    key="connections"
+                    title={
+                      <div className="flex items-center gap-2">
+                        <FaUserFriends size={14} />
+                        <span>Connections</span>
+                      </div>
+                    }
+                  >
+                    <div className="space-y-4 pt-4">
+                      <Accordion variant="light" className="px-0">
+                        <AccordionItem key="requests" title="Pending Requests">
+                          <Suspense
+                            fallback={
+                              <div className="flex justify-center py-4">
+                                <Spinner size="sm" />
+                              </div>
+                            }
+                          >
+                            <RequestsSection
+                              handleProfileClick={(id: string) =>
+                                navigate(`/profileDispaly/${id}`)
+                              }
+                            />
+                          </Suspense>
+                        </AccordionItem>
+                        <AccordionItem
+                          key="collaborations"
+                          title="Active Collaborations"
+                        >
+                          <Suspense
+                            fallback={
+                              <div className="flex justify-center py-4">
+                                <Spinner size="sm" />
+                              </div>
+                            }
+                          >
+                            <ActiveCollaborations
+                              handleProfileClick={(id: string) =>
+                                navigate(`/profileDispaly/${id}`)
+                              }
+                            />
+                          </Suspense>
+                        </AccordionItem>
+                        <AccordionItem key="network" title="My Network">
+                          <Suspense
+                            fallback={
+                              <div className="flex justify-center py-4">
+                                <Spinner size="sm" />
+                              </div>
+                            }
+                          >
+                            <UserConnections
+                              currentUser={currentUser}
+                              handleProfileClick={(id: string) =>
+                                navigate(`/profileDispaly/${id}`)
+                              }
+                            />
+                          </Suspense>
+                        </AccordionItem>
+                      </Accordion>
+                    </div>
                   </Tab>
-                )}
-              </Tabs>
-            </CardBody>
-          </Card>
+                  <Tab
+                    key="groups"
+                    title={
+                      <div className="flex items-center gap-2">
+                        <FaLayerGroup size={14} />
+                        <span>Groups</span>
+                      </div>
+                    }
+                  >
+                    <div className="space-y-4 pt-4">
+                      <Accordion variant="light" className="px-0">
+                        <AccordionItem
+                          key="invitations"
+                          title="Group Invitations"
+                        >
+                          <Suspense
+                            fallback={
+                              <div className="flex justify-center py-4">
+                                <Spinner size="sm" />
+                              </div>
+                            }
+                          >
+                            <GroupRequests />
+                          </Suspense>
+                        </AccordionItem>
+                        <AccordionItem key="my-groups" title="My Groups">
+                          <Suspense
+                            fallback={
+                              <div className="flex justify-center py-4">
+                                <Spinner size="sm" />
+                              </div>
+                            }
+                          >
+                            <GroupCollaborations
+                              handleProfileClick={(id: string) =>
+                                navigate(`/profileDispaly/${id}`)
+                              }
+                            />
+                          </Suspense>
+                        </AccordionItem>
+                      </Accordion>
+                    </div>
+                  </Tab>
+                  {mentorDetails && (
+                    <Tab
+                      key="mentoring"
+                      title={
+                        <div className="flex items-center gap-2">
+                          <FaUserGraduate size={14} />
+                          <span>Mentoring</span>
+                        </div>
+                      }
+                    >
+                      <div className="text-center py-8">
+                        <div className="p-4 rounded-lg bg-gray-50 max-w-sm mx-auto">
+                          <FaUserGraduate
+                            size={24}
+                            className="mx-auto text-gray-400 mb-3"
+                          />
+                          <p className="text-sm text-gray-600">
+                            Manage your mentoring activities here.
+                          </p>
+                        </div>
+                      </div>
+                    </Tab>
+                  )}
+                </Tabs>
+              </CardBody>
+            </Card>
+          </div>
         </div>
-      </div>
 
-      {/* Modals */}
-      <Modal
-        isOpen={isProfessionalModalOpen}
-        onClose={onProfessionalModalClose}
-        size="lg"
-      >
-        <ModalContent>
-          <ModalHeader>Edit Professional Info</ModalHeader>
-          <ModalBody>
-            <Input
-              label="Industry"
-              value={professionalInfo.industry}
-              onChange={(e) =>
-                setProfessionalInfo({
-                  ...professionalInfo,
-                  industry: e.target.value,
-                })
-              }
-            />
-            <Textarea
-              label="Reason for Joining"
-              value={professionalInfo.reasonForJoining}
-              onChange={(e) =>
-                setProfessionalInfo({
-                  ...professionalInfo,
-                  reasonForJoining: e.target.value,
-                })
-              }
-            />
-          </ModalBody>
-          <ModalFooter>
-            <Button variant="flat" onPress={onProfessionalModalClose}>
-              Cancel
-            </Button>
-            <Button color="primary" onPress={handleProfessionalSubmit}>
-              Save
-            </Button>
-          </ModalFooter>
-        </ModalContent>
-      </Modal>
-
-      <Modal
-        isOpen={isContactModalOpen}
-        onClose={onContactModalClose}
-        size="lg"
-      >
-        <ModalContent>
-          <ModalHeader>Edit Contact Info</ModalHeader>
-          <ModalBody>
-            <Input
-              label="Email"
-              value={contactInfo.email}
-              onChange={(e) =>
-                setContactInfo({ ...contactInfo, email: e.target.value })
-              }
-            />
-            <Input
-              label="Phone"
-              value={contactInfo.phone}
-              onChange={(e) =>
-                setContactInfo({ ...contactInfo, phone: e.target.value })
-              }
-            />
-            <Input
-              type="date"
-              label="Date of Birth"
-              value={contactInfo.dateOfBirth.split("T")[0] || ""}
-              onChange={(e) =>
-                setContactInfo({ ...contactInfo, dateOfBirth: e.target.value })
-              }
-            />
-          </ModalBody>
-          <ModalFooter>
-            <Button variant="flat" onPress={onContactModalClose}>
-              Cancel
-            </Button>
-            <Button color="primary" onPress={handleContactSubmit}>
-              Save
-            </Button>
-          </ModalFooter>
-        </ModalContent>
-      </Modal>
-
-      <Modal
-        isOpen={isPasswordModalOpen}
-        onClose={onPasswordModalClose}
-        size="lg"
-      >
-        <ModalContent>
-          <ModalHeader>Change Password</ModalHeader>
-          <ModalBody>
-            <Input
-              type="password"
-              label="Current Password"
-              value={passwordInfo.currentPassword}
-              onChange={(e) =>
-                setPasswordInfo({
-                  ...passwordInfo,
-                  currentPassword: e.target.value,
-                })
-              }
-            />
-            <Input
-              type="password"
-              label="New Password"
-              value={passwordInfo.newPassword}
-              onChange={(e) =>
-                setPasswordInfo({
-                  ...passwordInfo,
-                  newPassword: e.target.value,
-                })
-              }
-            />
-            <Input
-              type="password"
-              label="Confirm New Password"
-              value={passwordInfo.confirmPassword}
-              onChange={(e) =>
-                setPasswordInfo({
-                  ...passwordInfo,
-                  confirmPassword: e.target.value,
-                })
-              }
-            />
-          </ModalBody>
-          <ModalFooter>
-            <Button variant="flat" onPress={onPasswordModalClose}>
-              Cancel
-            </Button>
-            <Button color="primary" onPress={handlePasswordSubmit}>
-              Save
-            </Button>
-          </ModalFooter>
-        </ModalContent>
-      </Modal>
-
-      <Modal
-        isOpen={isMentorModalOpen}
-        onClose={onMentorModalClose}
-        size="2xl"
-        scrollBehavior="inside"
-      >
-        <ModalContent>
-          <ModalHeader>Edit Mentorship Info</ModalHeader>
-          <ModalBody>
-            <Textarea
-              label="Bio"
-              value={mentorshipInfo.bio}
-              onChange={(e) =>
-                setMentorshipInfo({ ...mentorshipInfo, bio: e.target.value })
-              }
-            />
-            <div className="space-y-4 mt-4">
-              <Select
-                label="Day"
-                value={selectedDay}
-                onChange={(e) => setSelectedDay(e.target.value)}
-              >
-                {DAYS_OF_WEEK.map((day) => (
-                  <SelectItem key={day} value={day}>
-                    {day}
-                  </SelectItem>
-                ))}
-              </Select>
+        {/* Professional Info Modal */}
+        <Modal
+          isOpen={isProfessionalModalOpen}
+          onClose={onProfessionalModalClose}
+          size="md"
+          classNames={{
+            base: "bg-white",
+            header: "border-b border-gray-100",
+            footer: "border-t border-gray-100",
+          }}
+        >
+          <ModalContent>
+            <ModalHeader className="text-lg font-medium">
+              Professional Information
+            </ModalHeader>
+            <ModalBody className="py-6">
               <div className="space-y-4">
-                <div>
-                  <p className="font-medium mb-2">Start Time</p>
-                  <div className="grid grid-cols-2 gap-2">
+                <Input
+                  label="Industry"
+                  variant="bordered"
+                  value={professionalInfo.industry}
+                  onChange={(e) =>
+                    setProfessionalInfo({
+                      ...professionalInfo,
+                      industry: e.target.value,
+                    })
+                  }
+                />
+                <Textarea
+                  label="Reason for Joining"
+                  variant="bordered"
+                  value={professionalInfo.reasonForJoining}
+                  onChange={(e) =>
+                    setProfessionalInfo({
+                      ...professionalInfo,
+                      reasonForJoining: e.target.value,
+                    })
+                  }
+                />
+              </div>
+            </ModalBody>
+            <ModalFooter>
+              <Button variant="light" onPress={onProfessionalModalClose}>
+                Cancel
+              </Button>
+              <Button color="primary" onPress={handleProfessionalSubmit}>
+                Save Changes
+              </Button>
+            </ModalFooter>
+          </ModalContent>
+        </Modal>
+
+        {/* Contact Info Modal */}
+        <Modal
+          isOpen={isContactModalOpen}
+          onClose={onContactModalClose}
+          size="md"
+          classNames={{
+            base: "bg-white",
+            header: "border-b border-gray-100",
+            footer: "border-t border-gray-100",
+          }}
+        >
+          <ModalContent>
+            <ModalHeader className="text-lg font-medium">
+              Contact Information
+            </ModalHeader>
+            <ModalBody className="py-6">
+              <div className="space-y-4">
+                <Input
+                  label="Email"
+                  type="email"
+                  variant="bordered"
+                  value={contactInfo.email}
+                  onChange={(e) =>
+                    setContactInfo({ ...contactInfo, email: e.target.value })
+                  }
+                />
+                <Input
+                  label="Phone"
+                  variant="bordered"
+                  value={contactInfo.phone}
+                  onChange={(e) =>
+                    setContactInfo({ ...contactInfo, phone: e.target.value })
+                  }
+                />
+                <Input
+                  type="date"
+                  label="Date of Birth"
+                  variant="bordered"
+                  value={contactInfo.dateOfBirth.split("T")[0] || ""}
+                  onChange={(e) =>
+                    setContactInfo({
+                      ...contactInfo,
+                      dateOfBirth: e.target.value,
+                    })
+                  }
+                />
+              </div>
+            </ModalBody>
+            <ModalFooter>
+              <Button variant="light" onPress={onContactModalClose}>
+                Cancel
+              </Button>
+              <Button color="primary" onPress={handleContactSubmit}>
+                Save Changes
+              </Button>
+            </ModalFooter>
+          </ModalContent>
+        </Modal>
+
+        {/* Password Modal */}
+        <Modal
+          isOpen={isPasswordModalOpen}
+          onClose={onPasswordModalClose}
+          size="md"
+          classNames={{
+            base: "bg-white",
+            header: "border-b border-gray-100",
+            footer: "border-t border-gray-100",
+          }}
+        >
+          <ModalContent>
+            <ModalHeader className="text-lg font-medium">
+              Change Password
+            </ModalHeader>
+            <ModalBody className="py-6">
+              <div className="space-y-4">
+                <Input
+                  type="password"
+                  label="Current Password"
+                  variant="bordered"
+                  value={passwordInfo.currentPassword}
+                  onChange={(e) =>
+                    setPasswordInfo({
+                      ...passwordInfo,
+                      currentPassword: e.target.value,
+                    })
+                  }
+                />
+                <Input
+                  type="password"
+                  label="New Password"
+                  variant="bordered"
+                  value={passwordInfo.newPassword}
+                  onChange={(e) =>
+                    setPasswordInfo({
+                      ...passwordInfo,
+                      newPassword: e.target.value,
+                    })
+                  }
+                />
+                <Input
+                  type="password"
+                  label="Confirm New Password"
+                  variant="bordered"
+                  value={passwordInfo.confirmPassword}
+                  onChange={(e) =>
+                    setPasswordInfo({
+                      ...passwordInfo,
+                      confirmPassword: e.target.value,
+                    })
+                  }
+                />
+              </div>
+            </ModalBody>
+            <ModalFooter>
+              <Button variant="light" onPress={onPasswordModalClose}>
+                Cancel
+              </Button>
+              <Button color="primary" onPress={handlePasswordSubmit}>
+                Update Password
+              </Button>
+            </ModalFooter>
+          </ModalContent>
+        </Modal>
+
+        {/* Mentorship Modal */}
+        <Modal
+          isOpen={isMentorModalOpen}
+          onClose={onMentorModalClose}
+          size="lg"
+          scrollBehavior="inside"
+          classNames={{
+            base: "bg-white",
+            header: "border-b border-gray-100",
+            footer: "border-t border-gray-100",
+          }}
+        >
+          <ModalContent>
+            <ModalHeader className="text-lg font-medium">
+              Mentorship Details
+            </ModalHeader>
+            <ModalBody className="py-6">
+              <div className="space-y-6">
+                <Textarea
+                  label="Bio"
+                  placeholder="Tell others about your expertise and mentoring approach..."
+                  variant="bordered"
+                  value={mentorshipInfo.bio}
+                  onChange={(e) =>
+                    setMentorshipInfo({
+                      ...mentorshipInfo,
+                      bio: e.target.value,
+                    })
+                  }
+                />
+
+                <div className="space-y-4">
+                  <h3 className="text-sm font-medium text-gray-900">
+                    Available Time Slots
+                  </h3>
+
+                  <div className="grid grid-cols-2 gap-3">
                     <Select
-                      label="Hour"
+                      label="Day"
+                      variant="bordered"
+                      value={selectedDay}
+                      onChange={(e) => setSelectedDay(e.target.value)}
+                    >
+                      {DAYS_OF_WEEK.map((day) => (
+                        <SelectItem key={day} value={day}>
+                          {day}
+                        </SelectItem>
+                      ))}
+                    </Select>
+
+                    <Select
+                      label="AM/PM"
+                      variant="bordered"
+                      value={ampm}
+                      onChange={(e) => setAmpm(e.target.value)}
+                    >
+                      {AMPM.map((period) => (
+                        <SelectItem key={period} value={period}>
+                          {period}
+                        </SelectItem>
+                      ))}
+                    </Select>
+                  </div>
+
+                  <div className="grid grid-cols-4 gap-2">
+                    <Select
+                      label="Start Hour"
+                      variant="bordered"
                       value={startHour}
                       onChange={(e) => setStartHour(e.target.value)}
                     >
@@ -1185,7 +1403,8 @@ const Profile = () => {
                       ))}
                     </Select>
                     <Select
-                      label="Minute"
+                      label="Start Min"
+                      variant="bordered"
                       value={startMin}
                       onChange={(e) => setStartMin(e.target.value)}
                     >
@@ -1195,13 +1414,9 @@ const Profile = () => {
                         </SelectItem>
                       ))}
                     </Select>
-                  </div>
-                </div>
-                <div>
-                  <p className="font-medium mb-2">End Time</p>
-                  <div className="grid grid-cols-2 gap-2">
                     <Select
-                      label="Hour"
+                      label="End Hour"
+                      variant="bordered"
                       value={endHour}
                       onChange={(e) => setEndHour(e.target.value)}
                     >
@@ -1212,7 +1427,8 @@ const Profile = () => {
                       ))}
                     </Select>
                     <Select
-                      label="Minute"
+                      label="End Min"
+                      variant="bordered"
                       value={endMin}
                       onChange={(e) => setEndMin(e.target.value)}
                     >
@@ -1223,60 +1439,62 @@ const Profile = () => {
                       ))}
                     </Select>
                   </div>
-                </div>
-                <div>
-                  <p className="font-medium mb-2">AM/PM</p>
-                  <Select
-                    label="AM/PM"
-                    value={ampm}
-                    onChange={(e) => setAmpm(e.target.value)}
+
+                  <Button
+                    color="primary"
+                    variant="flat"
+                    onPress={handleAddSlot}
+                    startContent={<FaPlus size={14} />}
+                    className="w-full"
                   >
-                    {AMPM.map((period) => (
-                      <SelectItem key={period} value={period}>
-                        {period}
-                      </SelectItem>
-                    ))}
-                  </Select>
+                    Add Time Slot
+                  </Button>
+
+                  {mentorshipInfo.availableSlots.length > 0 && (
+                    <div className="space-y-3">
+                      <p className="text-sm font-medium text-gray-700">
+                        Current Slots:
+                      </p>
+                      {mentorshipInfo.availableSlots.map(
+                        (slot: any, i: number) => (
+                          <div key={i} className="p-3 bg-gray-50 rounded-lg">
+                            <p className="text-sm font-medium text-gray-900 mb-2">
+                              {slot.day}
+                            </p>
+                            <div className="flex flex-wrap gap-1">
+                              {slot.timeSlots.map((time: string) => (
+                                <Chip
+                                  key={time}
+                                  variant="flat"
+                                  color="primary"
+                                  size="sm"
+                                  onClose={() =>
+                                    handleRemoveSlot(slot.day, time)
+                                  }
+                                >
+                                  {time}
+                                </Chip>
+                              ))}
+                            </div>
+                          </div>
+                        )
+                      )}
+                    </div>
+                  )}
                 </div>
               </div>
-              <Button
-                color="primary"
-                onPress={handleAddSlot}
-                startContent={<FaPlus />}
-              >
-                Add Slot
+            </ModalBody>
+            <ModalFooter>
+              <Button variant="light" onPress={onMentorModalClose}>
+                Cancel
               </Button>
-              <div className="space-y-2">
-                {mentorshipInfo.availableSlots.map((slot: any, i: number) => (
-                  <div key={i} className="flex flex-col gap-2">
-                    <p className="font-medium">{slot.day}</p>
-                    <div className="flex flex-wrap gap-2">
-                      {slot.timeSlots.map((time: string) => (
-                        <Chip
-                          key={time}
-                          variant="flat"
-                          color="primary"
-                          onClose={() => handleRemoveSlot(slot.day, time)}
-                        >
-                          {time}
-                        </Chip>
-                      ))}
-                    </div>
-                  </div>
-                ))}
-              </div>
-            </div>
-          </ModalBody>
-          <ModalFooter>
-            <Button variant="flat" onPress={onMentorModalClose}>
-              Cancel
-            </Button>
-            <Button color="primary" onPress={handleMentorshipSubmit}>
-              Save
-            </Button>
-          </ModalFooter>
-        </ModalContent>
-      </Modal>
+              <Button color="primary" onPress={handleMentorshipSubmit}>
+                Save Changes
+              </Button>
+            </ModalFooter>
+          </ModalContent>
+        </Modal>
+      </div>
     </div>
   );
 };

@@ -47,6 +47,7 @@ export interface Contact {
       joinedAt: Date 
     }[];
   };
+  lastMessageTimestamp?: string;
 }
 
 export const formatContact = (contact): Contact => ({
@@ -84,6 +85,7 @@ export interface IChatMessage {
   status: "pending" | "sent" | "read";
   timestamp: string;
   caption?: string;
+  createdAt?:string;
 }
 
 export interface Notification {
@@ -296,10 +298,29 @@ export interface Collaboration {
   createdAt: string;
 }
 
-// export interface sendGroupOffersAndAnswers {
-//   groupId: string; 
-//   callId: string; 
-//   callType: 'audio' | 'video'; 
-//   offerRecipients: string[]; 
-//   answerRecipients: string[]
-// }
+
+export interface ICallLog {
+  _id: string;
+  CallId: string;
+  chatKey: string;
+  callType: "audio" | "video";
+  type: "group" | "user-mentor" | "user-user";
+  senderId: {
+    _id: string ;
+    name: string;
+    profilePic: string | null;
+  };
+  recipientIds: {
+    _id: string;
+    name: string;
+    profilePic: string | null;
+  }[];
+  groupId?: string;
+  status: "ongoing" | "completed" | "missed";
+  callerName?: string; 
+  startTime: Date;
+  endTime?: Date;
+  duration?: number;
+  createdAt: Date;
+  updatedAt: Date;
+}

@@ -72,6 +72,9 @@ export interface PopulatedContact {
   type: "user-mentor" | "user-user" | "group";
   createdAt: Date;
   updatedAt: Date;
+  lastMessage?: {
+    timestamp: Date;
+  };
 }
 
 export interface FormattedContact {
@@ -118,4 +121,5 @@ export interface FormattedContact {
     availableSlots: { day: string; timeSlots: string[] }[];
     members: { userId: string; name: string; profilePic: string; joinedAt: Date }[];
   };
+  lastMessageTimestamp?: string;
 }

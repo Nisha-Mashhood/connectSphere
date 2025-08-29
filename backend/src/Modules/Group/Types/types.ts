@@ -19,4 +19,5 @@ export interface GroupQuery {
   search?: string;
   page?: number;
   limit?: number;
+  excludeAdminId?: string;
 }

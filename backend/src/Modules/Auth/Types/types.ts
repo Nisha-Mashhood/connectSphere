@@ -80,6 +80,7 @@ export interface UserQuery {
   page?: number;
   limit?: number;
   role?:string;
+  excludeId?: string;
 }
 
 //Upadte Password 

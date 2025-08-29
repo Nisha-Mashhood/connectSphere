@@ -8,6 +8,7 @@ import { UserInterface } from "../../../Interfaces/models/IUser";
 import { MentorQuery } from "../Types/Types";
 
 export class MentorRepository extends BaseRepository<IMentor> {
+   
   constructor() {
     super(Mentor as Model<IMentor>);
   }
@@ -92,72 +93,184 @@ export class MentorRepository extends BaseRepository<IMentor> {
     }
   }
 
-  getAllMentors = async (query: MentorQuery = {}): Promise<{ mentors: IMentor[]; total: number }> => {
-    try {
-      logger.debug(`Fetching all approved mentors with query: ${JSON.stringify(query)}`);
-      const { search, page, limit, skill } = query;
+getAllMentors = async (
+  query: MentorQuery = {}
+): Promise<{ mentors: IMentor[]; total: number }> => {
+  try {
+    logger.debug(
+      `Fetching all approved mentors with query: ${JSON.stringify(query)}`
+    );
 
-      // If no query parameters, return all mentors without pagination
-      if (!search && !page && !limit && !skill) {
-        const mentors = await this.model
-          .find({ isApproved: "Completed" })
-          .populate("userId")
-          .populate("skills")
-          .exec();
-        logger.info(`Fetched ${mentors.length} mentors (no query constraints)`);
-        return { mentors, total: mentors.length };
-      }
+    const {
+      search,
+      page = 1,
+      limit = 10,
+      skill,
+      category,
+      sortBy = "name",
+      sortOrder = "asc",
+    } = query;
 
-      // Build aggregation pipeline for search, filtering, and pagination
-      const matchStage: any = { isApproved: "Completed" };
+
+    // Log category and skill details
+      logger.info(`Selected category: ${category || 'None'}, Skill: ${skill || 'None'}`);
+
+      // Fetch all approved mentors before filtering for debugging
+      const allMentors = await this.model
+        .find({ isApproved: 'Completed' })
+        .populate('userId', 'name email profilePic')
+        .populate('skills', 'name subcategoryId')
+        .lean()
+        .exec();
+      logger.debug(`All approved mentors before filtering: ${JSON.stringify(
+        allMentors, null, 2)}`);
+
+      // Build match stage for initial filtering
+      const matchStage: any = { isApproved: 'Completed' };
       if (search) {
-        matchStage["userId.name"] = { $regex: search, $options: "i" };
-      }
-      if (skill) {
-        matchStage.skills = { $in: [skill] };
+        matchStage['userId.name'] = { $regex: search, $options: 'i' };
       }
 
-      const pipeline = [
+      // Build aggregation pipeline
+      const pipeline: any[] = [
+        // Lookup for user details, including profilePic
         {
           $lookup: {
-            from: "users",
-            localField: "userId",
-            foreignField: "_id",
-            as: "userId",
+            from: 'users',
+            localField: 'userId',
+            foreignField: '_id',
+            as: 'userId',
+            pipeline: [
+              { $project: { name: 1, email: 1, profilePic: 1 } }
+            ]
           },
         },
-        { $unwind: "$userId" },
+        { $unwind: { path: '$userId', preserveNullAndEmptyArrays: true } },
+        // Lookup for skills
         {
           $lookup: {
-            from: "skills",
-            localField: "skills",
-            foreignField: "_id",
-            as: "skills",
+            from: 'skills',
+            localField: 'skills',
+            foreignField: '_id',
+            as: 'skills',
+            pipeline: [
+              { $project: { name: 1, subcategoryId: 1 } }
+            ]
           },
         },
-        { $match: matchStage },
+        // Lookup for feedback to calculate average rating
         {
-          $facet: {
-            mentors: [
-              { $skip: ((page || 1) - 1) * (limit || 10) },
-              { $limit: limit || 10 },
-            ],
-            total: [{ $count: "count" }],
+          $lookup: {
+            from: 'feedbacks',
+            localField: '_id',
+            foreignField: 'mentorId',
+            as: 'feedbacks',
+          },
+        },
+        // Add average rating and feedback count
+        {
+          $addFields: {
+            avgRating: { $avg: '$feedbacks.rating' },
+            feedbackCount: { $size: '$feedbacks' },
           },
         },
       ];
 
+      // skill and category filtering
+      if (skill || category) {
+        // Lookup for subcategories
+        pipeline.push({
+          $lookup: {
+            from: 'subcategories',
+            localField: 'skills.subcategoryId',
+            foreignField: '_id',
+            as: 'subcategories',
+          },
+        });
+        // Lookup for categories
+        pipeline.push({
+          $lookup: {
+            from: 'categories',
+            localField: 'subcategories.categoryId',
+            foreignField: '_id',
+            as: 'categories',
+          },
+        });
+
+        // Apply skill and category filters
+        const filterStage: any = {};
+        if (skill) {
+          filterStage['skills.name'] = { $regex: `^${skill}$`, $options: 'i' };
+          logger.info(`Applying skill filter: ${skill}`);
+        }
+        if (category) {
+          filterStage['categories.name'] = { $regex: `^${category}$`, $options: 'i' };
+          logger.info(`Applying category filter: ${category}`);
+        }
+        if (skill || category) {
+          pipeline.push({ $match: filterStage });
+        }
+      }
+
+      // Apply base filters (price, approval, search)
+      pipeline.push({ $match: matchStage });
+
+      // Log mentors after filtering but before sorting/pagination
+      pipeline.push({
+        $project: {
+          _id: 1,
+          'userId.name': 1,
+          'userId.email': 1,
+          'userId.profilePic': 1,
+          'skills.name': 1,
+          'skills.subcategoryId': 1,
+          'categories.name': 1,
+          price: 1,
+          avgRating: 1,
+          feedbackCount: 1,
+          specialization: 1,
+          timePeriod: 1,
+          availableSlots: 1,
+        },
+      });
+      // const tempPipeline = [...pipeline, { $skip: 0 }, { $limit: 100 }];
+      // const intermediateResult = await this.model.aggregate(tempPipeline).exec();
+
+      // Sorting
+      const sortStage: any = {};
+      if (sortBy === 'rating') {
+        sortStage.avgRating = sortOrder === 'asc' ? 1 : -1;
+      } else if (sortBy === 'price') {
+        sortStage.price = sortOrder === 'asc' ? 1 : -1;
+      } else if (sortBy === 'feedbackCount') {
+        sortStage.feedbackCount = sortOrder === 'asc' ? 1 : -1;
+      } else {
+        sortStage['userId.name'] = sortOrder === 'asc' ? 1 : -1;
+      }
+      pipeline.push({ $sort: sortStage });
+
+      // Pagination
+      pipeline.push({
+        $facet: {
+          mentors: [{ $skip: (page - 1) * limit }, { $limit: limit }],
+          total: [{ $count: 'count' }],
+        },
+      });
+
+      logger.debug(`Executing mentor aggregation pipeline: ${JSON.stringify(pipeline, null, 2)}`);
       const result = await this.model.aggregate(pipeline).exec();
       const mentors = result[0]?.mentors || [];
       const total = result[0]?.total[0]?.count || 0;
 
-      logger.info(`Fetched ${mentors.length} mentors, total: ${total}`);
+      logger.info(`Final result - Fetched ${mentors.length} mentors, total: ${total}`)
+
       return { mentors, total };
     } catch (error: any) {
       logger.error(`Error fetching mentors: ${error.message}`);
       throw new RepositoryError(`Error fetching mentors: ${error.message}`);
     }
-  }
+};
+
 
    getMentorDetails = async(id: string): Promise<IMentor | null> => {
     try {

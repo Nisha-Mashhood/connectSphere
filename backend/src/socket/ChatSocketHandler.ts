@@ -298,6 +298,12 @@ export class ChatSocketHandler {
             );
           }
         }
+        // Emit contactsUpdated to sender and recipients
+        const allUsers = [senderId, ...recipientIds];
+        for (const userId of allUsers) {
+          this.io?.to(`user_${userId}`).emit("contactsUpdated");
+          logger.info(`Emitted contactsUpdated to user_${userId}`);
+        }
       }
 
       if (!savedMessage) {
