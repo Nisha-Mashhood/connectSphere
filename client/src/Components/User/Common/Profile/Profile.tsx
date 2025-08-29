@@ -63,6 +63,7 @@ import {
 import { updateUserProfile } from "../../../../redux/Slice/userSlice";
 import { checkProfile } from "../../../../Service/Auth.service";
 import { downloadReceipt } from "../../../../Service/collaboration.Service";
+import { Collaboration } from "../../../../types";
 
 // Lazy load components
 const RequestsSection = lazy(() => import("./RequestSection"));
@@ -132,7 +133,7 @@ const Profile = () => {
   const [ampm, setAmpm] = useState("AM");
   const [mentorNames, setMentorNames] = useState<{ [key: string]: string }>({});
   const [isPaymentLoading, setIsPaymentLoading] = useState(false);
-  const [selectedCollab, setSelectedCollab] = useState<any | null>(null);
+  const [selectedCollab, setSelectedCollab] = useState<Collaboration | null>(null);
   const {
     isOpen: isReceiptModalOpen,
     onOpen: onReceiptModalOpen,
@@ -1456,7 +1457,7 @@ const Profile = () => {
                         Current Slots:
                       </p>
                       {mentorshipInfo.availableSlots.map(
-                        (slot: any, i: number) => (
+                        (slot, i: number) => (
                           <div key={i} className="p-3 bg-gray-50 rounded-lg">
                             <p className="text-sm font-medium text-gray-900 mb-2">
                               {slot.day}
