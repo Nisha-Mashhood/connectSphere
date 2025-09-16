@@ -1,0 +1,211 @@
+import { inject, injectable } from "inversify";
+import { Types } from "mongoose";
+import { IChatMessage } from "../Interfaces/Models/IChatMessage";
+import { IChatRepository } from "../Interfaces/Repository/IChatRepository";
+import { IContactRepository } from "../Interfaces/Repository/IContactRepository";
+import { IGroupRepository } from "../Interfaces/Repository/IGroupRepository";
+import logger from "../Core/Utils/Logger";
+import { IContact } from "../Interfaces/Models/IContact";
+import { StatusCodes } from "../Constants/StatusCode.constants";
+import { ServiceError } from "../Core/Utils/ErrorHandler";
+import { IChatService } from "../Interfaces/Services/IChatService";
+
+@injectable()
+export class ChatService implements IChatService {
+  private _chatRepository: IChatRepository;
+  private _contactRepository: IContactRepository;
+  private _groupRepository: IGroupRepository;
+  
+  constructor(
+    @inject('IChatRepository') chatRepository : IChatRepository,
+    @inject('IContactRepository') contactRepository : IContactRepository,
+    @inject('IGroupRepository') groupRepository : IGroupRepository
+  ) {
+    this._chatRepository = chatRepository;
+    this._contactRepository = contactRepository;
+    this._groupRepository = groupRepository;
+  }
+
+  getChatMessages = async (
+    contactId?: string,
+    groupId?: string,
+    page: number = 1,
+    limit: number = 10
+  ): Promise<{ messages: IChatMessage[]; total: number }> => {
+    try {
+      logger.debug(
+        `Fetching chat messages for contact: ${contactId}, group: ${groupId}, page: ${page}, limit: ${limit}`
+      );
+      if (!contactId && !groupId) {
+        throw new ServiceError(
+          "Contact ID or Group ID is required to fetch chat messages",
+          StatusCodes.BAD_REQUEST
+        );
+      }
+      if (contactId && groupId) {
+        throw new ServiceError(
+          "Provide only one of Contact ID or Group ID, not both",
+          StatusCodes.BAD_REQUEST
+        );
+      }
+
+      let messages: IChatMessage[] = [];
+      let total = 0;
+
+      if (groupId) {
+        if (!Types.ObjectId.isValid(groupId)) {
+          throw new ServiceError(
+            "Invalid group ID: must be a 24 character hex string",
+            StatusCodes.BAD_REQUEST
+          );
+        }
+        const group = await this._groupRepository.getGroupById(groupId);
+        if (!group) {
+          throw new ServiceError("Invalid group ID", StatusCodes.NOT_FOUND);
+        }
+        messages = await this._chatRepository.findChatMessagesByGroupId(
+          groupId,
+          page,
+          limit
+        );
+        total = await this._chatRepository.countMessagesByGroupId(groupId);
+      } else if (contactId) {
+        if (!Types.ObjectId.isValid(contactId)) {
+          throw new ServiceError(
+            "Invalid contact ID: must be a 24 character hex string",
+            StatusCodes.BAD_REQUEST
+          );
+        }
+        const contact: IContact | null = await this._contactRepository.findContactById(
+          contactId
+        );
+        if (!contact) {
+          throw new ServiceError("Invalid contact ID", StatusCodes.NOT_FOUND);
+        }
+
+        if (contact.type === "user-mentor" && contact.collaborationId) {
+          messages = await this._chatRepository.findChatMessagesByCollaborationId(
+            contact.collaborationId.toString(),
+            page,
+            limit
+          );
+          total = await this._chatRepository.countMessagesByCollaborationId(
+            contact.collaborationId.toString()
+          );
+        } else if (contact.type === "user-user" && contact.userConnectionId) {
+          messages = await this._chatRepository.findChatMessagesByUserConnectionId(
+            contact.userConnectionId.toString(),
+            page,
+            limit
+          );
+          total = await this._chatRepository.countMessagesByUserConnectionId(
+            contact.userConnectionId.toString()
+          );
+        } else {
+          throw new ServiceError(
+            "No valid connection ID found for contact",
+            StatusCodes.BAD_REQUEST
+          );
+        }
+      }
+
+      return { messages: messages.reverse(), total };
+    } catch (error: unknown) {
+      const err = error instanceof Error ? error : new Error(String(error));
+      logger.error(`Error fetching chat messages: ${err.message}`);
+      throw error instanceof ServiceError
+        ? error
+        : new ServiceError(
+            "Failed to fetch chat messages",
+            StatusCodes.INTERNAL_SERVER_ERROR,
+            err
+          );
+    }
+  };
+
+  getUnreadMessageCounts = async (
+    userId: string
+  ): Promise<{ [key: string]: number }> => {
+    try {
+      logger.debug(`Fetching unread message counts for user: ${userId}`);
+      if (!userId) {
+        throw new ServiceError("User ID is required", StatusCodes.BAD_REQUEST);
+      }
+      if (!Types.ObjectId.isValid(userId)) {
+        throw new ServiceError(
+          "Invalid user ID: must be a 24 character hex string",
+          StatusCodes.BAD_REQUEST
+        );
+      }
+
+      const contacts = await this._contactRepository.findContactsByUserId(userId);
+      logger.debug(`Found ${contacts.length} contacts for user: ${userId}`);
+      const unreadCounts: { [key: string]: number } = {};
+
+      if (contacts.length === 0) {
+        logger.info(`No contacts found for user: ${userId}`);
+        return unreadCounts;
+      }
+
+      for (const contact of contacts) {
+        let count = 0;
+        try {
+          if (contact.type === "group" && contact.groupId) {
+            const groupIdStr = contact.groupId._id?.toString();
+            if (!groupIdStr) continue;
+            count = await this._chatRepository.countUnreadMessagesByGroupId(
+              groupIdStr,
+              userId
+            );
+            unreadCounts[`group_${groupIdStr}`] = count;
+          } else if (
+            contact.type === "user-mentor" &&
+            contact.collaborationId
+          ) {
+            const collabIdStr = contact.collaborationId._id?.toString();
+            if (!collabIdStr) continue;
+            count = await this._chatRepository.countUnreadMessagesByCollaborationId(
+              collabIdStr,
+              userId
+            );
+            unreadCounts[`user-mentor_${collabIdStr}`] = count;
+          } else if (contact.type === "user-user" && contact.userConnectionId) {
+            const userConnIdStr = contact.userConnectionId._id?.toString();
+            if (!userConnIdStr) continue;
+            count = await this._chatRepository.countUnreadMessagesByUserConnectionId(
+              userConnIdStr,
+              userId
+            );
+            unreadCounts[`user-user_${userConnIdStr}`] = count;
+          }
+        } catch (error: unknown) {
+          const err = error instanceof Error ? error : new Error(String(error));
+          logger.warn(
+            `Skipping unread count for contact ${contact._id}: ${err.message}`
+          );
+          const id =
+            contact.groupId?._id?.toString() ||
+            contact.collaborationId?._id?.toString() ||
+            contact.userConnectionId?._id?.toString() ||
+            "unknown";
+          unreadCounts[`${contact.type}_${id}`] = 0;
+        }
+      }
+
+      logger.info(`Unread message counts: ${JSON.stringify(unreadCounts)}`);
+      return unreadCounts;
+    } catch (error: unknown) {
+      const err = error instanceof Error ? error : new Error(String(error));
+      logger.error(
+        `Error fetching unread message counts for user ${userId}: ${err.message}`
+      );
+      throw error instanceof ServiceError
+        ? error
+        : new ServiceError(
+            "Failed to fetch unread message counts",
+            StatusCodes.INTERNAL_SERVER_ERROR,
+            err
+          );
+    }
+  };
+}

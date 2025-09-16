@@ -1,7 +1,9 @@
 import { Server, Socket } from "socket.io";
-import logger from "../core/Utils/Logger";
-import { NotificationService, TaskNotificationPayload } from "../Modules/Notification/Service/NotificationService";
-import { AppNotification } from "../Interfaces/models/AppNotification";
+import logger from "../Core/Utils/Logger";
+import { NotificationService } from "../Services/Notification.service";
+import { IAppNotification } from "../Interfaces/Models/IAppNotification";
+import { TaskNotificationPayload } from "../Utils/Types/Notification.types";
+
 
 export class NotificationSocketHandler {
   private sentNotifications: Set<string> = new Set();
@@ -19,7 +21,7 @@ export class NotificationSocketHandler {
 
   public async handleNotificationRead(
     socket: Socket,
-    data: { notificationId?: string; userId?: string; type?: AppNotification['type'] }
+    data: { notificationId?: string; userId?: string; type?: IAppNotification['type'] }
   ): Promise<void> {
     try {
       const { notificationId, userId, type } = data;

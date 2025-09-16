@@ -1,11 +1,11 @@
-import { UserInterface } from "./IUser.js";
+import { IUser } from "./IUser.js";
 import { Document, Types } from "mongoose";
 
 export interface IUserConnection extends Document {
   _id: Types.ObjectId;
   connectionId: string;
-  requester: string | UserInterface | Types.ObjectId;
-  recipient: string | UserInterface | Types.ObjectId;
+  requester: string | IUser | Types.ObjectId;
+  recipient: string | IUser | Types.ObjectId;
   requestStatus: "Pending" | "Accepted" | "Rejected";
   connectionStatus: "Connected" | "Disconnected";
   requestSentAt: Date;

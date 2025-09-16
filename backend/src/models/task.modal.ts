@@ -1,7 +1,7 @@
 import mongoose, { Schema, Model } from "mongoose";
-import { generateCustomId } from "../core/Utils/IdGenerator";
-import { ITask } from "../Interfaces/models/ITask";
-import logger from "../core/Utils/Logger";
+import { generateCustomId } from "../Core/Utils/IdGenerator";
+import { ITask } from "../Interfaces/Models/ITask";
+import logger from "../Core/Utils/Logger";
 
 const taskSchema: Schema<ITask> = new mongoose.Schema({
   taskId: {

@@ -1,6 +1,7 @@
 import * as dotenv from 'dotenv';
 
-dotenv.config();
+const envFile = process.env.NODE_ENV === 'production' ? '.env.production' : '.env.development';
+dotenv.config({ path: envFile });
 
 const config = {
   port: process.env.PORT || 3000,
@@ -22,6 +23,7 @@ const config = {
   githubclientsecret: process.env.GITHUB_CLIENT_SECRET,
   githubcallbackurl: process.env.GITHUB_CALLBACK_URL,
   baseurl: process.env.BASE_URL,
+  frontendurl:process.env.FRONTEND_URL,
   sessionsecret: process.env.SESSION_SECRET,
   adminpasscode: process.env.PASSKEY_ADMIN,
   vapidPublicKey: process.env.VAPID_PUBLIC_KEY,

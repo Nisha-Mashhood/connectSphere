@@ -1,9 +1,10 @@
 import { Request, Response, NextFunction } from 'express';
-import logger from '../core/Utils/Logger';
-import { ServiceError } from '../core/Utils/ErrorHandler';
-import { AuthService as JWTService } from '../Modules/Auth/Utils/JWT';
-import { UserRepository } from '../Modules/Auth/Repositry/UserRepositry';
-import { UserInterface } from '../Interfaces/models/IUser';
+import logger from '../Core/Utils/Logger';
+import { ServiceError } from '../Core/Utils/ErrorHandler';
+import { AuthService as JWTService } from '../Utils/Utils/Auth.utils/JWT';
+import { UserRepository } from '../Repositories/User.repository';
+import { UserInterface } from '../Interfaces/Models/IUser';
+// import type { Express } from "express";
 
 // Extend Express Request type to include user
 declare global {

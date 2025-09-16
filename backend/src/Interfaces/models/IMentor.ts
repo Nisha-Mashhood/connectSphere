@@ -1,10 +1,10 @@
 import { Document, Types } from "mongoose";
-import { UserInterface } from "./IUser";
+import { IUser } from "./IUser";
 
 export interface IMentor extends Document {
   _id: Types.ObjectId;
   mentorId: string;
-  userId: Types.ObjectId | UserInterface;
+  userId: Types.ObjectId | IUser;
   isApproved?: string;
   rejectionReason?: string;
   skills?: string[];

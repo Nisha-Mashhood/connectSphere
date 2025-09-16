@@ -15,7 +15,9 @@
     "declaration": true,                                 /* Emit declaration files for types. */
     "declarationMap": true, 
     "allowImportingTsExtensions": false,
-                                 /* Generate source maps for declaration files. */
+
+    "experimentalDecorators": true,
+    "emitDecoratorMetadata": true,
 
     /* Source Maps for Debugging */
     "sourceMap": true,                                   /* Emit .map files for debugging. */
@@ -24,10 +26,21 @@
     /* Advanced Options */
     "moduleResolution": "NodeNext",                          /* Resolve modules in Node.js style. */
     "allowSyntheticDefaultImports": true,                /* Allow default imports for modules without a default export. */
-    "typeRoots": ["./node_modules/@types"],              /* Specify the type definition root folder. */
+    "typeRoots": ["./node_modules/@types"], 
+    "types": ["node"],             /* Specify the type definition root folder. */
     "baseUrl": "./",  
     "paths": {
-      "src/*": ["./src/*"]
+      "src/*": ["./src/*"],
+      "@Utils/*": ["Utils/*"],
+      "@Controllers/*": ["Controllers/*"],
+      "@Services/*": ["Services/*"],
+      "@Repositories/*": ["Repositories/*"],
+      "@Routes/*": ["Routes/*"],
+      "@config/*": ["config/*"],
+      "@middlewares/*": ["middlewares/*"],
+      "@Core/*": ["Core/*"],
+      "@Interfaces/*": ["Interfaces/*"],
+      "@Models/*": ["Models/*"],
     },                                   /* Base directory for module resolution. */
 
     /* Optional Linting Improvements */

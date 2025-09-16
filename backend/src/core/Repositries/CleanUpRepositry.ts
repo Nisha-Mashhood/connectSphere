@@ -1,7 +1,7 @@
 import { RepositoryError } from "../Utils/ErrorHandler";
 import logger from "../Utils/Logger";
-import GroupRequest from "../../models/groupRequest.model";
-import MentorRequest from "../../models/mentorRequset";
+import GroupRequest from "../../Models/groupRequest.model";
+import MentorRequest from "../../Models/mentorRequset";
 
 export class CleanupRepository {
   // Delete old GroupRequest Documents
@@ -33,14 +33,4 @@ export class CleanupRepository {
       throw new RepositoryError(`Failed to delete old MentorRequest documents: ${error.message}`);
     }
   }
-
-  //Delete Orphan Documents
-  deleteOrphanDocuments = async(): Promise<void> =>{
-    try {
-      
-    } catch (error) {
-      
-    }
-  }
-  
 }

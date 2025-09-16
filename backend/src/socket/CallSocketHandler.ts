@@ -1,12 +1,12 @@
 import { Server, Socket } from "socket.io";
-import logger from "../core/Utils/Logger";
-import { ContactRepository } from "../Modules/Contact/Repositry/ContactRepositry";
-import { GroupRepository } from "../Modules/Group/Repositry/GroupRepositry";
-import { UserRepository } from "../Modules/Auth/Repositry/UserRepositry";
-import { NotificationService } from "../Modules/Notification/Service/NotificationService";
-import { CallData, CallOffer } from "./types";
+import logger from "../Core/Utils/Logger";
+import { ContactRepository } from "../Repositories/Contact.repository";
+import { GroupRepository } from "../Repositories/Group.repository";
+import { UserRepository } from "../Repositories/User.repository";
+import { NotificationService } from "../Services/Notification.service";
+import { CallData, CallOffer } from "../Utils/Types/SocketService.types";
 import { createCallLog, updateCallLog } from "./Utils/CallLogHelper";
-import { CallLogRepository } from "../Modules/Call/Repositry/CallRepositry";
+import { CallLogRepository } from "../Repositories/Call.repository";
 
 export class CallSocketHandler {
   private activeOffers: Map<string, CallOffer> = new Map();

@@ -1,9 +1,9 @@
 import mongoose, { Schema } from "mongoose";
-import { generateCustomId } from "../core/Utils/IdGenerator";
-import { GroupDocument } from "../Interfaces/models/GroupDocument";
-import logger from "../core/Utils/Logger";
+import { generateCustomId } from "../Core/Utils/IdGenerator";
+import { IGroup } from "../Interfaces/Models/IGroup";
+import logger from "../Core/Utils/Logger";
 
-const GroupSchema: Schema = new Schema<GroupDocument>(
+const GroupSchema: Schema = new Schema<IGroup>(
   {
     groupId: {
       type: String,
@@ -96,6 +96,6 @@ GroupSchema.pre("save", async function (next) {
   next();
 });
 
-const Group = mongoose.model<GroupDocument>("Group", GroupSchema);
+const Group = mongoose.model<IGroup>("Group", GroupSchema);
 
 export default Group;

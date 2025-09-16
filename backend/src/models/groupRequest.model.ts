@@ -1,9 +1,9 @@
 import mongoose, { Schema } from "mongoose";
-import { generateCustomId } from "../core/Utils/IdGenerator";
-import { GroupRequestDocument } from "../Interfaces/models/GroupRequestDocument";
-import logger from "../core/Utils/Logger";
+import { generateCustomId } from "../Core/Utils/IdGenerator";
+import { IGroupRequest } from "../Interfaces/Models/IGroupRequest";
+import logger from "../Core/Utils/Logger";
 
-const GroupRequestSchema: Schema = new Schema<GroupRequestDocument>(
+const GroupRequestSchema: Schema = new Schema<IGroupRequest>(
   {
     groupRequestId: {
       type: String,
@@ -63,7 +63,7 @@ GroupRequestSchema.pre("save", async function (next) {
   next();
 });
 
-const GroupRequest = mongoose.model<GroupRequestDocument>(
+const GroupRequest = mongoose.model<IGroupRequest>(
   "GroupRequest",
   GroupRequestSchema
 );

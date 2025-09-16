@@ -1,10 +1,10 @@
 import mongoose from "mongoose";
 import { Schema, model } from "mongoose";
-import { generateCustomId } from "../core/Utils/IdGenerator";
-import { AppNotification } from "../Interfaces/models/AppNotification";
-import logger from "../core/Utils/Logger";
+import { generateCustomId } from "../Core/Utils/IdGenerator";
+import { IAppNotification } from "../Interfaces/Models/IAppNotification";
+import logger from "../Core/Utils/Logger";
 
-const AppNotificationSchema = new Schema<AppNotification>({
+const AppNotificationSchema = new Schema<IAppNotification>({
   AppNotificationId: {
     type: String,
     unique: true,
@@ -96,7 +96,7 @@ AppNotificationSchema.pre("save", async function (next) {
   next();
 });
 
-export const AppNotificationModel = model<AppNotification>(
+export const AppNotificationModel = model<IAppNotification>(
   "AppNotification",
   AppNotificationSchema
 );

@@ -1,7 +1,7 @@
 import mongoose, { Schema } from "mongoose";
-import { generateCustomId } from "../core/Utils/IdGenerator";
-import { IFeedback } from "../Interfaces/models/IFeedback";
-import logger from "../core/Utils/Logger";
+import { generateCustomId } from "../Core/Utils/IdGenerator";
+import { IFeedback } from "../Interfaces/Models/IFeedback";
+import logger from "../Core/Utils/Logger";
 
 const FeedbackSchema: Schema<IFeedback> = new Schema(
   {

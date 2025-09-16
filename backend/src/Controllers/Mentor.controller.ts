@@ -1,0 +1,343 @@
+import type { Request, Response, Express, NextFunction } from "express";
+import { inject } from "inversify";
+import { BaseController } from "../Core/Controller/BaseController";
+import { uploadMedia } from "../Core/Utils/Cloudinary";
+import logger from "../Core/Utils/Logger";
+import { IMentorController } from "../Interfaces/Controller/IMentorController";
+import { HttpError } from "../Core/Utils/ErrorHandler";
+import { StatusCodes } from "../Constants/StatusCode.constants";
+import { IMentorService } from "../Interfaces/Services/IMentorService";
+import { IAuthService } from "../Interfaces/Services/IUserService";
+import { IUserRepository } from "../Interfaces/Repository/IUserRepository";
+
+export class MentorController extends BaseController implements IMentorController{
+  private _mentorService: IMentorService;
+  private _authService: IAuthService;
+  private _userRepo: IUserRepository;
+
+  constructor(
+    @inject('IMentorService') mentorService : IMentorService,
+    @inject('IAuthService') authService : IAuthService,
+    @inject('IUserRepository') userRepository : IUserRepository
+  ) {
+    super();
+    this._mentorService = mentorService;
+    this._authService = authService;
+    this._userRepo = userRepository;
+  }
+
+  checkMentorStatus = async (req: Request, res: Response, next:NextFunction): Promise<void> => {
+    try {
+      const { id } = req.params;
+      const mentor = await this._mentorService.getMentorByUserId(id);
+      this.sendSuccess(
+        res,
+        { mentor: mentor || null },
+        "Mentor status retrieved successfully"
+      );
+    } catch (error: any) {
+      next(error)
+    }
+  };
+
+  getMentorDetails = async (req: Request, res: Response, next:NextFunction): Promise<void> => {
+    try {
+      const { mentorId } = req.params;
+      const mentor = await this._mentorService.getMentorByMentorId(mentorId);
+      if (!mentor) {
+         throw new HttpError("Mentor not found", StatusCodes.NOT_FOUND);
+      }
+      this.sendSuccess(
+        res,
+        { mentor },
+        "Mentor details retrieved successfully"
+      );
+    } catch (error: any) {
+      next(error)
+    }
+  };
+
+  createMentor = async (req: Request, res: Response, next:NextFunction): Promise<void> => {
+    try {
+      const {
+        userId,
+        specialization,
+        bio,
+        price,
+        skills,
+        availableSlots,
+        timePeriod,
+      } = req.body;
+
+      const user = await this._userRepo.getUserById(userId);
+      if (!user) {
+         throw new HttpError( "User not found", StatusCodes.NOT_FOUND);
+      }
+
+      if (user?.role !== "mentor") {
+        await this._authService.changeRole(userId, "mentor");
+      }
+
+      const existingMentor = await this._mentorService.getMentorByUserId(userId);
+      if (existingMentor) {
+        throw new HttpError("Mentor profile already exists", StatusCodes.BAD_REQUEST);
+      }
+
+      let uploadedCertificates: string[] = [];
+      if (req.files && Array.isArray(req.files) && req.files.length > 0) {
+        const files = req.files as Express.Multer.File[];
+        const uploadPromises = files.map((file) =>
+          uploadMedia(file.path, "mentor_certificates", file.size).then(
+            (result) => result.url
+          )
+        );
+        uploadedCertificates = await Promise.all(uploadPromises);
+      } else {
+        throw new HttpError("Certificates are required for mentor registration", StatusCodes.BAD_REQUEST );
+      }
+
+      const newMentor = await this._mentorService.submitMentorRequest({
+        userId,
+        skills: JSON.parse(skills),
+        specialization,
+        bio,
+        price,
+        availableSlots: JSON.parse(availableSlots),
+        timePeriod,
+        certifications: uploadedCertificates,
+      });
+
+      this.sendCreated(
+        res,
+        newMentor,
+        "Mentor registration submitted successfully for admin review"
+      );
+    } catch (error: any) {
+      next(error)
+    }
+  };
+
+  getAllMentorRequests = async (req: Request, res: Response, next:NextFunction): Promise<void> => {
+    try {
+      const {
+        page = "1",
+        limit = "10",
+        search = "",
+        status = "",
+        sort = "desc",
+      } = req.query;
+      const mentorRequests = await this._mentorService.getAllMentorRequests(
+        parseInt(page as string),
+        parseInt(limit as string),
+        search as string,
+        status as string,
+        sort as "asc" | "desc"
+      );
+      
+
+      if (mentorRequests.mentors.length === 0) {
+        this.sendSuccess(res, { mentors: [], total: 0, }, "Mentor Request Not found");
+        return;
+      }
+      this.sendSuccess(
+        res,
+        {
+          mentors: mentorRequests.mentors,
+          total: mentorRequests.total,
+          currentPage: parseInt(page as string),
+          totalPages: mentorRequests.pages,
+        },
+        "Mentor requests retrieved successfully"
+      );
+    } catch (error: any) {
+      next(error)
+    }
+  };
+
+  getAllMentors = async (req: Request, res: Response, next:NextFunction): Promise<void> => {
+    try {
+      const {
+        search,
+        page,
+        limit,
+        skill,
+        category,
+        sortBy,
+        sortOrder,
+        excludeMentorId
+      } = req.query;
+      const query: any = {};
+
+      if (search) query.search = search as string;
+      if (page) query.page = parseInt(page as string, 10);
+      if (limit) query.limit = parseInt(limit as string, 10);
+      if (skill) query.skill = skill as string;
+      if (category) query.category = category as string;
+      if (sortBy) query.sortBy = sortBy as string;
+      if (sortOrder) query.sortOrder = sortOrder as string;
+      if (excludeMentorId) query.excludeMentorId = excludeMentorId as string;
+
+      logger.debug(`Fetching mentors with query: ${JSON.stringify(query)}`);
+      const result = await this._mentorService.getAllMentors(query);
+
+      // If no mentors found, return 200 with empty array and message
+      if (result.mentors.length === 0) {
+      this.sendSuccess(res, {
+        mentors: [],
+        total: 0,
+        page: query.page || 1,
+        limit: query.limit || 10,
+      }, 'No mentors found');
+      return;
+    }
+
+      const data = (!search && !page && !limit && !skill)
+      ? result.mentors
+      : {
+          mentors: result.mentors,
+          total: result.total,
+          page: query.page || 1,
+          limit: query.limit || 10,
+        };
+
+    this.sendSuccess(res, data, 'Mentors fetched successfully');
+    } catch (error: any) {
+      logger.error(`Error in getAllMentors: ${error.message}`);
+      next()
+    }
+  }
+
+  getMentorByUserId = async (req: Request, res: Response, next:NextFunction): Promise<void> => {
+    try {
+      const { userId } = req.params;
+      const mentor = await this._mentorService.getMentorByUserId(userId);
+      if (!mentor) {
+        throw new HttpError("Mentor not found", StatusCodes.NOT_FOUND);
+      }
+      this.sendSuccess(res, mentor, "Mentor retrieved successfully");
+    } catch (error: any) {
+      next(error)
+    }
+  };
+
+  approveMentorRequest = async (req: Request, res: Response, next:NextFunction): Promise<void> => {
+    try {
+      const { id } = req.params;
+      await this._mentorService.approveMentorRequest(id);
+      this.sendSuccess(
+        res,
+        null,
+        "Mentor request approved successfully. Email sent to user"
+      );
+    } catch (error: any) {
+      next(error)
+    }
+  };
+
+  rejectMentorRequest = async (req: Request, res: Response, next:NextFunction): Promise<void> => {
+    try {
+      const { id } = req.params;
+      const { reason } = req.body;
+      if (!reason) {
+        throw new HttpError("Rejection reason is required", StatusCodes.BAD_REQUEST);
+      }
+      await this._mentorService.rejectMentorRequest(id, reason);
+      this.sendSuccess(
+        res,
+        null,
+        "Mentor request rejected successfully. Email sent to user"
+      );
+    } catch (error: any) {
+      next(error)
+    }
+  };
+
+  cancelMentorship = async (req: Request, res: Response, next:NextFunction): Promise<void> => {
+    try {
+      const { mentorId } = req.params;
+      await this._mentorService.cancelMentorship(mentorId);
+      this.sendSuccess(
+        res,
+        null,
+        "Mentorship cancelled successfully. Email sent to user"
+      );
+    } catch (error: any) {
+      next(error)
+    }
+  };
+
+  updateMentorProfile = async (req: Request, res: Response, next:NextFunction): Promise<void> => {
+    try {
+      const { mentorId } = req.params;
+      const updateData = req.body;
+      const mentorData = await this._mentorService.updateMentorById(
+        mentorId,
+        updateData
+      );
+      this.sendSuccess(res, mentorData, "Mentor profile updated successfully");
+    } catch (error: any) {
+      next(error)
+    }
+  };
+
+  getMentorAnalytics = async (req: Request, res: Response, next:NextFunction): Promise<void> => {
+    try {
+      const {
+        page = "1",
+        limit = "10",
+        sortBy = "totalEarnings",
+        sortOrder = "desc",
+      } = req.query;
+
+      const validSortFields = [
+        "totalEarnings",
+        "platformFees",
+        "totalCollaborations",
+        "avgCollabPrice",
+      ] as const;
+      type SortByType = (typeof validSortFields)[number];
+      const validatedSortBy: SortByType = validSortFields.includes(
+        sortBy as SortByType
+      )
+        ? (sortBy as SortByType)
+        : "totalEarnings";
+
+      const validSortOrders = ["asc", "desc"] as const;
+      type SortOrderType = (typeof validSortOrders)[number];
+      const validatedSortOrder: SortOrderType = validSortOrders.includes(
+        sortOrder as SortOrderType
+      )
+        ? (sortOrder as SortOrderType)
+        : "desc";
+
+      const analytics = await this._mentorService.getMentorAnalytics(
+        parseInt(page as string) || 1,
+        parseInt(limit as string) || 10,
+        validatedSortBy,
+        validatedSortOrder
+      );
+      this.sendSuccess(
+        res,
+        {
+          mentors: analytics.mentors,
+          total: analytics.total,
+          currentPage: parseInt(page as string) || 1,
+          totalPages: analytics.pages,
+        },
+        "Mentor analytics retrieved successfully"
+      );
+    } catch (error: any) {
+      next(error)
+    }
+  };
+
+  getSalesReport = async (req: Request, res: Response, next:NextFunction): Promise<void> => {
+    try {
+      const { period = "1month" } = req.query;
+      const report = await this._mentorService.getSalesReport(period as string);
+      this.sendSuccess(res, report, "Sales report retrieved successfully");
+    } catch (error: any) {
+      next(error)
+    }
+  };
+}

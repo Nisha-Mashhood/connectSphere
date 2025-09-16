@@ -8,7 +8,7 @@ import {
   signinFailure,
 } from "../../redux/Slice/userSlice";
 import { login } from "../../Service/Auth.service";
-import { AdminPasscodeCheck } from "../../Service/Admin.Service";
+import { adminPasscodeCheck } from "../../Service/Admin.Service";
 
 const AdminLogin = () => {
   const dispatch = useDispatch();
@@ -37,7 +37,7 @@ const AdminLogin = () => {
         return;
       }
   
-      const isPasskeyValid = await AdminPasscodeCheck(passkey);
+      const isPasskeyValid = await adminPasscodeCheck(passkey);
       console.log('PassKey verified : ',isPasskeyValid);
       if (!isPasskeyValid.valid) {
         toast.error("Invalid admin passkey.");

@@ -70,7 +70,7 @@ const GithubCallback = () => {
       }
 
       navigate("/");
-    } catch (error: any) {
+    } catch (error) {
       dispatch(signinFailure(error.message));
       if (error.response && error.response.status === 404) {
         toast.error("Email not registered. Please sign up first.");
@@ -87,7 +87,7 @@ const GithubCallback = () => {
       await githubSignup(code);
       toast.success("Signup successful! Please login to continue.");
       navigate("/login");
-    } catch (error: any) {
+    } catch (error) {
       dispatch(signinFailure(error.message));
       if (error.message === "Email already registered. Please login instead.") {
         toast.error("Email already registered. Please login instead.");

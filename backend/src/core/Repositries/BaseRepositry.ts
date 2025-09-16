@@ -1,4 +1,4 @@
-import { Model, Document, FilterQuery } from 'mongoose';
+import { Model, Document, FilterQuery, UpdateQuery } from 'mongoose';
 import { IBaseRepository } from '../Interfaces/IBaseRepositry'; 
 import logger from '../Utils/Logger'; 
 import { RepositoryError } from '../Utils/ErrorHandler'; 
@@ -87,7 +87,7 @@ export abstract class BaseRepository<T extends Document> implements IBaseReposit
   }
 
   // Update an entity by ID 
-  findByIdAndUpdate = async (id: string, update: any, options: { new?: boolean } = { new: true }): Promise<T | null> => {
+  findByIdAndUpdate = async (id: string, update: UpdateQuery<T>, options: { new?: boolean } = { new: true }): Promise<T | null> => {
     try {
       const result = await this.model.findByIdAndUpdate(id, update, options).exec();
       logger.info(`Updated entity in ${this.model.modelName} with ID ${id}`);

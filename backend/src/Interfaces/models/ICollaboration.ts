@@ -1,12 +1,12 @@
 import { IMentor } from "./IMentor.js";
-import { UserInterface } from "./IUser.js";
+import { IUser } from "./IUser.js";
 import { Document, Types } from "mongoose";
 
 export interface ICollaboration extends Document {
   _id: Types.ObjectId;
   collaborationId: string;
   mentorId: IMentor | string | Types.ObjectId;
-  userId: UserInterface | string | Types.ObjectId;
+  userId: IUser | string | Types.ObjectId;
   selectedSlot: {
     day:
       | "Sunday"

@@ -12,7 +12,7 @@ export interface IBaseRepository<T> {
 
   delete(id: string): Promise<boolean>;
 
-  findByIdAndUpdate(id: string, update: any, options?: { new?: boolean }): Promise<T | null>;
+  findByIdAndUpdate(id: string, update: Partial<T>, options?: { new?: boolean }): Promise<T | null>;
 
   findByIdAndDelete(id: string ): Promise<T | null>;
   

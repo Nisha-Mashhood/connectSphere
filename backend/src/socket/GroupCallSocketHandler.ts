@@ -1,12 +1,12 @@
 import { Server, Socket } from "socket.io";
-import logger from "../core/Utils/Logger";
-import { GroupRepository } from "../Modules/Group/Repositry/GroupRepositry";
-import { UserRepository } from "../Modules/Auth/Repositry/UserRepositry";
-import { NotificationService } from "../Modules/Notification/Service/NotificationService";
-import { CallLogRepository } from "../Modules/Call/Repositry/CallRepositry";
+import logger from "../Core/Utils/Logger";
+import { GroupRepository } from "../Repositories/Group.repository";
+import { UserRepository } from "../Repositories/User.repository";
+import { NotificationService } from "..//Services/Notification.service";
+import { CallLogRepository } from "../Repositories/Call.repository";
 import {
-  createCallLogWithDirection,
-  updateCallLogWithDirection,
+  createCallLog,
+  updateCallLog,
 } from "./Utils/CallLogHelper";
 
 interface GroupCallData {
@@ -253,7 +253,7 @@ export class GroupCallSocketHandler {
 
         // Update call log only if no users remain
         if (this.joinedUsersByCallId.get(callId)!.size === 0) {
-          await updateCallLogWithDirection(
+          await updateCallLog(
             socket,
             this.io,
             this.callLogRepo,
@@ -268,7 +268,7 @@ export class GroupCallSocketHandler {
         }
       } else {
         // Entire call ending
-        await updateCallLogWithDirection(
+        await updateCallLog(
           socket,
           this.io,
           this.callLogRepo,
@@ -346,7 +346,7 @@ export class GroupCallSocketHandler {
           );
 
           if (this.joinedUsersByCallId.get(callId)!.size === 0) {
-            await updateCallLogWithDirection(
+            await updateCallLog(
               socket,
               this.io,
               this.callLogRepo,
@@ -415,7 +415,7 @@ export class GroupCallSocketHandler {
       // Create call log only when the first user joins
       if (this.joinedUsersByCallId.get(callId)!.size === 1) {
         const sender = await this.userRepo.findById(userId);
-        await createCallLogWithDirection(socket, this.io, this.callLogRepo, {
+        await createCallLog(socket, this.io, this.callLogRepo, {
           CallId: callId,
           chatKey: `group_${groupId}`,
           callType,
@@ -525,7 +525,7 @@ export class GroupCallSocketHandler {
 
         // Update call log to missed for unjoined members
         if (unjoinedMembers.length > 0) {
-          await updateCallLogWithDirection(
+          await updateCallLog(
             socket,
             this.io,
             this.callLogRepo,

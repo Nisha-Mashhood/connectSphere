@@ -12,7 +12,7 @@ export interface IMentorRequest extends Document {
   price: number;
   timePeriod: number;
   paymentStatus: "Pending" | "Paid" | "Failed";
-  isAccepted: String;
+  isAccepted: string;
   createdAt: Date;
   updatedAt: Date;
 }

@@ -1,5 +1,5 @@
 import mongoose, { Schema } from "mongoose";
-import { ICounter } from "../Interfaces/models/ICounter";
+import { ICounter } from "../Interfaces/Models/ICounter";
 
 const counterSchema: Schema<ICounter> = new Schema({
   _id: { type: String, required: true },

@@ -1,10 +1,10 @@
 import mongoose, { Schema, Model } from "mongoose";
-import { generateCustomId } from "../core/Utils/IdGenerator";
-import { CategoryInterface } from "../Interfaces/models/CategoryInterface";
-import logger from "../core/Utils/Logger";
+import { generateCustomId } from "../Core/Utils/IdGenerator";
+import { ICategory } from "../Interfaces/Models/ICategory";
+import logger from "../Core/Utils/Logger";
 
 // Category Schema
-const categorySchema: Schema<CategoryInterface> = new mongoose.Schema(
+const categorySchema: Schema<ICategory> = new mongoose.Schema(
   {
     categoryId: {
       type: String,
@@ -19,7 +19,7 @@ const categorySchema: Schema<CategoryInterface> = new mongoose.Schema(
       type: String,
       default: null,
     },
-    imageUrl: {
+    imageId: {
       type: String,
       default: null,
     },
@@ -45,5 +45,5 @@ categorySchema.pre("save", async function (next) {
   next();
 });
 
-export const Category: Model<CategoryInterface> =
-  mongoose.model<CategoryInterface>("Category", categorySchema);
+export const Category: Model<ICategory> =
+  mongoose.model<ICategory>("Category", categorySchema);

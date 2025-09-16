@@ -1,7 +1,7 @@
 import { Socket, Server } from "socket.io";
-import logger from "../../core/Utils/Logger";
-import { CallLogRepository } from "../../Modules/Call/Repositry/CallRepositry";
-import { ICallLog } from "../../Interfaces/models/IcallLog";
+import logger from "../../Core/Utils/Logger";
+import { CallLogRepository } from "../../Repositories/Call.repository";
+import { ICallLog } from "../../Interfaces/Models/IcallLog";
 
 export const createCallLog = async(
   socket: Socket,

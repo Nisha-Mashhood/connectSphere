@@ -79,8 +79,8 @@ const ExploreMentors = () => {
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedCategory, setSelectedCategory] = useState("");
   const [selectedSkill, setSelectedSkill] = useState("");
-  const [sortBy, setSortBy] = useState("name");
-  const [sortOrder, setSortOrder] = useState("asc");
+  const [sortBy, setSortBy] = useState("feedbackCount");
+  const [sortOrder, setSortOrder] = useState("desc");
   const [showFilters, setShowFilters] = useState(false);
   const [mentorPagination, setMentorPagination] = useState({
     currentPage: 1,
@@ -149,6 +149,7 @@ const ExploreMentors = () => {
             category: activeTab === "mentors" ? selectedCategory : "",
             sortBy,
             sortOrder,
+            excludeMentorId: mentorDetails?._id,
           }),
           groupDetails({
             search: searchQuery,
@@ -233,6 +234,7 @@ const ExploreMentors = () => {
               fetchCollabDetails({
                 userId: currentUser._id,
                 role: currentUser.role,
+                mentorId: currentUser.role === 'mentor' ? mentorDetails?._id : undefined,
               })
             ),
             dispatch(fetchGroupRequests(currentUser._id)),
@@ -498,7 +500,7 @@ const ExploreMentors = () => {
               <div className="flex items-center gap-1 text-white text-xs">
                 <FaStar className="text-yellow-400" />
                 <span className="font-medium">
-                  {mentor.avgRating.toFixed(1)}
+                  {mentor.avgRating.toFixed(1)} ({mentor.feedbackCount})
                 </span>
               </div>
             </div>

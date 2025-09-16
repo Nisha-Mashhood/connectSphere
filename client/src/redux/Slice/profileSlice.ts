@@ -9,6 +9,7 @@ import { User } from '../../types';
 interface FetchCollabDetailsArgs {
     userId: string;
     role: 'mentor' | 'user';
+    mentorId?: string;
   }
   
   // Define the return type for the thunk
@@ -55,15 +56,18 @@ export const fetchMentorDetails = createAsyncThunk(
 
 // Thunk to fetch collaboration details
 export const fetchCollabDetails = createAsyncThunk<
-FetchCollabDetailsResponse, 
-FetchCollabDetailsArgs,   
-{ rejectValue: string }    
+  FetchCollabDetailsResponse,
+  FetchCollabDetailsArgs,
+  { rejectValue: string }
 >(
   'profile/fetchCollabDetails',
-  async ({ userId, role }, { rejectWithValue }) => {
+  async ({ userId, role, mentorId }, { rejectWithValue }) => {
     try {
       if (role === 'mentor') {
-        const response = await getCollabDataforMentor(userId);
+        if (!mentorId) {
+          throw new Error('Mentor ID is required for mentor role');
+        }
+        const response = await getCollabDataforMentor(mentorId);
         return { role, data: response.collabData };
       } else {
         const response = await getCollabDataforUser(userId);
@@ -73,7 +77,7 @@ FetchCollabDetailsArgs,
       return rejectWithValue(error.message);
     }
   }
-);
+)
 
 // Thunk to fetch requests
 export const fetchRequests = createAsyncThunk<

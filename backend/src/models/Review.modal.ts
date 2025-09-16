@@ -1,7 +1,7 @@
 import mongoose, { Schema } from "mongoose";
-import { generateCustomId } from "../core/Utils/IdGenerator";
-import { IReview } from "../Interfaces/models/IReview";
-import logger from "../core/Utils/Logger";
+import { generateCustomId } from "../Core/Utils/IdGenerator";
+import { IReview } from "../Interfaces/Models/IReview";
+import logger from "../Core/Utils/Logger";
 
 const ReviewSchema: Schema<IReview> = new Schema({
   reviewId: {

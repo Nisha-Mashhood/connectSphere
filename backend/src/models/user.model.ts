@@ -1,10 +1,10 @@
 import mongoose, { Schema, Model } from "mongoose";
 import config from "../config/env.config";
-import { generateCustomId } from "../core/Utils/IdGenerator";
-import { UserInterface } from "../Interfaces/models/IUser";
-import logger from "../core/Utils/Logger";
+import { generateCustomId } from "../Core/Utils/IdGenerator";
+import { IUser } from "../Interfaces/Models/IUser";
+import logger from "../Core/Utils/Logger";
 
-const userSchema: Schema<UserInterface> = new mongoose.Schema(
+const userSchema: Schema<IUser> = new mongoose.Schema(
   {
     userId: {
       type: String,
@@ -105,7 +105,7 @@ userSchema.pre("save", async function (next) {
   next();
 });
 
-const User: Model<UserInterface> = mongoose.model<UserInterface>(
+const User: Model<IUser> = mongoose.model<IUser>(
   "User",
   userSchema
 );

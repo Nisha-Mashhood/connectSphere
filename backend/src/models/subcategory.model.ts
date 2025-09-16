@@ -1,10 +1,10 @@
 import mongoose, { Schema, Model } from "mongoose";
-import { generateCustomId } from "../core/Utils/IdGenerator";
-import { SubcategoryInterface } from "../Interfaces/models/SubcategoryInterface";
-import logger from "../core/Utils/Logger";
+import { generateCustomId } from "../Core/Utils/IdGenerator";
+import { ISubcategory } from "../Interfaces/Models/ISubcategory";
+import logger from "../Core/Utils/Logger";
 
 // Category Schema
-const SubcategorySchema: Schema<SubcategoryInterface> = new mongoose.Schema(
+const SubcategorySchema: Schema<ISubcategory> = new mongoose.Schema(
   {
     subcategoryId: {
       type: String,
@@ -50,5 +50,5 @@ SubcategorySchema.pre("save", async function (next) {
   next();
 });
 
-export const Subcategory: Model<SubcategoryInterface> =
-  mongoose.model<SubcategoryInterface>("Subcategory", SubcategorySchema);
+export const Subcategory: Model<ISubcategory> =
+  mongoose.model<ISubcategory>("Subcategory", SubcategorySchema);

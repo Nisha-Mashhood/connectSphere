@@ -1,10 +1,10 @@
 import mongoose, { Schema, Model } from "mongoose";
-import { generateCustomId } from "../core/Utils/IdGenerator";
-import { SkillInterface } from "../Interfaces/models/SkillInterface";
-import logger from "../core/Utils/Logger";
+import { generateCustomId } from "../Core/Utils/IdGenerator";
+import { ISkill } from "../Interfaces/Models/ISkill";
+import logger from "../Core/Utils/Logger";
 
 // Skill Schema
-const skillSchema: Schema<SkillInterface> = new Schema(
+const skillSchema: Schema<ISkill> = new Schema(
   {
     skillId: {
       type: String,
@@ -54,7 +54,7 @@ skillSchema.pre("save", async function (next) {
   next();
 });
 
-export const Skill: Model<SkillInterface> = mongoose.model<SkillInterface>(
+export const Skill: Model<ISkill> = mongoose.model<ISkill>(
   "Skill",
   skillSchema
 );

@@ -1,17 +1,17 @@
 import { Server, Socket } from "socket.io";
 import { EventEmitter } from "events";
-import logger from "../core/Utils/Logger";
-import { ContactRepository } from "../Modules/Contact/Repositry/ContactRepositry";
-import { GroupRepository } from "../Modules/Group/Repositry/GroupRepositry";
-import { ChatRepository } from "../Modules/Chat/Repositry/ChatRepositry";
-import { UserRepository } from "../Modules/Auth/Repositry/UserRepositry";
-import { NotificationService } from "../Modules/Notification/Service/NotificationService";
-import { CallLogRepository } from "../Modules/Call/Repositry/CallRepositry";
+import logger from "../Core/Utils/Logger";
+import { ContactRepository } from "../Repositories/Contact.repository";
+import { GroupRepository } from "../Repositories/Group.repository";
+import { ChatRepository } from "../Repositories/Chat.repository";
+import { UserRepository } from "../Repositories/User.repository";
+import { NotificationService } from "../Services/Notification.service";
+import { CallLogRepository } from "../Repositories/Call.repository";
 import { ChatSocketHandler } from "./ChatSocketHandler";
 import { CallSocketHandler } from "./CallSocketHandler";
 import { GroupCallSocketHandler } from "./GroupCallSocketHandler";
 import { NotificationSocketHandler } from "./NotificationSocketHandler";
-import { CallData, MarkAsReadData, Message, TypingData } from "./types";
+import { CallData, MarkAsReadData, Message, TypingData } from "../Utils/Types/SocketService.types";
 
 interface GroupCallData {
   groupId: string;

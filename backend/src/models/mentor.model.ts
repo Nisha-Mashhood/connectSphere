@@ -1,7 +1,7 @@
 import mongoose, { Schema } from "mongoose";
-import { generateCustomId } from "../core/Utils/IdGenerator";
-import { IMentor } from "../Interfaces/models/IMentor";
-import logger from "../core/Utils/Logger";
+import { generateCustomId } from "../Core/Utils/IdGenerator";
+import { IMentor } from "../Interfaces/Models/IMentor";
+import logger from "../Core/Utils/Logger";
 
 const MentorSchema: Schema = new Schema(
   {

@@ -1,10 +1,7 @@
 import { Response } from 'express';
 
-export interface IBaseController {
-  sendSuccess(res: Response, data: any, message: string, statusCode?: number): void;
-  sendCreated(res: Response, data: any, message: string): void;
+export interface IBaseController <T = any>{
+  sendSuccess(res: Response, data: T, message: string, statusCode?: number): void;
+  sendCreated(res: Response, data: T, message: string): void;
   sendNoContent(res: Response, message: string): void;
-  handleError(error: any, res: Response): void;
-  throwError(statusCode: number, message: string): never;
-  
 }

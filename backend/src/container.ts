@@ -1,0 +1,115 @@
+import { Container } from 'inversify';
+import { IUserRepository } from './Interfaces/Repository/IUserRepository';
+import { UserRepository } from './Repositories/User.repository';
+import { IAdminRepository } from './Interfaces/Repository/IAdminRepositry';
+import { AdminRepository } from './Repositories/AdminDashboard.repository';
+import { ICallLogRepository } from './Interfaces/Repository/ICallRepositry';
+import { CallLogRepository } from './Repositories/Call.repository';
+import { ICategoryRepository } from './Interfaces/Repository/ICategoryRepository';
+import { CategoryRepository } from './Repositories/Category.repository';
+import { IChatRepository } from './Interfaces/Repository/IChatRepository';
+import { ChatRepository } from './Repositories/Chat.repository';
+import { ICollaborationRepository } from './Interfaces/Repository/ICollaborationRepository';
+import { CollaborationRepository } from './Repositories/Collaboration.repository';
+import { IContactMessageRepository } from './Interfaces/Repository/IContactMessageRepository';
+import { ContactMessageRepository } from './Repositories/ContactUs.repository';
+import { IContactRepository } from './Interfaces/Repository/IContactRepository';
+import { ContactRepository } from './Repositories/Contact.repository';
+import { IFeedbackRepository } from './Interfaces/Repository/IFeedbackRepository';
+import { FeedbackRepository } from './Repositories/FeedBack.repository';
+import { IGroupRepository } from './Interfaces/Repository/IGroupRepository';
+import { GroupRepository } from './Repositories/Group.repository';
+import { IMentorRepository } from './Interfaces/Repository/IMentorRepository';
+import { MentorRepository } from './Repositories/Mentor.repository';
+import { INotificationRepository } from './Interfaces/Repository/INotificationRepository';
+import { NotificationRepository } from './Repositories/Notification.repository';
+import { IReviewRepository } from './Interfaces/Repository/IReviewRepository';
+import { ReviewRepository } from './Repositories/Review.repository';
+import { ISkillsRepository } from './Interfaces/Repository/ISkillsRepository';
+import { SkillsRepository } from './Repositories/Skills.repository';
+import { ISubcategoryRepository } from './Interfaces/Repository/ISubCategoryRepository';
+import { SubcategoryRepository } from './Repositories/SubCategory.repository';
+import { ITaskRepository } from './Interfaces/Repository/ITaskRepository';
+import { TaskRepository } from './Repositories/Task.repository';
+import { IUserConnectionRepository } from './Interfaces/Repository/IUserCollaborationRepository';
+import { UserConnectionRepository } from './Repositories/UserCollaboration.repository';
+import { IAuthService } from './Interfaces/Services/IUserService';
+import { AuthService } from './Services/Auth.service';
+import { IAdminService } from './Interfaces/Services/IAdminService';
+import { AdminService } from './Services/AdminDashboard.service';
+import { ICallService } from './Interfaces/Services/ICallService';
+import { CallService } from './Services/Call.service';
+import { ICategoryService } from './Interfaces/Services/ICategoryService';
+import { CategoryService } from './Services/Category.service';
+import { IChatService } from './Interfaces/Services/IChatService';
+import { ChatService } from './Services/Chat.service';
+import { ICollaborationService } from './Interfaces/Services/ICollaborationService';
+import { CollaborationService } from './Services/Collaboration.service';
+import { IContactMessageService } from './Interfaces/Services/IContactMessageService';
+import { ContactMessageService } from './Services/ContactUs.service';
+import { IContactService } from './Interfaces/Services/IContactService';
+import { ContactService } from './Services/Contact.service';
+import { IFeedbackService } from './Interfaces/Services/IFeedbackService';
+import { FeedbackService } from './Services/Feedback.service';
+import { IGroupService } from './Interfaces/Services/IGroupService';
+import { GroupService } from './Services/Group.service';
+import { IMentorService } from './Interfaces/Services/IMentorService';
+import { MentorService } from './Services/Mentor.service';
+import { INotificationService } from './Interfaces/Services/INotificationService';
+import { NotificationService } from './Services/Notification.service';
+import { IReviewService } from './Interfaces/Services/IReviewService';
+import { ReviewService } from './Services/Review.service';
+import { ISkillsService } from './Interfaces/Services/ISkillsService';
+import { SkillsService } from './Services/Skill.service';
+import { ISubcategoryService } from './Interfaces/Services/ISubCategoryService';
+import { SubcategoryService } from './Services/SubCategory.service';
+import { ITaskService } from './Interfaces/Services/ITaskService';
+import { TaskService } from './Services/Task.service';
+import { IUserConnectionService } from './Interfaces/Services/IUserCollaborationService';
+import { UserConnectionService } from './Services/UserCollaboartion.service';
+
+
+const container = new Container();
+
+// Bind Interface to Repositries
+container.bind<IUserRepository>('IUserRepository').to(UserRepository);
+container.bind<IAdminRepository>('IAdminRepository').to(AdminRepository);
+container.bind<ICallLogRepository>('ICallLogRepository').to(CallLogRepository);
+container.bind<ICategoryRepository>('ICategoryRepository').to(CategoryRepository);
+container.bind<IChatRepository>('IChatRepository').to(ChatRepository);
+container.bind<ICollaborationRepository>('ICollaborationRepository').to(CollaborationRepository);
+container.bind<IContactMessageRepository>('IContactMessageRepository').to(ContactMessageRepository);
+container.bind<IContactRepository>('IContactRepository').to(ContactRepository);
+container.bind<IFeedbackRepository>('IFeedbackRepository').to(FeedbackRepository);
+container.bind<IGroupRepository>('IGroupRepository').to(GroupRepository);
+container.bind<IMentorRepository>('IMentorRepository').to(MentorRepository);
+container.bind<INotificationRepository>('INotificationRepository').to(NotificationRepository);
+container.bind<IReviewRepository>('IReviewRepository').to(ReviewRepository);
+container.bind<ISkillsRepository>('ISkillsRepository').to(SkillsRepository);
+container.bind<ISubcategoryRepository>('ISubCategoryRepository').to(SubcategoryRepository);
+container.bind<ITaskRepository>('ITaskRepository').to(TaskRepository);
+container.bind<IUserConnectionRepository>('IUserConnectionRepository').to(UserConnectionRepository);
+
+
+//Bind Interface to Services
+container.bind<IAuthService>('IUserService').to(AuthService);
+container.bind<IAdminService>('IAdminService').to(AdminService);
+container.bind<ICallService>('ICallService').to(CallService);
+container.bind<ICategoryService>('ICategoryService').to(CategoryService);
+container.bind<IChatService>('IChatService').to(ChatService);
+container.bind<ICollaborationService>('ICollaborationService').to(CollaborationService);
+container.bind<IContactMessageService>('IContactMessageService').to(ContactMessageService);
+container.bind<IContactService>('IContactService').to(ContactService);
+container.bind<IFeedbackService>('IFeedbackService').to(FeedbackService);
+container.bind<IGroupService>('IGroupService').to(GroupService);
+container.bind<IMentorService>('IMentorService').to(MentorService);
+container.bind<INotificationService>('INotificationService').to(NotificationService);
+container.bind<IReviewService>('IReviewService').to(ReviewService);
+container.bind<ISkillsService>('ISkillsService').to(SkillsService);
+container.bind<ISubcategoryService>('ISubCategoryService').to(SubcategoryService);
+container.bind<ITaskService>('ITaskService').to(TaskService);
+container.bind<IUserConnectionService>('IUserConnectionService').to(UserConnectionService);
+
+
+export default container;
+

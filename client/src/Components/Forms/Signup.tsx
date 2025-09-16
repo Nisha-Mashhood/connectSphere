@@ -1,5 +1,4 @@
 import { Formik, Form, Field, ErrorMessage } from "formik";
-import * as Yup from "yup";
 import { Link, useNavigate } from "react-router-dom";
 import { toast } from "react-hot-toast";
 import { useDispatch } from "react-redux";
@@ -8,85 +7,61 @@ import { register } from "../../Service/Auth.service.ts";
 import SignupImage from "../../assets/Signup.png";
 import SignupGoogle from "../User/Auth/SignupGoogle.tsx";
 import SignupGithub from "../User/Auth/SignupGithub.tsx";
+import * as Yup from "yup";
+import {
+  required,
+  minLength,
+  maxLength,
+  emailFormat,
+  noMultipleSpaces,
+  namePattern,
+  passwordPattern,
+  noSequentialRepeatedDigits,
+  noSequentialRepeatedLetters,
+  noNameInPassword,
+  noEmailInPassword,
+} from "../../validation/validationRules.ts"; 
 
 const Signup = () => {
   const Navigate = useNavigate();
   const dispatch = useDispatch();
 
-  // Yup validation schema
+  // Yup validation
   const validationSchema = Yup.object({
-    name: Yup.string()
-      .required("Full name is required")
-      .matches(/^[A-Za-z ]+$/, "Full name can only contain alphabets")
-      .min(3, "Name must be at least 3 characters long")
-      .max(50, "Name cannot exceed 50 characters")
-      .test(
-        "no-multiple-spaces",
-        "Name cannot contain multiple consecutive spaces",
-        (value) => !/\s{2,}/.test(value)
-      ),
-    email: Yup.string()
-      .required("Email is required")
-      .email("Invalid email format")
-      .max(100, "Email cannot exceed 100 characters")
+    name: required("Full name is required")
+      .concat(namePattern())
+      .concat(minLength(3, "Name must be at least 3 characters long"))
+      .concat(maxLength(50, "Name cannot exceed 50 characters"))
+      .concat(noMultipleSpaces()),
+    email: required("Email is required")
+      .concat(emailFormat())
+      .concat(maxLength(100, "Email cannot exceed 100 characters"))
+      .concat(noMultipleSpaces())
       .notOneOf(
         ["@example.com"],
         "Email from @example.com domain is not allowed"
-      )
-      .test(
-        "no-multiple-spaces",
-        "Email cannot contain multiple consecutive spaces",
-        (value) => !/\s{2,}/.test(value)
       ),
-    password: Yup.string()
-      .required("Password is required")
-      .matches(
-        /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[!@#$%^&*])[A-Za-z\d!@#$%^&*]{8,20}$/,
-        "Password must be 8-20 characters long, include at least one uppercase letter, one lowercase letter, one number, and one special character"
-      )
-      .test(
-        "no-sequential-repeated-digits",
-        "Password cannot contain sequential repeated digits",
-        (value) => !/(\d)\1{2,}/.test(value)
-      )
-      .test(
-        "no-sequential-repeated-letters",
-        "Password cannot contain sequential repeated letters",
-        (value) => !/([A-Za-z])\1{2,}/.test(value)
-      )
-      .test(
-        "no-name-in-password",
-        "Password cannot contain your name",
-        function (value) {
-          const { name } = this.parent;
-          return !value.includes(name.trim());
-        }
-      )
-      .test(
-        "no-email-in-password",
-        "Password cannot contain parts of your email",
-        function (value) {
-          const { email } = this.parent;
-          return !value.includes(email.split("@")[0]);
-        }
-      )
-      .test(
-        "no-multiple-spaces",
-        "Password cannot contain multiple consecutive spaces",
-        (value) => !/\s{2,}/.test(value)
-      ),
+    password: required("Password is required")
+      .concat(passwordPattern())
+      .concat(minLength(8, "Password must be at least 8 characters long"))
+      .concat(maxLength(20, "Password cannot exceed 20 characters"))
+      .concat(noSequentialRepeatedDigits())
+      .concat(noSequentialRepeatedLetters())
+      .concat(noNameInPassword())
+      .concat(noEmailInPassword())
+      .concat(noMultipleSpaces()),
   });
 
-  const handleSubmit = async (values: any, { setSubmitting }: any) => {
+  const handleSubmit = async (values, { setSubmitting }) => {
     try {
       dispatch(signinStart());
       await register(values);
       toast.success("User Registered Successfully");
       Navigate("/login");
     } catch (err) {
-      console.error("Sign up Error : ",err.response?.data?.message);
+      console.error("Sign up Error : ", err.response?.data?.message);
       dispatch(signinFailure(err.response?.data?.message || "Signup failed"));
-      toast.error( "Signup failed");
+      toast.error("Signup failed");
     } finally {
       setSubmitting(false);
     }
@@ -170,11 +145,9 @@ const Signup = () => {
             </Formik>
             <hr className="my-6 border-gray-300 w-full" />
 
-            {/* Google Signup Button */}
-            <SignupGoogle/>
-
-            {/* GitHub Signup Button */}
-            <SignupGithub/>
+            {/* Google & GitHub Signup Button */}
+            <SignupGoogle />
+            <SignupGithub />
 
             <p className="mt-8">
               Already have an account?{" "}

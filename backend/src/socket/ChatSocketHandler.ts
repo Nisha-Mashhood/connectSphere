@@ -1,13 +1,13 @@
 import { Server, Socket } from "socket.io";
 import mongoose from "mongoose";
-import logger from "../core/Utils/Logger";
-import { ContactRepository } from "../Modules/Contact/Repositry/ContactRepositry";
-import { GroupRepository } from "../Modules/Group/Repositry/GroupRepositry";
-import { ChatRepository } from "../Modules/Chat/Repositry/ChatRepositry";
-import { NotificationService } from "../Modules/Notification/Service/NotificationService";
-import Group from "../models/group.model";
-import Collaboration from "../models/collaboration";
-import UserConnection from "../models/userConnection.modal";
+import logger from "../Core/Utils/Logger";
+import { ContactRepository } from "../Repositories/Contact.repository";
+import { GroupRepository } from "../Repositories/Group.repository";
+import { ChatRepository } from "../Repositories/Chat.repository";
+import { NotificationService } from "../Services/Notification.service";
+import Group from "../Models/group.model";
+import Collaboration from "../Models/collaboration";
+import UserConnection from "../Models/userConnection.modal";
 import { MarkAsReadData, Message, TypingData } from "./types";
 
 export class ChatSocketHandler {
