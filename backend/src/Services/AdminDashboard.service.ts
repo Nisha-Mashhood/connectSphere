@@ -11,7 +11,7 @@ import {
 } from "../Utils/Types/Admin.types";
 import { ICollaboration } from "../Interfaces/Models/ICollaboration";
 import { IMentor } from "../Interfaces/Models/IMentor";
-import { IAdminRepository } from "src/Interfaces/Repository/IAdminRepositry";
+import { IAdminRepository } from "../Interfaces/Repository/IAdminRepositry";
 
 @injectable()
 export class AdminService implements IAdminService {

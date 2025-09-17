@@ -1,5 +1,5 @@
 import { NextFunction, Request, Response } from 'express';
-import { inject } from 'inversify';
+import { inject, injectable } from 'inversify';
 import { BaseController } from '../Core/Controller/BaseController';
 import logger from "../Core/Utils/Logger";
 import { ISkillsController } from '../Interfaces/Controller/ISkillsController';
@@ -14,6 +14,7 @@ export interface SkillRequest extends Request {
   params: { id?: string; subcategoryId?: string };
 }
 
+@injectable()
 export class SkillsController extends BaseController implements ISkillsController{
   private _skillsService: ISkillsService;
   // private _skillsRepo: ISkillsRepository;

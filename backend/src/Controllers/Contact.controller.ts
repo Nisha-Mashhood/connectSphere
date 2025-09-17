@@ -1,5 +1,5 @@
 import { NextFunction, Request, Response } from 'express';
-import { inject } from 'inversify';
+import { inject, injectable } from 'inversify';
 import { BaseController } from '../Core/Controller/BaseController';
 import logger from '../Core/Utils/Logger';
 import { IContactController } from '../Interfaces/Controller/IContactController';
@@ -7,6 +7,7 @@ import { HttpError } from '../Core/Utils/ErrorHandler';
 import { StatusCodes } from "../Enums/StatusCode.enums";
 import { IContactService } from '../Interfaces/Services/IContactService';
 
+@injectable()
 export class ContactController extends BaseController implements IContactController{
   private _contactService: IContactService;
 

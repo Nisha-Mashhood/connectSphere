@@ -7,8 +7,9 @@ import { ICollaborationController } from "../Interfaces/Controller/ICollaboratio
 import { HttpError } from "../Core/Utils/ErrorHandler";
 import { StatusCodes } from "../Enums/StatusCode.enums";
 import { ICollaborationService } from "../Interfaces/Services/ICollaborationService";
-import { inject } from "inversify";
+import { inject, injectable } from "inversify";
 
+@injectable()
 export class CollaborationController extends BaseController implements ICollaborationController{
   private _collabService: ICollaborationService;
 

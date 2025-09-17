@@ -6,8 +6,9 @@ import { HttpError } from "../Core/Utils/ErrorHandler";
 import { ICallLogPopulated } from "../Utils/Types/Call.types";
 import { StatusCodes } from "../Enums/StatusCode.enums";
 import { ICallService } from "../Interfaces/Services/ICallService";
-import { inject } from "inversify";
+import { inject, injectable } from "inversify";
 
+@injectable()
 export class CallController extends BaseController implements ICallController{
   private _callService: ICallService;
 

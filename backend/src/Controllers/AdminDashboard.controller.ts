@@ -1,10 +1,11 @@
 import { Request, Response, NextFunction } from "express";
-import { inject } from "inversify";
+import { inject, injectable } from "inversify";
 import logger from "../Core/Utils/Logger";
 import { IAdminController } from "../Interfaces/Controller/IAdminController";
 import { BaseController } from "../Core/Controller/BaseController";
 import { IAdminService } from "../Interfaces/Services/IAdminService";
 
+@injectable()
 export class AdminController extends BaseController implements IAdminController {
   private _adminService: IAdminService;
     

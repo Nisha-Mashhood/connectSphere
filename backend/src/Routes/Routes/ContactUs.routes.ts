@@ -1,12 +1,13 @@
 import express from 'express';
-import { ContactMessageController } from '../../Controllers/ContactUs.controller';
-import { apiLimiter } from '../../middlewares/ratelimit.middleware';
-import { AuthMiddleware } from '../../middlewares/auth.middleware';
+import container from "../../container";
 import { CONTACT_ROUTES } from '../Constants/ContactUs.routes';
+import { apiLimiter } from '../../middlewares/ratelimit.middleware';
+import { IContactMessageController } from '../../Interfaces/Controller/IContactUsController';
+import { IAuthMiddleware } from '../../Interfaces/Middleware/IAuthMiddleware';
 
 const router = express.Router();
-const contactMessageController = new ContactMessageController();
-const authMiddleware = new AuthMiddleware();
+const contactMessageController = container.get<IContactMessageController>('IContactMessageController');
+const authMiddleware = container.get<IAuthMiddleware>('IAuthMiddleware');
 
 router.post(
   CONTACT_ROUTES.CreateContactMessage,

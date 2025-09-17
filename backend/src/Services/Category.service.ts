@@ -17,7 +17,7 @@ export class CategoryService implements ICategoryService {
 
   constructor(
     @inject('ICategoryRepository') categoryRepository : ICategoryRepository,
-    @inject('ISubcategoryRepository') subcategoryRepository : ISubcategoryRepository,
+    @inject('ISubCategoryRepository') subcategoryRepository : ISubcategoryRepository,
     @inject('ISkillsRepository') skillsRepository : ISkillsRepository
   ) {
     this.categoryRepo = categoryRepository;

@@ -1,13 +1,14 @@
 import { Server, Socket } from "socket.io";
 import logger from "../Core/Utils/Logger";
-import { GroupRepository } from "../Repositories/Group.repository";
-import { UserRepository } from "../Repositories/User.repository";
-import { NotificationService } from "..//Services/Notification.service";
-import { CallLogRepository } from "../Repositories/Call.repository";
 import {
   createCallLog,
   updateCallLog,
 } from "./Utils/CallLogHelper";
+import { inject, injectable } from "inversify";
+import { IGroupRepository } from "../Interfaces/Repository/IGroupRepository";
+import { IUserRepository } from "../Interfaces/Repository/IUserRepository";
+import { INotificationService } from "../Interfaces/Services/INotificationService";
+import { ICallLogRepository } from "../Interfaces/Repository/ICallRepositry";
 
 interface GroupCallData {
   groupId: string;
@@ -44,35 +45,36 @@ interface GroupCallOffer {
   endTimeout: NodeJS.Timeout;
 }
 
+@injectable()
 export class GroupCallSocketHandler {
-  private activeOffers: Map<string, GroupCallOffer> = new Map();
-  private endedCalls: Set<string> = new Set();
-  private joinedUsersByCallId: Map<string, Set<string>> = new Map();
-  private groupRepo: GroupRepository;
-  private userRepo: UserRepository;
-  private notificationService: NotificationService;
-  private callLogRepo: CallLogRepository;
-  private io: Server | null = null;
-  private groupToCallId: Map<string, string> = new Map();
+  private _activeOffers: Map<string, GroupCallOffer> = new Map();
+  private _endedCalls: Set<string> = new Set();
+  private _joinedUsersByCallId: Map<string, Set<string>> = new Map();
+  private _groupRepo: IGroupRepository;
+  private _userRepo: IUserRepository;
+  private _notificationService: INotificationService;
+  private _callLogRepo: ICallLogRepository;
+  private _io: Server | null = null;
+  private _groupToCallId: Map<string, string> = new Map();
 
   constructor(
-    groupRepo: GroupRepository,
-    userRepo: UserRepository,
-    notificationService: NotificationService,
-    callLogRepo: CallLogRepository
+    @inject("IGroupRepository") groupRepo: IGroupRepository,
+    @inject("IUserRepository") userRepo: IUserRepository,
+    @inject("INotificationService") notificationService: INotificationService,
+    @inject("ICallLogRepository") callLogRepo: ICallLogRepository
   ) {
-    this.groupRepo = groupRepo;
-    this.userRepo = userRepo;
-    this.notificationService = notificationService;
-    this.callLogRepo = callLogRepo;
+    this._groupRepo = groupRepo;
+    this._userRepo = userRepo;
+    this._notificationService = notificationService;
+    this._callLogRepo = callLogRepo;
   }
 
   public setIo(io: Server): void {
-    this.io = io;
+    this._io = io;
   }
 
   public getCallIdForGroup(groupId: string): string | undefined {
-    return this.groupToCallId.get(groupId);
+    return this._groupToCallId.get(groupId);
   }
 
   public async handleGroupOffer(
@@ -85,7 +87,7 @@ export class GroupCallSocketHandler {
         `Received group ${callType} offer from ${senderId} to ${recipientId} for callId: ${callId}, groupId: ${groupId}`
       );
 
-      const group = await this.groupRepo.getGroupById(groupId);
+      const group = await this._groupRepo.getGroupById(groupId);
       if (!group) {
         logger.error(`Invalid group ID: ${groupId}`);
         socket.emit("error", { message: "Invalid group ID" });
@@ -105,7 +107,7 @@ export class GroupCallSocketHandler {
       }
 
       const recipientSocketRoom = `user_${recipientId}`;
-      const socketsInRoom = await this.io?.in(recipientSocketRoom).allSockets();
+      const socketsInRoom = await this._io?.in(recipientSocketRoom).allSockets();
       if (!socketsInRoom || socketsInRoom.size === 0) {
         logger.warn(
           `No sockets found in room ${recipientSocketRoom} for recipient ${recipientId}`
@@ -113,11 +115,11 @@ export class GroupCallSocketHandler {
         return;
       }
 
-      const sender = await this.userRepo.findById(senderId);
+      const sender = await this._userRepo.findById(senderId);
       logger.info(
         `Emitting groupOffer to ${recipientSocketRoom} for recipient ${recipientId}`
       );
-      this.io?.to(recipientSocketRoom).emit("groupOffer", {
+      this._io?.to(recipientSocketRoom).emit("groupOffer", {
         groupId,
         senderId,
         recipientId,
@@ -142,7 +144,7 @@ export class GroupCallSocketHandler {
         `Received group ${callType} answer from ${senderId} to ${recipientId} for callId: ${callId}, groupId: ${groupId}`
       );
 
-      const group = await this.groupRepo.getGroupById(groupId);
+      const group = await this._groupRepo.getGroupById(groupId);
       if (!group) {
         logger.error(`Invalid group ID: ${groupId}`);
         socket.emit("error", { message: "Invalid group ID" });
@@ -150,7 +152,7 @@ export class GroupCallSocketHandler {
       }
 
       const recipientSocketRoom = `user_${recipientId}`;
-      const socketsInRoom = await this.io?.in(recipientSocketRoom).allSockets();
+      const socketsInRoom = await this._io?.in(recipientSocketRoom).allSockets();
       if (!socketsInRoom || socketsInRoom.size === 0) {
         logger.warn(
           `No sockets found in room ${recipientSocketRoom} for recipient ${recipientId}`
@@ -161,7 +163,7 @@ export class GroupCallSocketHandler {
       logger.info(
         `Emitting groupAnswer to ${recipientSocketRoom} for recipient ${recipientId}`
       );
-      this.io?.to(recipientSocketRoom).emit("groupAnswer", {
+      this._io?.to(recipientSocketRoom).emit("groupAnswer", {
         groupId,
         senderId,
         recipientId,
@@ -170,10 +172,10 @@ export class GroupCallSocketHandler {
         callId,
       });
 
-      const call = this.activeOffers.get(callId);
+      const call = this._activeOffers.get(callId);
       if (call) {
         clearTimeout(call.endTimeout);
-        this.activeOffers.delete(callId);
+        this._activeOffers.delete(callId);
         logger.info(`Cleared active offer for callId: ${callId}`);
       }
     } catch (error: any) {
@@ -193,14 +195,14 @@ export class GroupCallSocketHandler {
         `Received group ${callType} ICE candidate from ${senderId} for callId: ${callId}, groupId: ${groupId}`
       );
 
-      const group = await this.groupRepo.getGroupById(groupId);
+      const group = await this._groupRepo.getGroupById(groupId);
       if (!group) {
         logger.error(`Invalid group ID: ${groupId}`);
         socket.emit("error", { message: "Invalid group ID" });
         return;
       }
 
-      this.io?.to(`user_${recipientId}`).emit("groupIceCandidate", {
+      this._io?.to(`user_${recipientId}`).emit("groupIceCandidate", {
         groupId,
         senderId,
         recipientId,
@@ -220,7 +222,7 @@ export class GroupCallSocketHandler {
   ): Promise<void> {
     try {
       const { groupId, senderId, callType, callId } = data;
-      if (this.endedCalls.has(callId)) {
+      if (this._endedCalls.has(callId)) {
         logger.info(
           `Ignoring duplicate group callEnded for callId: ${callId}, groupId: ${groupId}`
         );
@@ -230,7 +232,7 @@ export class GroupCallSocketHandler {
         `Received group callEnded from ${senderId} for callId: ${callId}, groupId: ${groupId}, callType: ${callType}`
       );
 
-      const group = await this.groupRepo.getGroupById(groupId);
+      const group = await this._groupRepo.getGroupById(groupId);
       if (!group) {
         logger.error(`Invalid group ID: ${groupId}`);
         socket.emit("error", { message: "Invalid group ID" });
@@ -243,20 +245,20 @@ export class GroupCallSocketHandler {
 
       const room = `group_${groupId}`;
       // If senderId is leaving, emit userRoomLeft and update call log
-      if (senderId && this.joinedUsersByCallId.has(callId)) {
-        this.joinedUsersByCallId.get(callId)!.delete(senderId);
+      if (senderId && this._joinedUsersByCallId.has(callId)) {
+        this._joinedUsersByCallId.get(callId)!.delete(senderId);
         logger.info(`Removed user ${senderId} from call ${callId}`);
-        this.io?.to(room).emit("userRoomLeft", { userId: senderId });
+        this._io?.to(room).emit("userRoomLeft", { userId: senderId });
         logger.info(
           `Emitted userRoomLeft for user ${senderId} to room ${room}`
         );
 
         // Update call log only if no users remain
-        if (this.joinedUsersByCallId.get(callId)!.size === 0) {
+        if (this._joinedUsersByCallId.get(callId)!.size === 0) {
           await updateCallLog(
             socket,
-            this.io,
-            this.callLogRepo,
+            this._io,
+            this._callLogRepo,
             callId,
             senderId,
             recipientIds,
@@ -270,8 +272,8 @@ export class GroupCallSocketHandler {
         // Entire call ending
         await updateCallLog(
           socket,
-          this.io,
-          this.callLogRepo,
+          this._io,
+          this._callLogRepo,
           callId,
           senderId,
           recipientIds,
@@ -280,29 +282,29 @@ export class GroupCallSocketHandler {
             endTime: new Date(),
           }
         );
-        this.io?.to(room).emit("groupCallEnded", {
+        this._io?.to(room).emit("groupCallEnded", {
           groupId,
           callId,
         });
       }
 
-      this.endedCalls.add(callId);
-      setTimeout(() => this.endedCalls.delete(callId), 60000);
+      this._endedCalls.add(callId);
+      setTimeout(() => this._endedCalls.delete(callId), 60000);
 
-      const call = this.activeOffers.get(callId);
+      const call = this._activeOffers.get(callId);
       if (call) {
         clearTimeout(call.endTimeout);
-        this.activeOffers.delete(callId);
+        this._activeOffers.delete(callId);
       }
 
       // Clean up if no users remain
       if (
-        this.joinedUsersByCallId.has(callId) &&
-        this.joinedUsersByCallId.get(callId)!.size === 0
+        this._joinedUsersByCallId.has(callId) &&
+        this._joinedUsersByCallId.get(callId)!.size === 0
       ) {
-        this.joinedUsersByCallId.delete(callId);
-        this.activeOffers.delete(callId);
-        this.groupToCallId.delete(groupId);
+        this._joinedUsersByCallId.delete(callId);
+        this._activeOffers.delete(callId);
+        this._groupToCallId.delete(groupId);
         logger.info(`Cleaned up empty call ${callId} for group ${groupId}`);
       }
     } catch (error: any) {
@@ -326,11 +328,11 @@ export class GroupCallSocketHandler {
       for (const room of rooms) {
         const groupId = room.replace("group_", "");
         const callId = this.getCallIdForGroup(groupId);
-        if (callId && this.joinedUsersByCallId.has(callId)) {
-          this.joinedUsersByCallId.get(callId)!.delete(userId);
+        if (callId && this._joinedUsersByCallId.has(callId)) {
+          this._joinedUsersByCallId.get(callId)!.delete(userId);
           logger.info(`Removed user ${userId} from call ${callId}`);
 
-          const group = await this.groupRepo.getGroupById(groupId);
+          const group = await this._groupRepo.getGroupById(groupId);
           if (!group) {
             logger.error(`Invalid group ID: ${groupId}`);
             continue;
@@ -340,16 +342,16 @@ export class GroupCallSocketHandler {
             .filter((member) => member.userId._id.toString() !== userId)
             .map((member) => member.userId._id.toString());
 
-          this.io?.to(room).emit("userRoomLeft", { userId });
+          this._io?.to(room).emit("userRoomLeft", { userId });
           logger.info(
             `Emitted userRoomLeft for user ${userId} to room ${room}`
           );
 
-          if (this.joinedUsersByCallId.get(callId)!.size === 0) {
+          if (this._joinedUsersByCallId.get(callId)!.size === 0) {
             await updateCallLog(
               socket,
-              this.io,
-              this.callLogRepo,
+              this._io,
+              this._callLogRepo,
               callId,
               userId,
               recipientIds,
@@ -358,9 +360,9 @@ export class GroupCallSocketHandler {
                 endTime: new Date(),
               }
             );
-            this.joinedUsersByCallId.delete(callId);
-            this.activeOffers.delete(callId);
-            this.groupToCallId.delete(groupId);
+            this._joinedUsersByCallId.delete(callId);
+            this._activeOffers.delete(callId);
+            this._groupToCallId.delete(groupId);
             logger.info(`Cleaned up empty call ${callId} for group ${groupId}`);
           }
         }
@@ -380,7 +382,7 @@ export class GroupCallSocketHandler {
         `User ${userId} joining group call for groupId: ${groupId}, callId: ${callId}, callType: ${callType}`
       );
 
-      const group = await this.groupRepo.getGroupById(groupId);
+      const group = await this._groupRepo.getGroupById(groupId);
       if (!group) {
         logger.error(`Invalid group ID: ${groupId}`);
         socket.emit("error", { message: "Invalid group ID" });
@@ -400,12 +402,12 @@ export class GroupCallSocketHandler {
       socket.join(room);
       logger.info(`User ${userId} joined group call room: ${room}`);
 
-      if (!this.joinedUsersByCallId.has(callId)) {
-        this.joinedUsersByCallId.set(callId, new Set());
+      if (!this._joinedUsersByCallId.has(callId)) {
+        this._joinedUsersByCallId.set(callId, new Set());
       }
-      this.joinedUsersByCallId.get(callId)!.add(userId);
+      this._joinedUsersByCallId.get(callId)!.add(userId);
 
-      this.groupToCallId.set(groupId, callId);
+      this._groupToCallId.set(groupId, callId);
       logger.info(`Mapped groupId ${groupId} to callId ${callId}`);
 
       const recipientIds = group.members
@@ -413,9 +415,9 @@ export class GroupCallSocketHandler {
         .map((member) => member.userId._id.toString());
 
       // Create call log only when the first user joins
-      if (this.joinedUsersByCallId.get(callId)!.size === 1) {
-        const sender = await this.userRepo.findById(userId);
-        await createCallLog(socket, this.io, this.callLogRepo, {
+      if (this._joinedUsersByCallId.get(callId)!.size === 1) {
+        const sender = await this._userRepo.findById(userId);
+        await createCallLog(socket, this._io, this._callLogRepo, {
           CallId: callId,
           chatKey: `group_${groupId}`,
           callType,
@@ -428,7 +430,7 @@ export class GroupCallSocketHandler {
       }
 
       const currentParticipants = Array.from(
-        this.joinedUsersByCallId.get(callId) || []
+        this._joinedUsersByCallId.get(callId) || []
       ).filter((id) => id !== userId);
 
       socket.emit("joinedGroupCall", {
@@ -440,12 +442,12 @@ export class GroupCallSocketHandler {
       logger.info(`Sent participant list to ${userId}: ${currentParticipants}`);
 
       const unjoinedMembers = recipientIds.filter(
-        (memberId) => !this.joinedUsersByCallId.get(callId)!.has(memberId)
+        (memberId) => !this._joinedUsersByCallId.get(callId)!.has(memberId)
       );
-      const sender = await this.userRepo.findById(userId);
+      const sender = await this._userRepo.findById(userId);
       for (const recipId of unjoinedMembers) {
         try {
-          const notification = await this.notificationService.sendNotification(
+          const notification = await this._notificationService.sendNotification(
             recipId,
             "incoming_call",
             userId,
@@ -455,7 +457,7 @@ export class GroupCallSocketHandler {
             callType,
             `Incoming group ${callType} call from ${sender?.name || "Group"}`
           );
-          this.io?.to(`user_${recipId}`).emit("notification.new", notification);
+          this._io?.to(`user_${recipId}`).emit("notification.new", notification);
           logger.info(
             `Sent group call notification to user ${recipId}: ${notification._id}`
           );
@@ -466,18 +468,18 @@ export class GroupCallSocketHandler {
         }
       }
 
-      this.io?.to(room).emit("userRoomJoined", { userId });
+      this._io?.to(room).emit("userRoomJoined", { userId });
       logger.info(`Emitted userRoomJoined for user ${userId} to ${room}`);
 
       const endTimeout = setTimeout(async () => {
-        const call = this.activeOffers.get(callId);
+        const call = this._activeOffers.get(callId);
         if (!call) return;
 
-        const socketsInRoom = await this.io?.in(room).allSockets();
+        const socketsInRoom = await this._io?.in(room).allSockets();
         const connectedUserIds = new Set<string>();
         if (socketsInRoom) {
           for (const socketId of socketsInRoom) {
-            const s = this.io?.sockets.sockets.get(socketId);
+            const s = this._io?.sockets.sockets.get(socketId);
             if (s && s.data.userId) {
               connectedUserIds.add(s.data.userId);
             }
@@ -487,13 +489,13 @@ export class GroupCallSocketHandler {
         for (const recipId of recipientIds) {
           if (!connectedUserIds.has(recipId)) {
             const notification =
-              await this.notificationService.updateCallNotificationToMissed(
+              await this._notificationService.updateCallNotificationToMissed(
                 recipId,
                 callId,
                 `Missed group ${callType} call from ${sender?.name || "Group"}`
               );
             if (notification) {
-              this.io
+              this._io
                 ?.to(`user_${recipId}`)
                 .emit("notification.updated", notification);
               logger.info(
@@ -501,7 +503,7 @@ export class GroupCallSocketHandler {
               );
             } else {
               const newNotification =
-                await this.notificationService.sendNotification(
+                await this._notificationService.sendNotification(
                   recipId,
                   "missed_call",
                   userId,
@@ -513,7 +515,7 @@ export class GroupCallSocketHandler {
                     sender?.name || "Group"
                   }`
                 );
-              this.io
+              this._io
                 ?.to(`user_${recipId}`)
                 .emit("notification.new", newNotification);
               logger.info(
@@ -527,8 +529,8 @@ export class GroupCallSocketHandler {
         if (unjoinedMembers.length > 0) {
           await updateCallLog(
             socket,
-            this.io,
-            this.callLogRepo,
+            this._io,
+            this._callLogRepo,
             callId,
             userId,
             recipientIds,
@@ -539,13 +541,13 @@ export class GroupCallSocketHandler {
           );
         }
 
-        this.activeOffers.delete(callId);
-        this.joinedUsersByCallId.delete(callId);
-        this.groupToCallId.delete(groupId);
+        this._activeOffers.delete(callId);
+        this._joinedUsersByCallId.delete(callId);
+        this._groupToCallId.delete(groupId);
         logger.info(`Cleaned up timed out call ${callId} for group ${groupId}`);
       }, 30000);
 
-      this.activeOffers.set(callId, {
+      this._activeOffers.set(callId, {
         senderId: userId,
         recipientIds,
         callType,

@@ -1,5 +1,5 @@
 import { NextFunction, Request, Response } from 'express';
-import { inject } from 'inversify';
+import { inject, injectable } from 'inversify';
 import logger from '../Core/Utils/Logger';
 import { ITask } from '../Interfaces/Models/ITask';
 import { Types } from 'mongoose';
@@ -9,6 +9,7 @@ import { StatusCodes } from "../Enums/StatusCode.enums";
 import { BaseController } from '../Core/Controller/BaseController';
 import { ITaskService } from '../Interfaces/Services/ITaskService';
 
+@injectable()
 export class TaskController extends BaseController implements ITaskController{
   private _taskService: ITaskService;
 

@@ -1,42 +1,44 @@
 import { Server, Socket } from "socket.io";
 import mongoose from "mongoose";
 import logger from "../Core/Utils/Logger";
-import { ContactRepository } from "../Repositories/Contact.repository";
-import { GroupRepository } from "../Repositories/Group.repository";
-import { ChatRepository } from "../Repositories/Chat.repository";
-import { NotificationService } from "../Services/Notification.service";
 import Group from "../Models/group.model";
 import Collaboration from "../Models/collaboration";
 import UserConnection from "../Models/userConnection.modal";
 import { MarkAsReadData, Message, TypingData } from "./types";
+import { inject, injectable } from "inversify";
+import { IContactRepository } from "../Interfaces/Repository/IContactRepository";
+import { IGroupRepository } from "../Interfaces/Repository/IGroupRepository";
+import { IChatRepository } from "../Interfaces/Repository/IChatRepository";
+import { INotificationService } from "../Interfaces/Services/INotificationService";
 
+@injectable()
 export class ChatSocketHandler {
-  private activeChats: Map<string, string> = new Map(); // userId -> chatKey
-  private contactsRepo: ContactRepository;
-  private groupRepo: GroupRepository;
-  private chatRepo: ChatRepository;
-  private notificationService: NotificationService;
-  private io: Server | null = null;
+  private _activeChats: Map<string, string> = new Map(); // userId -> chatKey
+  private _contactsRepo: IContactRepository;
+  private _groupRepo: IGroupRepository;
+  private _chatRepo: IChatRepository;
+  private _notificationService: INotificationService;
+  private _io: Server | null = null;
 
   constructor(
-    contactsRepo: ContactRepository,
-    groupRepo: GroupRepository,
-    chatRepo: ChatRepository,
-    notificationService: NotificationService
+    @inject("IContactRepository") contactsRepo: IContactRepository,
+    @inject("IGroupRepository") groupRepo: IGroupRepository,
+    @inject("IChatRepository") chatRepo: IChatRepository,
+    @inject("INotificationService") notificationService: INotificationService
   ) {
-    this.contactsRepo = contactsRepo;
-    this.groupRepo = groupRepo;
-    this.chatRepo = chatRepo;
-    this.notificationService = notificationService;
+    this._contactsRepo = contactsRepo;
+    this._groupRepo = groupRepo;
+    this._chatRepo = chatRepo;
+    this._notificationService = notificationService;
   }
 
   public setIo(io: Server): void {
-    this.io = io;
+    this._io = io;
   }
 
   public async handleJoinChats(socket: Socket, userId: string): Promise<void> {
     try {
-      const contacts = await this.contactsRepo.findContactsByUserId(userId);
+      const contacts = await this._contactsRepo.findContactsByUserId(userId);
       const rooms = Array.from(
         new Set(
           contacts
@@ -67,7 +69,7 @@ export class ChatSocketHandler {
   public handleJoinUserRoom(socket: Socket, userId: string): void {
     socket.join(`user_${userId}`);
     const roomMembers =
-      this.io?.sockets.adapter.rooms.get(`user_${userId}`)?.size || 0;
+      this._io?.sockets.adapter.rooms.get(`user_${userId}`)?.size || 0;
     logger.info(
       `User ${userId} joined personal room: user_${userId}, socketId=${socket.id}, members=${roomMembers}`
     );
@@ -77,11 +79,11 @@ export class ChatSocketHandler {
     const { userId } = data;
     socket.join(`user_${userId}`);
     const roomMembers =
-      this.io?.sockets.adapter.rooms.get(`user_${userId}`)?.size || 0;
+      this._io?.sockets.adapter.rooms.get(`user_${userId}`)?.size || 0;
     logger.info(
       `Ensured user ${userId} joined room user_${userId}, socketId=${socket.id}, members=${roomMembers}`
     );
-    this.io?.to(`user_${userId}`).emit("userRoomJoined", { userId });
+    this._io?.to(`user_${userId}`).emit("userRoomJoined", { userId });
   }
 
   public handleLeaveUserRoom(socket: Socket, userId: string): void {
@@ -93,7 +95,7 @@ export class ChatSocketHandler {
 
   public handleActiveChat(data: { userId: string; chatKey: string }): void {
     const { userId, chatKey } = data;
-    this.activeChats.set(userId, chatKey);
+    this._activeChats.set(userId, chatKey);
     logger.info(`User ${userId} set active chat: ${chatKey}`);
   }
 
@@ -131,13 +133,13 @@ export class ChatSocketHandler {
 
       if (contentType === "text") {
         if (type === "group") {
-          const group = await this.groupRepo.getGroupById(targetId);
+          const group = await this._groupRepo.getGroupById(targetId);
           if (!group) {
             logger.error(`Invalid group ID: ${targetId}`);
             socket.emit("error", { message: "Invalid group ID" });
             return;
           }
-          const isMember = await this.groupRepo.isUserInGroup(
+          const isMember = await this._groupRepo.isUserInGroup(
             targetId,
             senderId
           );
@@ -149,7 +151,7 @@ export class ChatSocketHandler {
             return;
           }
           room = `group_${targetId}`;
-          savedMessage = await this.chatRepo.saveChatMessage({
+          savedMessage = await this._chatRepo.saveChatMessage({
             senderId: senderObjectId,
             groupId: new mongoose.Types.ObjectId(groupId || targetId),
             content,
@@ -159,7 +161,7 @@ export class ChatSocketHandler {
             status: "sent",
           });
         } else {
-          const contact = await this.contactsRepo.findContactByUsers(
+          const contact = await this._contactsRepo.findContactByUsers(
             senderId,
             targetId
           );
@@ -175,7 +177,7 @@ export class ChatSocketHandler {
             contact.targetUserId?.toString(),
           ].sort();
           room = `chat_${ids[0]}_${ids[1]}`;
-          savedMessage = await this.chatRepo.saveChatMessage({
+          savedMessage = await this._chatRepo.saveChatMessage({
             senderId: senderObjectId,
             ...(type === "user-mentor" && {
               collaborationId: new mongoose.Types.ObjectId(
@@ -211,7 +213,7 @@ export class ChatSocketHandler {
           });
           return;
         }
-        savedMessage = await this.chatRepo.findChatMessageById(_id);
+        savedMessage = await this._chatRepo.findChatMessageById(_id);
         if (!savedMessage) {
           logger.error(`Invalid message ID for non-text message: ${_id}`);
           socket.emit("error", { message: "Invalid message ID" });
@@ -220,7 +222,7 @@ export class ChatSocketHandler {
         if (type === "group") {
           room = `group_${targetId}`;
         } else {
-          const contact = await this.contactsRepo.findContactByUsers(
+          const contact = await this._contactsRepo.findContactByUsers(
             senderId,
             targetId
           );
@@ -269,11 +271,11 @@ export class ChatSocketHandler {
         }
       }
 
-      if (chatKey && recipientIds.length > 0 && this.io) {
-        const socketsInRoom = await this.io.in(room).allSockets();
+      if (chatKey && recipientIds.length > 0 && this._io) {
+        const socketsInRoom = await this._io.in(room).allSockets();
         const connectedUserIds = new Set<string>();
         for (const socketId of socketsInRoom) {
-          const s = this.io.sockets.sockets.get(socketId);
+          const s = this._io.sockets.sockets.get(socketId);
           if (s && s.data.userId) {
             connectedUserIds.add(s.data.userId);
           }
@@ -282,7 +284,7 @@ export class ChatSocketHandler {
         for (const recipientId of recipientIds) {
           try {
             const notification =
-              await this.notificationService.sendNotification(
+              await this._notificationService.sendNotification(
                 recipientId,
                 "message",
                 senderId,
@@ -301,7 +303,7 @@ export class ChatSocketHandler {
         // Emit contactsUpdated to sender and recipients
         const allUsers = [senderId, ...recipientIds];
         for (const userId of allUsers) {
-          this.io?.to(`user_${userId}`).emit("contactsUpdated");
+          this._io?.to(`user_${userId}`).emit("contactsUpdated");
           logger.info(`Emitted contactsUpdated to user_${userId}`);
         }
       }
@@ -382,12 +384,12 @@ export class ChatSocketHandler {
   ): Promise<void> {
     try {
       const { chatKey, userId, type } = data;
-      const updatedMessages = await this.chatRepo.markMessagesAsRead(
+      const updatedMessages = await this._chatRepo.markMessagesAsRead(
         chatKey,
         userId,
         type
       );
-      const notifications = await this.notificationService.getNotifications(
+      const notifications = await this._notificationService.getNotifications(
         userId
       );
       const messageNotifications = notifications.filter(
@@ -399,11 +401,11 @@ export class ChatSocketHandler {
 
       for (const notification of messageNotifications) {
         const updatedNotification =
-          await this.notificationService.markNotificationAsRead(
+          await this._notificationService.markNotificationAsRead(
             notification._id.toString()
           );
-        if (updatedNotification && this.io) {
-          this.io
+        if (updatedNotification && this._io) {
+          this._io
             .to(`user_${userId}`)
             .emit("notification.read", { notificationId: notification._id });
         }
@@ -413,7 +415,7 @@ export class ChatSocketHandler {
       if (type === "group") {
         room = `group_${chatKey.replace("group_", "")}`;
       } else {
-        const contact = await this.contactsRepo.findContactByUsers(
+        const contact = await this._contactsRepo.findContactByUsers(
           userId,
           chatKey.replace(/^(user-mentor_|user-user_)/, "")
         );
@@ -424,7 +426,7 @@ export class ChatSocketHandler {
         room = `chat_${ids[0]}_${ids[1]}`;
       }
 
-      this.io
+      this._io
         ?.to(room)
         .emit("messagesRead", { chatKey, userId, messageIds: updatedMessages });
       logger.info(
@@ -436,7 +438,7 @@ export class ChatSocketHandler {
     }
   }
   public handleLeaveChat(userId: string): void {
-    this.activeChats.delete(userId);
+    this._activeChats.delete(userId);
     logger.info(`User ${userId} left active chat`);
   }
 }

@@ -7,7 +7,6 @@ import cors from "cors";
 import cookieParser from "cookie-parser";
 import http from "http";
 import { Server } from "socket.io";
-import { SocketService }from "./socket/SocketService";
 import { CleanupScheduler } from "./Core/Utils/NotificationSchdduler";
 import logger from "./Core/Utils/Logger";
 import categoryRoutes from "./Routes/Routes/Category.routes";
@@ -27,6 +26,8 @@ import reviewsRoutes from "./Routes/Routes/Review.routes";
 import contactUsRoutes from "./Routes/Routes/ContactUs.routes";
 import callLogRoutes from "./Routes/Routes/Call.routes";
 import { errorHandler } from "./middlewares/errorHandler.middleware";
+import container from "./container";
+import { ISocketService } from "./Interfaces/Services/ISocketService";
 
 const app = express();
 const server: http.Server = http.createServer(app);
@@ -80,7 +81,7 @@ const startServer = async () => {
       credentials: true,
     },
   });
-  const socketService = new SocketService();
+  const socketService =container.get<ISocketService>('ISocketService');
   socketService.initialize(io);
 
   // Schedule Node cron tasks

@@ -31,7 +31,7 @@ export class MentorService implements IMentorService {
     @inject('IMentorRepository') mentorRepository : IMentorRepository,
     @inject('IUserRepository') userRepository : IUserRepository,
     @inject('ICollaborationRepository') collaborationRepository : ICollaborationRepository,
-    @inject('notificationService') notificationService : INotificationService,
+    @inject('INotificationService') notificationService : INotificationService,
     @inject('ICategoryRepository') categoryService : ICategoryRepository,
     @inject('ISkillsRepository') skillRepository : ISkillsRepository
   ) {

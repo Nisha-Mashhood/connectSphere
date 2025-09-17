@@ -1,12 +1,13 @@
 import { Router } from 'express';
-import { ContactController } from '../../Controllers/Contact.controller';
 import { apiLimiter } from '../../middlewares/ratelimit.middleware';
-import { AuthMiddleware } from '../../middlewares/auth.middleware';
+import { IAuthMiddleware } from '../../Interfaces/Middleware/IAuthMiddleware';
 import { CONTACT_ROUTES } from '../Constants/Contact.routes';
+import container from "../../container";
+import { IContactController } from '../../Interfaces/Controller/IContactController';
 
 const router = Router();
-const contactController = new ContactController();
-const authMiddleware = new AuthMiddleware();
+const contactController = container.get<IContactController>('IContactController');
+const authMiddleware = container.get<IAuthMiddleware>('IAuthMiddleware');
 
 router.get(CONTACT_ROUTES.GetUserContacts, [apiLimiter, authMiddleware.verifyToken, authMiddleware.checkBlockedStatus], contactController.getUserContacts);
 

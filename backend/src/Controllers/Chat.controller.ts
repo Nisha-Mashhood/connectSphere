@@ -7,8 +7,9 @@ import { IChatController } from '../Interfaces/Controller/IChatController';
 import { StatusCodes } from "../Enums/StatusCode.enums";
 import { IChatService } from '../Interfaces/Services/IChatService';
 import { IChatRepository } from '../Interfaces/Repository/IChatRepository';
-import { inject } from 'inversify';
+import { inject, injectable } from 'inversify';
 
+@injectable()
 export class ChatController extends BaseController implements IChatController{
   private _chatService: IChatService;
    private _chatRepo: IChatRepository;

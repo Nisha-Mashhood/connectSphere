@@ -1,13 +1,14 @@
 import express from 'express';
-import { TaskController } from '../../Controllers/Task.controller';
 import { apiLimiter } from '../../middlewares/ratelimit.middleware';
-import { AuthMiddleware } from '../../middlewares/auth.middleware';
+import { IAuthMiddleware } from '../../Interfaces/Middleware/IAuthMiddleware';
 import { upload } from '../../Core/Utils/Multer';
 import { TASK_ROUTES } from '../Constants/Task.routes';
+import container from "../../container";
+import { ITaskController } from '../../Interfaces/Controller/ITaskController';
 
 const router = express.Router();
-const taskController = new TaskController();
-const authMiddleware = new AuthMiddleware();
+const taskController = container.get<ITaskController>('ITaskController');
+const authMiddleware = container.get<IAuthMiddleware>('IAuthMiddleware');
 
 
 router.post(

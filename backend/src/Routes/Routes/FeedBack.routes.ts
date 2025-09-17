@@ -1,12 +1,13 @@
 import express from 'express';
-import { FeedbackController } from '../../Controllers/FeedBack.controller';
-import { apiLimiter } from '../../middlewares/ratelimit.middleware';
-import { AuthMiddleware } from '../../middlewares/auth.middleware';
+import container from "../../container";
 import { FEEDBACK_ROUTES } from '../Constants/Feedback.routes';
+import { IFeedbackController } from '../../Interfaces/Controller/IFeedBackController';
+import { apiLimiter } from '../../middlewares/ratelimit.middleware';
+import { IAuthMiddleware } from '../../Interfaces/Middleware/IAuthMiddleware';
 
 const router = express.Router();
-const feedbackController = new FeedbackController();
-const authMiddleware = new AuthMiddleware();
+const feedbackController = container.get<IFeedbackController>('IFeedBackController');
+const authMiddleware = container.get<IAuthMiddleware>('IAuthMiddleware');
 
 
 router.post(

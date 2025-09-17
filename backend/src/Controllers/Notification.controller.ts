@@ -1,5 +1,5 @@
 import { NextFunction, Request, Response } from "express";
-import { inject } from "inversify";
+import { inject, injectable } from "inversify";
 import logger from "../Core/Utils/Logger";
 import { IAppNotification } from "../Interfaces/Models/IAppNotification";
 import { INotificationController } from "../Interfaces/Controller/INotificationController";
@@ -8,6 +8,7 @@ import { BaseController } from "../Core/Controller/BaseController";
 import { HttpError } from "../Core/Utils/ErrorHandler";
 import { INotificationService } from "../Interfaces/Services/INotificationService";
 
+@injectable()
 export class NotificationController extends BaseController implements INotificationController{
   private _notificationService: INotificationService;
 

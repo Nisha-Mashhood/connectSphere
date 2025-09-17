@@ -1,5 +1,5 @@
 import type { Request, Response, Express, NextFunction } from "express";
-import { inject } from "inversify";
+import { inject, injectable } from "inversify";
 import { BaseController } from "../Core/Controller/BaseController";
 import { uploadMedia } from "../Core/Utils/Cloudinary";
 import logger from "../Core/Utils/Logger";
@@ -10,6 +10,7 @@ import { IMentorService } from "../Interfaces/Services/IMentorService";
 import { IAuthService } from "../Interfaces/Services/IUserService";
 import { IUserRepository } from "../Interfaces/Repository/IUserRepository";
 
+@injectable()
 export class MentorController extends BaseController implements IMentorController{
   private _mentorService: IMentorService;
   private _authService: IAuthService;
@@ -17,7 +18,7 @@ export class MentorController extends BaseController implements IMentorControlle
 
   constructor(
     @inject('IMentorService') mentorService : IMentorService,
-    @inject('IAuthService') authService : IAuthService,
+    @inject('IUserService') authService : IAuthService,
     @inject('IUserRepository') userRepository : IUserRepository
   ) {
     super();

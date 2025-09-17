@@ -1,12 +1,13 @@
 import { Router } from 'express';
-import { CollaborationController } from '../../Controllers/Collaboration.controller';
-import { apiLimiter } from '../../middlewares/ratelimit.middleware';
-import { AuthMiddleware } from '../../middlewares/auth.middleware';
+import container from "../../container";
 import { COLLABORATION_ROUTES } from '../Constants/Collaboration.routes';
+import { apiLimiter } from '../../middlewares/ratelimit.middleware';
+import { IAuthMiddleware } from '../../Interfaces/Middleware/IAuthMiddleware';
+import { ICollaborationController } from '../../Interfaces/Controller/ICollaborationController';
 
 const router = Router();
-const collabController = new CollaborationController();
-const authMiddleware = new AuthMiddleware();
+const collabController = container.get<ICollaborationController>('ICollaborationController');
+const authMiddleware = container.get<IAuthMiddleware>('IAuthMiddleware');
 
 
 router.post(COLLABORATION_ROUTES.CreateMentorProfile, [apiLimiter, authMiddleware.verifyToken, authMiddleware.checkBlockedStatus], collabController.TemporaryRequestController);

@@ -1,12 +1,12 @@
 import { Socket, Server } from "socket.io";
 import logger from "../../Core/Utils/Logger";
-import { CallLogRepository } from "../../Repositories/Call.repository";
 import { ICallLog } from "../../Interfaces/Models/IcallLog";
+import { ICallLogRepository } from "../../Interfaces/Repository/ICallRepositry";
 
 export const createCallLog = async(
   socket: Socket,
   io: Server | null,
-  callLogRepo: CallLogRepository,
+  callLogRepo: ICallLogRepository,
   data: {
     CallId: string;
     chatKey: string;
@@ -54,7 +54,7 @@ export const createCallLog = async(
 export const updateCallLog = async (
   socket: Socket,
   io: Server | null,
-  callLogRepo: CallLogRepository,
+  callLogRepo: ICallLogRepository,
   callId: string,
   senderId: string,
   recipientIds: string[],

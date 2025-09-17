@@ -1,13 +1,14 @@
 import { Router } from 'express';
-import { CategoryController } from '../../Controllers/Category.controller';
 import { apiLimiter } from '../../middlewares/ratelimit.middleware';
 import { upload } from '../../Core/Utils/Multer';
-import { AuthMiddleware } from '../../middlewares/auth.middleware';
+import { IAuthMiddleware } from '../../Interfaces/Middleware/IAuthMiddleware';
 import { CATEGORY_ROUTES } from '../Constants/Category.routes';
+import container from "../../container";
+import { ICategoryController } from '../../Interfaces/Controller/ICategoryController';
 
 const router = Router();
-const categoryController = new CategoryController();
-const authMiddleware = new AuthMiddleware();
+const categoryController = container.get<ICategoryController>('ICategoryController');
+const authMiddleware = container.get<IAuthMiddleware>('IAuthMiddleware');
 
 router.post(CATEGORY_ROUTES.CreateCategory, [apiLimiter, authMiddleware.verifyToken, authMiddleware.authorize('admin'), upload.single('image')], categoryController.createCategory);
 router.get(CATEGORY_ROUTES.GetCategories, [apiLimiter, authMiddleware.verifyToken, authMiddleware.checkBlockedStatus], categoryController.getAllCategories);

@@ -1,11 +1,11 @@
 import { Request, Response, NextFunction } from 'express';
+import { inject, injectable } from 'inversify';
 import logger from '../Core/Utils/Logger';
 import { ServiceError } from '../Core/Utils/ErrorHandler';
 import { IUser } from '../Interfaces/Models/IUser';
 import { IJWTService } from '../Interfaces/Services/IJWTService';
 import { IUserRepository } from '../Interfaces/Repository/IUserRepository';
-import { inject } from 'inversify';
-// import type { Express } from "express";
+import { IAuthMiddleware } from '../Interfaces/Middleware/IAuthMiddleware';
 
 // Extend Express Request type to include user
 declare global {
@@ -16,7 +16,8 @@ declare global {
   }
 }
 
-export class AuthMiddleware {
+@injectable()
+export class AuthMiddleware implements IAuthMiddleware{
   private _jwtService: IJWTService;
   private _userRepository: IUserRepository;
 
@@ -33,7 +34,6 @@ export class AuthMiddleware {
     logger.info(`Access Token: ${accessToken}`);
     if (!accessToken) {
       logger.warn('Access token not found in request');
-      // throw new ServiceError('Access token not found');
       req.currentUser = undefined; 
       return next();
     }

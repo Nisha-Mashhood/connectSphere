@@ -1,5 +1,5 @@
 import { BaseController } from '../Core/Controller/BaseController';
-import { inject } from 'inversify';
+import { inject, injectable } from 'inversify';
 import { Request, Response, NextFunction } from 'express';
 import type { Express } from "express";
 import logger from '../Core/Utils/Logger';
@@ -22,13 +22,13 @@ import { StatusCodes } from '../Enums/StatusCode.enums';
 import { IAuthService } from '../Interfaces/Services/IUserService';
 import { IJWTService } from '../Interfaces/Services/IJWTService';
 
-
+@injectable()
 export class AuthController extends BaseController implements IAuthController{
   private _authService: IAuthService;
   private _jwtService: IJWTService;
 
   constructor(
-    @inject('IAuthService') authService : IAuthService,
+    @inject('IUserService') authService : IAuthService,
     @inject('IJWTService') jwtService : IJWTService
   ) {
     super();

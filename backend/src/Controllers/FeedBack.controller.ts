@@ -1,5 +1,5 @@
 import { Request, Response, NextFunction } from 'express';
-import { inject } from 'inversify';
+import { inject, injectable } from 'inversify';
 import logger from '../Core/Utils/Logger';
 import { IFeedback } from '../Interfaces/Models/IFeedback';
 import { IFeedbackController } from '../Interfaces/Controller/IFeedBackController';
@@ -8,6 +8,7 @@ import { StatusCodes } from "../Enums/StatusCode.enums";
 import { BaseController } from '../Core/Controller/BaseController';
 import { IFeedbackService } from '../Interfaces/Services/IFeedbackService';
 
+@injectable()
 export class FeedbackController extends BaseController implements IFeedbackController{
   private _feedbackService: IFeedbackService;
 

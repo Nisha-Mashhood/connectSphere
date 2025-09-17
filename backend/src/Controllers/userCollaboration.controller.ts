@@ -1,10 +1,11 @@
 import { NextFunction, Request, Response } from 'express';
-import { inject } from 'inversify';
+import { inject, injectable } from 'inversify';
 import logger from '../Core/Utils/Logger';
 import { IUserConnectionController } from '../Interfaces/Controller/IUserCollaborationController';
 import { BaseController } from '../Core/Controller/BaseController';
 import { IUserConnectionService } from '../Interfaces/Services/IUserCollaborationService';
 
+@injectable()
 export class UserConnectionController extends BaseController implements IUserConnectionController {
   private _userConnectionService: IUserConnectionService;
 

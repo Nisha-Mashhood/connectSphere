@@ -1,17 +1,13 @@
 import { Server, Socket } from "socket.io";
 import { EventEmitter } from "events";
 import logger from "../Core/Utils/Logger";
-import { ContactRepository } from "../Repositories/Contact.repository";
-import { GroupRepository } from "../Repositories/Group.repository";
-import { ChatRepository } from "../Repositories/Chat.repository";
-import { UserRepository } from "../Repositories/User.repository";
-import { NotificationService } from "../Services/Notification.service";
-import { CallLogRepository } from "../Repositories/Call.repository";
-import { ChatSocketHandler } from "./ChatSocketHandler";
-import { CallSocketHandler } from "./CallSocketHandler";
-import { GroupCallSocketHandler } from "./GroupCallSocketHandler";
-import { NotificationSocketHandler } from "./NotificationSocketHandler";
 import { CallData, MarkAsReadData, Message, TypingData } from "../Utils/Types/SocketService.types";
+import { inject, injectable } from "inversify";
+import { ISocketService } from "../Interfaces/Services/ISocketService";
+import { IChatSocketHandler } from "../Interfaces/Services/IChatSocketHandler";
+import { ICallSocketHandler } from "../Interfaces/Services/ICallSocketHandler";
+import { IGroupCallSocketHandler } from "../Interfaces/Services/IGroupCallSocketHandler";
+import { INotificationSocketHandler } from "../Interfaces/Services/INotificationSocketHandler";
 
 interface GroupCallData {
   groupId: string;
@@ -40,40 +36,39 @@ interface JoinGroupCallData {
   callId: string;
 }
 
-export class SocketService {
-  private io: Server | null = null;
+@injectable()
+export class SocketService implements ISocketService{
+  private _io: Server | null = null;
   public static notificationEmitter: EventEmitter = new EventEmitter();
-  private chatHandler: ChatSocketHandler;
-  private callHandler: CallSocketHandler;
-  private groupCallHandler: GroupCallSocketHandler;
-  private notificationHandler: NotificationSocketHandler;
+  private _chatHandler: IChatSocketHandler;
+  private _callHandler: ICallSocketHandler;
+  private _groupCallHandler: IGroupCallSocketHandler;
+  private _notificationHandler: INotificationSocketHandler;
 
-  constructor() {
-    const contactRepo = new ContactRepository();
-    const groupRepo = new GroupRepository();
-    const chatRepo = new ChatRepository();
-    const userRepo = new UserRepository();
-    const notificationService = new NotificationService();
-    const callLogRepo = new CallLogRepository();
-
-    this.chatHandler = new ChatSocketHandler(contactRepo, groupRepo, chatRepo, notificationService);
-    this.callHandler = new CallSocketHandler(contactRepo, groupRepo, userRepo, notificationService, callLogRepo);
-    this.groupCallHandler = new GroupCallSocketHandler(groupRepo, userRepo, notificationService, callLogRepo);
-    this.notificationHandler = new NotificationSocketHandler(notificationService);
+  constructor(
+    @inject("IChatSocketHandler") chatHandler: IChatSocketHandler,
+    @inject("ICallSocketHandler") callHandler: ICallSocketHandler,
+    @inject("IGroupCallSocketHandler") groupCallHandler: IGroupCallSocketHandler,
+    @inject("INotificationSocketHandler") notificationHandler: INotificationSocketHandler
+  ) {
+    this._chatHandler = chatHandler;
+    this._callHandler = callHandler;
+    this._groupCallHandler = groupCallHandler;
+    this._notificationHandler = notificationHandler;
   }
 
   public initialize(io: Server): void {
-    this.io = io;
-    this.callHandler.setIo(io); 
-    this.groupCallHandler.setIo(io); 
-    this.notificationHandler.initializeSocket(io);
+    this._io = io;
+    this._callHandler.setIo(io); 
+    this._groupCallHandler.setIo(io); 
+    this._notificationHandler.initializeSocket(io);
     logger.info("Socket.IO server initialized");
 
     SocketService.notificationEmitter.on("notification", (notification) => {
-      this.notificationHandler.emitTaskNotification(notification);
+      this._notificationHandler.emitTaskNotification(notification);
     });
 
-    this.io.on("connection", (socket: Socket) => {
+    this._io.on("connection", (socket: Socket) => {
       this.handleConnection(socket);
     });
   }
@@ -91,56 +86,58 @@ export class SocketService {
 
     // Chat-related events
     socket.on("joinChats", (userId: string) =>
-      this.chatHandler.handleJoinChats(socket, userId)
+      this._chatHandler.handleJoinChats(socket, userId)
     );
     socket.on("joinUserRoom", (userId: string) =>
-      this.chatHandler.handleJoinUserRoom(socket, userId)
+      this._chatHandler.handleJoinUserRoom(socket, userId)
     );
-    socket.on("ensureUserRoom", this.chatHandler.handleEnsureUserRoom.bind(this.chatHandler, socket));
+    socket.on("ensureUserRoom", (data: { userId: string }) =>
+    this._chatHandler.handleEnsureUserRoom(socket, data)
+    );
     socket.on("leaveUserRoom", (userId: string) =>
-      this.chatHandler.handleLeaveUserRoom(socket, userId)
+      this._chatHandler.handleLeaveUserRoom(socket, userId)
     );
     socket.on("activeChat", (data: { userId: string; chatKey: string }) =>
-      this.chatHandler.handleActiveChat(data)
+      this._chatHandler.handleActiveChat(data)
     );
     socket.on("sendMessage", (message: Message) =>
-      this.chatHandler.handleSendMessage(socket, message)
+      this._chatHandler.handleSendMessage(socket, message)
     );
     socket.on("typing", (data: TypingData) =>
-      this.chatHandler.handleTyping(socket, data)
+      this._chatHandler.handleTyping(socket, data)
     );
     socket.on("stopTyping", (data: TypingData) =>
-      this.chatHandler.handleStopTyping(socket, data)
+      this._chatHandler.handleStopTyping(socket, data)
     );
     socket.on("markAsRead", (data: MarkAsReadData) =>
-      this.chatHandler.handleMarkAsRead(socket, data)
+      this._chatHandler.handleMarkAsRead(socket, data)
     );
     socket.on("leaveChat", (userId: string) =>
-      this.chatHandler.handleLeaveChat(userId)
+      this._chatHandler.handleLeaveChat(userId)
     );
 
     // One-on-one call events
-    socket.on("offer", (data: CallData) => this.callHandler.handleOffer(socket, data));
-    socket.on("answer", (data: CallData) => this.callHandler.handleAnswer(socket, data));
-    socket.on("ice-candidate", (data: CallData) => this.callHandler.handleIceCandidate(socket, data));
-    socket.on("callEnded", (data: CallData) => this.callHandler.handleCallEnded(socket, data));
+    socket.on("offer", (data: CallData) => this._callHandler.handleOffer(socket, data));
+    socket.on("answer", (data: CallData) => this._callHandler.handleAnswer(socket, data));
+    socket.on("ice-candidate", (data: CallData) => this._callHandler.handleIceCandidate(socket, data));
+    socket.on("callEnded", (data: CallData) => this._callHandler.handleCallEnded(socket, data));
 
     // Group call events
-    socket.on("groupOffer", (data: GroupOfferData) => this.groupCallHandler.handleGroupOffer(socket, data));
-    socket.on("groupAnswer", (data: GroupAnswerData) => this.groupCallHandler.handleGroupAnswer(socket, data));
+    socket.on("groupOffer", (data: GroupOfferData) => this._groupCallHandler.handleGroupOffer(socket, data));
+    socket.on("groupAnswer", (data: GroupAnswerData) => this._groupCallHandler.handleGroupAnswer(socket, data));
     socket.on("groupIceCandidate", (data: GroupIceCandidateData) =>
-      this.groupCallHandler.handleGroupIceCandidate(socket, data)
+      this._groupCallHandler.handleGroupIceCandidate(socket, data)
     );
     socket.on("groupCallEnded", (data: GroupCallData) =>
-      this.groupCallHandler.handleGroupCallEnded(socket, data)
+      this._groupCallHandler.handleGroupCallEnded(socket, data)
     );
     socket.on("joinGroupCall", (data: JoinGroupCallData) =>
-      this.groupCallHandler.handleJoinGroupCall(socket, data)
+      this._groupCallHandler.handleJoinGroupCall(socket, data)
     );
 
     // Notification events
     socket.on("notification.read", (data: { notificationId: string; userId: string }) =>
-      this.notificationHandler.handleNotificationRead(socket, data)
+      this._notificationHandler.handleNotificationRead(socket, data)
     );
 
     socket.on("disconnect", () => this.handleDisconnect(socket));
@@ -155,7 +152,7 @@ export class SocketService {
     //check for group rooms
     const rooms = Array.from(socket.rooms).filter((room) => room.startsWith("group_"));
     if(rooms){
-      this.groupCallHandler.handleDisconnect(socket);
+      this._groupCallHandler.handleDisconnect(socket);
     }
     logger.info(`User disconnected: socketId=${socket.id}, userId=${userId}`);
   }

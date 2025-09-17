@@ -1,5 +1,5 @@
 import { NextFunction, Request, Response } from 'express';
-import { inject } from 'inversify';
+import { inject, injectable } from 'inversify';
 import { ISubcategory } from "../Interfaces/Models/ISubcategory";
 import { BaseController } from '../Core/Controller/BaseController';
 import logger from "../Core/Utils/Logger";
@@ -15,12 +15,13 @@ interface SubcategoryRequest extends Request {
   params: { id?: string; categoryId?: string };
 }
 
+@injectable()
 export class SubcategoryController extends BaseController implements ISubcategoryController{
   private _subcategoryService: ISubcategoryService;
   // private subcategoryRepo: ISubcategoryRepository;
 
   constructor(
-    @inject('ISubcategoryService') subCategoryService : ISubcategoryService,
+    @inject('ISubCategoryService') subCategoryService : ISubcategoryService,
     // @inject('ISubcategoryRepository') subcategoryRepository : ISubcategoryRepository
 ) {
     super();

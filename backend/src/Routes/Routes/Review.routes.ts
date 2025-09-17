@@ -1,12 +1,13 @@
 import express from 'express';
-import { ReviewController } from '../../Controllers/Review.controller';
 import { apiLimiter } from '../../middlewares/ratelimit.middleware';
-import { AuthMiddleware } from '../../middlewares/auth.middleware';
+import { IAuthMiddleware } from '../../Interfaces/Middleware/IAuthMiddleware';
 import { REVIEW_ROUTES } from '../Constants/Review.routes';
+import container from "../../container";
+import { IReviewController } from '../../Interfaces/Controller/IReviewController';
 
 const router = express.Router();
-const reviewController = new ReviewController();
-const authMiddleware = new AuthMiddleware();
+const reviewController = container.get<IReviewController>('IReviewController');
+const authMiddleware = container.get<IAuthMiddleware>('IAuthMiddleware');
 
 
 router.post(

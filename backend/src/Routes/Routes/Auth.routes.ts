@@ -1,13 +1,14 @@
 import express from 'express';
-import { AuthController } from '../../Controllers/Auth.controller';
-import { AuthMiddleware } from '../../middlewares/auth.middleware';
+import { AUTH_ROUTES } from '../Constants/auth.routes';
+import container from "../../container";
+import { IAuthMiddleware } from '../../Interfaces/Middleware/IAuthMiddleware';
 import { apiLimiter, authLimiter } from '../../middlewares/ratelimit.middleware';
 import { upload } from '../../Core/Utils/Multer';
-import { AUTH_ROUTES } from '../Constants/auth.routes';
+import { IAuthController } from '../../Interfaces/Controller/IAuthController';
 
 const router = express.Router();
-const authController = new AuthController();
-const authMiddleware = new AuthMiddleware();
+const authController = container.get<IAuthController>('IAuthController');
+const authMiddleware = container.get<IAuthMiddleware>('IAuthMiddleware');
 
 // Public routes
 router.post(AUTH_ROUTES.Register, authLimiter, authController.signup.bind(authController));

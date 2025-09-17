@@ -1,35 +1,38 @@
 import { Server, Socket } from "socket.io";
 import logger from "../Core/Utils/Logger";
-import { ContactRepository } from "../Repositories/Contact.repository";
-import { GroupRepository } from "../Repositories/Group.repository";
-import { UserRepository } from "../Repositories/User.repository";
-import { NotificationService } from "../Services/Notification.service";
 import { CallData, CallOffer } from "../Utils/Types/SocketService.types";
 import { createCallLog, updateCallLog } from "./Utils/CallLogHelper";
-import { CallLogRepository } from "../Repositories/Call.repository";
+import { inject, injectable } from "inversify";
+import { ICallSocketHandler } from "../Interfaces/Services/ICallSocketHandler";
+import { IContactRepository } from "../Interfaces/Repository/IContactRepository";
+import { IGroupRepository } from "../Interfaces/Repository/IGroupRepository";
+import { IUserRepository } from "../Interfaces/Repository/IUserRepository";
+import { INotificationService } from "../Interfaces/Services/INotificationService";
+import { ICallLogRepository } from "../Interfaces/Repository/ICallRepositry";
 
-export class CallSocketHandler {
-  private activeOffers: Map<string, CallOffer> = new Map();
-  private endedCalls: Set<string> = new Set();
-  private contactsRepo: ContactRepository;
-  private groupRepo: GroupRepository;
-  private userRepo: UserRepository;
-  private notificationService: NotificationService;
-  private callLogRepo: CallLogRepository;
-  private io: Server | null = null;
+@injectable()
+export class CallSocketHandler implements ICallSocketHandler{
+  private _activeOffers: Map<string, CallOffer> = new Map();
+  private _endedCalls: Set<string> = new Set();
+  private _contactsRepo: IContactRepository;
+  private _groupRepo: IGroupRepository;
+  private _userRepo: IUserRepository;
+  private _notificationService: INotificationService;
+  private _callLogRepo: ICallLogRepository;
+  private _io: Server | null = null;
 
   constructor(
-    contactsRepo: ContactRepository,
-    groupRepo: GroupRepository,
-    userRepo: UserRepository,
-    notificationService: NotificationService,
-    callLogRepo: CallLogRepository
+    @inject("IContactRepository") contactsRepo: IContactRepository,
+    @inject("IGroupRepository") groupRepo: IGroupRepository,
+    @inject("IUserRepository") userRepo: IUserRepository,
+    @inject("INotificationService") notificationService: INotificationService,
+    @inject("ICallLogRepository") callLogRepo: ICallLogRepository
   ) {
-    this.contactsRepo = contactsRepo;
-    this.groupRepo = groupRepo;
-    this.userRepo = userRepo;
-    this.notificationService = notificationService;
-    this.callLogRepo = callLogRepo;
+    this._contactsRepo = contactsRepo;
+    this._groupRepo = groupRepo;
+    this._userRepo = userRepo;
+    this._notificationService = notificationService;
+    this._callLogRepo = callLogRepo;
     logger.debug(
       `CallSocketHandler initialized with callLogRepo: ${!!callLogRepo}`
     );
@@ -40,7 +43,7 @@ export class CallSocketHandler {
   }
 
   public setIo(io: Server): void {
-    this.io = io;
+    this._io = io;
   }
 
   public async handleOffer(socket: Socket, data: CallData): Promise<void> {
@@ -56,7 +59,7 @@ export class CallSocketHandler {
       if (type === "group") {
         room = `group_${targetId}`;
         contentType = "group";
-        const group = await this.groupRepo.getGroupById(targetId);
+        const group = await this._groupRepo.getGroupById(targetId);
         if (!group) {
           logger.error(`Invalid group ID: ${targetId}`);
           socket.emit("error", { message: "Invalid group ID" });
@@ -66,7 +69,7 @@ export class CallSocketHandler {
           .filter((member) => member.userId.toString() !== userId)
           .map((member) => member.userId.toString());
       } else {
-        const contact = await this.contactsRepo.findContactByUsers(
+        const contact = await this._contactsRepo.findContactByUsers(
           userId,
           targetId
         );
@@ -87,7 +90,7 @@ export class CallSocketHandler {
           contact.type === "user-mentor" ? "collaboration" : "userconnection";
       }
 
-      const sender = await this.userRepo.findById(userId);
+      const sender = await this._userRepo.findById(userId);
       socket.broadcast.to(room).emit("offer", {
         userId,
         targetId,
@@ -100,7 +103,7 @@ export class CallSocketHandler {
 
       const callId = `${chatKey}_${Date.now()}`;
 
-      const callLog = await createCallLog(socket, this.io, this.callLogRepo, {
+      const callLog = await createCallLog(socket, this._io, this._callLogRepo, {
         CallId: callId,
         chatKey,
         callType,
@@ -112,11 +115,11 @@ export class CallSocketHandler {
       });
       if (!callLog) return;
 
-      const socketsInRoom = await this.io?.in(room).allSockets();
+      const socketsInRoom = await this._io?.in(room).allSockets();
       const connectedUserIds = new Set<string>();
       if (socketsInRoom) {
         for (const socketId of socketsInRoom) {
-          const s = this.io?.sockets.sockets.get(socketId);
+          const s = this._io?.sockets.sockets.get(socketId);
           if (s && s.data.userId) {
             connectedUserIds.add(s.data.userId);
           }
@@ -125,7 +128,7 @@ export class CallSocketHandler {
 
       for (const recipientId of recipientIds) {
         try {
-          const notification = await this.notificationService.sendNotification(
+          const notification = await this._notificationService.sendNotification(
             recipientId,
             "incoming_call",
             userId,
@@ -147,14 +150,14 @@ export class CallSocketHandler {
       }
 
       const endTimeout = setTimeout(async () => {
-        const call = this.activeOffers.get(callId);
+        const call = this._activeOffers.get(callId);
         if (!call) return;
 
-        const socketsInRoom = await this.io?.in(room).allSockets();
+        const socketsInRoom = await this._io?.in(room).allSockets();
         const connectedUserIds = new Set<string>();
         if (socketsInRoom) {
           for (const socketId of socketsInRoom) {
-            const s = this.io?.sockets.sockets.get(socketId);
+            const s = this._io?.sockets.sockets.get(socketId);
             if (s && s.data.userId) {
               connectedUserIds.add(s.data.userId);
             }
@@ -165,8 +168,8 @@ export class CallSocketHandler {
           if (!connectedUserIds.has(recipientId)) {
             const updatedCallLog = await updateCallLog(
               socket,
-              this.io,
-              this.callLogRepo,
+              this._io,
+              this._callLogRepo,
               callId,
               userId,
               recipientIds,
@@ -184,13 +187,13 @@ export class CallSocketHandler {
             }
 
             const notification =
-              await this.notificationService.updateCallNotificationToMissed(
+              await this._notificationService.updateCallNotificationToMissed(
                 recipientId,
                 callId,
                 `Missed ${callType} call from ${userId}`
               );
-            if (notification && this.io) {
-              this.io
+            if (notification && this._io) {
+              this._io
                 .to(`user_${recipientId}`)
                 .emit("notification.updated", notification);
             } else {
@@ -198,7 +201,7 @@ export class CallSocketHandler {
                 `No incoming call notification found for call ${callId}, creating new`
               );
               const newNotification =
-                await this.notificationService.sendNotification(
+                await this._notificationService.sendNotification(
                   recipientId,
                   "missed_call",
                   userId,
@@ -221,10 +224,10 @@ export class CallSocketHandler {
           .to(room)
           .emit("callEnded", { userId, targetId, type, chatKey, callType });
         socket.emit("callEnded", { userId, targetId, type, chatKey, callType });
-        this.activeOffers.delete(callId);
+        this._activeOffers.delete(callId);
       }, 30000);
 
-      this.activeOffers.set(callId, {
+      this._activeOffers.set(callId, {
         senderId: userId,
         targetId,
         type,
@@ -250,7 +253,7 @@ export class CallSocketHandler {
       if (type === "group") {
         room = `group_${targetId}`;
       } else {
-        const contact = await this.contactsRepo.findContactByUsers(
+        const contact = await this._contactsRepo.findContactByUsers(
           userId,
           targetId
         );
@@ -272,16 +275,16 @@ export class CallSocketHandler {
         .to(room)
         .emit("answer", { userId, targetId, type, chatKey, answer, callType });
 
-      const callId = Array.from(this.activeOffers.keys()).find(
+      const callId = Array.from(this._activeOffers.keys()).find(
         (id) =>
-          this.activeOffers.get(id)?.chatKey === chatKey &&
-          this.activeOffers.get(id)?.senderId === targetId
+          this._activeOffers.get(id)?.chatKey === chatKey &&
+          this._activeOffers.get(id)?.senderId === targetId
       );
       if (callId) {
-        const call = this.activeOffers.get(callId);
+        const call = this._activeOffers.get(callId);
         if (call) {
           clearTimeout(call.endTimeout);
-          this.activeOffers.delete(callId);
+          this._activeOffers.delete(callId);
         }
       }
     } catch (error: any) {
@@ -304,7 +307,7 @@ export class CallSocketHandler {
       if (type === "group") {
         room = `group_${targetId}`;
       } else {
-        const contact = await this.contactsRepo.findContactByUsers(
+        const contact = await this._contactsRepo.findContactByUsers(
           userId,
           targetId
         );
@@ -339,12 +342,12 @@ export class CallSocketHandler {
   public async handleCallEnded(socket: Socket, data: CallData): Promise<void> {
     try {
       const { userId, targetId, type, chatKey, callType } = data;
-      const callId = Array.from(this.activeOffers.keys()).find(
+      const callId = Array.from(this._activeOffers.keys()).find(
         (id) =>
-          this.activeOffers.get(id)?.chatKey === chatKey &&
-          this.activeOffers.get(id)?.senderId === userId
+          this._activeOffers.get(id)?.chatKey === chatKey &&
+          this._activeOffers.get(id)?.senderId === userId
       );
-      if (!callId || this.endedCalls.has(callId)) {
+      if (!callId || this._endedCalls.has(callId)) {
         logger.info(
           `Ignoring duplicate or invalid callEnded for callId: ${callId}, chatKey: ${chatKey}`
         );
@@ -358,7 +361,7 @@ export class CallSocketHandler {
       let recipientIds: string[] = [];
       if (type === "group") {
         room = `group_${targetId}`;
-        const group = await this.groupRepo.getGroupById(targetId);
+        const group = await this._groupRepo.getGroupById(targetId);
         if (!group) {
           logger.error(`Invalid group ID: ${targetId}`);
           socket.emit("error", { message: "Invalid group ID" });
@@ -368,7 +371,7 @@ export class CallSocketHandler {
           .filter((member) => member.userId.toString() !== userId)
           .map((member) => member.userId.toString());
       } else {
-        const contact = await this.contactsRepo.findContactByUsers(
+        const contact = await this._contactsRepo.findContactByUsers(
           userId,
           targetId
         );
@@ -390,8 +393,8 @@ export class CallSocketHandler {
       // Update call log
       const updatedCallLog = await updateCallLog(
         socket,
-        this.io,
-        this.callLogRepo,
+        this._io,
+        this._callLogRepo,
         callId,
         userId,
         recipientIds,
@@ -407,16 +410,16 @@ export class CallSocketHandler {
         );
         return;
       }
-      this.io
+      this._io
         ?.to(room)
         .emit("callEnded", { userId, targetId, type, chatKey, callType });
-      this.endedCalls.add(callId);
-      setTimeout(() => this.endedCalls.delete(callId), 60000);
+      this._endedCalls.add(callId);
+      setTimeout(() => this._endedCalls.delete(callId), 60000);
 
-      const call = this.activeOffers.get(callId);
+      const call = this._activeOffers.get(callId);
       if (call) {
         clearTimeout(call.endTimeout);
-        this.activeOffers.delete(callId);
+        this._activeOffers.delete(callId);
       }
     } catch (error: any) {
       logger.error(`Error handling callEnded: ${error.message}`);

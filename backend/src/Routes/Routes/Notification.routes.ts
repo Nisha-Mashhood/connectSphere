@@ -1,12 +1,13 @@
 import express from 'express';
-import { NotificationController } from '../../Controllers/Notification.controller';
-import { AuthMiddleware } from '../../middlewares/auth.middleware';
+import { IAuthMiddleware } from '../../Interfaces/Middleware/IAuthMiddleware';
 import { apiLimiter } from '../../middlewares/ratelimit.middleware';
 import { NOTIFICATION_ROUTES } from '../Constants/Notification.routes';
+import container from "../../container";
+import { INotificationController } from '../../Interfaces/Controller/INotificationController';
 
 const router = express.Router();
-const notificationController = new NotificationController();
-const authMiddleware = new AuthMiddleware();
+const notificationController = container.get<INotificationController>('INotificationController');
+const authMiddleware = container.get<IAuthMiddleware>('IAuthMiddleware');
 
 
 router.get(

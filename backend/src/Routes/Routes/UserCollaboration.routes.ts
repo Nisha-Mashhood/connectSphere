@@ -1,12 +1,13 @@
 import express from 'express';
-import { UserConnectionController } from '../../Controllers/userCollaboration.controller';
 import { apiLimiter } from '../../middlewares/ratelimit.middleware';
-import { AuthMiddleware } from '../../middlewares/auth.middleware';
+import { IAuthMiddleware } from '../../Interfaces/Middleware/IAuthMiddleware';
 import { USER_CONNECTION_ROUTES } from '../Constants/UserCollaboration.routes';
+import container from "../../container";
+import { IUserConnectionController } from '../../Interfaces/Controller/IUserCollaborationController';
 
 const router = express.Router();
-const userConnectionController = new UserConnectionController();
-const authMiddleware = new AuthMiddleware();
+const userConnectionController = container.get<IUserConnectionController>('IUserConnectionController');
+const authMiddleware = container.get<IAuthMiddleware>('IAuthMiddleware');
 
 
 router.post(

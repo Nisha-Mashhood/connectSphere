@@ -1,5 +1,5 @@
 import { Request, Response, NextFunction } from "express";
-import { inject } from "inversify";
+import { inject, injectable } from "inversify";
 import { BaseController } from "../Core/Controller/BaseController";
 import logger from "../Core/Utils/Logger";
 import { CategoryRequest } from "../Utils/Types/Category.types";
@@ -8,6 +8,7 @@ import { HttpError } from "../Core/Utils/ErrorHandler";
 import { StatusCodes } from "../Enums/StatusCode.enums";
 import { ICategoryService } from "../Interfaces/Services/ICategoryService";
 
+@injectable()
 export class CategoryController extends BaseController implements ICategoryController {
   private _categoryService: ICategoryService;
 

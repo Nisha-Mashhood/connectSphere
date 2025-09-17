@@ -1,5 +1,5 @@
 import { NextFunction, Request, Response } from 'express';
-import { inject } from 'inversify';
+import { inject, injectable } from 'inversify';
 import logger from '../Core/Utils/Logger';
 import { IReviewController } from '../Interfaces/Controller/IReviewController';
 import { HttpError } from '../Core/Utils/ErrorHandler';
@@ -7,6 +7,7 @@ import { StatusCodes } from "../Enums/StatusCode.enums";
 import { BaseController } from '../Core/Controller/BaseController';
 import { IReviewService } from '../Interfaces/Services/IReviewService';
 
+@injectable()
 export class ReviewController extends BaseController implements IReviewController{
   private _reviewService: IReviewService;
 

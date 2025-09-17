@@ -13,7 +13,7 @@ export class SubcategoryService  {
   private _skillsRepository: ISkillsRepository;
 
   constructor(
-    @inject('ISubcategoryRepository') subcategoryRepository : ISubcategoryRepository,
+    @inject('ISubCategoryRepository') subcategoryRepository : ISubcategoryRepository,
     @inject('ISkillsRepository') skillsRepository : ISkillsRepository
   ) {
     this._subcategoryRepository = subcategoryRepository;

@@ -69,6 +69,52 @@ import { ITaskService } from './Interfaces/Services/ITaskService';
 import { TaskService } from './Services/Task.service';
 import { IUserConnectionService } from './Interfaces/Services/IUserCollaborationService';
 import { UserConnectionService } from './Services/UserCollaboartion.service';
+import { IAuthMiddleware } from './Interfaces/Middleware/IAuthMiddleware';
+import { AuthMiddleware } from './middlewares/auth.middleware';
+import { IAdminController } from './Interfaces/Controller/IAdminController';
+import { AdminController } from './Controllers/AdminDashboard.controller';
+import { IAuthController } from './Interfaces/Controller/IAuthController';
+import { AuthController } from './Controllers/Auth.controller';
+import { ICallController } from './Interfaces/Controller/ICallController';
+import { CallController } from './Controllers/Call.controller';
+import { ICategoryController } from './Interfaces/Controller/ICategoryController';
+import { CategoryController } from './Controllers/Category.controller';
+import { IChatController } from './Interfaces/Controller/IChatController';
+import { ChatController } from './Controllers/Chat.controller';
+import { ICollaborationController } from './Interfaces/Controller/ICollaborationController';
+import { CollaborationController } from './Controllers/Collaboration.controller';
+import { IContactController } from './Interfaces/Controller/IContactController';
+import { ContactController } from './Controllers/Contact.controller';
+import { IContactMessageController } from './Interfaces/Controller/IContactUsController';
+import { ContactMessageController } from './Controllers/ContactUs.controller';
+import { IFeedbackController } from './Interfaces/Controller/IFeedBackController';
+import { FeedbackController } from './Controllers/FeedBack.controller';
+import { IGroupController } from './Interfaces/Controller/IGroupController';
+import { GroupController } from './Controllers/Group.controller';
+import { IMentorController } from './Interfaces/Controller/IMentorController';
+import { MentorController } from './Controllers/Mentor.controller';
+import { INotificationController } from './Interfaces/Controller/INotificationController';
+import { NotificationController } from './Controllers/Notification.controller';
+import { IReviewController } from './Interfaces/Controller/IReviewController';
+import { ReviewController } from './Controllers/Review.controller';
+import { ISkillsController } from './Interfaces/Controller/ISkillsController';
+import { SkillsController } from './Controllers/Skills.controller';
+import { ISubcategoryController } from './Interfaces/Controller/ISubCategoryController';
+import { SubcategoryController } from './Controllers/SubCategory.controller';
+import { ITaskController } from './Interfaces/Controller/ITaskController';
+import { TaskController } from './Controllers/Task.controller';
+import { IUserConnectionController } from './Interfaces/Controller/IUserCollaborationController';
+import { UserConnectionController } from './Controllers/userCollaboration.controller';
+import { ISocketService } from './Interfaces/Services/ISocketService';
+import { SocketService } from './socket/SocketService';
+import { IChatSocketHandler } from './Interfaces/Services/IChatSocketHandler';
+import { ChatSocketHandler } from './socket/ChatSocketHandler';
+import { ICallSocketHandler } from './Interfaces/Services/ICallSocketHandler';
+import { CallSocketHandler } from './socket/CallSocketHandler';
+import { IGroupCallSocketHandler } from './Interfaces/Services/IGroupCallSocketHandler';
+import { GroupCallSocketHandler } from './socket/GroupCallSocketHandler';
+import { INotificationSocketHandler } from './Interfaces/Services/INotificationSocketHandler';
+import { NotificationSocketHandler } from './socket/NotificationSocketHandler';
 
 
 const container = new Container();
@@ -112,6 +158,35 @@ container.bind<ISkillsService>('ISkillsService').to(SkillsService);
 container.bind<ISubcategoryService>('ISubCategoryService').to(SubcategoryService);
 container.bind<ITaskService>('ITaskService').to(TaskService);
 container.bind<IUserConnectionService>('IUserConnectionService').to(UserConnectionService);
+
+//Middlewares
+container.bind<IAuthMiddleware>('IAuthMiddleware').to(AuthMiddleware);
+
+// Bind socket-related classes
+container.bind<ISocketService>('ISocketService').to(SocketService);
+container.bind<IChatSocketHandler>('IChatSocketHandler').to(ChatSocketHandler);
+container.bind<ICallSocketHandler>('ICallSocketHandler').to(CallSocketHandler);
+container.bind<IGroupCallSocketHandler>('IGroupCallSocketHandler').to(GroupCallSocketHandler);
+container.bind<INotificationSocketHandler>('INotificationSocketHandler').to(NotificationSocketHandler);
+
+//Bind Interface to the controllers
+container.bind<IAdminController>('IAdminController').to(AdminController);
+container.bind<IAuthController>('IAuthController').to(AuthController);
+container.bind<ICallController>('ICallController').to(CallController);
+container.bind<ICategoryController>('ICategoryController').to(CategoryController);
+container.bind<IChatController>('IChatController').to(ChatController);
+container.bind<ICollaborationController>('ICollaborationController').to(CollaborationController);
+container.bind<IContactController>('IContactController').to(ContactController);
+container.bind<IContactMessageController>('IContactMessageController').to(ContactMessageController);
+container.bind<IFeedbackController>('IFeedBackController').to(FeedbackController);
+container.bind<IGroupController>('IGroupController').to(GroupController);
+container.bind<IMentorController>('IMentorController').to(MentorController);
+container.bind<INotificationController>('INotificationController').to(NotificationController);
+container.bind<IReviewController>('IReviewController').to(ReviewController);
+container.bind<ISkillsController>('ISkillsController').to(SkillsController);
+container.bind<ISubcategoryController>('ISubCategoryController').to(SubcategoryController);
+container.bind<ITaskController>('ITaskController').to(TaskController);
+container.bind<IUserConnectionController>('IUserConnectionController').to(UserConnectionController);
 
 
 export default container;

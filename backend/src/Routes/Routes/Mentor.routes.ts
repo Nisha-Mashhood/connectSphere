@@ -1,13 +1,14 @@
 import { Router } from 'express';
-import { MentorController } from '../../Controllers/Mentor.controller';
 import { apiLimiter } from '../../middlewares/ratelimit.middleware';
-import { AuthMiddleware } from '../../middlewares/auth.middleware';
+import { IAuthMiddleware } from '../../Interfaces/Middleware/IAuthMiddleware';
 import { upload } from '../../Core/Utils/Multer';
 import { MENTOR_ROUTES } from '../Constants/Mentor.routes';
+import container from "../../container";
+import { IMentorController } from '../../Interfaces/Controller/IMentorController';
 
 const router = Router();
-const mentorController = new MentorController();
-const authMiddleware = new AuthMiddleware();
+const mentorController = container.get<IMentorController>('IMentorController');
+const authMiddleware = container.get<IAuthMiddleware>('IAuthMiddleware');
 
 
 router.post(MENTOR_ROUTES.CreateMentorProfile, [apiLimiter, authMiddleware.verifyToken, authMiddleware.checkBlockedStatus, upload.array('certificates', 2)], mentorController.createMentor);

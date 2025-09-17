@@ -1,12 +1,13 @@
 import express from "express";
-import { AdminController } from "../../Controllers/AdminDashboard.controller";
-import { apiLimiter } from "../../middlewares/ratelimit.middleware";
-import { AuthMiddleware } from '../../middlewares/auth.middleware';
+import container from "../../container";
 import { ADMIN_DASHBOARD_ROUTES } from "../Constants/AdminDashboard.routes";
+import { apiLimiter } from "../../middlewares/ratelimit.middleware";
+import { IAuthMiddleware } from "../../Interfaces/Middleware/IAuthMiddleware";
+import { IAdminController } from "../../Interfaces/Controller/IAdminController";
 
 const router = express.Router();
-const authMiddleware = new AuthMiddleware();
-const adminController = new AdminController();
+const authMiddleware = container.get<IAuthMiddleware>('IAuthMiddleware');
+const adminController = container.get<IAdminController>('IAdminController');
 
 
 router.get(ADMIN_DASHBOARD_ROUTES.GetTotalUsers, [apiLimiter, authMiddleware.verifyToken, authMiddleware.authorize('admin')], adminController.getTotalUsersCount);

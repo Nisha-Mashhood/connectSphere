@@ -1,13 +1,14 @@
 import { Router } from 'express';
-import { SkillsController } from '../../Controllers/Skills.controller';
 import { apiLimiter } from '../../middlewares/ratelimit.middleware';
 import { upload } from '../../Core/Utils/Multer';
-import { AuthMiddleware } from '../../middlewares/auth.middleware';
+import { IAuthMiddleware } from '../../Interfaces/Middleware/IAuthMiddleware';
 import { SKILLS_ROUTES } from '../Constants/Skills.routes';
+import container from "../../container";
+import { ISkillsController } from '../../Interfaces/Controller/ISkillsController';
 
 const router = Router();
-const skillsController = new SkillsController();
-const authMiddleware = new AuthMiddleware();
+const skillsController = container.get<ISkillsController>('ISkillsController');
+const authMiddleware = container.get<IAuthMiddleware>('IAuthMiddleware');
 
 
 router.post(SKILLS_ROUTES.CreateSkill, [apiLimiter, authMiddleware.verifyToken, authMiddleware.authorize('admin'), upload.single('skills_image')], skillsController.createSkill);

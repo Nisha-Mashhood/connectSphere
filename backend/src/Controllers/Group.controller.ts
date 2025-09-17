@@ -1,5 +1,5 @@
 import { Request, Response, NextFunction } from 'express';
-import { inject } from 'inversify';
+import { inject, injectable } from 'inversify';
 import { uploadMedia } from '../Core/Utils/Cloudinary';
 import { HttpError } from '../Core/Utils/ErrorHandler';
 import logger from '../Core/Utils/Logger';
@@ -10,6 +10,7 @@ import { StatusCodes } from "../Enums/StatusCode.enums";
 import { BaseController } from '../Core/Controller/BaseController';
 import { IGroupService } from '../Interfaces/Services/IGroupService';
 
+@injectable()
 export class GroupController extends BaseController implements IGroupController{
   private _groupService: IGroupService;
 

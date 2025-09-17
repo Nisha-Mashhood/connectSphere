@@ -1,15 +1,14 @@
 import express from "express";
-import { GroupController } from "../../Controllers/Group.controller";
 import { apiLimiter } from "../../middlewares/ratelimit.middleware";
-import {
-  AuthMiddleware
-} from "../../middlewares/auth.middleware";
+import { IAuthMiddleware } from '../../Interfaces/Middleware/IAuthMiddleware';
 import { upload } from "../../Core/Utils/Multer";
 import { GROUP_ROUTES } from "../Constants/Group.routes";
+import container from "../../container";
+import { IGroupController } from "../../Interfaces/Controller/IGroupController";
 
 const router = express.Router();
-const groupController = new GroupController();
-const authMiddleware = new AuthMiddleware();
+const groupController = container.get<IGroupController>('IGroupController');
+const authMiddleware = container.get<IAuthMiddleware>('IAuthMiddleware');
 
 
 router.post(
