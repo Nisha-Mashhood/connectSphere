@@ -2,7 +2,7 @@ import { inject, injectable } from "inversify";
 import { ServiceError } from '../Core/Utils/ErrorHandler';
 import logger from '../Core/Utils/Logger';
 import { IFeedback } from '../Interfaces/Models/IFeedback';
-import { StatusCodes } from '../Enums/StatusCode.constants';
+import { StatusCodes } from '../Enums/StatusCode.enums';
 import { IFeedbackService } from '../Interfaces/Services/IFeedbackService';
 import { IFeedbackRepository } from "../Interfaces/Repository/IFeedbackRepository";
 import { ICollaborationRepository } from "../Interfaces/Repository/ICollaborationRepository";

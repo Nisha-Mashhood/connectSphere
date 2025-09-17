@@ -5,7 +5,7 @@ import { RepositoryError } from "../Core/Utils/ErrorHandler";
 import logger from "../Core/Utils/Logger";
 import { ISkill, } from "../Interfaces/Models/ISkill";
 import { Skill } from "../Models/skills.model";
-import { StatusCodes } from "../Enums/StatusCode.constants";
+import { StatusCodes } from "../Enums/StatusCode.enums";
 import { Model } from "mongoose";
 
 @injectable()

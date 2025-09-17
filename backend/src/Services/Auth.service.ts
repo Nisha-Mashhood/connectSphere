@@ -2,7 +2,6 @@ import { inject, injectable } from "inversify";
 import { ServiceError } from "../Core/Utils/ErrorHandler";
 import { IUser } from "../Interfaces/Models/IUser";
 import bcrypt from "bcryptjs";
-import { AuthService as JWTService } from "../Utils/Utils/Auth.utils/JWT";
 import { generateOTP } from "../Utils/Utils/Auth.utils/OTP";
 import { sendEmail } from "../Core/Utils/Email";
 import config from "../config/env.config";
@@ -16,11 +15,12 @@ import {
   UserQuery,
 } from "../Utils/Types/Auth.types";
 import { IAuthService } from "../Interfaces/Services/IUserService";
-import { StatusCodes } from "../Enums/StatusCode.constants";
+import { StatusCodes } from "../Enums/StatusCode.enums";
 import { IUserAdminDTO, IUserDTO } from "../Interfaces/DTOs/IUserDTO";
 import { toUserAdminDTOs, toUserDTO, toUserDTOs } from "../Utils/Mappers/UserMapper";
 import { IUserRepository } from "../Interfaces/Repository/IUserRepository";
 import { INotificationService } from "../Interfaces/Services/INotificationService";
+import { IJWTService } from "../Interfaces/Services/IJWTService";
 
 // Temporary OTP storage (replace with Redis in production)
 const otpStore: Record<string, string> = {};
@@ -29,15 +29,16 @@ const otpStore: Record<string, string> = {};
 export class AuthService implements IAuthService {
   private _userRepository: IUserRepository;
   private _notificationService: INotificationService;
-  private jwtservice = new JWTService();
+  private _jwtService: IJWTService;
 
   constructor(
     @inject('IUserRepository') userRepository :IUserRepository,
-    @inject('INotificationService') notificationservice : INotificationService
+    @inject('INotificationService') notificationservice : INotificationService,
+    @inject('IJWTService') jwtService :IJWTService
   ) {
     this._userRepository =  userRepository;
     this._notificationService = notificationservice;
-    this.jwtservice = new JWTService();
+    this._jwtService = jwtService;
   }
 
   //Notify admin for New User
@@ -146,11 +147,11 @@ export class AuthService implements IAuthService {
           StatusCodes.NOT_FOUND
         );
       }
-      const accessToken = this.jwtservice.generateAccessToken({
+      const accessToken = this._jwtService.generateAccessToken({
         userId: user._id,
         userRole: user.role,
       });
-      const refreshToken = this.jwtservice.generateRefreshToken({
+      const refreshToken = this._jwtService.generateRefreshToken({
         userId: user._id,
         userRole: user.role,
       });
@@ -256,11 +257,11 @@ export class AuthService implements IAuthService {
           StatusCodes.NOT_FOUND
         );
       }
-      const accessToken = this.jwtservice.generateAccessToken({
+      const accessToken = this._jwtService.generateAccessToken({
         userId: existingUser._id,
         userRole: existingUser.role,
       });
-      const refreshToken = this.jwtservice.generateRefreshToken({
+      const refreshToken = this._jwtService.generateRefreshToken({
         userId: existingUser._id,
         userRole: existingUser.role,
       });
@@ -414,11 +415,11 @@ export class AuthService implements IAuthService {
           StatusCodes.NOT_FOUND
         );
       }
-      const accessToken = this.jwtservice.generateAccessToken({
+      const accessToken = this._jwtService.generateAccessToken({
         userId: existingUser._id,
         userRole: existingUser.role,
       });
-      const refreshToken = this.jwtservice.generateRefreshToken({
+      const refreshToken = this._jwtService.generateRefreshToken({
         userId: existingUser._id,
         userRole: existingUser.role,
       });
@@ -454,8 +455,8 @@ export class AuthService implements IAuthService {
     refreshToken: string
   ): Promise<{ newAccessToken: string }> => {
     try {
-      const decoded = this.jwtservice.verifyRefreshToken(refreshToken);
-      const newAccessToken = this.jwtservice.generateAccessToken({
+      const decoded = this._jwtService.verifyRefreshToken(refreshToken);
+      const newAccessToken = this._jwtService.generateAccessToken({
         userId: decoded.userId,
       });
       logger.info(`Refreshed access token for userId: ${decoded.userId}`);
@@ -504,7 +505,7 @@ export class AuthService implements IAuthService {
         );
       }
       delete otpStore[email];
-      const token = this.jwtservice.generateAccessToken({ email }, "10m");
+      const token = this._jwtService.generateAccessToken({ email }, "10m");
       logger.info(`OTP verified for ${email}`);
       return token;
     } catch (error: unknown) {

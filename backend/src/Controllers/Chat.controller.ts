@@ -4,7 +4,7 @@ import { uploadMedia } from '../Core/Utils/Cloudinary';
 import logger from '../Core/Utils/Logger';
 import { HttpError } from '../Core/Utils/ErrorHandler';
 import { IChatController } from '../Interfaces/Controller/IChatController';
-import { StatusCodes } from "../Enums/StatusCode.constants";
+import { StatusCodes } from "../Enums/StatusCode.enums";
 import { IChatService } from '../Interfaces/Services/IChatService';
 import { IChatRepository } from '../Interfaces/Repository/IChatRepository';
 import { inject } from 'inversify';

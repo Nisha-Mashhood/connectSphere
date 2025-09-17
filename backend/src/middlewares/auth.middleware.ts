@@ -1,27 +1,31 @@
 import { Request, Response, NextFunction } from 'express';
 import logger from '../Core/Utils/Logger';
 import { ServiceError } from '../Core/Utils/ErrorHandler';
-import { AuthService as JWTService } from '../Utils/Utils/Auth.utils/JWT';
-import { UserRepository } from '../Repositories/User.repository';
-import { UserInterface } from '../Interfaces/Models/IUser';
+import { IUser } from '../Interfaces/Models/IUser';
+import { IJWTService } from '../Interfaces/Services/IJWTService';
+import { IUserRepository } from '../Interfaces/Repository/IUserRepository';
+import { inject } from 'inversify';
 // import type { Express } from "express";
 
 // Extend Express Request type to include user
 declare global {
   namespace Express {
     interface Request {
-      currentUser?: UserInterface;
+      currentUser?: IUser;
     }
   }
 }
 
 export class AuthMiddleware {
-  private jwtService: JWTService;
-  private userRepo: UserRepository;
+  private _jwtService: IJWTService;
+  private _userRepository: IUserRepository;
 
-  constructor() {
-    this.jwtService = new JWTService();
-    this.userRepo = new UserRepository();
+  constructor(
+    @inject('IJWTService') jwtService : IJWTService,
+    @inject('IUserRepository') userRepository : IUserRepository,
+  ) {
+    this._jwtService = jwtService;
+    this._userRepository = userRepository;
   }
 
   public verifyToken = async (req: Request, _res: Response, next: NextFunction): Promise<void> => {
@@ -34,9 +38,9 @@ export class AuthMiddleware {
       return next();
     }
     try {
-      const decoded = this.jwtService.verifyAccessToken(accessToken);
+      const decoded = this._jwtService.verifyAccessToken(accessToken);
       logger.info(`Decoded Info: ${JSON.stringify(decoded)}`);
-      const user = await this.userRepo.getUserById(decoded.userId);
+      const user = await this._userRepository.getUserById(decoded.userId);
       logger.debug(`Current user: ${user?._id}`);
       if (!user) {
         logger.warn(`User not found for ID: ${decoded.userId}`);
@@ -57,8 +61,8 @@ export class AuthMiddleware {
       throw new ServiceError('Refresh token not found');
     }
     try {
-      const decoded = this.jwtService.verifyRefreshToken(refreshToken);
-      const user = await this.userRepo.getUserById(decoded.userId);
+      const decoded = this._jwtService.verifyRefreshToken(refreshToken);
+      const user = await this._userRepository.getUserById(decoded.userId);
       if (!user || user.refreshToken !== refreshToken) {
         logger.warn(`Invalid refresh token for user ID: ${decoded.userId}`);
         throw new ServiceError('Invalid refresh token');

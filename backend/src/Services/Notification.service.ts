@@ -9,7 +9,7 @@ import { SocketService } from "../socket/SocketService";
 import { convertTo24HourFormat } from "../Utils/Utils/Notification.utils/Helper";
 import { INotificationService } from "../Interfaces/Services/INotificationService";
 import { TaskNotificationPayload } from "../Utils/Types/Notification.types";
-import { StatusCodes } from "../Enums/StatusCode.constants";
+import { StatusCodes } from "../Enums/StatusCode.enums";
 import { INotificationRepository } from "../Interfaces/Repository/INotificationRepository";
 import { IUserRepository } from "../Interfaces/Repository/IUserRepository";
 

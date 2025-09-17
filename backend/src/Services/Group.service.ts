@@ -9,7 +9,7 @@ import { ServiceError } from "../Core/Utils/ErrorHandler";
 import { GroupFormData, GroupQuery } from "../Utils/Types/Group.types";
 import { Types } from "mongoose";
 import { IGroupService } from "../Interfaces/Services/IGroupService";
-import { StatusCodes } from "../Enums/StatusCode.constants";
+import { StatusCodes } from "../Enums/StatusCode.enums";
 import { IGroupRepository } from "../Interfaces/Repository/IGroupRepository";
 import { IContactRepository } from "../Interfaces/Repository/IContactRepository";
 import { IUserRepository } from "../Interfaces/Repository/IUserRepository";

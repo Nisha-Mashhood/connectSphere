@@ -11,7 +11,7 @@ import { IMentorRequest } from "../Interfaces/Models/IMentorRequest";
 import { IMentor } from "../Interfaces/Models/IMentor";
 import { IUser } from "../Interfaces/Models/IUser";
 import { LockedSlot } from "../Utils/Types/Collaboration.types";
-import { StatusCodes } from "../Enums/StatusCode.constants";
+import { StatusCodes } from "../Enums/StatusCode.enums";
 import { ICollaborationRepository } from "../Interfaces/Repository/ICollaborationRepository";
 
 @injectable()

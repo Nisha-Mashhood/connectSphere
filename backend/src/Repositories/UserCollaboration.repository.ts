@@ -5,7 +5,7 @@ import { RepositoryError } from '../Core/Utils/ErrorHandler';
 import logger from '../Core/Utils/Logger';
 import UserConnection from '../Models/userConnection.modal';
 import { IUserConnection } from '../Interfaces/Models/IUserConnection';
-import { StatusCodes } from '../Enums/StatusCode.constants';
+import { StatusCodes } from '../Enums/StatusCode.enums';
 import { IUserConnectionRepository } from '../Interfaces/Repository/IUserCollaborationRepository';
 
 @injectable()

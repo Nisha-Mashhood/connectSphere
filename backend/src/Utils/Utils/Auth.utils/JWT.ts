@@ -1,19 +1,22 @@
 import jwt from 'jsonwebtoken';
+import { inject, injectable } from 'inversify';
 import { Response } from 'express';
 import config from '../../../config/env.config';
 import logger from '../../../Core/Utils/Logger';
 import { ServiceError } from '../../../Core/Utils/ErrorHandler';
-import { UserRepository } from '../../../Repositories/User.repository';
+import { IUserRepository } from '../../../Interfaces/Repository/IUserRepository';
+import { IJWTService } from '../../../Interfaces/Services/IJWTService';
 
 interface JwtPayload {
   [key: string]: any;
 }
 
-export class AuthService {
-  private userRepo: UserRepository;
+@injectable()
+export class JWTServiceClass implements IJWTService{
+  private userRepo: IUserRepository;
 
-  constructor() {
-    this.userRepo = new UserRepository();
+  constructor(@inject('IUserRepository') userRepository : IUserRepository) {
+    this.userRepo = userRepository;
   }
 
   public generateAccessToken = (payload: JwtPayload, expiresIn: string = '1h'): string => {

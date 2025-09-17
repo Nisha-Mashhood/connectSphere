@@ -5,7 +5,7 @@ import { RepositoryError } from '../Core/Utils/ErrorHandler';
 import logger from '../Core/Utils/Logger';
 import { ITask } from '../Interfaces/Models/ITask';
 import { Task } from '../Models/task.modal';
-import { StatusCodes } from '../Enums/StatusCode.constants';
+import { StatusCodes } from '../Enums/StatusCode.enums';
 import { ITaskRepository } from '../Interfaces/Repository/ITaskRepository';
   
   @injectable()

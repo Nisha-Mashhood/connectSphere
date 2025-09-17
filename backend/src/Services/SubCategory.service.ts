@@ -3,7 +3,7 @@ import { ISubcategory } from "../Interfaces/Models/ISubcategory";
 import logger from "../Core/Utils/Logger";
 import { uploadMedia } from "../Core/Utils/Cloudinary";
 import { ServiceError } from "../Core/Utils/ErrorHandler";
-import { StatusCodes } from "../Enums/StatusCode.constants";
+import { StatusCodes } from "../Enums/StatusCode.enums";
 import { ISubcategoryRepository } from "../Interfaces/Repository/ISubCategoryRepository";
 import { ISkillsRepository } from "../Interfaces/Repository/ISkillsRepository";
 

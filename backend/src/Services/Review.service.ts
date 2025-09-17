@@ -3,7 +3,7 @@ import { ServiceError } from '../Core/Utils/ErrorHandler';
 import logger from '../Core/Utils/Logger';
 import { IReview } from '../Interfaces/Models/IReview';
 import { IReviewService } from '../Interfaces/Services/IReviewService';
-import { StatusCodes } from '../Enums/StatusCode.constants';
+import { StatusCodes } from '../Enums/StatusCode.enums';
 import { IReviewRepository } from "../Interfaces/Repository/IReviewRepository";
 import { IUserRepository } from "../Interfaces/Repository/IUserRepository";
 

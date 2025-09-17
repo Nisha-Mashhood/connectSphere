@@ -4,7 +4,7 @@ import { BaseController } from '../Core/Controller/BaseController';
 import logger from "../Core/Utils/Logger";
 import { ISkillsController } from '../Interfaces/Controller/ISkillsController';
 import { HttpError } from '../Core/Utils/ErrorHandler';
-// import { StatusCodes } from "../Constants/StatusCode.constants";
+// import { StatusCodes } from "../Constants/StatusCode.enums";
 import { ISkillsService } from '../Interfaces/Services/ISkillsService';
 // import { ISkillsRepository } from '../Interfaces/Repository/ISkillsRepository';
 import { ISkill } from "../Interfaces/Models/ISkill";

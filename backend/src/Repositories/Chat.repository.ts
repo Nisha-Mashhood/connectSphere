@@ -6,7 +6,7 @@ import logger from "../Core/Utils/Logger";
 import ChatMessage from "../Models/chat.model";
 import { IChatMessage } from "../Interfaces/Models/IChatMessage";
 import { IChatRepository } from "../Interfaces/Repository/IChatRepository";
-import { StatusCodes } from "../Enums/StatusCode.constants";
+import { StatusCodes } from "../Enums/StatusCode.enums";
 
 @injectable()
 export class ChatRepository extends BaseRepository<IChatMessage> implements IChatRepository{

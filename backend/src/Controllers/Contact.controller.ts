@@ -4,7 +4,7 @@ import { BaseController } from '../Core/Controller/BaseController';
 import logger from '../Core/Utils/Logger';
 import { IContactController } from '../Interfaces/Controller/IContactController';
 import { HttpError } from '../Core/Utils/ErrorHandler';
-import { StatusCodes } from "../Enums/StatusCode.constants";
+import { StatusCodes } from "../Enums/StatusCode.enums";
 import { IContactService } from '../Interfaces/Services/IContactService';
 
 export class ContactController extends BaseController implements IContactController{

@@ -2,7 +2,6 @@ import { BaseController } from '../Core/Controller/BaseController';
 import { inject } from 'inversify';
 import { Request, Response, NextFunction } from 'express';
 import type { Express } from "express";
-import { AuthService as JWTService } from  '../Utils/Utils/Auth.utils/JWT';
 import logger from '../Core/Utils/Logger';
 import { ForgotPasswordRequestBody, 
   LoginRequestBody, 
@@ -19,18 +18,22 @@ import { ForgotPasswordRequestBody,
 } from '../Utils/Types/Auth.types';
 import { IAuthController } from '../Interfaces/Controller/IAuthController';
 import { HttpError } from '../Core/Utils/ErrorHandler';
-import { StatusCodes } from '../Enums/StatusCode.constants';
+import { StatusCodes } from '../Enums/StatusCode.enums';
 import { IAuthService } from '../Interfaces/Services/IUserService';
+import { IJWTService } from '../Interfaces/Services/IJWTService';
 
 
 export class AuthController extends BaseController implements IAuthController{
   private _authService: IAuthService;
-  private jwtService: JWTService;
+  private _jwtService: IJWTService;
 
-  constructor(@inject('IAuthService') authService : IAuthService) {
+  constructor(
+    @inject('IAuthService') authService : IAuthService,
+    @inject('IJWTService') jwtService : IJWTService
+  ) {
     super();
     this._authService = authService;
-    this.jwtService = new JWTService();
+    this._jwtService = jwtService;
   }
 
   // Handle user signup
@@ -60,7 +63,7 @@ export class AuthController extends BaseController implements IAuthController{
       }
       const { user, accessToken, refreshToken, needsReviewPrompt } = await this._authService.login(email, password);
       // logger.info(`User details : ${user}`)
-      this.jwtService.setTokensInCookies(res, accessToken, refreshToken);
+      this._jwtService.setTokensInCookies(res, accessToken, refreshToken);
       this.sendSuccess(res, { user, needsReviewPrompt }, 'Login successful');
       logger.info(`User logged in: ${user.userId} (${email})`);
     } catch (error) {
@@ -95,7 +98,7 @@ export class AuthController extends BaseController implements IAuthController{
        throw new HttpError('Authorization code is required', StatusCodes.BAD_REQUEST);
       }
       const { user, accessToken, refreshToken, needsReviewPrompt } = await this._authService.googleLogin(code);
-      this.jwtService.setTokensInCookies(res, accessToken, refreshToken);
+      this._jwtService.setTokensInCookies(res, accessToken, refreshToken);
       this.sendSuccess(res, { user, accessToken, refreshToken, needsReviewPrompt }, 'Google login successful');
       logger.info(`Google login completed for user: ${user.userId} (${user.email})`);
     } catch (error) {
@@ -130,7 +133,7 @@ export class AuthController extends BaseController implements IAuthController{
        throw new HttpError('Authorization code is required', StatusCodes.BAD_REQUEST);
       }
       const { user, accessToken, refreshToken, needsReviewPrompt } = await this._authService.githubLogin(code);
-      this.jwtService.setTokensInCookies(res, accessToken, refreshToken);
+      this._jwtService.setTokensInCookies(res, accessToken, refreshToken);
       this.sendSuccess(res, { user, accessToken, refreshToken, needsReviewPrompt }, 'GitHub login successful');
       logger.info(`GitHub login completed for user: ${user.userId} (${user.email})`);
     } catch (error) {
@@ -253,7 +256,7 @@ export class AuthController extends BaseController implements IAuthController{
        throw new HttpError('Email is required', StatusCodes.BAD_REQUEST);
       }
       await this._authService.logout(email);
-      this.jwtService.clearCookies(res);
+      this._jwtService.clearCookies(res);
       this.sendSuccess(res, {}, 'Logged out successfully');
       logger.info(`User logged out: ${email}`);
     } catch (error) {

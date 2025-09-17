@@ -6,7 +6,7 @@ import logger from '../Core/Utils/Logger';
 import { GroupFormData } from '../Utils/Types/Group.types';
 import type { Express } from "express";
 import { IGroupController } from '../Interfaces/Controller/IGroupController';
-import { StatusCodes } from "../Enums/StatusCode.constants";
+import { StatusCodes } from "../Enums/StatusCode.enums";
 import { BaseController } from '../Core/Controller/BaseController';
 import { IGroupService } from '../Interfaces/Services/IGroupService';
 

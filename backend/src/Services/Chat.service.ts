@@ -6,7 +6,7 @@ import { IContactRepository } from "../Interfaces/Repository/IContactRepository"
 import { IGroupRepository } from "../Interfaces/Repository/IGroupRepository";
 import logger from "../Core/Utils/Logger";
 import { IContact } from "../Interfaces/Models/IContact";
-import { StatusCodes } from "../Enums/StatusCode.constants";
+import { StatusCodes } from "../Enums/StatusCode.enums";
 import { ServiceError } from "../Core/Utils/ErrorHandler";
 import { IChatService } from "../Interfaces/Services/IChatService";
 

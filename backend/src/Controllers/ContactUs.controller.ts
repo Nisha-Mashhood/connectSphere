@@ -3,7 +3,7 @@ import { inject } from 'inversify';
 import logger from '../Core/Utils/Logger';
 import { IContactMessageController } from '../Interfaces/Controller/IContactUsController';
 import { HttpError } from '../Core/Utils/ErrorHandler';
-import { StatusCodes } from "../Enums/StatusCode.constants";
+import { StatusCodes } from "../Enums/StatusCode.enums";
 import { BaseController } from '../Core/Controller/BaseController';
 import { IContactMessageService } from '../Interfaces/Services/IContactMessageService';
 

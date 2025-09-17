@@ -1,7 +1,7 @@
 import { Response } from 'express';
 import { IBaseController } from '../Interfaces/IBaseController';
 import logger from '../Utils/Logger';
-import { StatusCodes } from '../../Enums/StatusCode.constants';
+import { StatusCodes } from '../../Enums/StatusCode.enums';
 
 export abstract class BaseController<T = unknown> implements IBaseController {
   sendSuccess = (res: Response, data: T, message: string = 'Success'): void => {

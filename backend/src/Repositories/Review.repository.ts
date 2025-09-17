@@ -5,7 +5,7 @@ import { RepositoryError } from '../Core/Utils/ErrorHandler';
 import logger from '../Core/Utils/Logger';
 import Review from '../Models/Review.modal';
 import { IReview } from '../Interfaces/Models/IReview';
-import { StatusCodes } from '../Enums/StatusCode.constants';
+import { StatusCodes } from '../Enums/StatusCode.enums';
 import { IReviewRepository } from '../Interfaces/Repository/IReviewRepository';
 
 @injectable()

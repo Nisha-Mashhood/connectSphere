@@ -5,7 +5,7 @@ import { BaseController } from '../Core/Controller/BaseController';
 import logger from "../Core/Utils/Logger";
 import { ISubcategoryController } from '../Interfaces/Controller/ISubCategoryController';
 import { HttpError } from '../Core/Utils/ErrorHandler';
-// import { StatusCodes } from "../Constants/StatusCode.constants";
+// import { StatusCodes } from "../Constants/StatusCode.enums";
 import { ISubcategoryService } from '../Interfaces/Services/ISubCategoryService';
 // import { ISubcategoryRepository } from '../Interfaces/Repository/ISubCategoryRepository';
 

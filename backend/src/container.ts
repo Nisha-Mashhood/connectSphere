@@ -35,6 +35,8 @@ import { IUserConnectionRepository } from './Interfaces/Repository/IUserCollabor
 import { UserConnectionRepository } from './Repositories/UserCollaboration.repository';
 import { IAuthService } from './Interfaces/Services/IUserService';
 import { AuthService } from './Services/Auth.service';
+import { IJWTService } from './Interfaces/Services/IJWTService';
+import { JWTServiceClass } from './Utils/Utils/Auth.utils/JWT';
 import { IAdminService } from './Interfaces/Services/IAdminService';
 import { AdminService } from './Services/AdminDashboard.service';
 import { ICallService } from './Interfaces/Services/ICallService';
@@ -93,6 +95,7 @@ container.bind<IUserConnectionRepository>('IUserConnectionRepository').to(UserCo
 
 //Bind Interface to Services
 container.bind<IAuthService>('IUserService').to(AuthService);
+container.bind<IJWTService>('IJWTService').to(JWTServiceClass);
 container.bind<IAdminService>('IAdminService').to(AdminService);
 container.bind<ICallService>('ICallService').to(CallService);
 container.bind<ICategoryService>('ICategoryService').to(CategoryService);

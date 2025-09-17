@@ -4,7 +4,7 @@ import logger from "../Core/Utils/Logger";
 import { uploadMedia } from "../Core/Utils/Cloudinary";
 import { ServiceError } from "../Core/Utils/ErrorHandler";
 import { ISkillsService } from "../Interfaces/Services/ISkillsService";
-import { StatusCodes } from "../Enums/StatusCode.constants";
+import { StatusCodes } from "../Enums/StatusCode.enums";
 import { ISkillsRepository } from "../Interfaces/Repository/ISkillsRepository";
 
 @injectable()

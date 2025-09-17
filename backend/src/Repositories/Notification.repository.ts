@@ -12,7 +12,7 @@ import { IMentor } from "../Interfaces/Models/IMentor";
 import UserConnectionModal from "../Models/userConnection.modal";
 import { Task } from "../Models/task.modal";
 import { CollaborationData, UserIds } from "../Utils/Types/Notification.types";
-import { StatusCodes } from "../Enums/StatusCode.constants";
+import { StatusCodes } from "../Enums/StatusCode.enums";
 import { INotificationRepository } from "../Interfaces/Repository/INotificationRepository";
 
 @injectable()

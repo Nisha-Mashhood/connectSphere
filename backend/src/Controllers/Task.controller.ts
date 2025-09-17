@@ -5,7 +5,7 @@ import { ITask } from '../Interfaces/Models/ITask';
 import { Types } from 'mongoose';
 import { ITaskController } from '../Interfaces/Controller/ITaskController';
 import { HttpError } from '../Core/Utils/ErrorHandler';
-import { StatusCodes } from "../Enums/StatusCode.constants";
+import { StatusCodes } from "../Enums/StatusCode.enums";
 import { BaseController } from '../Core/Controller/BaseController';
 import { ITaskService } from '../Interfaces/Services/ITaskService';
 

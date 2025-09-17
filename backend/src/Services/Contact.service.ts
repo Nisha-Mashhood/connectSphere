@@ -5,7 +5,7 @@ import {
   PopulatedContact,
 } from "../Utils/Types/contact.types";
 import { ServiceError } from "../Core/Utils/ErrorHandler";
-import { StatusCodes } from "../Enums/StatusCode.constants";
+import { StatusCodes } from "../Enums/StatusCode.enums";
 import { IContactService } from "../Interfaces/Services/IContactService";
 import { IContactRepository } from "../Interfaces/Repository/IContactRepository";
 
