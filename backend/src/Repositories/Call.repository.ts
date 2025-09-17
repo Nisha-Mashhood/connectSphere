@@ -5,7 +5,7 @@ import { ICallLog } from "../Interfaces/Models/IcallLog";
 import callModal from "../Models/call.modal";
 import { ICallLogPopulated } from "../Utils/Types/Call.types";
 import { ICallLogRepository } from "../Interfaces/Repository/ICallRepositry";
-import { StatusCodes } from "../Constants/StatusCode.constants";
+import { StatusCodes } from "../Enums/StatusCode.constants";
 import { inject, injectable } from "inversify";
 import { IUserRepository } from "../Interfaces/Repository/IUserRepository";
 

@@ -5,7 +5,7 @@ import { RepositoryError } from "../Core/Utils/ErrorHandler";
 import logger from "../Core/Utils/Logger";
 import { ISubcategory } from "../Interfaces/Models/ISubcategory";
 import { Subcategory } from "../Models/subcategory.model";
-import { StatusCodes } from "../Constants/StatusCode.constants";
+import { StatusCodes } from "../Enums/StatusCode.constants";
 import { ISubcategoryRepository } from "../Interfaces/Repository/ISubCategoryRepository";
 
 @injectable()

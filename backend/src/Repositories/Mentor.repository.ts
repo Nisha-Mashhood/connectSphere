@@ -7,7 +7,7 @@ import Mentor from "../Models/mentor.model";
 import { IMentor } from "../Interfaces/Models/IMentor";
 import { IUser } from "../Interfaces/Models/IUser";
 import { MentorQuery } from "../Utils/Types/mentor.types";
-import { StatusCodes } from "../Constants/StatusCode.constants";
+import { StatusCodes } from "../Enums/StatusCode.constants";
 import { IMentorRepository } from "../Interfaces/Repository/IMentorRepository";
 
 @injectable()

@@ -7,7 +7,7 @@ import logger from "../Core/Utils/Logger";
 import { uploadMedia } from "../Core/Utils/Cloudinary";
 import { ServiceError } from "../Core/Utils/ErrorHandler";
 import { ICategoryService } from "../Interfaces/Services/ICategoryService";
-import { StatusCodes } from "../Constants/StatusCode.constants";
+import { StatusCodes } from "../Enums/StatusCode.constants";
 
 @injectable()
 export class CategoryService implements ICategoryService {

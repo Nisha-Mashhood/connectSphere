@@ -4,7 +4,7 @@ import logger from "../Core/Utils/Logger";
 import { ICallController } from "../Interfaces/Controller/ICallController";
 import { HttpError } from "../Core/Utils/ErrorHandler";
 import { ICallLogPopulated } from "../Utils/Types/Call.types";
-import { StatusCodes } from "../Constants/StatusCode.constants";
+import { StatusCodes } from "../Enums/StatusCode.constants";
 import { ICallService } from "../Interfaces/Services/ICallService";
 import { inject } from "inversify";
 

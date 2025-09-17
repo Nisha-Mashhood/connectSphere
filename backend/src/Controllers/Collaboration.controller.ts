@@ -5,7 +5,7 @@ import { IMentorRequest } from "../Interfaces/Models/IMentorRequest";
 import logger from "../Core/Utils/Logger";
 import { ICollaborationController } from "../Interfaces/Controller/ICollaborationController";
 import { HttpError } from "../Core/Utils/ErrorHandler";
-import { StatusCodes } from "../Constants/StatusCode.constants";
+import { StatusCodes } from "../Enums/StatusCode.constants";
 import { ICollaborationService } from "../Interfaces/Services/ICollaborationService";
 import { inject } from "inversify";
 

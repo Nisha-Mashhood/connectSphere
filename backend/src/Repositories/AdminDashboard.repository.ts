@@ -14,7 +14,7 @@ import {
 } from "../Utils/Types/Admin.types";
 import { IMentor } from "../Interfaces/Models/IMentor";
 import { ICollaboration } from "../Interfaces/Models/ICollaboration";
-import { StatusCodes } from "../Constants/StatusCode.constants";
+import { StatusCodes } from "../Enums/StatusCode.constants";
 import { IFeedbackRepository } from "../Interfaces/Repository/IFeedbackRepository";
 
 @injectable()

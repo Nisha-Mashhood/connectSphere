@@ -5,7 +5,7 @@ import { RepositoryError } from '../Core/Utils/ErrorHandler';
 import logger from '../Core/Utils/Logger';
 import Feedback from '../Models/feedback.modal';
 import { IFeedback } from '../Interfaces/Models/IFeedback';
-import { StatusCodes } from '../Constants/StatusCode.constants';
+import { StatusCodes } from '../Enums/StatusCode.constants';
 import { IFeedbackRepository } from '../Interfaces/Repository/IFeedbackRepository';
 
 @injectable()

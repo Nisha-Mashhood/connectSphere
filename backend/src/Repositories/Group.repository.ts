@@ -8,7 +8,7 @@ import GroupRequest from '../Models/groupRequest.model';
 import { IGroup } from '../Interfaces/Models/IGroup';
 import { IGroupRequest } from '../Interfaces/Models/IGroupRequest';
 import { GroupFormData, GroupQuery } from '../Utils/Types/Group.types';
-import { StatusCodes } from '../Constants/StatusCode.constants';
+import { StatusCodes } from '../Enums/StatusCode.constants';
 import { IGroupRepository } from '../Interfaces/Repository/IGroupRepository';
 
 @injectable()

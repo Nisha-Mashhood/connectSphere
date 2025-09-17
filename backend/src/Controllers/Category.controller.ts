@@ -5,7 +5,7 @@ import logger from "../Core/Utils/Logger";
 import { CategoryRequest } from "../Utils/Types/Category.types";
 import { ICategoryController } from "../Interfaces/Controller/ICategoryController";
 import { HttpError } from "../Core/Utils/ErrorHandler";
-import { StatusCodes } from "../Constants/StatusCode.constants";
+import { StatusCodes } from "../Enums/StatusCode.constants";
 import { ICategoryService } from "../Interfaces/Services/ICategoryService";
 
 export class CategoryController extends BaseController implements ICategoryController {

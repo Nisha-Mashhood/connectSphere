@@ -2,7 +2,7 @@ import { inject, injectable } from "inversify";
 import { ServiceError } from "../Core/Utils/ErrorHandler";
 import logger from "../Core/Utils/Logger";
 import { IUserConnection } from "../Interfaces/Models/IUserConnection";
-import { StatusCodes } from "../Constants/StatusCode.constants";
+import { StatusCodes } from "../Enums/StatusCode.constants";
 import { IContact } from "../Interfaces/Models/IContact";
 import { IUserConnectionRepository } from "../Interfaces/Repository/IUserCollaborationRepository";
 import { IContactRepository } from "../Interfaces/Repository/IContactRepository";

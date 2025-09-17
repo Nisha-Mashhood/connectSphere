@@ -2,7 +2,7 @@ import { inject, injectable } from "inversify";
 import { Types } from "mongoose";
 import config from "../config/env.config";
 import { IContactMessage } from "../Interfaces/Models/IContactMessage";
-import { StatusCodes } from "../Constants/StatusCode.constants";
+import { StatusCodes } from "../Enums/StatusCode.constants";
 import { sendEmail } from "../Core/Utils/Email";
 import logger from "../Core/Utils/Logger";
 import { ServiceError } from "../Core/Utils/ErrorHandler";

@@ -2,7 +2,7 @@ import { inject, injectable } from "inversify";
 import { Types } from "mongoose";
 import { v4 as uuid } from "uuid";
 import PDFDocument from "pdfkit";
-import { StatusCodes } from "../Constants/StatusCode.constants";
+import { StatusCodes } from "../Enums/StatusCode.constants";
 import { ICollaboration } from "../Interfaces/Models/ICollaboration";
 import { IMentorRequest } from "../Interfaces/Models/IMentorRequest";
 import { IUser } from "../Interfaces/Models/IUser";

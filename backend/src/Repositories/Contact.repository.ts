@@ -7,7 +7,7 @@ import Contact from '../Models/contacts.model';
 import { IContact } from '../Interfaces/Models/IContact';
 import { PopulatedContact } from '../Utils/Types/contact.types';
 import { IContactRepository } from '../Interfaces/Repository/IContactRepository';
-import { StatusCodes } from '../Constants/StatusCode.constants';
+import { StatusCodes } from '../Enums/StatusCode.constants';
 import { IChatRepository } from '../Interfaces/Repository/IChatRepository';
 
 @injectable()

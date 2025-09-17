@@ -7,7 +7,7 @@ import logger from "../Core/Utils/Logger";
 import { UserQuery } from "../Utils/Types/Auth.types";
 import { Model } from "mongoose";
 import { IUserRepository } from "../Interfaces/Repository/IUserRepository";
-import { StatusCodes } from "../Constants/StatusCode.constants";
+import { StatusCodes } from "../Enums/StatusCode.constants";
 
 @injectable()
 export class UserRepository extends BaseRepository<IUser> implements IUserRepository{

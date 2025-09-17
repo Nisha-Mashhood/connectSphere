@@ -6,7 +6,7 @@ import logger from '../Core/Utils/Logger';
 import ContactMessage from '../Models/ContactMessage.modal';
 import { IContactMessage } from '../Interfaces/Models/IContactMessage';
 import { IContactMessageRepository } from '../Interfaces/Repository/IContactMessageRepository';
-import { StatusCodes } from '../Constants/StatusCode.constants';
+import { StatusCodes } from '../Enums/StatusCode.constants';
 
 @injectable()
 export class ContactMessageRepository extends BaseRepository<IContactMessage> implements IContactMessageRepository{

@@ -19,7 +19,7 @@ import { ForgotPasswordRequestBody,
 } from '../Utils/Types/Auth.types';
 import { IAuthController } from '../Interfaces/Controller/IAuthController';
 import { HttpError } from '../Core/Utils/ErrorHandler';
-import { StatusCodes } from '../Constants/StatusCode.constants';
+import { StatusCodes } from '../Enums/StatusCode.constants';
 import { IAuthService } from '../Interfaces/Services/IUserService';
 
 

@@ -3,7 +3,7 @@ import { inject } from "inversify";
 import logger from "../Core/Utils/Logger";
 import { IAppNotification } from "../Interfaces/Models/IAppNotification";
 import { INotificationController } from "../Interfaces/Controller/INotificationController";
-import { StatusCodes } from "../Constants/StatusCode.constants";
+import { StatusCodes } from "../Enums/StatusCode.constants";
 import { BaseController } from "../Core/Controller/BaseController";
 import { HttpError } from "../Core/Utils/ErrorHandler";
 import { INotificationService } from "../Interfaces/Services/INotificationService";

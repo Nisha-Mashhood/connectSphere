@@ -16,7 +16,7 @@ import {
   UserQuery,
 } from "../Utils/Types/Auth.types";
 import { IAuthService } from "../Interfaces/Services/IUserService";
-import { StatusCodes } from "../Constants/StatusCode.constants";
+import { StatusCodes } from "../Enums/StatusCode.constants";
 import { IUserAdminDTO, IUserDTO } from "../Interfaces/DTOs/IUserDTO";
 import { toUserAdminDTOs, toUserDTO, toUserDTOs } from "../Utils/Mappers/UserMapper";
 import { IUserRepository } from "../Interfaces/Repository/IUserRepository";

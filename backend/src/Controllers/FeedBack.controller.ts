@@ -4,7 +4,7 @@ import logger from '../Core/Utils/Logger';
 import { IFeedback } from '../Interfaces/Models/IFeedback';
 import { IFeedbackController } from '../Interfaces/Controller/IFeedBackController';
 import { HttpError } from '../Core/Utils/ErrorHandler';
-import { StatusCodes } from "../Constants/StatusCode.constants";
+import { StatusCodes } from "../Enums/StatusCode.constants";
 import { BaseController } from '../Core/Controller/BaseController';
 import { IFeedbackService } from '../Interfaces/Services/IFeedbackService';
 

@@ -1,7 +1,7 @@
 import { inject, injectable } from "inversify";
 import logger from "../Core/Utils/Logger";
 import { ServiceError } from "../Core/Utils/ErrorHandler";
-import { StatusCodes } from "../Constants/StatusCode.constants";
+import { StatusCodes } from "../Enums/StatusCode.constants";
 import { IAdminService } from "../Interfaces/Services/IAdminService";
 import {
   RevenueStats,

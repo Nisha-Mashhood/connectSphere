@@ -3,7 +3,7 @@ import { inject } from 'inversify';
 import logger from '../Core/Utils/Logger';
 import { IReviewController } from '../Interfaces/Controller/IReviewController';
 import { HttpError } from '../Core/Utils/ErrorHandler';
-import { StatusCodes } from "../Constants/StatusCode.constants";
+import { StatusCodes } from "../Enums/StatusCode.constants";
 import { BaseController } from '../Core/Controller/BaseController';
 import { IReviewService } from '../Interfaces/Services/IReviewService';
 
