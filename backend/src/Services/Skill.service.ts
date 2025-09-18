@@ -26,6 +26,16 @@ export class SkillsService implements ISkillsService {
           StatusCodes.BAD_REQUEST
         );
       }
+
+      const isDuplicate = await this._skillsRepository.isDuplicateSkill(data.name, data.subcategoryId.toString());
+      if (isDuplicate) {
+        logger.warn(`Skill name '${data.name}' already exists in subcategory ${data.subcategoryId}`);
+        throw new ServiceError(
+          "Skill name already exists in this subcategory",
+          StatusCodes.BAD_REQUEST
+        );
+      }
+
       let imageUrl: string | null = null;
       if (imagePath) {
         const folder = "skills";
@@ -101,6 +111,25 @@ export class SkillsService implements ISkillsService {
   ): Promise<ISkill | null> => {
     try {
       logger.debug(`Updating skill: ${id}`);
+      if (data.name) {
+        const existingSkill = await this._skillsRepository.getSkillById(id);
+        if (!existingSkill) {
+          logger.warn(`Skill not found for update: ${id}`);
+          throw new ServiceError("Skill not found", StatusCodes.NOT_FOUND);
+        }
+        const isDuplicate = await this._skillsRepository.isDuplicateSkill(
+          data.name,
+          existingSkill.subcategoryId.toString(),
+          id
+        );
+        if (isDuplicate) {
+          logger.warn(`Skill name '${data.name}' already exists in subcategory ${existingSkill.subcategoryId}`);
+          throw new ServiceError(
+            "Skill name already exists in this subcategory",
+            StatusCodes.BAD_REQUEST
+          );
+        }
+      }
       let imageUrl: string | null = null;
       if (imagePath) {
         const folder = "skills";

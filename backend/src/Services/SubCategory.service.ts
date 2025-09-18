@@ -32,6 +32,16 @@ export class SubcategoryService  {
         );
       }
 
+      // Check for duplicate subcategory name in the same category
+      const isDuplicate = await this._subcategoryRepository.isDuplicateSubcategory(data.name, data.categoryId.toString());
+      if (isDuplicate) {
+        logger.warn(`Subcategory name '${data.name}' already exists in category ${data.categoryId}`);
+        throw new ServiceError(
+          "Subcategory name already exists in this category",
+          StatusCodes.BAD_REQUEST
+        );
+      }
+
       let imageUrl: string | null = null;
       if (imagePath) {
         const folder = "sub-categories";
@@ -113,6 +123,26 @@ export class SubcategoryService  {
           "Category ID must be a valid ObjectId",
           StatusCodes.BAD_REQUEST
         );
+      }
+
+      if (data.name) {
+        const existingSubcategory = await this._subcategoryRepository.getSubcategoryById(id);
+        if (!existingSubcategory) {
+          logger.warn(`Subcategory not found for update: ${id}`);
+          throw new ServiceError("Subcategory not found", StatusCodes.NOT_FOUND);
+        }
+        const isDuplicate = await this._subcategoryRepository.isDuplicateSubcategory(
+          data.name,
+          existingSubcategory.categoryId.toString(),
+          id
+        );
+        if (isDuplicate) {
+          logger.warn(`Subcategory name '${data.name}' already exists in category ${existingSubcategory.categoryId}`);
+          throw new ServiceError(
+            "Subcategory name already exists in this category",
+            StatusCodes.BAD_REQUEST
+          );
+        }
       }
 
       let imageUrl: string | null = null;

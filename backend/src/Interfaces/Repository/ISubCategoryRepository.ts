@@ -7,5 +7,5 @@ export interface ISubcategoryRepository {
   updateSubcategory(id: string, data: Partial<ISubcategory>): Promise<ISubcategory | null>;
   deleteSubcategory(id: string): Promise<ISubcategory | null>;
   deleteManySubcategories(categoryId: string): Promise<{ deletedCount: number }>;
-  isDuplicateSubcategory(name: string, categoryId: string): Promise<boolean>;
+  isDuplicateSubcategory(name: string, categoryId: string, excludeId?: string): Promise<boolean>;
 }

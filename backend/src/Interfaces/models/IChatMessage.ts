@@ -3,12 +3,12 @@ import { Document, Types } from "mongoose";
 export interface IChatMessage extends Document {
   _id: Types.ObjectId;
   ChatId: string;
-  senderId: Types.ObjectId;
+  senderId: Types.ObjectId | string;
   content: string;
   thumbnailUrl?: string;
-  collaborationId?: Types.ObjectId; // For user-mentor chats
-  userConnectionId?: Types.ObjectId; // For user-user chats
-  groupId?: Types.ObjectId; // For group chats
+  collaborationId?: Types.ObjectId | string; // For user-mentor chats
+  userConnectionId?: Types.ObjectId | string; // For user-user chats
+  groupId?: Types.ObjectId | string; // For group chats
   contentType: "text" | "image" | "video" | "file";
   fileMetadata?: {
     fileName: string | undefined;

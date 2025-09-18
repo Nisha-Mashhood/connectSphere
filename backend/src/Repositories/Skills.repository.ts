@@ -152,12 +152,14 @@ export class SkillsRepository extends BaseRepository<ISkill> implements ISkillsR
     }
   }
 
-  public isDuplicateSkill = async (name: string, subcategoryId: string): Promise<boolean> => {
+  public isDuplicateSkill = async (name: string, subcategoryId: string, excludeId?: string): Promise<boolean> => {
     try {
-      logger.debug(`Checking duplicate skill: ${name} for subcategory: ${subcategoryId}`);
-      const existingSkill = await this.model
-        .findOne({ name, subcategoryId: subcategoryId })
-        .exec();
+      logger.debug(`Checking duplicate skill: ${name} for subcategory: ${subcategoryId}${excludeId ? `, excluding ID: ${excludeId}` : ''}`);
+      const query: any = { name, subcategoryId };
+      if (excludeId) {
+        query._id = { $ne: excludeId };
+      }
+      const existingSkill = await this.model.findOne(query).exec();
       const isDuplicate = !!existingSkill;
       logger.info(`Duplicate check for skill ${name} in subcategory ${subcategoryId} - ${isDuplicate}`);
       return isDuplicate;

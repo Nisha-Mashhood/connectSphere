@@ -7,24 +7,16 @@ import { IMentorController } from "../Interfaces/Controller/IMentorController";
 import { HttpError } from "../Core/Utils/ErrorHandler";
 import { StatusCodes } from "../Enums/StatusCode.enums";
 import { IMentorService } from "../Interfaces/Services/IMentorService";
-import { IAuthService } from "../Interfaces/Services/IUserService";
-import { IUserRepository } from "../Interfaces/Repository/IUserRepository";
 
 @injectable()
 export class MentorController extends BaseController implements IMentorController{
   private _mentorService: IMentorService;
-  private _authService: IAuthService;
-  private _userRepo: IUserRepository;
 
   constructor(
     @inject('IMentorService') mentorService : IMentorService,
-    @inject('IUserService') authService : IAuthService,
-    @inject('IUserRepository') userRepository : IUserRepository
   ) {
     super();
     this._mentorService = mentorService;
-    this._authService = authService;
-    this._userRepo = userRepository;
   }
 
   checkMentorStatus = async (req: Request, res: Response, next:NextFunction): Promise<void> => {
@@ -69,20 +61,6 @@ export class MentorController extends BaseController implements IMentorControlle
         availableSlots,
         timePeriod,
       } = req.body;
-
-      const user = await this._userRepo.getUserById(userId);
-      if (!user) {
-         throw new HttpError( "User not found", StatusCodes.NOT_FOUND);
-      }
-
-      if (user?.role !== "mentor") {
-        await this._authService.changeRole(userId, "mentor");
-      }
-
-      const existingMentor = await this._mentorService.getMentorByUserId(userId);
-      if (existingMentor) {
-        throw new HttpError("Mentor profile already exists", StatusCodes.BAD_REQUEST);
-      }
 
       let uploadedCertificates: string[] = [];
       if (req.files && Array.isArray(req.files) && req.files.length > 0) {

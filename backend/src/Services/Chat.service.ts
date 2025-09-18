@@ -9,6 +9,7 @@ import { IContact } from "../Interfaces/Models/IContact";
 import { StatusCodes } from "../Enums/StatusCode.enums";
 import { ServiceError } from "../Core/Utils/ErrorHandler";
 import { IChatService } from "../Interfaces/Services/IChatService";
+import { uploadMedia } from "../Core/Utils/Cloudinary";
 
 @injectable()
 export class ChatService implements IChatService {
@@ -203,6 +204,84 @@ export class ChatService implements IChatService {
         ? error
         : new ServiceError(
             "Failed to fetch unread message counts",
+            StatusCodes.INTERNAL_SERVER_ERROR,
+            err
+          );
+    }
+  };
+
+  uploadAndSaveMessage = async (data: {
+    senderId: string;
+    targetId: string;
+    type: 'user-mentor' | 'user-user' | 'group';
+    collaborationId?: string;
+    userConnectionId?: string;
+    groupId?: string;
+    file: {
+      path: string;
+      size?: number;
+      originalname?: string;
+      mimetype?: string;
+    };
+  }): Promise<{ url: string; thumbnailUrl?: string; messageId: string }> => {
+    try {
+      logger.debug(`Uploading and saving message: senderId=${data.senderId}, targetId=${data.targetId}, type=${data.type}`);
+
+      // Validate message type and associated IDs
+      if (data.type === 'user-mentor' && !data.collaborationId) {
+        throw new ServiceError('Collaboration ID is required for user-mentor messages', StatusCodes.BAD_REQUEST);
+      }
+      if (data.type === 'user-user' && !data.userConnectionId) {
+        throw new ServiceError('User connection ID is required for user-user messages', StatusCodes.BAD_REQUEST);
+      }
+      if (data.type === 'group' && !data.groupId) {
+        throw new ServiceError('Group ID is required for group messages', StatusCodes.BAD_REQUEST);
+      }
+
+      // Ensure only the relevant ID is included
+      if (data.type !== 'user-mentor' && data.collaborationId) {
+        throw new ServiceError('Collaboration ID is only valid for user-mentor messages', StatusCodes.BAD_REQUEST);
+      }
+      if (data.type !== 'user-user' && data.userConnectionId) {
+        throw new ServiceError('User connection ID is only valid for user-user messages', StatusCodes.BAD_REQUEST);
+      }
+      if (data.type !== 'group' && data.groupId) {
+        throw new ServiceError('Group ID is only valid for group messages', StatusCodes.BAD_REQUEST);
+      }
+
+      const folder = data.type === 'group' ? 'group_chat_media' : 'chat_media';
+      const contentType = data.file.mimetype?.startsWith('image/')
+        ? 'image'
+        : data.file.mimetype?.startsWith('video/')
+        ? 'video'
+        : 'file';
+      const { url, thumbnailUrl } = await uploadMedia(data.file.path, folder, data.file.size, contentType);
+
+      const message = await this._chatRepository.saveChatMessage({
+        senderId: data.senderId,
+        content: url,
+        thumbnailUrl,
+        contentType,
+        collaborationId: data.collaborationId,
+        userConnectionId: data.userConnectionId,
+        groupId: data.groupId,
+        fileMetadata: {
+          fileName: data.file.originalname,
+          fileSize: data.file.size,
+          mimeType: data.file.mimetype,
+        },
+        timestamp: new Date(),
+      });
+
+      logger.info(`Saved message: ${message._id}`);
+      return { url, thumbnailUrl, messageId: message._id.toString() };
+    } catch (error: unknown) {
+      const err = error instanceof Error ? error : new Error(String(error));
+      logger.error(`Error uploading and saving message: ${err.message}`);
+      throw error instanceof ServiceError
+        ? error
+        : new ServiceError(
+            "Failed to upload and save message",
             StatusCodes.INTERNAL_SERVER_ERROR,
             err
           );

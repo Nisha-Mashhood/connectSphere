@@ -115,12 +115,14 @@ export class SubcategoryRepository extends BaseRepository<ISubcategory> implemen
     }
   }
 
-  public isDuplicateSubcategory = async (name: string, categoryId: string): Promise<boolean> => {
+  public isDuplicateSubcategory = async (name: string, categoryId: string, excludeId?: string): Promise<boolean> => {
     try {
-      logger.debug(`Checking duplicate subcategory: ${name} for category: ${categoryId}`);
-      const existingSubcategory = await this.model
-        .findOne({ name, categoryId:categoryId })
-        .exec();
+      logger.debug(`Checking duplicate subcategory: ${name} for category: ${categoryId}${excludeId ? `, excluding ID: ${excludeId}` : ''}`);
+      const query: any = { name, categoryId };
+      if (excludeId) {
+        query._id = { $ne: excludeId };
+      }
+      const existingSubcategory = await this.model.findOne(query).exec();
       const isDuplicate = !!existingSubcategory;
       logger.info(`Duplicate check for subcategory ${name} in category ${categoryId} - ${isDuplicate}`);
       return isDuplicate;

@@ -9,6 +9,6 @@ export interface ISkillsRepository {
   deleteManySkills(categoryId: string): Promise<{ deletedCount: number }>;
   deleteManySkillsBySubcategoryId(subcategoryId: string): Promise<{ deletedCount: number }>;
   getSkills(): Promise<{ _id: string; name: string }[]>;
-  isDuplicateSkill(name: string, subcategoryId: string): Promise<boolean>;
+  isDuplicateSkill(name: string, subcategoryId: string, excludeId?: string): Promise<boolean>;
   findOne(query: Partial<ISkill>): Promise<ISkill | null>;
 }

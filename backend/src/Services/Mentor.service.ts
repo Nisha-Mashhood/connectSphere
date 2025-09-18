@@ -17,6 +17,8 @@ import { ICollaborationRepository } from "../Interfaces/Repository/ICollaboratio
 import { INotificationService } from "../Interfaces/Services/INotificationService";
 import { ICategoryRepository } from "../Interfaces/Repository/ICategoryRepository";
 import { ISkillsRepository } from "../Interfaces/Repository/ISkillsRepository";
+import { IMentorDTO } from "../Interfaces/DTOs/IMentorDTO";
+import { toMentorDTO, toMentorDTOs } from "../Utils/Mappers/mentorMapper";
 
 @injectable()
 export class MentorService implements IMentorService {
@@ -28,12 +30,13 @@ export class MentorService implements IMentorService {
   private _skillRepository: ISkillsRepository;
 
   constructor(
-    @inject('IMentorRepository') mentorRepository : IMentorRepository,
-    @inject('IUserRepository') userRepository : IUserRepository,
-    @inject('ICollaborationRepository') collaborationRepository : ICollaborationRepository,
-    @inject('INotificationService') notificationService : INotificationService,
-    @inject('ICategoryRepository') categoryService : ICategoryRepository,
-    @inject('ISkillsRepository') skillRepository : ISkillsRepository
+    @inject("IMentorRepository") mentorRepository: IMentorRepository,
+    @inject("IUserRepository") userRepository: IUserRepository,
+    @inject("ICollaborationRepository")
+    collaborationRepository: ICollaborationRepository,
+    @inject("INotificationService") notificationService: INotificationService,
+    @inject("ICategoryRepository") categoryService: ICategoryRepository,
+    @inject("ISkillsRepository") skillRepository: ISkillsRepository
   ) {
     this._mentorRepository = mentorRepository;
     this._authRepository = userRepository;
@@ -52,7 +55,7 @@ export class MentorService implements IMentorService {
     availableSlots: object[];
     timePeriod: number;
     certifications: string[];
-  }): Promise<IMentor> => {
+  }): Promise<IMentorDTO> => {
     try {
       logger.debug(`Submitting mentor request for user: ${mentorData.userId}`);
 
@@ -72,12 +75,24 @@ export class MentorService implements IMentorService {
         );
       }
 
-      if (!Types.ObjectId.isValid(mentorData.userId)) {
-        logger.error("Invalid user ID");
+      const existingMentor = await this._mentorRepository.getMentorByUserId(
+        mentorData.userId
+      );
+
+      if (existingMentor) {
         throw new ServiceError(
-          "User ID must be a valid ObjectId",
+          "Mentor profile already exists",
           StatusCodes.BAD_REQUEST
         );
+      }
+
+      const user = await this._authRepository.getUserById(mentorData.userId);
+      if (!user) {
+        throw new ServiceError("User not found", StatusCodes.NOT_FOUND);
+      }
+
+      if (user.role !== "mentor") {
+        await this._authRepository.updateUserRole(mentorData.userId, "mentor");
       }
 
       if (mentorData.skills.length === 0) {
@@ -135,7 +150,7 @@ export class MentorService implements IMentorService {
         }
       }
 
-      return mentor;
+      return toMentorDTO(mentor)!;
     } catch (error: unknown) {
       const err = error instanceof Error ? error : new Error(String(error));
       logger.error(
@@ -158,7 +173,7 @@ export class MentorService implements IMentorService {
     status: string = "",
     sort: "asc" | "desc" = "desc"
   ): Promise<{
-    mentors: IMentor[];
+    mentors: IMentorDTO[];
     total: number;
     page: number;
     pages: number;
@@ -204,7 +219,12 @@ export class MentorService implements IMentorService {
       logger.info(
         `Fetched ${result.mentors.length} mentor requests, total: ${result.total}`
       );
-      return result;
+      return {
+          mentors: toMentorDTOs(result.mentors),
+          total: result.total,
+          page: result.page,
+          pages: result.pages,
+      };
     } catch (error: unknown) {
       const err = error instanceof Error ? error : new Error(String(error));
       logger.error(`Error fetching mentor requests: ${err.message}`);
@@ -220,7 +240,7 @@ export class MentorService implements IMentorService {
 
   getAllMentors = async (
     query: MentorQuery
-  ): Promise<{ mentors: IMentor[]; total: number }> => {
+  ): Promise<{ mentors: IMentorDTO[]; total: number }> => {
     try {
       logger.debug(
         `Fetching all approved mentors with query: ${JSON.stringify(query)}`
@@ -264,7 +284,10 @@ export class MentorService implements IMentorService {
       logger.info(
         `Fetched ${result.mentors.length} mentors, total: ${result.total}`
       );
-      return result;
+      return {
+        mentors: toMentorDTOs(result.mentors),
+        total: result.total,
+      };
     } catch (error: unknown) {
       const err = error instanceof Error ? error : new Error(String(error));
       logger.error(`Error fetching mentors: ${err.message}`);
@@ -278,7 +301,7 @@ export class MentorService implements IMentorService {
     }
   };
 
-  getMentorByMentorId = async (mentorId: string): Promise<IMentor | null> => {
+  getMentorByMentorId = async (mentorId: string): Promise<IMentorDTO | null> => {
     try {
       logger.debug(`Fetching mentor by ID: ${mentorId}`);
 
@@ -297,7 +320,7 @@ export class MentorService implements IMentorService {
       }
 
       logger.info(`Fetched mentor: ${mentorId}`);
-      return mentor;
+      return toMentorDTO(mentor);
     } catch (error: unknown) {
       const err = error instanceof Error ? error : new Error(String(error));
       logger.error(`Error fetching mentor ${mentorId}: ${err.message}`);
@@ -329,7 +352,9 @@ export class MentorService implements IMentorService {
         throw new ServiceError("Mentor not found", StatusCodes.NOT_FOUND);
       }
 
-      const user = await this._authRepository.getUserById(mentor.userId.toString());
+      const user = await this._authRepository.getUserById(
+        mentor.userId.toString()
+      );
       if (!user) {
         logger.error(`User not found for mentor userId: ${mentor.userId}`);
         throw new ServiceError("User not found", StatusCodes.NOT_FOUND);
@@ -391,7 +416,9 @@ export class MentorService implements IMentorService {
         throw new ServiceError("Mentor not found", StatusCodes.NOT_FOUND);
       }
 
-      const user = await this._authRepository.getUserById(mentor.userId.toString());
+      const user = await this._authRepository.getUserById(
+        mentor.userId.toString()
+      );
       if (!user) {
         logger.error(`User not found for mentor userId: ${mentor.userId}`);
         throw new ServiceError("User not found", StatusCodes.NOT_FOUND);
@@ -434,7 +461,9 @@ export class MentorService implements IMentorService {
         throw new ServiceError("Mentor not found", StatusCodes.NOT_FOUND);
       }
 
-      const user = await this._authRepository.getUserById(mentor.userId.toString());
+      const user = await this._authRepository.getUserById(
+        mentor.userId.toString()
+      );
       if (!user) {
         logger.error(`User not found for mentor userId: ${mentor.userId}`);
         throw new ServiceError("User not found", StatusCodes.NOT_FOUND);
@@ -459,7 +488,7 @@ export class MentorService implements IMentorService {
     }
   };
 
-  getMentorByUserId = async (userId: string): Promise<IMentor | null> => {
+  getMentorByUserId = async (userId: string): Promise<IMentorDTO | null> => {
     try {
       logger.debug(`Fetching mentor by user ID: ${userId}`);
 
@@ -478,7 +507,7 @@ export class MentorService implements IMentorService {
       }
 
       logger.info(`Fetched mentor for user: ${userId}`);
-      return mentor;
+      return toMentorDTO(mentor);
     } catch (error: unknown) {
       const err = error instanceof Error ? error : new Error(String(error));
       logger.error(`Error fetching mentor for user ${userId}: ${err.message}`);
@@ -495,7 +524,7 @@ export class MentorService implements IMentorService {
   updateMentorById = async (
     mentorId: string,
     updateData: Partial<IMentor>
-  ): Promise<IMentor | null> => {
+  ): Promise<IMentorDTO | null> => {
     try {
       logger.debug(`Updating mentor: ${mentorId}`);
 
@@ -526,7 +555,7 @@ export class MentorService implements IMentorService {
       }
 
       logger.info(`Mentor updated: ${mentorId}`);
-      return updatedMentor;
+      return toMentorDTO(updatedMentor);
     } catch (error: unknown) {
       const err = error instanceof Error ? error : new Error(String(error));
       logger.error(`Error updating mentor ${mentorId}: ${err.message}`);
@@ -743,7 +772,9 @@ export class MentorService implements IMentorService {
             );
 
             const user = mentor
-              ? await this._authRepository.getUserById(mentor.userId?._id.toString())
+              ? await this._authRepository.getUserById(
+                  mentor.userId?._id.toString()
+                )
               : null;
 
             return {

@@ -1,5 +1,6 @@
 import { IMentor } from "../../Interfaces/Models/IMentor";
 import { MentorAnalytics, MentorQuery, SalesReport } from "../../Utils/Types/mentor.types";
+import { IMentorDTO } from "../DTOs/IMentorDTO";
 
 export interface IMentorService {
   submitMentorRequest: (mentorData: {
@@ -11,7 +12,7 @@ export interface IMentorService {
     availableSlots: object[];
     timePeriod: number;
     certifications: string[];
-  }) => Promise<IMentor>;
+  }) => Promise<IMentorDTO>;
   getAllMentorRequests: (
     page?: number,
     limit?: number,
@@ -19,18 +20,18 @@ export interface IMentorService {
     status?: string,
     sort?: "asc" | "desc"
   ) => Promise<{
-    mentors: IMentor[];
+    mentors: IMentorDTO[];
     total: number;
     page: number;
     pages: number;
   }>;
-  getAllMentors: (query: MentorQuery) => Promise<{ mentors: IMentor[]; total: number }>;
-  getMentorByMentorId: (mentorId: string) => Promise<IMentor | null>;
+  getAllMentors: (query: MentorQuery) => Promise<{ mentors: IMentorDTO[]; total: number }>;
+  getMentorByMentorId: (mentorId: string) => Promise<IMentorDTO | null>;
   approveMentorRequest: (id: string) => Promise<void>;
   rejectMentorRequest: (id: string, reason: string) => Promise<void>;
   cancelMentorship: (id: string) => Promise<void>;
-  getMentorByUserId: (userId: string) => Promise<IMentor | null>;
-  updateMentorById: (mentorId: string, updateData: Partial<IMentor>) => Promise<IMentor | null>;
+  getMentorByUserId: (userId: string) => Promise<IMentorDTO | null>;
+  updateMentorById: (mentorId: string, updateData: Partial<IMentor>) => Promise<IMentorDTO | null>;
   getMentorAnalytics: (
     page?: number,
     limit?: number,

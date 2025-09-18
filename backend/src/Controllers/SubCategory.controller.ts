@@ -5,9 +5,7 @@ import { BaseController } from '../Core/Controller/BaseController';
 import logger from "../Core/Utils/Logger";
 import { ISubcategoryController } from '../Interfaces/Controller/ISubCategoryController';
 import { HttpError } from '../Core/Utils/ErrorHandler';
-// import { StatusCodes } from "../Constants/StatusCode.enums";
 import { ISubcategoryService } from '../Interfaces/Services/ISubCategoryService';
-// import { ISubcategoryRepository } from '../Interfaces/Repository/ISubCategoryRepository';
 
 
 interface SubcategoryRequest extends Request {
@@ -18,24 +16,17 @@ interface SubcategoryRequest extends Request {
 @injectable()
 export class SubcategoryController extends BaseController implements ISubcategoryController{
   private _subcategoryService: ISubcategoryService;
-  // private subcategoryRepo: ISubcategoryRepository;
 
   constructor(
     @inject('ISubCategoryService') subCategoryService : ISubcategoryService,
-    // @inject('ISubcategoryRepository') subcategoryRepository : ISubcategoryRepository
 ) {
     super();
     this._subcategoryService = subCategoryService;
-    // this.subcategoryRepo = subcategoryRepository;
   }
 
    createSubcategory  = async(req: SubcategoryRequest, res: Response, next:NextFunction): Promise<void> => {
     try {
       logger.debug(`Creating subcategory: ${req.body.name}`);
-      // const isDuplicate = await this.subcategoryRepo.findOne({ name: req.body.name, categoryId: req.body.categoryId });
-      // if (isDuplicate) {
-      //   throw new HttpError('Subcategory name already exists in this category', StatusCodes.BAD_REQUEST);
-      // }
       const imagePath = req.file?.path;
       const fileSize = req.file?.size;
       const subcategory = await this._subcategoryService.createSubcategory(req.body, imagePath, fileSize);
@@ -76,14 +67,6 @@ export class SubcategoryController extends BaseController implements ISubcategor
    updateSubcategory  = async(req: SubcategoryRequest, res: Response, next:NextFunction): Promise<void> => {
     try {
       logger.debug(`Updating subcategory: ${req.params.id}`);
-      // const isDuplicate = await this.subcategoryRepo.findOne({
-      //   name: req.body.name,
-      //   categoryId: req.body.categoryId || (await this.subcategoryRepo.getSubcategoryById(req.params.id!))?.categoryId,
-      //   _id: { $ne: req.params.id },
-      // });
-      // if (isDuplicate) {
-      //   throw new HttpError('Subcategory name already exists in this category', StatusCodes.BAD_REQUEST);
-      // }
       const imagePath = req.file?.path;
       const fileSize = req.file?.size;
       const updatedSubcategory = await this._subcategoryService.updateSubcategory(req.params.id!, req.body, imagePath, fileSize);
