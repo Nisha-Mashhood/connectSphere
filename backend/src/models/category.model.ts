@@ -3,7 +3,6 @@ import { generateCustomId } from "../Core/Utils/IdGenerator";
 import { ICategory } from "../Interfaces/Models/ICategory";
 import logger from "../Core/Utils/Logger";
 
-// Category Schema
 const categorySchema: Schema<ICategory> = new mongoose.Schema(
   {
     categoryId: {

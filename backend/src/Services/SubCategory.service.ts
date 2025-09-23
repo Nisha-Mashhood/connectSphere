@@ -6,9 +6,12 @@ import { ServiceError } from "../Core/Utils/ErrorHandler";
 import { StatusCodes } from "../Enums/StatusCode.enums";
 import { ISubcategoryRepository } from "../Interfaces/Repository/ISubCategoryRepository";
 import { ISkillsRepository } from "../Interfaces/Repository/ISkillsRepository";
+import { ISubcategoryDTO } from "../Interfaces/DTOs/ISubCategoryDTO";
+import { ISubcategoryService } from "../Interfaces/Services/ISubCategoryService";
+import { toSubcategoryDTO, toSubcategoryDTOs } from "../Utils/Mappers/subcategoryMapper";
 
 @injectable()
-export class SubcategoryService  {
+export class SubcategoryService  implements ISubcategoryService{
   private _subcategoryRepository: ISubcategoryRepository;
   private _skillsRepository: ISkillsRepository;
 
@@ -20,7 +23,7 @@ export class SubcategoryService  {
     this._skillsRepository = skillsRepository;
   }
 
-   public createSubcategory = async (data: Partial<ISubcategory>, imagePath?: string, fileSize?: number): Promise<ISubcategory> => {
+   public createSubcategory = async (data: Partial<ISubcategory>, imagePath?: string, fileSize?: number): Promise<ISubcategoryDTO> => {
     try {
       logger.debug(`Creating subcategory: ${data.name} for category ${data.categoryId}`);
 
@@ -32,7 +35,6 @@ export class SubcategoryService  {
         );
       }
 
-      // Check for duplicate subcategory name in the same category
       const isDuplicate = await this._subcategoryRepository.isDuplicateSubcategory(data.name, data.categoryId.toString());
       if (isDuplicate) {
         logger.warn(`Subcategory name '${data.name}' already exists in category ${data.categoryId}`);
@@ -51,8 +53,16 @@ export class SubcategoryService  {
       }
 
       const subcategory = await this._subcategoryRepository.createSubcategory({ ...data, imageUrl });
+      const subcategoryDTO = toSubcategoryDTO(subcategory);
+      if (!subcategoryDTO) {
+        logger.error(`Failed to map subcategory ${subcategory._id} to DTO`);
+        throw new ServiceError(
+          "Failed to map subcategory to DTO",
+          StatusCodes.INTERNAL_SERVER_ERROR
+        );
+      }
       logger.info(`Subcategory created: ${subcategory._id} (${subcategory.name})`);
-      return subcategory;
+      return subcategoryDTO;
     } catch (error: unknown) {
       const err = error instanceof Error ? error : new Error(String(error));
       logger.error(`Error creating subcategory ${data.name}: ${err.message}`);
@@ -66,12 +76,13 @@ export class SubcategoryService  {
     }
   };
 
-  public getAllSubcategories = async (categoryId: string): Promise<ISubcategory[]> => {
+  public getAllSubcategories = async (categoryId: string): Promise<ISubcategoryDTO[]> => {
     try {
       logger.debug(`Fetching subcategories for category: ${categoryId}`);
       const subcategories = await this._subcategoryRepository.getAllSubcategories(categoryId);
-      logger.info(`Fetched ${subcategories.length} subcategories for category: ${categoryId}`);
-      return subcategories;
+      const subcategoriesDTO = toSubcategoryDTOs(subcategories);
+      logger.info(`Fetched ${subcategoriesDTO.length} subcategories for category: ${categoryId}`);
+      return subcategoriesDTO;
     } catch (error: unknown) {
       const err = error instanceof Error ? error : new Error(String(error));
       logger.error(`Error fetching subcategories for category ${categoryId}: ${err.message}`);
@@ -85,7 +96,7 @@ export class SubcategoryService  {
     }
   };
 
-  public getSubcategoryById = async (id: string): Promise<ISubcategory | null> => {
+  public getSubcategoryById = async (id: string): Promise<ISubcategoryDTO> => {
     try {
       logger.debug(`Fetching subcategory: ${id}`);
       const subcategory = await this._subcategoryRepository.getSubcategoryById(id);
@@ -93,9 +104,16 @@ export class SubcategoryService  {
         logger.warn(`Subcategory not found: ${id}`);
         throw new ServiceError("Subcategory not found", StatusCodes.NOT_FOUND);
       }
-
+      const subcategoryDTO = toSubcategoryDTO(subcategory);
+      if (!subcategoryDTO) {
+        logger.error(`Failed to map subcategory ${id} to DTO`);
+        throw new ServiceError(
+          "Failed to map subcategory to DTO",
+          StatusCodes.INTERNAL_SERVER_ERROR
+        );
+      }
       logger.info(`Subcategory fetched: ${id} (${subcategory.name})`);
-      return subcategory;
+      return subcategoryDTO;
     } catch (error: unknown) {
       const err = error instanceof Error ? error : new Error(String(error));
       logger.error(`Error fetching subcategory ${id}: ${err.message}`);
@@ -114,7 +132,7 @@ export class SubcategoryService  {
     data: Partial<ISubcategory>,
     imagePath?: string,
     fileSize?: number
-  ): Promise<ISubcategory | null> => {
+  ): Promise<ISubcategoryDTO> => {
     try {
       logger.debug(`Updating subcategory: ${id}`);
       if (data.categoryId) {
@@ -162,8 +180,16 @@ export class SubcategoryService  {
         throw new ServiceError("Subcategory not found", StatusCodes.NOT_FOUND);
       }
 
+      const subcategoryDTO = toSubcategoryDTO(subcategory);
+      if (!subcategoryDTO) {
+        logger.error(`Failed to map subcategory ${id} to DTO`);
+        throw new ServiceError(
+          "Failed to map subcategory to DTO",
+          StatusCodes.INTERNAL_SERVER_ERROR
+        );
+      }
       logger.info(`Subcategory updated: ${id} (${subcategory.name})`);
-      return subcategory;
+      return subcategoryDTO;
     } catch (error: unknown) {
       const err = error instanceof Error ? error : new Error(String(error));
       logger.error(`Error updating subcategory ${id}: ${err.message}`);
@@ -177,7 +203,7 @@ export class SubcategoryService  {
     }
   };
 
-  public deleteSubcategory = async (id: string): Promise<ISubcategory | null> => {
+  public deleteSubcategory = async (id: string): Promise<ISubcategoryDTO> => {
     try {
       logger.debug(`Deleting subcategory: ${id}`);
       await this._skillsRepository.deleteManySkillsBySubcategoryId(id);
@@ -189,8 +215,16 @@ export class SubcategoryService  {
         throw new ServiceError("Subcategory not found", StatusCodes.NOT_FOUND);
       }
 
+      const subcategoryDTO = toSubcategoryDTO(subcategory);
+      if (!subcategoryDTO) {
+        logger.error(`Failed to map subcategory ${id} to DTO`);
+        throw new ServiceError(
+          "Failed to map subcategory to DTO",
+          StatusCodes.INTERNAL_SERVER_ERROR
+        );
+      }
       logger.info(`Subcategory deleted: ${id} (${subcategory.name})`);
-      return subcategory;
+      return subcategoryDTO;
     } catch (error: unknown) {
       const err = error instanceof Error ? error : new Error(String(error));
       logger.error(`Error deleting subcategory ${id}: ${err.message}`);
@@ -202,5 +236,5 @@ export class SubcategoryService  {
             err
           );
     }
-  }
+  };
 }

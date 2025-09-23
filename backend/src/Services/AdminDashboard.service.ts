@@ -9,9 +9,11 @@ import {
   TopMentor,
   UserGrowth,
 } from "../Utils/Types/Admin.types";
-import { ICollaboration } from "../Interfaces/Models/ICollaboration";
-import { IMentor } from "../Interfaces/Models/IMentor";
 import { IAdminRepository } from "../Interfaces/Repository/IAdminRepositry";
+import { toMentorDTOs } from "../Utils/Mappers/mentorMapper";
+import { IMentorDTO } from "../Interfaces/DTOs/IMentorDTO";
+import { toCollaborationDTOs } from "../Utils/Mappers/collaborationMapper";
+import { ICollaborationDTO } from "../Interfaces/DTOs/ICollaborationDTO";
 
 @injectable()
 export class AdminService implements IAdminService {
@@ -144,7 +146,7 @@ export class AdminService implements IAdminService {
     }
   };
 
-  getPendingMentorRequests = async (limit?: number): Promise<IMentor[]> => {
+  getPendingMentorRequests = async (limit?: number): Promise<IMentorDTO[]> => {
     try {
       if (limit && limit < 0) {
         throw new ServiceError(
@@ -153,7 +155,7 @@ export class AdminService implements IAdminService {
         );
       }
       const requests = await this._adminRepository.getPendingMentorRequests(limit);
-      return requests;
+      return toMentorDTOs(requests);
     } catch (error: unknown) {
       const err = error instanceof Error ? error : new Error(String(error));
       logger.error("Error in getPendingMentorRequests", err);
@@ -188,7 +190,7 @@ export class AdminService implements IAdminService {
 
   getRecentCollaborations = async (
     limit: number
-  ): Promise<ICollaboration[]> => {
+  ): Promise<ICollaborationDTO[]> => {
     try {
       if (!limit || limit < 0) {
         throw new ServiceError(
@@ -199,7 +201,7 @@ export class AdminService implements IAdminService {
       const collaborations = await this._adminRepository.getRecentCollaborations(
         limit
       );
-      return collaborations;
+      return toCollaborationDTOs(collaborations);
     } catch (error: unknown) {
       const err = error instanceof Error ? error : new Error(String(error));
       logger.error("Error in getRecentCollaborations", err);

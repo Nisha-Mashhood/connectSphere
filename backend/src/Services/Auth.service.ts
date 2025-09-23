@@ -61,7 +61,7 @@ export class AuthService implements IAuthService {
           "profile"
         );
         logger.info(
-          `Created new_user notification for admin ${admin._id}: ${notification._id}`
+          `Created new_user notification for admin ${admin._id}: ${notification.id}`
         );
       }
       logger.info(`Created new_user notifications for ${admins.length} admins`);

@@ -1,10 +1,13 @@
+import { ICategoryDTO } from './ICategoryDTO';
+
 export interface ISubcategoryDTO {
   id: string;
   subcategoryId: string;
   name: string;
   categoryId: string;
+  category?: ICategoryDTO;
   description?: string;
-  imageUrl?: string | null;
+  imageUrl?: string;
   createdAt: Date;
   updatedAt: Date;
 }

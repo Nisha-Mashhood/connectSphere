@@ -10,6 +10,8 @@ import { StatusCodes } from "../Enums/StatusCode.enums";
 import { ServiceError } from "../Core/Utils/ErrorHandler";
 import { IChatService } from "../Interfaces/Services/IChatService";
 import { uploadMedia } from "../Core/Utils/Cloudinary";
+import { IChatMessageDTO } from "../Interfaces/DTOs/IChatMessageDTO";
+import { toChatMessageDTOs } from "../Utils/Mappers/chatMessageMapper";
 
 @injectable()
 export class ChatService implements IChatService {
@@ -32,7 +34,7 @@ export class ChatService implements IChatService {
     groupId?: string,
     page: number = 1,
     limit: number = 10
-  ): Promise<{ messages: IChatMessage[]; total: number }> => {
+  ): Promise<{ messages: IChatMessageDTO[]; total: number }> => {
     try {
       logger.debug(
         `Fetching chat messages for contact: ${contactId}, group: ${groupId}, page: ${page}, limit: ${limit}`
@@ -110,7 +112,8 @@ export class ChatService implements IChatService {
         }
       }
 
-      return { messages: messages.reverse(), total };
+      const messagesDTO = toChatMessageDTOs(messages);
+      return { messages: messagesDTO.reverse(), total };
     } catch (error: unknown) {
       const err = error instanceof Error ? error : new Error(String(error));
       logger.error(`Error fetching chat messages: ${err.message}`);

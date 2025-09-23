@@ -78,7 +78,7 @@ export function toCollaborationDTO(collaboration: ICollaboration | null): IColla
     mentorId = '';
   }
 
-  //userId
+  // HuserId
   let userId: string;
   let user: IUserDTO | undefined;
 

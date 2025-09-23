@@ -1,4 +1,4 @@
-import { IChatMessage } from "../../Interfaces/Models/IChatMessage";
+import { IChatMessageDTO } from "../DTOs/IChatMessageDTO";
 
 export interface IChatService {
   getChatMessages: (
@@ -6,7 +6,7 @@ export interface IChatService {
     groupId?: string,
     page?: number,
     limit?: number
-  ) => Promise<{ messages: IChatMessage[]; total: number }>;
+  ) => Promise<{ messages: IChatMessageDTO[]; total: number }>;
   getUnreadMessageCounts: (userId: string) => Promise<{ [key: string]: number }>;
   uploadAndSaveMessage(data: {
     senderId: string;

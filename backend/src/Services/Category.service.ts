@@ -8,6 +8,8 @@ import { uploadMedia } from "../Core/Utils/Cloudinary";
 import { ServiceError } from "../Core/Utils/ErrorHandler";
 import { ICategoryService } from "../Interfaces/Services/ICategoryService";
 import { StatusCodes } from "../Enums/StatusCode.enums";
+import { toCategoryDTO, toCategoryDTOs } from "../Utils/Mappers/categoryMapper";
+import { ICategoryDTO } from "../Interfaces/DTOs/ICategoryDTO";
 
 @injectable()
 export class CategoryService implements ICategoryService {
@@ -53,7 +55,7 @@ export class CategoryService implements ICategoryService {
     data: Partial<ICategory>,
     imagePath?: string,
     fileSize?: number
-  ): Promise<ICategory> => {
+  ): Promise<ICategoryDTO> => {
     try {
       logger.debug(`Creating category with name: ${data.name}`);
       let imageId: string | null = null;
@@ -67,8 +69,16 @@ export class CategoryService implements ICategoryService {
         ...data,
         imageId,
       });
+      const categoryDTO = toCategoryDTO(category);
+      if (!categoryDTO) {
+        logger.error(`Failed to map category ${category._id} to DTO`);
+        throw new ServiceError(
+          "Failed to map category to DTO",
+          StatusCodes.INTERNAL_SERVER_ERROR
+        );
+      }
       logger.info(`Category created: ${category._id} (${category.name})`);
-      return category;
+      return categoryDTO;
     } catch (error: unknown) {
       const err = error instanceof Error ? error : new Error(String(error));
       logger.error(`Error creating category: ${err.message}`);
@@ -87,16 +97,17 @@ export class CategoryService implements ICategoryService {
       limit?: number;
       sort?: string;
     } = {}
-  ): Promise<{ categories: ICategory[]; total: number }> => {
+  ): Promise<{ categories: ICategoryDTO[]; total: number }> => {
     try {
       logger.debug(
         `Fetching all categories with query: ${JSON.stringify(query)}`
       );
       const result = await this.categoryRepo.getAllCategories(query);
+      const categoriesDTO = toCategoryDTOs(result.categories);
       logger.info(
-        `Fetched ${result.categories.length} categories, total: ${result.total}`
+        `Fetched ${categoriesDTO.length} categories, total: ${result.total}`
       );
-      return result;
+      return { categories: categoriesDTO, total: result.total };
     } catch (error: unknown) {
       const err = error instanceof Error ? error : new Error(String(error));
       logger.error(`Error fetching categories: ${err.message}`);
@@ -108,7 +119,7 @@ export class CategoryService implements ICategoryService {
     }
   };
 
-  getCategoryById = async (id: string): Promise<ICategory | null> => {
+  getCategoryById = async (id: string): Promise<ICategoryDTO | null> => {
     try {
       logger.debug(`Fetching category: ${id}`);
       const category = await this.categoryRepo.getCategoryById(id);
@@ -116,8 +127,16 @@ export class CategoryService implements ICategoryService {
         logger.warn(`Category not found: ${id}`);
         throw new ServiceError("Category not found", StatusCodes.NOT_FOUND);
       }
+      const categoryDTO = toCategoryDTO(category);
+      if (!categoryDTO) {
+        logger.error(`Failed to map category ${id} to DTO`);
+        throw new ServiceError(
+          "Failed to map category to DTO",
+          StatusCodes.INTERNAL_SERVER_ERROR
+        );
+      }
       logger.info(`Category fetched: ${id} (${category.name})`);
-      return category;
+      return categoryDTO;
     } catch (error: unknown) {
       const err = error instanceof Error ? error : new Error(String(error));
       logger.error(`Error fetching category ${id}: ${err.message}`);
@@ -136,7 +155,7 @@ export class CategoryService implements ICategoryService {
     data: Partial<ICategory>,
     imagePath?: string,
     fileSize?: number
-  ): Promise<ICategory | null> => {
+  ): Promise<ICategoryDTO | null> => {
     try {
       logger.debug(`Updating category: ${id}`);
       let imageId: string | null = null;
@@ -154,8 +173,16 @@ export class CategoryService implements ICategoryService {
         logger.warn(`Category not found for update: ${id}`);
         throw new ServiceError("Category not found", StatusCodes.NOT_FOUND);
       }
+      const categoryDTO = toCategoryDTO(category);
+      if (!categoryDTO) {
+        logger.error(`Failed to map category ${id} to DTO`);
+        throw new ServiceError(
+          "Failed to map category to DTO",
+          StatusCodes.INTERNAL_SERVER_ERROR
+        );
+      }
       logger.info(`Category updated: ${id} (${category.name})`);
-      return category;
+      return categoryDTO;
     } catch (error: unknown) {
       const err = error instanceof Error ? error : new Error(String(error));
       logger.error(`Error updating category ${id}: ${err.message}`);
@@ -169,7 +196,7 @@ export class CategoryService implements ICategoryService {
     }
   };
 
-  deleteCategory = async (id: string): Promise<ICategory | null> => {
+  deleteCategory = async (id: string): Promise<ICategoryDTO | null> => {
     try {
       logger.debug(`Deleting category: ${id}`);
       await this.subcategoryRepo.deleteManySubcategories(id);
@@ -181,8 +208,16 @@ export class CategoryService implements ICategoryService {
         logger.warn(`Category not found for deletion: ${id}`);
         throw new ServiceError("Category not found", StatusCodes.NOT_FOUND);
       }
+      const categoryDTO = toCategoryDTO(category);
+      if (!categoryDTO) {
+        logger.error(`Failed to map category ${id} to DTO`);
+        throw new ServiceError(
+          "Failed to map category to DTO",
+          StatusCodes.INTERNAL_SERVER_ERROR
+        );
+      }
       logger.info(`Category deleted: ${id} (${category.name})`);
-      return category;
+      return categoryDTO;
     } catch (error: unknown) {
       const err = error instanceof Error ? error : new Error(String(error));
       logger.error(`Error deleting category ${id}: ${err.message}`);

@@ -3,7 +3,7 @@ export interface ICategoryDTO {
   categoryId: string;
   name: string;
   description?: string;
-  imageUrl?: string | null;
+  imageId?: string;
   createdAt: Date;
   updatedAt: Date;
 }

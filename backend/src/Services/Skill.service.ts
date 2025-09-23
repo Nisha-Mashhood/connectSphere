@@ -6,6 +6,8 @@ import { ServiceError } from "../Core/Utils/ErrorHandler";
 import { ISkillsService } from "../Interfaces/Services/ISkillsService";
 import { StatusCodes } from "../Enums/StatusCode.enums";
 import { ISkillsRepository } from "../Interfaces/Repository/ISkillsRepository";
+import { ISkillDTO } from "../Interfaces/DTOs/ISkillDTO";
+import { toSkillDTO, toSkillDTOs } from "src/Utils/Mappers/skillMapper";
 
 @injectable()
 export class SkillsService implements ISkillsService {
@@ -15,7 +17,7 @@ export class SkillsService implements ISkillsService {
     this._skillsRepository = skillRepository;
   }
 
-  createSkill = async (data: Partial<ISkill>, imagePath?: string, fileSize?: number): Promise<ISkill> => {
+  createSkill = async (data: Partial<ISkill>, imagePath?: string, fileSize?: number): Promise<ISkillDTO> => {
     try {
       logger.debug(`Creating skill: ${data.name} for subcategory ${data.subcategoryId}`);
 
@@ -45,8 +47,16 @@ export class SkillsService implements ISkillsService {
       }
 
       const skill = await this._skillsRepository.createSkill({ ...data, imageUrl });
+      const skillDTO = toSkillDTO(skill);
+      if (!skillDTO) {
+        logger.error(`Failed to map skill ${skill._id} to DTO`);
+        throw new ServiceError(
+          "Failed to map skill to DTO",
+          StatusCodes.INTERNAL_SERVER_ERROR
+        );
+      }
       logger.info(`Skill created: ${skill._id} (${skill.name})`);
-      return skill;
+      return skillDTO;
     } catch (error: unknown) {
       const err = error instanceof Error ? error : new Error(String(error));
       logger.error(`Error creating skill ${data.name}: ${err.message}`);
@@ -60,12 +70,13 @@ export class SkillsService implements ISkillsService {
     }
   };
 
-  getAllSkills = async (subcategoryId: string): Promise<ISkill[]> => {
+  getAllSkills = async (subcategoryId: string): Promise<ISkillDTO[]> => {
     try {
       logger.debug(`Fetching skills for subcategory: ${subcategoryId}`);
       const skills = await this._skillsRepository.getAllSkills(subcategoryId);
-      logger.info(`Fetched ${skills.length} skills for subcategory: ${subcategoryId}`);
-      return skills;
+      const skillsDTO = toSkillDTOs(skills);
+      logger.info(`Fetched ${skillsDTO.length} skills for subcategory: ${subcategoryId}`);
+      return skillsDTO;
     } catch (error: unknown) {
       const err = error instanceof Error ? error : new Error(String(error));
       logger.error(`Error fetching skills for subcategory ${subcategoryId}: ${err.message}`);
@@ -79,7 +90,7 @@ export class SkillsService implements ISkillsService {
     }
   };
 
-  getSkillById = async (id: string): Promise<ISkill | null> => {
+  getSkillById = async (id: string): Promise<ISkillDTO | null> => {
     try {
       logger.debug(`Fetching skill: ${id}`);
       const skill = await this._skillsRepository.getSkillById(id);
@@ -88,8 +99,16 @@ export class SkillsService implements ISkillsService {
         throw new ServiceError("Skill not found", StatusCodes.NOT_FOUND);
       }
 
+      const skillDTO = toSkillDTO(skill);
+      if (!skillDTO) {
+        logger.error(`Failed to map skill ${id} to DTO`);
+        throw new ServiceError(
+          "Failed to map skill to DTO",
+          StatusCodes.INTERNAL_SERVER_ERROR
+        );
+      }
       logger.info(`Skill fetched: ${id} (${skill.name})`);
-      return skill;
+      return skillDTO;
     } catch (error: unknown) {
       const err = error instanceof Error ? error : new Error(String(error));
       logger.error(`Error fetching skill ${id}: ${err.message}`);
@@ -108,7 +127,7 @@ export class SkillsService implements ISkillsService {
     data: Partial<ISkill>,
     imagePath?: string,
     fileSize?: number
-  ): Promise<ISkill | null> => {
+  ): Promise<ISkillDTO | null> => {
     try {
       logger.debug(`Updating skill: ${id}`);
       if (data.name) {
@@ -144,8 +163,16 @@ export class SkillsService implements ISkillsService {
         throw new ServiceError("Skill not found", StatusCodes.NOT_FOUND);
       }
 
+      const skillDTO = toSkillDTO(skill);
+      if (!skillDTO) {
+        logger.error(`Failed to map skill ${id} to DTO`);
+        throw new ServiceError(
+          "Failed to map skill to DTO",
+          StatusCodes.INTERNAL_SERVER_ERROR
+        );
+      }
       logger.info(`Skill updated: ${id} (${skill.name})`);
-      return skill;
+      return skillDTO;
     } catch (error: unknown) {
       const err = error instanceof Error ? error : new Error(String(error));
       logger.error(`Error updating skill ${id}: ${err.message}`);
@@ -159,7 +186,7 @@ export class SkillsService implements ISkillsService {
     }
   };
 
-  deleteSkill = async (id: string): Promise<ISkill | null> => {
+  deleteSkill = async (id: string): Promise<ISkillDTO | null> => {
     try {
       logger.debug(`Deleting skill: ${id}`);
 
@@ -169,8 +196,16 @@ export class SkillsService implements ISkillsService {
         throw new ServiceError("Skill not found", StatusCodes.NOT_FOUND);
       }
 
+      const skillDTO = toSkillDTO(skill);
+      if (!skillDTO) {
+        logger.error(`Failed to map skill ${id} to DTO`);
+        throw new ServiceError(
+          "Failed to map skill to DTO",
+          StatusCodes.INTERNAL_SERVER_ERROR
+        );
+      }
       logger.info(`Skill deleted: ${id} (${skill.name})`);
-      return skill;
+      return skillDTO;
     } catch (error: unknown) {
       const err = error instanceof Error ? error : new Error(String(error));
       logger.error(`Error deleting skill ${id}: ${err.message}`);
