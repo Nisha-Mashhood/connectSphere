@@ -1,4 +1,5 @@
 import { Document, Types } from "mongoose";
+import { IUser } from "./IUser";
 
 export interface TimeSlot {
   day: string;
@@ -17,7 +18,7 @@ export interface IGroup extends Document {
   profilePic: string;
   coverPic: string;
   startDate: Date;
-  adminId: Types.ObjectId; // the user who created the group
-  members: { userId: Types.ObjectId; joinedAt: Date }[]; // Array of member IDs
+  adminId: Types.ObjectId | IUser; // the user who created the group
+  members: { userId: Types.ObjectId | IUser; joinedAt: Date }[]; // Array of member IDs
   createdAt: Date;
 }

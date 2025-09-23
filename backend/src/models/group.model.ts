@@ -45,11 +45,11 @@ const GroupSchema: Schema = new Schema<IGroup>(
     ],
     profilePic: {
       type: String,
-      default: "", // Optional
+      default: "",
     },
     coverPic: {
       type: String,
-      default: "", // Optional
+      default: "",
     },
     startDate: {
       type: Date,

@@ -654,20 +654,20 @@ export class AuthService implements IAuthService {
       let profilePic = user.profilePic ?? undefined;
       let coverPic = user.coverPic ?? undefined;
       if (data.profilePicFile) {
-        const { url } = await uploadMedia(
+        const { publicId } = await uploadMedia(
           data.profilePicFile.path,
           "profiles",
           data.profilePicFile.size
         );
-        profilePic = url;
+        profilePic = publicId;
       }
       if (data.coverPicFile) {
-        const { url } = await uploadMedia(
+        const { publicId } = await uploadMedia(
           data.coverPicFile.path,
           "covers",
           data.coverPicFile.size
         );
-        coverPic = url;
+        coverPic = publicId
       }
       const updatedData: Partial<IUser> = {
         name: data.name ?? user.name,

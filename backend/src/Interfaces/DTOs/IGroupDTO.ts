@@ -1,3 +1,5 @@
+import { IUserDTO } from "./IUserDTO";
+
 export interface TimeSlotDTO {
   day: string;
   timeSlots: string[];
@@ -16,6 +18,8 @@ export interface IGroupDTO {
   coverPic: string;
   startDate: Date;
   adminId: string;
+  admin?: IUserDTO;
   members: { userId: string; joinedAt: Date }[];
+  membersDetails?: { user: IUserDTO; joinedAt: Date }[];
   createdAt: Date;
 }

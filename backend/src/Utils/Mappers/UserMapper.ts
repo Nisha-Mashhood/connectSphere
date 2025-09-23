@@ -1,5 +1,7 @@
 import { IUser } from '../../Interfaces/Models/IUser'; 
 import { IUserAdminDTO, IUserDTO } from '../../Interfaces/DTOs/IUserDTO';
+import { resolveImage } from '../Utils/Mappers/imageResolver';
+
 
 export function toUserDTO(user: IUser | null): IUserDTO | null {
   if (!user) return null;
@@ -14,8 +16,8 @@ export function toUserDTO(user: IUser | null): IUserDTO | null {
     industry: user.industry,
     reasonForJoining: user.reasonForJoining,
     role: user.role,
-    profilePic: user.profilePic ?? undefined,
-    coverPic: user.coverPic ?? undefined,
+    profilePic: resolveImage(user.profilePic, "profiles"),
+    coverPic: resolveImage(user.coverPic, "covers"),
     loginCount: user.loginCount,
     hasReviewed: user.hasReviewed,
   };
@@ -40,8 +42,8 @@ export function toUserAdminDTO(user: IUser | null): IUserAdminDTO | null {
     industry: user.industry,
     reasonForJoining: user.reasonForJoining,
     role: user.role,
-    profilePic: user.profilePic ?? undefined,
-    coverPic: user.coverPic ?? undefined,
+    profilePic: resolveImage(user.profilePic, "profiles") ?? undefined,
+    coverPic: resolveImage(user.coverPic, "covers") ?? undefined,
     loginCount: user.loginCount,
     hasReviewed: user.hasReviewed,
     isBlocked: user.isBlocked,

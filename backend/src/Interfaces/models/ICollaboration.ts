@@ -8,14 +8,7 @@ export interface ICollaboration extends Document {
   mentorId: IMentor | string | Types.ObjectId;
   userId: IUser | string | Types.ObjectId;
   selectedSlot: {
-    day:
-      | "Sunday"
-      | "Monday"
-      | "Tuesday"
-      | "Wednesday"
-      | "Thursday"
-      | "Friday"
-      | "Saturday";
+    day:string;
     timeSlots: string[];
   }[];
   unavailableDays: {

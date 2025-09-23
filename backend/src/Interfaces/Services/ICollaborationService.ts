@@ -1,14 +1,15 @@
 import { Types } from "mongoose";
-import { ICollaboration } from "../../Interfaces/Models/ICollaboration";
 import { IMentorRequest } from "../../Interfaces/Models/IMentorRequest";
 import { LockedSlot } from "../../Utils/Types/Collaboration.types";
+import { IMentorRequestDTO } from "../DTOs/IMentorRequestDTO";
+import { ICollaborationDTO } from "../DTOs/ICollaborationDTO";
 
 export interface ICollaborationService {
-  TemporaryRequestService: (requestData: Partial<IMentorRequest>) => Promise<IMentorRequest>;
-  getMentorRequests: (mentorId: string) => Promise<IMentorRequest[]>;
-  acceptRequest: (requestId: string) => Promise<IMentorRequest | null>;
-  rejectRequest: (requestId: string) => Promise<IMentorRequest | null>;
-  getRequestForUser: (userId: string) => Promise<IMentorRequest[]>;
+  TemporaryRequestService: (requestData: Partial<IMentorRequest>) => Promise<IMentorRequestDTO | null>;
+  getMentorRequests: (mentorId: string) => Promise<IMentorRequestDTO[]>;
+  acceptRequest: (requestId: string) => Promise<IMentorRequestDTO | null>;
+  rejectRequest: (requestId: string) => Promise<IMentorRequestDTO | null>;
+  getRequestForUser: (userId: string) => Promise<IMentorRequestDTO[]>;
   processPaymentService: (
     paymentMethodId: string,
     amount: number,
@@ -17,15 +18,15 @@ export interface ICollaborationService {
     email: string,
     returnUrl: string
   ) => Promise<{ paymentIntent: any; contacts?: any[] }>;
-  getCollabDataForUserService: (userId: string) => Promise<ICollaboration[]>;
-  getCollabDataForMentorService: (mentorId: string) => Promise<ICollaboration[]>;
-  cancelAndRefundCollab: (collabId: string, reason: string, amount: number) => Promise<ICollaboration | null>;
+  getCollabDataForUserService: (userId: string) => Promise<ICollaborationDTO[]>;
+  getCollabDataForMentorService: (mentorId: string) => Promise<ICollaborationDTO[]>;
+  cancelAndRefundCollab: (collabId: string, reason: string, amount: number) => Promise<ICollaborationDTO | null>;
   getMentorRequestsService: (params: {
     page: number;
     limit: number;
     search: string;
   }) => Promise<{
-    requests: IMentorRequest[];
+    requests: IMentorRequestDTO[];
     total: number;
     page: number;
     pages: number;
@@ -35,13 +36,13 @@ export interface ICollaborationService {
     limit: number;
     search: string;
   }) => Promise<{
-    collabs: ICollaboration[];
+    collabs: ICollaborationDTO[];
     total: number;
     page: number;
     pages: number;
   }>;
-  fetchCollabById: (collabId: string) => Promise<ICollaboration | null>;
-  fetchRequestById: (requestId: string) => Promise<IMentorRequest | null>;
+  fetchCollabById: (collabId: string) => Promise<ICollaborationDTO | null>;
+  fetchRequestById: (requestId: string) => Promise<IMentorRequestDTO | null>;
   markUnavailableDaysService: (
     collabId: string,
     updateData: {
@@ -51,7 +52,7 @@ export interface ICollaborationService {
       approvedById: string;
       isApproved: "pending" | "approved" | "rejected";
     }
-  ) => Promise<ICollaboration | null>;
+  ) => Promise<ICollaborationDTO | null>;
   updateTemporarySlotChangesService: (
     collabId: string,
     updateData: {
@@ -61,19 +62,19 @@ export interface ICollaborationService {
       approvedById: string;
       isApproved: "pending" | "approved" | "rejected";
     }
-  ) => Promise<ICollaboration | null>;
+  ) => Promise<ICollaborationDTO | null>;
   processTimeSlotRequest: (
     collabId: string,
     requestId: string,
     isApproved: boolean,
     requestType: "unavailable" | "timeSlot"
-  ) => Promise<ICollaboration | null>;
+  ) => Promise<ICollaborationDTO | null>;
   getMentorLockedSlots: (mentorId: string) => Promise<LockedSlot[]>;
   getReceiptData: (collabId: string) => Promise<{
     mentorUser: { name: string; email: string };
     user: { name: string; email: string; _id: Types.ObjectId };
     paymentIntent: any;
-    collab: ICollaboration;
+    collab: ICollaborationDTO;
   }>;
   generateReceiptPDF: (collabId: string) => Promise<Buffer>;
 }

@@ -1,18 +1,20 @@
 import { Document, Types } from "mongoose";
+import { IUser } from "./IUser";
+import { IMentor } from "./IMentor";
 
 export interface IMentorRequest extends Document {
   _id: Types.ObjectId;
   mentorRequestId: string;
-  mentorId: Types.ObjectId;
-  userId: Types.ObjectId;
+  mentorId: Types.ObjectId | IMentor;
+  userId: Types.ObjectId | IUser;
   selectedSlot: {
-    day: 'Sunday' | 'Monday' | 'Tuesday' | 'Wednesday' | 'Thursday' | 'Friday' | 'Saturday';
+    day: string;
     timeSlots: string[];
   };
   price: number;
   timePeriod: number;
   paymentStatus: "Pending" | "Paid" | "Failed";
-  isAccepted: string;
+  isAccepted: "Pending" | "Accepted" | "Rejected";
   createdAt: Date;
   updatedAt: Date;
 }

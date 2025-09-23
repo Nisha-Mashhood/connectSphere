@@ -1,5 +1,6 @@
 import { Document, Types } from "mongoose";
 import { IUser } from "./IUser";
+import { ISkill } from "./ISkill";
 
 export interface IMentor extends Document {
   _id: Types.ObjectId;
@@ -7,7 +8,7 @@ export interface IMentor extends Document {
   userId: Types.ObjectId | IUser;
   isApproved?: string;
   rejectionReason?: string;
-  skills?: string[];
+  skills?: string[] | ISkill[];
   certifications?: string[];
   specialization?: string;
   bio: string;

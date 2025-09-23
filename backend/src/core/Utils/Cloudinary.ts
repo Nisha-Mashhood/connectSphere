@@ -63,9 +63,35 @@ export const uploadMedia = async (filePath: string,
 
     await fs.unlink(filePath); // Remove the file from local storage
     console.log(`Deleted local file: ${filePath}`);
-    return { url: result.secure_url, thumbnailUrl };
+    return { url: result.secure_url, thumbnailUrl, publicId : result.public_id };
   } catch (error) {
     console.error(`Failed to upload image or delete file: ${filePath}`, error);
     throw error;
   }
+};
+
+export const generateCloudinaryUrl = (
+  publicId: string,
+  folder?: string,
+  options: {
+    width?: number;
+    height?: number;
+    crop?: string;
+    format?: string;
+    resourceType?: "image" | "video" | "auto";
+  } = {}
+): string => {
+  const { width, height, crop, format, resourceType = "image" } = options;
+
+  // Construct the full ID (folder + publicId)
+  const fullPublicId = folder ? `${folder}/${publicId}` : publicId;
+
+  return cloudinary.url(fullPublicId, {
+    secure: true,
+    resource_type: resourceType,
+    transformation: [
+      ...(width && height ? [{ width, height, crop: crop || "fill" }] : []),
+      ...(format ? [{ fetch_format: format }] : []),
+    ],
+  });
 };

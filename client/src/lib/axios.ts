@@ -3,6 +3,7 @@ import axiosRetry from "axios-retry";
 import { store } from "../redux/store"; 
 import { signOut } from "../redux/Slice/userSlice";
 import toast from "react-hot-toast";
+import logger from "./Logger";
 
 export const axiosInstance = axios.create({
   baseURL: import.meta.env.VITE_BACKEND_URL,
@@ -104,10 +105,11 @@ export const setupInterceptors = (navigate) => {
       if (error.response?.status === 401 && !error.config?._retry) {
         error.config._retry = true;
         try {
-          const response = await axiosInstance.post("/auth/refresh-token");
+          const response = await axiosInstance.post("/auth/refresh-token", {}, { withCredentials: true });
           const { newAccessToken } = response.data;
-          document.cookie = `accessToken=${newAccessToken}; path=/;`;
-          error.config.headers.Authorization = `Bearer ${newAccessToken}`;
+          logger.info(`New Acess Token created : ${newAccessToken}`);
+          // document.cookie = `accessToken=${newAccessToken}; path=/;`;
+          // error.config.headers.Authorization = `Bearer ${newAccessToken}`;
           return axiosInstance(error.config);
         } catch (refreshError) {
           store.dispatch(signOut());

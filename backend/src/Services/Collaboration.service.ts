@@ -17,6 +17,10 @@ import { IContactRepository } from "../Interfaces/Repository/IContactRepository"
 import { IMentorRepository } from "../Interfaces/Repository/IMentorRepository";
 import { IUserRepository } from "../Interfaces/Repository/IUserRepository";
 import { INotificationService } from "../Interfaces/Services/INotificationService";
+import { IMentorRequestDTO } from "../Interfaces/DTOs/IMentorRequestDTO";
+import { toMentorRequestDTO, toMentorRequestDTOs } from "../Utils/Mappers/mentorRequestMapper";
+import { toCollaborationDTO } from "../Utils/Mappers/collaborationMapper";
+import { ICollaborationDTO } from "../Interfaces/DTOs/ICollaborationDTO";
 
 @injectable()
 export class CollaborationService implements ICollaborationService {
@@ -42,7 +46,7 @@ export class CollaborationService implements ICollaborationService {
 
   public TemporaryRequestService = async (
     requestData: Partial<IMentorRequest>
-  ): Promise<IMentorRequest> => {
+  ): Promise<IMentorRequestDTO | null> => {
     try {
       logger.debug(`Creating temporary request`);
       const request = await this._collabRepository.createTemporaryRequest({
@@ -51,7 +55,7 @@ export class CollaborationService implements ICollaborationService {
         isAccepted: "Pending",
       });
       logger.info(`Temporary request created: ${request._id}`);
-      return request;
+      return toMentorRequestDTO(request);
     } catch (error: unknown) {
       const err = error instanceof Error ? error : new Error(String(error));
       logger.error(`Error creating temporary request: ${err.message}`);
@@ -65,7 +69,7 @@ export class CollaborationService implements ICollaborationService {
 
   public getMentorRequests = async (
     mentorId: string
-  ): Promise<IMentorRequest[]> => {
+  ): Promise<IMentorRequestDTO[]> => {
     try {
       logger.debug(`Fetching mentor requests for mentor: ${mentorId}`);
       if (!Types.ObjectId.isValid(mentorId)) {
@@ -80,7 +84,7 @@ export class CollaborationService implements ICollaborationService {
       logger.info(
         `Fetched ${requests.length} mentor requests for mentorId: ${mentorId}`
       );
-      return requests;
+      return toMentorRequestDTOs(requests);
     } catch (error: unknown) {
       const err = error instanceof Error ? error : new Error(String(error));
       logger.error(
@@ -98,7 +102,7 @@ export class CollaborationService implements ICollaborationService {
 
   public acceptRequest = async (
     requestId: string
-  ): Promise<IMentorRequest | null> => {
+  ): Promise<IMentorRequestDTO | null> => {
     try {
       logger.debug(`Accepting mentor request: ${requestId}`);
       if (!Types.ObjectId.isValid(requestId)) {
@@ -117,7 +121,7 @@ export class CollaborationService implements ICollaborationService {
           StatusCodes.INTERNAL_SERVER_ERROR
         );
       }
-
+      
       const user = await this._userRepository.findById(
         updatedRequest.userId.toString()
       );
@@ -180,7 +184,7 @@ export class CollaborationService implements ICollaborationService {
         `Sent collaboration_status notification to mentor ${mentorUser._id}`
       );
 
-      return updatedRequest;
+      return toMentorRequestDTO(updatedRequest);
     } catch (error: unknown) {
       const err = error instanceof Error ? error : new Error(String(error));
       logger.error(`Error accepting request ${requestId}: ${err.message}`);
@@ -196,7 +200,7 @@ export class CollaborationService implements ICollaborationService {
 
   public rejectRequest = async (
     requestId: string
-  ): Promise<IMentorRequest | null> => {
+  ): Promise<IMentorRequestDTO | null> => {
     try {
       logger.debug(`Rejecting mentor request: ${requestId}`);
       if (!Types.ObjectId.isValid(requestId)) {
@@ -278,7 +282,7 @@ export class CollaborationService implements ICollaborationService {
         `Sent collaboration_status notification to mentor ${mentorUser._id}`
       );
 
-      return updatedRequest;
+      return toMentorRequestDTO(updatedRequest);
     } catch (error: unknown) {
       const err = error instanceof Error ? error : new Error(String(error));
       logger.error(`Error rejecting request ${requestId}: ${err.message}`);
@@ -294,7 +298,7 @@ export class CollaborationService implements ICollaborationService {
 
   public getRequestForUser = async (
     userId: string
-  ): Promise<IMentorRequest[]> => {
+  ): Promise<IMentorRequestDTO[]> => {
     try {
       logger.debug(`Fetching requests for user: ${userId}`);
       if (!Types.ObjectId.isValid(userId)) {
@@ -307,7 +311,7 @@ export class CollaborationService implements ICollaborationService {
       logger.info(
         `Fetched ${requests.length} mentor requests for userId: ${userId}`
       );
-      return requests;
+      return toMentorRequestDTOs(requests);
     } catch (error: unknown) {
       const err = error instanceof Error ? error : new Error(String(error));
       logger.error(
@@ -405,6 +409,11 @@ export class CollaborationService implements ICollaborationService {
           endDate,
           paymentIntentId: paymentIntent.id,
         });
+        const collaborationDTO = toCollaborationDTO(collaboration);
+        if (!collaborationDTO) {
+          logger.error(`Failed to map collaboration ${collaboration._id} to DTO`);
+          throw new ServiceError("Failed to map collaboration to DTO", StatusCodes.INTERNAL_SERVER_ERROR);
+        }
         logger.info(`Collaboration created: ${collaboration._id}`);
 
         const mentor = await this._mentorRepository.getMentorById(
@@ -493,7 +502,7 @@ export class CollaborationService implements ICollaborationService {
   //Check whether the collbaoration is completed
   private checkAndCompleteCollaboration = async (
     collab: ICollaboration
-  ): Promise<ICollaboration | null> => {
+  ): Promise<ICollaborationDTO | null> => {
     try {
       const currentDate = new Date();
       if (
@@ -509,7 +518,13 @@ export class CollaborationService implements ICollaborationService {
           { new: true }
         );
 
-        await this._contactRepository.deleteContact(
+        const updatedCollabDTO = toCollaborationDTO(updatedCollab);
+        if (!updatedCollabDTO) {
+          logger.error(`Failed to map collaboration ${collab._id} to DTO`);
+          throw new ServiceError("Failed to map collaboration to DTO", StatusCodes.INTERNAL_SERVER_ERROR);
+        }
+
+       await this._contactRepository.deleteContact(
           collab._id.toString(),
           "user-mentor"
         );
@@ -517,9 +532,14 @@ export class CollaborationService implements ICollaborationService {
           `Collaboration ${collab._id} was completed, so associated contact was deleted`
         );
 
-        return updatedCollab;
+        return updatedCollabDTO;
       }
-      return collab;
+      const collabDTO = toCollaborationDTO(collab);
+      if (!collabDTO) {
+        logger.error(`Failed to map collaboration ${collab._id} to DTO`);
+        throw new ServiceError("Failed to map collaboration to DTO", StatusCodes.INTERNAL_SERVER_ERROR);
+      }
+      return collabDTO;
     } catch (error: unknown) {
       const err = error instanceof Error ? error : new Error(String(error));
       logger.error(
@@ -535,7 +555,7 @@ export class CollaborationService implements ICollaborationService {
 
   public getCollabDataForUserService = async (
     userId: string
-  ): Promise<ICollaboration[]> => {
+  ): Promise<ICollaborationDTO[]> => {
     try {
       logger.debug(`Fetching collaboration data for user: ${userId}`);
       if (!Types.ObjectId.isValid(userId)) {
@@ -551,7 +571,7 @@ export class CollaborationService implements ICollaborationService {
         })
       );
       const activeCollaborations = updatedCollaborations.filter(
-        (collab): collab is ICollaboration =>
+        (collab): collab is ICollaborationDTO =>
           collab !== null && !collab.isCompleted
       );
       logger.info(
@@ -575,7 +595,7 @@ export class CollaborationService implements ICollaborationService {
 
   public getCollabDataForMentorService = async (
     mentorId: string
-  ): Promise<ICollaboration[]> => {
+  ): Promise<ICollaborationDTO[]> => {
     try {
       logger.debug(`Fetching collaboration data for mentor: ${mentorId}`);
       if (!Types.ObjectId.isValid(mentorId)) {
@@ -593,7 +613,7 @@ export class CollaborationService implements ICollaborationService {
         })
       );
       const activeCollaborations = updatedCollaborations.filter(
-        (collab): collab is ICollaboration =>
+        (collab): collab is ICollaborationDTO =>
           collab !== null && !collab.isCompleted
       );
       logger.info(
@@ -619,7 +639,7 @@ export class CollaborationService implements ICollaborationService {
     collabId: string,
     reason: string,
     amount: number
-  ): Promise<ICollaboration | null> => {
+  ): Promise<ICollaborationDTO | null> => {
     try {
       logger.debug(
         `Processing cancellation and refund for collaboration: ${collabId}`
@@ -673,6 +693,11 @@ export class CollaborationService implements ICollaborationService {
       const updatedCollab = await this._collabRepository.markCollabAsCancelled(
         collabId
       );
+      const updatedCollabDTO = toCollaborationDTO(updatedCollab);
+      if (!updatedCollabDTO) {
+        logger.error(`Failed to map collaboration ${updatedCollab?._id} to DTO`);
+        throw new ServiceError("Failed to map collaboration to DTO", StatusCodes.INTERNAL_SERVER_ERROR);
+      }
       await this._contactRepository.deleteContact(collabId, "user-mentor");
 
       const user = collab.userId as Pick<IUser, "name" | "email">;
@@ -710,7 +735,7 @@ export class CollaborationService implements ICollaborationService {
             : ""
         }`
       );
-      return updatedCollab;
+      return updatedCollabDTO;
     } catch (error: unknown) {
       const err = error instanceof Error ? error : new Error(String(error));
       logger.error(
@@ -735,7 +760,7 @@ export class CollaborationService implements ICollaborationService {
     limit: number;
     search: string;
   }): Promise<{
-    requests: IMentorRequest[];
+    requests: IMentorRequestDTO[];
     total: number;
     page: number;
     pages: number;
@@ -752,7 +777,12 @@ export class CollaborationService implements ICollaborationService {
       logger.info(
         `Fetched ${result.requests.length} mentor requests, total: ${result.total}`
       );
-      return result;
+      return {
+        requests: toMentorRequestDTOs(result.requests),
+        total: result.total,
+        page: result.page,
+        pages: result.pages,
+      };
     } catch (error: unknown) {
       const err = error instanceof Error ? error : new Error(String(error));
       logger.error(`Error fetching mentor requests: ${err.message}`);
@@ -775,7 +805,7 @@ export class CollaborationService implements ICollaborationService {
     limit: number;
     search: string;
   }): Promise<{
-    collabs: ICollaboration[];
+    collabs: ICollaborationDTO[];
     total: number;
     page: number;
     pages: number;
@@ -800,7 +830,7 @@ export class CollaborationService implements ICollaborationService {
         })
       );
       const filteredCollabs = updatedCollabs.filter(
-        (collab): collab is ICollaboration => collab !== null
+        (collab): collab is ICollaborationDTO => collab !== null
       );
       logger.info(
         `Fetched ${filteredCollabs.length} collaborations, total: ${total}`
@@ -821,7 +851,7 @@ export class CollaborationService implements ICollaborationService {
 
   public fetchCollabById = async (
     collabId: string
-  ): Promise<ICollaboration | null> => {
+  ): Promise<ICollaborationDTO | null> => {
     try {
       logger.debug(`Fetching collaboration by ID: ${collabId}`);
       if (!Types.ObjectId.isValid(collabId)) {
@@ -835,12 +865,17 @@ export class CollaborationService implements ICollaborationService {
         logger.info(`Collaboration ${collabId} is cancelled or completed`);
         return null;
       }
+      const collabDTO = toCollaborationDTO(collab);
+      if (!collabDTO && collab) {
+        logger.error(`Failed to map collaboration ${collab._id} to DTO`);
+        throw new ServiceError("Failed to map collaboration to DTO", StatusCodes.INTERNAL_SERVER_ERROR);
+      }
       logger.info(
         `Collaboration ${
           collab ? "found" : "not found"
         } for collabId: ${collabId}`
       );
-      return collab;
+      return collabDTO;
     } catch (error: unknown) {
       const err = error instanceof Error ? error : new Error(String(error));
       logger.error(`Error fetching collaboration ${collabId}: ${err.message}`);
@@ -856,7 +891,7 @@ export class CollaborationService implements ICollaborationService {
 
   public fetchRequestById = async (
     requestId: string
-  ): Promise<IMentorRequest | null> => {
+  ): Promise<IMentorRequestDTO | null> => {
     try {
       logger.debug(`Fetching request by ID: ${requestId}`);
       if (!Types.ObjectId.isValid(requestId)) {
@@ -868,12 +903,17 @@ export class CollaborationService implements ICollaborationService {
       const request = await this._collabRepository.fetchMentorRequestDetails(
         requestId
       );
+      const requestDTO = toMentorRequestDTO(request);
+      if (!requestDTO && request) {
+        logger.error(`Failed to map mentor request ${request._id} to DTO`);
+        throw new ServiceError("Failed to map mentor request to DTO", StatusCodes.INTERNAL_SERVER_ERROR);
+      }
       logger.info(
         `Mentor request ${
           request ? "found" : "not found"
         } for requestId: ${requestId}`
       );
-      return request;
+      return requestDTO;
     } catch (error: unknown) {
       const err = error instanceof Error ? error : new Error(String(error));
       logger.error(`Error fetching request ${requestId}: ${err.message}`);
@@ -896,7 +936,7 @@ export class CollaborationService implements ICollaborationService {
       approvedById: string;
       isApproved: "pending" | "approved" | "rejected";
     }
-  ): Promise<ICollaboration | null> => {
+  ): Promise<ICollaborationDTO | null> => {
     try {
       logger.debug(`Marking unavailable days for collaboration: ${collabId}`);
       if (!Types.ObjectId.isValid(collabId)) {
@@ -909,8 +949,13 @@ export class CollaborationService implements ICollaborationService {
         collabId,
         updateData
       );
+      const collaborationDTO = toCollaborationDTO(collaboration);
+      if (!collaborationDTO && collaboration) {
+        logger.error(`Failed to map collaboration ${collaboration._id} to DTO`);
+        throw new ServiceError("Failed to map collaboration to DTO", StatusCodes.INTERNAL_SERVER_ERROR);
+      }
       logger.info(`Updated unavailable days for collaboration ${collabId}`);
-      return collaboration;
+      return collaborationDTO;
     } catch (error: unknown) {
       const err = error instanceof Error ? error : new Error(String(error));
       logger.error(
@@ -935,7 +980,7 @@ export class CollaborationService implements ICollaborationService {
       approvedById: string;
       isApproved: "pending" | "approved" | "rejected";
     }
-  ): Promise<ICollaboration | null> => {
+  ): Promise<ICollaborationDTO | null> => {
     try {
       logger.debug(
         `Updating temporary slot changes for collaboration: ${collabId}`
@@ -950,10 +995,15 @@ export class CollaborationService implements ICollaborationService {
         collabId,
         updateData
       );
+      const collaborationDTO = toCollaborationDTO(collaboration);
+      if (!collaborationDTO && collaboration) {
+        logger.error(`Failed to map collaboration ${collaboration._id} to DTO`);
+        throw new ServiceError("Failed to map collaboration to DTO", StatusCodes.INTERNAL_SERVER_ERROR);
+      }
       logger.info(
         `Updated temporary slot changes for collaboration ${collabId}`
       );
-      return collaboration;
+      return collaborationDTO;
     } catch (error: unknown) {
       const err = error instanceof Error ? error : new Error(String(error));
       logger.error(
@@ -974,7 +1024,7 @@ export class CollaborationService implements ICollaborationService {
     requestId: string,
     isApproved: boolean,
     requestType: "unavailable" | "timeSlot"
-  ): Promise<ICollaboration | null> => {
+  ): Promise<ICollaborationDTO | null> => {
     try {
       logger.debug(
         `Processing time slot request for collaboration: ${collabId}`
@@ -1064,6 +1114,12 @@ export class CollaborationService implements ICollaborationService {
         newEndDate
       );
 
+      const updatedCollaborationDTO = toCollaborationDTO(updatedCollaboration);
+      if (!updatedCollaborationDTO && updatedCollaboration) {
+        logger.error(`Failed to map collaboration ${updatedCollaboration._id} to DTO`);
+        throw new ServiceError("Failed to map collaboration to DTO", StatusCodes.INTERNAL_SERVER_ERROR);
+      }
+
       if (status === "rejected") {
         const user = collaboration.userId as Pick<IUser, "name" | "email">;
         const mentor = (
@@ -1099,7 +1155,7 @@ export class CollaborationService implements ICollaborationService {
       logger.info(
         `Processed time slot request for collaboration ${collabId}: ${status}`
       );
-      return updatedCollaboration;
+      return updatedCollaborationDTO;
     } catch (error: unknown) {
       const err = error instanceof Error ? error : new Error(String(error));
       logger.error(
@@ -1200,7 +1256,7 @@ export class CollaborationService implements ICollaborationService {
     mentorUser: { name: string; email: string };
     user: { name: string; email: string; _id: Types.ObjectId };
     paymentIntent: any;
-    collab: ICollaboration;
+    collab: ICollaborationDTO;
   }> => {
     try {
       logger.debug(`Fetching receipt data for collaboration: ${collabId}`);
@@ -1217,6 +1273,12 @@ export class CollaborationService implements ICollaborationService {
           "Collaboration or payment not found",
           StatusCodes.NOT_FOUND
         );
+      }
+
+      const collabDTO = toCollaborationDTO(collab);
+      if (!collabDTO) {
+        logger.error(`Failed to map collaboration ${collab._id} to DTO`);
+        throw new ServiceError("Failed to map collaboration to DTO", StatusCodes.INTERNAL_SERVER_ERROR);
       }
 
       const paymentIntent = await stripe.paymentIntents.retrieve(
@@ -1245,7 +1307,7 @@ export class CollaborationService implements ICollaborationService {
         throw new ServiceError("User not found", StatusCodes.NOT_FOUND);
       }
 
-      return { mentorUser, user, paymentIntent, collab };
+      return { mentorUser, user, paymentIntent, collab: collabDTO };
     } catch (error: unknown) {
       const err = error instanceof Error ? error : new Error(String(error));
       logger.error(
@@ -1307,10 +1369,10 @@ export class CollaborationService implements ICollaborationService {
         doc.moveDown(0.5);
         doc
           .fontSize(10)
-          .text(`Collaboration ID: ${collab.collaborationId || collab._id}`);
+          .text(`Collaboration ID: ${collab.collaborationId || collab.id}`);
         doc.text(`Mentor: ${mentorUser.name}`);
         doc.text(`User: ${user.name}`);
-        doc.text(`Amount: INR ${(collab.price || 0).toFixed(2)}`);
+        doc.text(`Amount: INR ${collab.price.toFixed(2)}`);
         doc.text(
           `Payment Date: ${
             paymentIntent.created
@@ -1342,7 +1404,7 @@ export class CollaborationService implements ICollaborationService {
             `Payment for mentorship session with ${mentorUser.name} from ` +
               `${
                 collab.startDate
-                  ? collab.startDate.toLocaleDateString("en-US", {
+                  ? new Date(collab.startDate).toLocaleDateString("en-US", {
                       year: "numeric",
                       month: "long",
                       day: "numeric",
@@ -1351,7 +1413,7 @@ export class CollaborationService implements ICollaborationService {
               } to ` +
               `${
                 collab.endDate
-                  ? collab.endDate.toLocaleDateString("en-US", {
+                  ? new Date(collab.endDate).toLocaleDateString("en-US", {
                       year: "numeric",
                       month: "long",
                       day: "numeric",
@@ -1384,5 +1446,5 @@ export class CollaborationService implements ICollaborationService {
             err
           );
     }
-  };
+  }
 }

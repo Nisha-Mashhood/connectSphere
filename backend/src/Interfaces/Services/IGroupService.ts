@@ -1,17 +1,17 @@
-import { IGroup } from "../Models/IGroup";
-import { IGroupRequest } from "../Models/IGroupRequest";
 import { GroupFormData, GroupQuery } from "../../Utils/Types/Group.types";
+import { IGroupDTO } from "../DTOs/IGroupDTO";
+import { IGroupRequestDTO } from "../DTOs/IGroupRequestDTO";
 
 export interface IGroupService {
-  createGroup: (groupData: GroupFormData) => Promise<IGroup>;
-  getGroupDetails: (adminId: string) => Promise<IGroup[]>;
-  getGroupById: (groupId: string) => Promise<IGroup | null>;
-  getAllGroups: (query?: GroupQuery) => Promise<{ groups: IGroup[]; total: number }>;
-  requestToJoinGroup: (groupId: string, userId: string) => Promise<IGroupRequest>;
-  getGroupRequestsByGroupId: (groupId: string) => Promise<IGroupRequest[]>;
-  getGroupRequestsByAdminId: (adminId: string) => Promise<IGroupRequest[]>;
-  getGroupRequestsByUserId: (userId: string) => Promise<IGroupRequest[]>;
-  getGroupRequestById: (requestId: string) => Promise<IGroupRequest | null>;
+  createGroup: (groupData: GroupFormData) => Promise<IGroupDTO | null>;
+  getGroupDetails: (adminId: string) => Promise<IGroupDTO[]>;
+  getGroupById: (groupId: string) => Promise<IGroupDTO | null>;
+  getAllGroups: (query?: GroupQuery) => Promise<{ groups: IGroupDTO[]; total: number }>;
+  requestToJoinGroup: (groupId: string, userId: string) => Promise<IGroupRequestDTO>;
+  getGroupRequestsByGroupId: (groupId: string) => Promise<IGroupRequestDTO[]>;
+  getGroupRequestsByAdminId: (adminId: string) => Promise<IGroupRequestDTO[]>;
+  getGroupRequestsByUserId: (userId: string) => Promise<IGroupRequestDTO[]>;
+  getGroupRequestById: (requestId: string) => Promise<IGroupRequestDTO | null>;
   modifyGroupRequestStatus: (
     requestId: string,
     status: "Accepted" | "Rejected"
@@ -29,13 +29,13 @@ export interface IGroupService {
     groupRequestData: { groupId: string; userId: string },
     returnUrl: string
   ) => Promise<{ paymentIntent: any }>;
-  removeGroupMember: (groupId: string, userId: string) => Promise<IGroup>;
-  deleteGroup: (groupId: string) => Promise<IGroup | null>;
+  removeGroupMember: (groupId: string, userId: string) => Promise<IGroupDTO | null>;
+  deleteGroup: (groupId: string) => Promise<IGroupDTO | null>;
   updateGroupImage: (
     groupId: string,
     profilePic?: string,
     coverPic?: string
-  ) => Promise<IGroup | null>;
-  getGroupDetailsForMembers: (userId: string) => Promise<IGroup[]>;
-  getAllGroupRequests: () => Promise<IGroupRequest[]>;
+  ) => Promise<IGroupDTO | null>;
+  getGroupDetailsForMembers: (userId: string) => Promise<IGroupDTO[]>;
+  getAllGroupRequests: () => Promise<IGroupRequestDTO[]>;
 }

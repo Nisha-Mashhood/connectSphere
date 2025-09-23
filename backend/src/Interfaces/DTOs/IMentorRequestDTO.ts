@@ -1,16 +1,20 @@
+import { IUserDTO } from "./IUserDTO";
+import { IMentorDTO } from "./IMentorDTO";
+
 export interface IMentorRequestDTO {
   id: string;
   mentorRequestId: string;
   mentorId: string;
-  userId: string;
-  selectedSlot: {
-    day: "Sunday" | "Monday" | "Tuesday" | "Wednesday" | "Thursday" | "Friday" | "Saturday";
+  mentor?: IMentorDTO; // Populated mentor details when available
+  userId: string; 
+  user?: IUserDTO; // Populated user details when available
+  selectedSlot?: {
+    day: string;
     timeSlots: string[];
   };
   price: number;
-  timePeriod: number;
   paymentStatus: "Pending" | "Paid" | "Failed";
-  isAccepted: string;
+  timePeriod: number;
+  isAccepted: "Pending" | "Accepted" | "Rejected";
   createdAt: Date;
-  updatedAt: Date;
 }

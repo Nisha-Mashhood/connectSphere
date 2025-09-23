@@ -3,8 +3,6 @@ import { sendEmail } from "../Core/Utils/Email";
 import stripe from "../Core/Utils/Stripe";
 import { v4 as uuid } from "uuid";
 import logger from "../Core/Utils/Logger";
-import { IGroup } from "../Interfaces/Models/IGroup";
-import { IGroupRequest } from "../Interfaces/Models/IGroupRequest";
 import { ServiceError } from "../Core/Utils/ErrorHandler";
 import { GroupFormData, GroupQuery } from "../Utils/Types/Group.types";
 import { Types } from "mongoose";
@@ -13,6 +11,10 @@ import { StatusCodes } from "../Enums/StatusCode.enums";
 import { IGroupRepository } from "../Interfaces/Repository/IGroupRepository";
 import { IContactRepository } from "../Interfaces/Repository/IContactRepository";
 import { IUserRepository } from "../Interfaces/Repository/IUserRepository";
+import { IGroupDTO } from "../Interfaces/DTOs/IGroupDTO";
+import { IGroupRequestDTO } from "../Interfaces/DTOs/IGroupRequestDTO";
+import { toGroupDTO, toGroupDTOs } from "../Utils/Mappers/groupMapper";
+import { toGroupRequestDTO, toGroupRequestDTOs } from "../Utils/Mappers/groupRequestMapper";
 
 @injectable()
 export class GroupService implements IGroupService {
@@ -30,7 +32,7 @@ export class GroupService implements IGroupService {
     this._userRepository = userRepository;
   }
 
-  public createGroup = async (groupData: GroupFormData): Promise<IGroup> => {
+  public createGroup = async (groupData: GroupFormData): Promise<IGroupDTO | null> => {
     try {
       logger.debug(`Creating group: ${groupData.name}`);
 
@@ -99,7 +101,7 @@ export class GroupService implements IGroupService {
         `Contact created for admin ${groupData.adminId} in group ${newGroup._id}`
       );
 
-      return newGroup;
+      return toGroupDTO(newGroup);
     } catch (error: unknown) {
       const err = error instanceof Error ? error : new Error(String(error));
       logger.error(`Error creating group ${groupData.name}: ${err.message}`);
@@ -113,7 +115,7 @@ export class GroupService implements IGroupService {
     }
   };
 
-  public getGroupDetails = async (adminId: string): Promise<IGroup[]> => {
+  public getGroupDetails = async (adminId: string): Promise<IGroupDTO[]> => {
     try {
       logger.debug(`Fetching groups for admin: ${adminId}`);
 
@@ -127,7 +129,7 @@ export class GroupService implements IGroupService {
 
       const groups = await this._groupRepository.getGroupsByAdminId(adminId);
       logger.info(`Fetched ${groups.length} groups for admin: ${adminId}`);
-      return groups;
+      return toGroupDTOs(groups);
     } catch (error: unknown) {
       const err = error instanceof Error ? error : new Error(String(error));
       logger.error(
@@ -143,7 +145,7 @@ export class GroupService implements IGroupService {
     }
   };
 
-  public getGroupById = async (groupId: string): Promise<IGroup | null> => {
+  public getGroupById = async (groupId: string): Promise<IGroupDTO | null> => {
     try {
       logger.debug(`Fetching group by ID: ${groupId}`);
 
@@ -162,7 +164,7 @@ export class GroupService implements IGroupService {
       }
 
       logger.info(`Fetched group: ${groupId} (${group.name})`);
-      return group;
+      return toGroupDTO(group);
     } catch (error: unknown) {
       const err = error instanceof Error ? error : new Error(String(error));
       logger.error(`Error fetching group ${groupId}: ${err.message}`);
@@ -178,14 +180,17 @@ export class GroupService implements IGroupService {
 
   public getAllGroups = async (
     query: GroupQuery = {}
-  ): Promise<{ groups: IGroup[]; total: number }> => {
+  ): Promise<{ groups: IGroupDTO[]; total: number }> => {
     try {
       logger.debug(`Fetching all groups with query: ${JSON.stringify(query)}`);
       const result = await this._groupRepository.getAllGroups(query);
       logger.info(
         `Fetched ${result.groups.length} groups, total: ${result.total}`
       );
-      return result;
+      return {
+        groups: toGroupDTOs(result.groups),
+        total:result.total
+      };
     } catch (error: unknown) {
       const err = error instanceof Error ? error : new Error(String(error));
       logger.error(`Error fetching all groups: ${err.message}`);
@@ -202,7 +207,7 @@ export class GroupService implements IGroupService {
   public requestToJoinGroup = async (
     groupId: string,
     userId: string
-  ): Promise<IGroupRequest> => {
+  ): Promise<IGroupRequestDTO> => {
     try {
       logger.debug(
         `Creating group request for group: ${groupId}, user: ${userId}`
@@ -229,7 +234,7 @@ export class GroupService implements IGroupService {
       logger.info(
         `Group request created: ${request._id} for group ${groupId}, user ${userId}`
       );
-      return request;
+      return toGroupRequestDTO(request)!;
     } catch (error: unknown) {
       const err = error instanceof Error ? error : new Error(String(error));
       logger.error(
@@ -247,7 +252,7 @@ export class GroupService implements IGroupService {
 
   public getGroupRequestsByGroupId = async (
     groupId: string
-  ): Promise<IGroupRequest[]> => {
+  ): Promise<IGroupRequestDTO[]> => {
     try {
       logger.debug(`Fetching group requests for group: ${groupId}`);
 
@@ -263,7 +268,7 @@ export class GroupService implements IGroupService {
       logger.info(
         `Fetched ${requests.length} group requests for group: ${groupId}`
       );
-      return requests;
+      return toGroupRequestDTOs(requests);
     } catch (error: unknown) {
       const err = error instanceof Error ? error : new Error(String(error));
       logger.error(
@@ -281,7 +286,7 @@ export class GroupService implements IGroupService {
 
   public getGroupRequestsByAdminId = async (
     adminId: string
-  ): Promise<IGroupRequest[]> => {
+  ): Promise<IGroupRequestDTO[]> => {
     try {
       logger.debug(`Fetching group requests for admin: ${adminId}`);
 
@@ -297,7 +302,7 @@ export class GroupService implements IGroupService {
       logger.info(
         `Fetched ${requests.length} group requests for admin: ${adminId}`
       );
-      return requests;
+      return toGroupRequestDTOs(requests);
     } catch (error: unknown) {
       const err = error instanceof Error ? error : new Error(String(error));
       logger.error(
@@ -315,7 +320,7 @@ export class GroupService implements IGroupService {
 
   public getGroupRequestsByUserId = async (
     userId: string
-  ): Promise<IGroupRequest[]> => {
+  ): Promise<IGroupRequestDTO[]> => {
     try {
       logger.debug(`Fetching group requests for user: ${userId}`);
 
@@ -331,7 +336,7 @@ export class GroupService implements IGroupService {
       logger.info(
         `Fetched ${requests.length} group requests for user: ${userId}`
       );
-      return requests;
+      return toGroupRequestDTOs(requests);
     } catch (error: unknown) {
       const err = error instanceof Error ? error : new Error(String(error));
       logger.error(
@@ -349,7 +354,7 @@ export class GroupService implements IGroupService {
 
   public getGroupRequestById = async (
     requestId: string
-  ): Promise<IGroupRequest | null> => {
+  ): Promise<IGroupRequestDTO | null> => {
     try {
       logger.debug(`Fetching group request by ID: ${requestId}`);
 
@@ -371,7 +376,7 @@ export class GroupService implements IGroupService {
       }
 
       logger.info(`Fetched group request: ${requestId}`);
-      return request;
+      return toGroupRequestDTO(request);
     } catch (error: unknown) {
       const err = error instanceof Error ? error : new Error(String(error));
       logger.error(`Error fetching group request ${requestId}: ${err.message}`);
@@ -670,7 +675,7 @@ export class GroupService implements IGroupService {
   public removeGroupMember = async (
     groupId: string,
     userId: string
-  ): Promise<IGroup> => {
+  ): Promise<IGroupDTO | null> => {
     try {
       logger.debug(`Removing user ${userId} from group ${groupId}`);
 
@@ -744,7 +749,7 @@ export class GroupService implements IGroupService {
       logger.info(
         `User ${userId} removed from group ${groupId} and contact deleted`
       );
-      return updatedGroup;
+      return toGroupDTO(updatedGroup);
     } catch (error: unknown) {
       const err = error instanceof Error ? error : new Error(String(error));
       logger.error(
@@ -760,7 +765,7 @@ export class GroupService implements IGroupService {
     }
   };
 
-  public deleteGroup = async (groupId: string): Promise<IGroup | null> => {
+  public deleteGroup = async (groupId: string): Promise<IGroupDTO | null> => {
     try {
       logger.debug(`Deleting group: ${groupId}`);
 
@@ -785,7 +790,8 @@ export class GroupService implements IGroupService {
       logger.info(
         `Group ${groupId} deleted and associated contacts and requests removed`
       );
-      return deletedGroup;
+      const deletedGroupDTO = toGroupDTO(deletedGroup);
+      return deletedGroupDTO;
     } catch (error: unknown) {
       const err = error instanceof Error ? error : new Error(String(error));
       logger.error(`Error deleting group ${groupId}: ${err.message}`);
@@ -803,7 +809,7 @@ export class GroupService implements IGroupService {
     groupId: string,
     profilePic?: string,
     coverPic?: string
-  ): Promise<IGroup | null> => {
+  ): Promise<IGroupDTO | null> => {
     try {
       logger.debug(`Updating group image for group: ${groupId}`);
 
@@ -837,7 +843,7 @@ export class GroupService implements IGroupService {
       }
 
       logger.info(`Group image updated for group: ${groupId}`);
-      return updatedGroup;
+      return toGroupDTO(updatedGroup);
     } catch (error: unknown) {
       const err = error instanceof Error ? error : new Error(String(error));
       logger.error(
@@ -855,7 +861,7 @@ export class GroupService implements IGroupService {
 
   public getGroupDetailsForMembers = async (
     userId: string
-  ): Promise<IGroup[]> => {
+  ): Promise<IGroupDTO[]> => {
     try {
       logger.debug(`Fetching group details for member: ${userId}`);
 
@@ -869,7 +875,7 @@ export class GroupService implements IGroupService {
 
       const groups = await this._groupRepository.getGroupDetailsByUserId(userId);
       logger.info(`Fetched ${groups.length} groups for member: ${userId}`);
-      return groups;
+      return toGroupDTOs(groups);
     } catch (error: unknown) {
       const err = error instanceof Error ? error : new Error(String(error));
       logger.error(
@@ -885,12 +891,12 @@ export class GroupService implements IGroupService {
     }
   };
 
-  public getAllGroupRequests = async (): Promise<IGroupRequest[]> => {
+  public getAllGroupRequests = async (): Promise<IGroupRequestDTO[]> => {
     try {
       logger.debug("Fetching all group requests");
       const requests = await this._groupRepository.getAllGroupRequests();
       logger.info(`Fetched ${requests.length} group requests`);
-      return requests;
+      return toGroupRequestDTOs(requests);
     } catch (error: unknown) {
       const err = error instanceof Error ? error : new Error(String(error));
       logger.error(`Error fetching all group requests: ${err.message}`);

@@ -12,7 +12,7 @@ export interface IMentorService {
     availableSlots: object[];
     timePeriod: number;
     certifications: string[];
-  }) => Promise<IMentorDTO>;
+  }) => Promise<IMentorDTO | null>;
   getAllMentorRequests: (
     page?: number,
     limit?: number,

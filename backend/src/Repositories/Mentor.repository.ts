@@ -80,8 +80,8 @@ export class MentorRepository extends BaseRepository<IMentor> implements IMentor
       const total = await this.model.countDocuments(query);
       const mentors = await this.model
         .find(query)
-        .populate("userId", "name email")
-        .populate("skills", "name")
+        .populate("userId", "id name email")
+        .populate("skills", "id name")
         .sort({ createdAt: sort === "desc" ? -1 : 1 })
         .skip((page - 1) * limit)
         .limit(limit)

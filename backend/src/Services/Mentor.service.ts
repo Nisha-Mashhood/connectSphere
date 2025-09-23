@@ -55,7 +55,7 @@ export class MentorService implements IMentorService {
     availableSlots: object[];
     timePeriod: number;
     certifications: string[];
-  }): Promise<IMentorDTO> => {
+  }): Promise<IMentorDTO | null> => {
     try {
       logger.debug(`Submitting mentor request for user: ${mentorData.userId}`);
 
@@ -64,9 +64,7 @@ export class MentorService implements IMentorService {
         !mentorData.skills ||
         !mentorData.specialization ||
         !mentorData.bio ||
-        !mentorData.availableSlots ||
-        mentorData.price === null ||
-        mentorData.timePeriod === null
+        !mentorData.availableSlots
       ) {
         logger.error("Missing required fields in mentorData");
         throw new ServiceError(
@@ -150,7 +148,7 @@ export class MentorService implements IMentorService {
         }
       }
 
-      return toMentorDTO(mentor)!;
+      return toMentorDTO(mentor);
     } catch (error: unknown) {
       const err = error instanceof Error ? error : new Error(String(error));
       logger.error(
