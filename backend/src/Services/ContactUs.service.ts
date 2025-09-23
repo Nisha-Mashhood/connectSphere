@@ -1,13 +1,14 @@
 import { inject, injectable } from "inversify";
 import { Types } from "mongoose";
 import config from "../config/env.config";
-import { IContactMessage } from "../Interfaces/Models/IContactMessage";
 import { StatusCodes } from "../Enums/StatusCode.enums";
 import { sendEmail } from "../Core/Utils/Email";
 import logger from "../Core/Utils/Logger";
 import { ServiceError } from "../Core/Utils/ErrorHandler";
 import { IContactMessageService } from "../Interfaces/Services/IContactMessageService";
 import { IContactMessageRepository } from "../Interfaces/Repository/IContactMessageRepository";
+import { IContactMessageDTO } from "../Interfaces/DTOs/IContactMessageDTO";
+import { toContactMessageDTO, toContactMessageDTOs } from "../Utils/Mappers/contactMessageMapper";
 
 @injectable()
 export class ContactMessageService implements IContactMessageService{
@@ -21,7 +22,7 @@ export class ContactMessageService implements IContactMessageService{
     name: string;
     email: string;
     message: string;
-  }): Promise<IContactMessage> => {
+  }): Promise<IContactMessageDTO> => {
     try {
       logger.debug(`Creating contact message from: ${data.email}`);
 
@@ -45,6 +46,14 @@ export class ContactMessageService implements IContactMessageService{
       const contactMessage = await this.contactMessageRepo.createContactMessage(
         data
       );
+      const contactMessageDTO = toContactMessageDTO(contactMessage);
+      if (!contactMessageDTO) {
+        logger.error(`Failed to map contact message ${contactMessage._id} to DTO`);
+        throw new ServiceError(
+          "Failed to map contact message to DTO",
+          StatusCodes.INTERNAL_SERVER_ERROR
+        );
+      }
 
       const emailText = `New Contact Message\n\nName: ${data.name}\nEmail: ${
         data.email
@@ -57,7 +66,7 @@ export class ContactMessageService implements IContactMessageService{
       logger.info(`Email sent to admin: ${ReceiverEmail}`);
 
       logger.info(`Contact message created: ${contactMessage._id}`);
-      return contactMessage;
+      return contactMessageDTO;
     } catch (error: unknown) {
       const err = error instanceof Error ? error : new Error(String(error));
       logger.error(
@@ -73,12 +82,13 @@ export class ContactMessageService implements IContactMessageService{
     }
   };
 
-  public getAllContactMessages = async (): Promise<IContactMessage[]> => {
+  public getAllContactMessages = async (): Promise<IContactMessageDTO[]> => {
     try {
       logger.debug("Fetching all contact messages");
       const messages = await this.contactMessageRepo.getAllContactMessages();
-      logger.info(`Fetched ${messages.length} contact messages`);
-      return messages;
+      const messagesDTO = toContactMessageDTOs(messages);
+      logger.info(`Fetched ${messagesDTO.length} contact messages`);
+      return messagesDTO;
     } catch (error: unknown) {
       const err = error instanceof Error ? error : new Error(String(error));
       logger.error(`Error fetching contact messages: ${err.message}`);
@@ -95,7 +105,7 @@ export class ContactMessageService implements IContactMessageService{
   public sendReply = async (
     contactMessageId: string,
     replyData: { email: string; replyMessage: string }
-  ): Promise<IContactMessage> => {
+  ): Promise<IContactMessageDTO> => {
     try {
       logger.debug(`Sending reply for contact message: ${contactMessageId}`);
 
@@ -126,6 +136,15 @@ export class ContactMessageService implements IContactMessageService{
         );
       }
 
+      const updatedMessageDTO = toContactMessageDTO(updatedMessage);
+      if (!updatedMessageDTO) {
+        logger.error(`Failed to map contact message ${updatedMessage._id} to DTO`);
+        throw new ServiceError(
+          "Failed to map contact message to DTO",
+          StatusCodes.INTERNAL_SERVER_ERROR
+        );
+      }
+
       await sendEmail(
         replyData.email,
         "Reply from ConnectSphere",
@@ -134,7 +153,7 @@ export class ContactMessageService implements IContactMessageService{
       logger.info(`Reply email sent to: ${replyData.email}`);
 
       logger.info(`Reply sent for contact message: ${contactMessageId}`);
-      return updatedMessage;
+      return updatedMessageDTO;
     } catch (error: unknown) {
       const err = error instanceof Error ? error : new Error(String(error));
       logger.error(

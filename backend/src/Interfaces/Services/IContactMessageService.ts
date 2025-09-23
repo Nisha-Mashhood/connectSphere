@@ -1,7 +1,7 @@
-import { IContactMessage } from "../../Interfaces/Models/IContactMessage";
+import { IContactMessageDTO } from "../DTOs/IContactMessageDTO";
 
 export interface IContactMessageService {
-  createContactMessage: (data: { name: string; email: string; message: string }) => Promise<IContactMessage>;
-  getAllContactMessages: () => Promise<IContactMessage[]>;
-  sendReply: (contactMessageId: string, replyData: { email: string; replyMessage: string }) => Promise<IContactMessage>;
+  createContactMessage: (data: { name: string; email: string; message: string }) => Promise<IContactMessageDTO>;
+  getAllContactMessages: () => Promise<IContactMessageDTO[]>;
+  sendReply: (contactMessageId: string, replyData: { email: string; replyMessage: string }) => Promise<IContactMessageDTO>;
 }

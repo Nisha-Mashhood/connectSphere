@@ -4,6 +4,6 @@ export interface IContactMessageDTO {
   name: string;
   email: string;
   message: string;
-  givenReply: boolean;
   createdAt: Date;
+  givenReply: boolean;
 }
