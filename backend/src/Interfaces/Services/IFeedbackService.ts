@@ -1,21 +1,22 @@
 import { IFeedback } from "../../Interfaces/Models/IFeedback";
+import { IFeedbackDTO } from "../DTOs/IFeedBackDTO";
 
 export interface IFeedbackService {
-  createFeedback: (feedbackData: Partial<IFeedback>) => Promise<IFeedback>;
+  createFeedback: (feedbackData: Partial<IFeedback>) => Promise<IFeedbackDTO>;
   getMentorFeedbacks: (mentorId: string) => Promise<{
-    feedbacks: IFeedback[];
+    feedbacks: IFeedbackDTO[];
     averageRating: number;
     totalFeedbacks: number;
   }>;
-  getUserFeedbacks: (userId: string) => Promise<IFeedback[]>;
+  getUserFeedbacks: (userId: string) => Promise<IFeedbackDTO[]>;
   getFeedbackForProfile: (
     profileId: string,
     profileType: "mentor" | "user"
   ) => Promise<{
-    feedbacks: IFeedback[];
+    feedbacks: IFeedbackDTO[];
     totalFeedbacks: number;
   }>;
-  getFeedbackByCollaborationId: (collabId: string) => Promise<IFeedback[]>;
-  toggleFeedback: (feedbackId: string) => Promise<IFeedback>;
-  getFeedbackByMentorId: (mentorId: string) => Promise<IFeedback[]>;
+  getFeedbackByCollaborationId: (collabId: string) => Promise<IFeedbackDTO[]>;
+  toggleFeedback: (feedbackId: string) => Promise<IFeedbackDTO>;
+  getFeedbackByMentorId: (mentorId: string) => Promise<IFeedbackDTO[]>;
 }

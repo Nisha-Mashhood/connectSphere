@@ -1,6 +1,7 @@
 import { Document, Types } from "mongoose";
 
 export interface IFeedback extends Document {
+  _id: Types.ObjectId;
   feedbackId: string;
   userId: Types.ObjectId;
   mentorId: Types.ObjectId;

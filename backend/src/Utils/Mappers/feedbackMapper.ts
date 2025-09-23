@@ -1,5 +1,4 @@
 import { IFeedback } from '../../Interfaces/Models/IFeedback';
-import { IFeedbackDTO } from '../../Interfaces/DTOs/IFeedbackDTO';
 import { toUserDTO } from './UserMapper';
 import { toMentorDTO } from './mentorMapper';
 import { toCollaborationDTO } from './collaborationMapper';
@@ -11,6 +10,7 @@ import { Types } from 'mongoose';
 import { IUserDTO } from '../../Interfaces/DTOs/IUserDTO';
 import { IMentorDTO } from '../../Interfaces/DTOs/IMentorDTO';
 import { ICollaborationDTO } from '../../Interfaces/DTOs/ICollaborationDTO';
+import { IFeedbackDTO } from '../../Interfaces/DTOs/IFeedBackDTO';
 
 export function toFeedbackDTO(feedback: IFeedback | null): IFeedbackDTO | null {
   if (!feedback) {
@@ -96,7 +96,6 @@ export function toFeedbackDTO(feedback: IFeedback | null): IFeedbackDTO | null {
     wouldRecommend: feedback.wouldRecommend,
     isHidden: feedback.isHidden,
     createdAt: feedback.createdAt,
-    updatedAt: feedback.updatedAt,
   };
 }
 

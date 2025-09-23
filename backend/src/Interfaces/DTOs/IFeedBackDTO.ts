@@ -20,5 +20,4 @@ export interface IFeedbackDTO {
   wouldRecommend: boolean;
   isHidden: boolean;
   createdAt: Date;
-  updatedAt: Date;
 }

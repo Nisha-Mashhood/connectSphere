@@ -6,6 +6,8 @@ import { StatusCodes } from '../Enums/StatusCode.enums';
 import { IFeedbackService } from '../Interfaces/Services/IFeedbackService';
 import { IFeedbackRepository } from "../Interfaces/Repository/IFeedbackRepository";
 import { ICollaborationRepository } from "../Interfaces/Repository/ICollaborationRepository";
+import { IFeedbackDTO } from "../Interfaces/DTOs/IFeedBackDTO";
+import { toFeedbackDTO, toFeedbackDTOs } from "../Utils/Mappers/feedbackMapper";
 
 @injectable()
 export class FeedbackService implements IFeedbackService{
@@ -20,7 +22,7 @@ export class FeedbackService implements IFeedbackService{
     this._collabRepository = collaborationrepository;
   }
 
-   public createFeedback = async (feedbackData: Partial<IFeedback>): Promise<IFeedback> => {
+   public createFeedback = async (feedbackData: Partial<IFeedback>): Promise<IFeedbackDTO> => {
     try {
       logger.debug(`Creating feedback for collaboration: ${feedbackData.collaborationId}`);
 
@@ -46,8 +48,14 @@ export class FeedbackService implements IFeedbackService{
       }
 
       const feedback = await this._feedbackRepository.createFeedback(feedbackData);
+      const feedbackDTO = toFeedbackDTO(feedback);
+      if (!feedbackDTO) {
+        logger.error(`Failed to map feedback ${feedback._id} to DTO`);
+        throw new ServiceError("Failed to map feedback to DTO", StatusCodes.INTERNAL_SERVER_ERROR);
+      }
+
       logger.info(`Feedback created: ${feedback._id}`);
-      return feedback;
+      return feedbackDTO;
     } catch (error: unknown) {
       const err = error instanceof Error ? error : new Error(String(error));
       logger.error(`Error creating feedback for collaboration ${feedbackData.collaborationId}: ${err.message}`);
@@ -63,17 +71,18 @@ export class FeedbackService implements IFeedbackService{
 
   public getMentorFeedbacks = async (
     mentorId: string
-  ): Promise<{ feedbacks: IFeedback[]; averageRating: number; totalFeedbacks: number }> => {
+  ): Promise<{ feedbacks: IFeedbackDTO[]; averageRating: number; totalFeedbacks: number }> => {
     try {
       logger.debug(`Fetching feedbacks for mentor: ${mentorId}`);
       const feedbacks = await this._feedbackRepository.getFeedbacksByMentorId(mentorId);
+      const feedbacksDTO = toFeedbackDTOs(feedbacks);
       const averageRating = await this._feedbackRepository.getMentorAverageRating(mentorId);
 
-      logger.info(`Fetched ${feedbacks.length} feedbacks for mentor: ${mentorId}`);
+      logger.info(`Fetched ${feedbacksDTO.length} feedbacks for mentor: ${mentorId}`);
       return {
-        feedbacks,
+        feedbacks: feedbacksDTO,
         averageRating,
-        totalFeedbacks: feedbacks.length,
+        totalFeedbacks: feedbacksDTO.length,
       };
     } catch (error: unknown) {
       const err = error instanceof Error ? error : new Error(String(error));
@@ -88,12 +97,13 @@ export class FeedbackService implements IFeedbackService{
     }
   };
 
-  public getUserFeedbacks = async (userId: string): Promise<IFeedback[]> => {
+  public getUserFeedbacks = async (userId: string): Promise<IFeedbackDTO[]> => {
     try {
       logger.debug(`Fetching feedbacks for user: ${userId}`);
       const feedbacks = await this._feedbackRepository.getFeedbacksByUserId(userId);
-      logger.info(`Fetched ${feedbacks.length} feedbacks for user: ${userId}`);
-      return feedbacks;
+      const feedbacksDTO = toFeedbackDTOs(feedbacks);
+      logger.info(`Fetched ${feedbacksDTO.length} feedbacks for user: ${userId}`);
+      return feedbacksDTO;
     } catch (error: unknown) {
       const err = error instanceof Error ? error : new Error(String(error));
       logger.error(`Error fetching user feedbacks for user ${userId}: ${err.message}`);
@@ -110,7 +120,7 @@ export class FeedbackService implements IFeedbackService{
   public getFeedbackForProfile = async (
     profileId: string,
     profileType: "mentor" | "user"
-  ): Promise<{ feedbacks: IFeedback[]; totalFeedbacks: number }> => {
+  ): Promise<{ feedbacks: IFeedbackDTO[]; totalFeedbacks: number }> => {
     try {
       logger.debug(`Fetching feedbacks for profile: ${profileId}, type: ${profileType}`);
       if (!["mentor", "user"].includes(profileType)) {
@@ -119,10 +129,11 @@ export class FeedbackService implements IFeedbackService{
       }
 
       const feedbacks = await this._feedbackRepository.getFeedbackForProfile(profileId, profileType);
-      logger.info(`Fetched ${feedbacks.length} feedbacks for profile: ${profileId}`);
+      const feedbacksDTO = toFeedbackDTOs(feedbacks);
+      logger.info(`Fetched ${feedbacksDTO.length} feedbacks for profile: ${profileId}`);
       return {
-        feedbacks,
-        totalFeedbacks: feedbacks.length,
+        feedbacks: feedbacksDTO,
+        totalFeedbacks: feedbacksDTO.length,
       };
     } catch (error: unknown) {
       const err = error instanceof Error ? error : new Error(String(error));
@@ -137,12 +148,13 @@ export class FeedbackService implements IFeedbackService{
     }
   };
 
-  public getFeedbackByCollaborationId = async (collabId: string): Promise<IFeedback[]> => {
+  public getFeedbackByCollaborationId = async (collabId: string): Promise<IFeedbackDTO[]> => {
     try {
       logger.debug(`Fetching feedbacks for collaboration: ${collabId}`);
       const feedbacks = await this._feedbackRepository.getFeedbackByCollaborationId(collabId);
-      logger.info(`Fetched ${feedbacks.length} feedbacks for collaboration: ${collabId}`);
-      return feedbacks;
+      const feedbacksDTO = toFeedbackDTOs(feedbacks);
+      logger.info(`Fetched ${feedbacksDTO.length} feedbacks for collaboration: ${collabId}`);
+      return feedbacksDTO;
     } catch (error: unknown) {
       const err = error instanceof Error ? error : new Error(String(error));
       logger.error(`Error fetching feedbacks by collaboration ID ${collabId}: ${err.message}`);
@@ -156,7 +168,7 @@ export class FeedbackService implements IFeedbackService{
     }
   };
 
-  public toggleFeedback = async (feedbackId: string): Promise<IFeedback> => {
+  public toggleFeedback = async (feedbackId: string): Promise<IFeedbackDTO> => {
     try {
       logger.debug(`Toggling feedback visibility: ${feedbackId}`);
       const feedback = await this._feedbackRepository.toggleIsHidden(feedbackId);
@@ -165,8 +177,14 @@ export class FeedbackService implements IFeedbackService{
         throw new ServiceError("Feedback not found", StatusCodes.NOT_FOUND);
       }
 
+      const feedbackDTO = toFeedbackDTO(feedback);
+      if (!feedbackDTO) {
+        logger.error(`Failed to map feedback ${feedback._id} to DTO`);
+        throw new ServiceError("Failed to map feedback to DTO", StatusCodes.INTERNAL_SERVER_ERROR);
+      }
+
       logger.info(`Toggled feedback visibility: ${feedbackId}`);
-      return feedback;
+      return feedbackDTO;
     } catch (error: unknown) {
       const err = error instanceof Error ? error : new Error(String(error));
       logger.error(`Error toggling feedback visibility for feedback ${feedbackId}: ${err.message}`);
@@ -180,12 +198,13 @@ export class FeedbackService implements IFeedbackService{
     }
   };
 
-  public getFeedbackByMentorId = async (mentorId: string): Promise<IFeedback[]> => {
+  public getFeedbackByMentorId = async (mentorId: string): Promise<IFeedbackDTO[]> => {
     try {
       logger.debug(`Fetching feedbacks by mentor ID: ${mentorId}`);
       const feedbacks = await this._feedbackRepository.getFeedbacksByMentorId(mentorId);
-      logger.info(`Fetched ${feedbacks.length} feedbacks for mentor: ${mentorId}`);
-      return feedbacks;
+      const feedbacksDTO = toFeedbackDTOs(feedbacks);
+      logger.info(`Fetched ${feedbacksDTO.length} feedbacks for mentor: ${mentorId}`);
+      return feedbacksDTO;
     } catch (error: unknown) {
       const err = error instanceof Error ? error : new Error(String(error));
       logger.error(`Error fetching feedbacks by mentor ID ${mentorId}: ${err.message}`);
