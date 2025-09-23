@@ -1,11 +1,12 @@
 import { inject, injectable } from "inversify";
 import { ServiceError } from '../Core/Utils/ErrorHandler';
 import logger from '../Core/Utils/Logger';
-import { IReview } from '../Interfaces/Models/IReview';
 import { IReviewService } from '../Interfaces/Services/IReviewService';
 import { StatusCodes } from '../Enums/StatusCode.enums';
 import { IReviewRepository } from "../Interfaces/Repository/IReviewRepository";
 import { IUserRepository } from "../Interfaces/Repository/IUserRepository";
+import { toReviewDTO, toReviewDTOs } from "../Utils/Mappers/reviewMapper";
+import { IReviewDTO } from "../Interfaces/DTOs/IReviewDTO";
 
 @injectable()
 export class ReviewService implements IReviewService{
@@ -20,7 +21,7 @@ export class ReviewService implements IReviewService{
     this._userRepository = userRepository;
   }
 
-   public submitReview = async (userId: string, rating: number, comment: string): Promise<IReview> => {
+   public submitReview = async (userId: string, rating: number, comment: string): Promise<IReviewDTO> => {
     try {
       logger.debug(`Submitting review for user: ${userId}`);
       if (rating < 1 || rating > 5) {
@@ -45,9 +46,15 @@ export class ReviewService implements IReviewService{
       }
 
       const review = await this._reviewRepository.createReview({ userId, rating, comment });
+      const reviewDTO = toReviewDTO(review);
+      if (!reviewDTO) {
+        logger.error(`Failed to map review ${review._id} to DTO`);
+        throw new ServiceError("Failed to map review to DTO", StatusCodes.INTERNAL_SERVER_ERROR);
+      }
+
       await this._userRepository.update(userId, { hasReviewed: true, loginCount: 0 });
       logger.info(`Review submitted for user: ${userId}, review ID: ${review._id}`);
-      return review;
+      return reviewDTO;
     } catch (error: unknown) {
       const err = error instanceof Error ? error : new Error(String(error));
       logger.error(`Error submitting review for user ${userId}: ${err.message}`);
@@ -85,12 +92,13 @@ export class ReviewService implements IReviewService{
     }
   };
 
-  public getAllReviews = async (): Promise<IReview[]> => {
+  public getAllReviews = async (): Promise<IReviewDTO[]> => {
     try {
       logger.debug("Fetching all reviews");
       const reviews = await this._reviewRepository.getAllReviews();
-      logger.info(`Fetched ${reviews.length} reviews`);
-      return reviews || [];
+      const reviewDTOs = toReviewDTOs(reviews);
+      logger.info(`Fetched ${reviewDTOs.length} reviews`);
+      return reviewDTOs;
     } catch (error: unknown) {
       const err = error instanceof Error ? error : new Error(String(error));
       logger.error(`Error fetching all reviews: ${err.message}`);
@@ -104,7 +112,7 @@ export class ReviewService implements IReviewService{
     }
   };
 
-  public approveReview = async (reviewId: string): Promise<IReview | null> => {
+  public approveReview = async (reviewId: string): Promise<IReviewDTO | null> => {
     try {
       logger.debug(`Approving review: ${reviewId}`);
       const review = await this._reviewRepository.findReviewById(reviewId);
@@ -114,8 +122,18 @@ export class ReviewService implements IReviewService{
       }
 
       const updatedReview = await this._reviewRepository.updateReview(reviewId, { isApproved: true });
+      if (!updatedReview) {
+        logger.error(`Failed to update review: ${reviewId}`);
+        throw new ServiceError("Failed to update review", StatusCodes.INTERNAL_SERVER_ERROR);
+      }
+      const reviewDTO = toReviewDTO(updatedReview);
+      if (!reviewDTO) {
+        logger.error(`Failed to map review ${updatedReview._id} to DTO`);
+        throw new ServiceError("Failed to map review to DTO", StatusCodes.INTERNAL_SERVER_ERROR);
+      }
+
       logger.info(`Review approved: ${reviewId}`);
-      return updatedReview;
+      return reviewDTO;
     } catch (error: unknown) {
       const err = error instanceof Error ? error : new Error(String(error));
       logger.error(`Error approving review ${reviewId}: ${err.message}`);
@@ -129,7 +147,7 @@ export class ReviewService implements IReviewService{
     }
   };
 
-  public selectReview = async (reviewId: string): Promise<IReview | null> => {
+  public selectReview = async (reviewId: string): Promise<IReviewDTO | null> => {
     try {
       logger.debug(`Selecting review: ${reviewId}`);
       const review = await this._reviewRepository.findReviewById(reviewId);
@@ -147,8 +165,19 @@ export class ReviewService implements IReviewService{
       }
 
       const updatedReview = await this._reviewRepository.updateReview(reviewId, { isSelect: true });
+      if (!updatedReview) {
+        logger.error(`Failed to update review: ${reviewId}`);
+        throw new ServiceError("Failed to update review", StatusCodes.INTERNAL_SERVER_ERROR);
+      }
+
+      const reviewDTO = toReviewDTO(updatedReview);
+      if (!reviewDTO) {
+        logger.error(`Failed to map review ${updatedReview._id} to DTO`);
+        throw new ServiceError("Failed to map review to DTO", StatusCodes.INTERNAL_SERVER_ERROR);
+      }
+
       logger.info(`Review selected: ${reviewId}`);
-      return updatedReview;
+      return reviewDTO;
     } catch (error: unknown) {
       const err = error instanceof Error ? error : new Error(String(error));
       logger.error(`Error selecting review ${reviewId}: ${err.message}`);
@@ -162,7 +191,7 @@ export class ReviewService implements IReviewService{
     }
   };
 
-  public cancelApproval = async (reviewId: string): Promise<IReview | null> => {
+  public cancelApproval = async (reviewId: string): Promise<IReviewDTO | null> => {
     try {
       logger.debug(`Canceling approval for review: ${reviewId}`);
       const review = await this._reviewRepository.findReviewById(reviewId);
@@ -175,8 +204,19 @@ export class ReviewService implements IReviewService{
         isApproved: false,
         isSelect: false,
       });
+      if (!updatedReview) {
+        logger.error(`Failed to update review: ${reviewId}`);
+        throw new ServiceError("Failed to update review", StatusCodes.INTERNAL_SERVER_ERROR);
+      }
+
+      const reviewDTO = toReviewDTO(updatedReview);
+      if (!reviewDTO) {
+        logger.error(`Failed to map review ${updatedReview._id} to DTO`);
+        throw new ServiceError("Failed to map review to DTO", StatusCodes.INTERNAL_SERVER_ERROR);
+      }
+
       logger.info(`Approval canceled for review: ${reviewId}`);
-      return updatedReview;
+      return reviewDTO;
     } catch (error: unknown) {
       const err = error instanceof Error ? error : new Error(String(error));
       logger.error(`Error canceling approval for review ${reviewId}: ${err.message}`);
@@ -190,7 +230,7 @@ export class ReviewService implements IReviewService{
     }
   };
 
-  public deselectReview = async (reviewId: string): Promise<IReview | null> => {
+  public deselectReview = async (reviewId: string): Promise<IReviewDTO | null> => {
     try {
       logger.debug(`Deselecting review: ${reviewId}`);
 
@@ -206,8 +246,19 @@ export class ReviewService implements IReviewService{
       }
 
       const updatedReview = await this._reviewRepository.updateReview(reviewId, { isSelect: false });
+      if (!updatedReview) {
+        logger.error(`Failed to update review: ${reviewId}`);
+        throw new ServiceError("Failed to update review", StatusCodes.INTERNAL_SERVER_ERROR);
+      }
+
+      const reviewDTO = toReviewDTO(updatedReview);
+      if (!reviewDTO) {
+        logger.error(`Failed to map review ${updatedReview._id} to DTO`);
+        throw new ServiceError("Failed to map review to DTO", StatusCodes.INTERNAL_SERVER_ERROR);
+      }
+
       logger.info(`Review deselected: ${reviewId}`);
-      return updatedReview;
+      return reviewDTO;
     } catch (error: unknown) {
       const err = error instanceof Error ? error : new Error(String(error));
       logger.error(`Error deselecting review ${reviewId}: ${err.message}`);
@@ -221,12 +272,13 @@ export class ReviewService implements IReviewService{
     }
   };
 
-  public getSelectedReviews = async (): Promise<IReview[]> => {
+  public getSelectedReviews = async (): Promise<IReviewDTO[]> => {
     try {
       logger.debug("Fetching selected reviews");
       const reviews = await this._reviewRepository.getSelectedReviews();
-      logger.info(`Fetched ${reviews.length} selected reviews`);
-      return reviews || [];
+      const reviewDTOs = toReviewDTOs(reviews);
+      logger.info(`Fetched ${reviewDTOs.length} selected reviews`);
+      return reviewDTOs;
     } catch (error: unknown) {
       const err = error instanceof Error ? error : new Error(String(error));
       logger.error(`Error fetching selected reviews: ${err.message}`);
