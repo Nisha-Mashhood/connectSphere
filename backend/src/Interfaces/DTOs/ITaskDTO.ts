@@ -1,18 +1,25 @@
+import { IUserDTO } from './IUserDTO';
+import { ICollaborationDTO } from './ICollaborationDTO';
+import { IGroupDTO } from './IGroupDTO';
+
 export interface ITaskDTO {
   id: string;
   taskId: string;
   name: string;
   description?: string;
   image?: string;
-  priority: "low" | "medium" | "high";
-  status: "pending" | "in-progress" | "completed" | "not-completed";
+  priority: 'low' | 'medium' | 'high';
+  status: 'pending' | 'in-progress' | 'completed' | 'not-completed';
   startDate: Date;
   dueDate: Date;
   notificationDate?: Date;
   notificationTime?: string;
-  contextType: "profile" | "group" | "collaboration";
+  contextType: 'profile' | 'group' | 'collaboration';
   contextId: string;
-  assignedUsers: string[];
-  createdBy: string;
+  context?: IUserDTO | IGroupDTO | ICollaborationDTO; // Populated context (User, Group, or Collaboration)
+  assignedUsers: string[]; // Array of user IDs
+  assignedUsersDetails?: IUserDTO[]; // Populated user details
+  createdBy: string; // User ID
+  createdByDetails?: IUserDTO; // Populated user details
   createdAt: Date;
 }

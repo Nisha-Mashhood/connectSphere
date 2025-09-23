@@ -1,13 +1,14 @@
 import { ITask } from "../../Interfaces/Models/ITask";
+import { ITaskDTO } from "../DTOs/ITaskDTO";
 
 export interface ITaskService {
-  createTask: (taskData: Partial<ITask>, imagePath?: string, fileSize?: number) => Promise<ITask>;
-  getTasksByContext: (contextType: string, contextId: string, userId: string) => Promise<ITask[]>;
-  changeTaskPriority: (taskId: string, priority: "low" | "medium" | "high") => Promise<ITask | null>;
+  createTask: (taskData: Partial<ITask>, imagePath?: string, fileSize?: number) => Promise<ITaskDTO>;
+  getTasksByContext: (contextType: string, contextId: string, userId: string) => Promise<ITaskDTO[]>;
+  changeTaskPriority: (taskId: string, priority: "low" | "medium" | "high") => Promise<ITaskDTO | null>;
   changeTaskStatus: (
     taskId: string,
     status: "pending" | "in-progress" | "completed" | "not-completed"
-  ) => Promise<ITask | null>;
-  editTask: (taskId: string, updates: Partial<ITask>) => Promise<ITask | null>;
+  ) => Promise<ITaskDTO | null>;
+  editTask: (taskId: string, updates: Partial<ITask>) => Promise<ITaskDTO | null>;
   deleteTask: (taskId: string) => Promise<void>;
 }

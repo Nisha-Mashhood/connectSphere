@@ -6,9 +6,12 @@ import { uploadMedia } from "../Core/Utils/Cloudinary";
 import { StatusCodes } from "../Enums/StatusCode.enums";
 import { ITaskRepository } from "../Interfaces/Repository/ITaskRepository";
 import { INotificationRepository } from "../Interfaces/Repository/INotificationRepository";
+import { ITaskService } from "../Interfaces/Services/ITaskService";
+import { ITaskDTO } from "../Interfaces/DTOs/ITaskDTO";
+import { toTaskDTO, toTaskDTOs } from "../Utils/Mappers/taskMapper";
 
 @injectable()
-export class TaskService  {
+export class TaskService  implements ITaskService{
   private _taskRepository: ITaskRepository;
   private _notificationRepository: INotificationRepository;
 
@@ -20,7 +23,7 @@ export class TaskService  {
     this._notificationRepository = notificationRepository;
   }
 
-  public createTask = async (taskData: Partial<ITask>, imagePath?: string, fileSize?: number): Promise<ITask> => {
+  public createTask = async (taskData: Partial<ITask>, imagePath?: string, fileSize?: number): Promise<ITaskDTO> => {
     try {
       logger.debug(`Creating task: ${taskData.name}`);
 
@@ -49,8 +52,13 @@ export class TaskService  {
       }
 
       const createdTask = await this._taskRepository.createTask({ ...taskData, image });
+      const taskDTO = toTaskDTO(createdTask);
+      if (!taskDTO) {
+        logger.error(`Failed to map task ${createdTask._id} to DTO`);
+        throw new ServiceError("Failed to map task to DTO", StatusCodes.INTERNAL_SERVER_ERROR);
+      }
       logger.info(`Task created: ${createdTask._id} (${createdTask.name})`);
-      return createdTask;
+      return taskDTO;
     } catch (error: unknown) {
       const err = error instanceof Error ? error : new Error(String(error));
       logger.error(`Error creating task ${taskData.name}: ${err.message}`);
@@ -64,7 +72,7 @@ export class TaskService  {
     }
   };
 
-  public getTasksByContext = async (contextType: string, contextId: string, userId: string): Promise<ITask[]> => {
+  public getTasksByContext = async (contextType: string, contextId: string, userId: string): Promise<ITaskDTO[]> => {
     try {
       logger.debug(`Fetching tasks for contextType=${contextType}, contextId=${contextId}, userId=${userId}`);
       const validContextTypes = ["collaboration", "group", "user"];
@@ -77,8 +85,9 @@ export class TaskService  {
       }
 
       const tasks = await this._taskRepository.findTasksByContext(contextType, contextId, userId);
-      logger.info(`Fetched ${tasks.length} tasks for context: ${contextType}/${contextId}`);
-      return tasks;
+      const taskDTOs = toTaskDTOs(tasks);
+      logger.info(`Fetched ${taskDTOs.length} tasks for context: ${contextType}/${contextId}`);
+      return taskDTOs;
     } catch (error: unknown) {
       const err = error instanceof Error ? error : new Error(String(error));
       logger.error(`Error fetching tasks for context ${contextType}/${contextId}: ${err.message}`);
@@ -92,7 +101,7 @@ export class TaskService  {
     }
   };
 
-  public changeTaskPriority = async (taskId: string, priority: "low" | "medium" | "high"): Promise<ITask | null> => {
+  public changeTaskPriority = async (taskId: string, priority: "low" | "medium" | "high"): Promise<ITaskDTO | null> => {
     try {
       logger.debug(`Changing task priority: taskId=${taskId}, priority=${priority}`);
       const validPriorities = ["low", "medium", "high"];
@@ -110,8 +119,13 @@ export class TaskService  {
         throw new ServiceError("Task not found", StatusCodes.NOT_FOUND);
       }
 
+      const taskDTO = toTaskDTO(task);
+      if (!taskDTO) {
+        logger.error(`Failed to map task ${task._id} to DTO`);
+        throw new ServiceError("Failed to map task to DTO", StatusCodes.INTERNAL_SERVER_ERROR);
+      }
       logger.info(`Task priority changed: ${taskId} to ${priority}`);
-      return task;
+      return taskDTO;
     } catch (error: unknown) {
       const err = error instanceof Error ? error : new Error(String(error));
       logger.error(`Error changing task priority for task ${taskId}: ${err.message}`);
@@ -128,7 +142,7 @@ export class TaskService  {
   public changeTaskStatus = async (
     taskId: string,
     status: "pending" | "in-progress" | "completed" | "not-completed"
-  ): Promise<ITask | null> => {
+  ): Promise<ITaskDTO | null> => {
     try {
       logger.debug(`Changing task status: taskId=${taskId}, status=${status}`);
       const validStatuses = ["pending", "in-progress", "completed", "not-completed"];
@@ -146,8 +160,13 @@ export class TaskService  {
         throw new ServiceError("Task not found", StatusCodes.NOT_FOUND);
       }
 
+      const taskDTO = toTaskDTO(task);
+      if (!taskDTO) {
+        logger.error(`Failed to map task ${task._id} to DTO`);
+        throw new ServiceError("Failed to map task to DTO", StatusCodes.INTERNAL_SERVER_ERROR);
+      }
       logger.info(`Task status changed: ${taskId} to ${status}`);
-      return task;
+      return taskDTO;
     } catch (error: unknown) {
       const err = error instanceof Error ? error : new Error(String(error));
       logger.error(`Error changing task status for task ${taskId}: ${err.message}`);
@@ -161,7 +180,7 @@ export class TaskService  {
     }
   };
 
-  public editTask = async (taskId: string, updates: Partial<ITask>): Promise<ITask | null> => {
+  public editTask = async (taskId: string, updates: Partial<ITask>): Promise<ITaskDTO | null> => {
     try {
       logger.debug(`Editing task: taskId=${taskId}`);
 
@@ -169,6 +188,12 @@ export class TaskService  {
       if (!task) {
         logger.warn(`Task not found: ${taskId}`);
         throw new ServiceError("Task not found", StatusCodes.NOT_FOUND);
+      }
+
+      const taskDTO = toTaskDTO(task);
+      if (!taskDTO) {
+        logger.error(`Failed to map task ${task._id} to DTO`);
+        throw new ServiceError("Failed to map task to DTO", StatusCodes.INTERNAL_SERVER_ERROR);
       }
 
       if (updates.notificationDate || updates.notificationTime) {
@@ -182,7 +207,7 @@ export class TaskService  {
       }
 
       logger.info(`Task updated: ${taskId} (${task.name})`);
-      return task;
+      return taskDTO;
     } catch (error: unknown) {
       const err = error instanceof Error ? error : new Error(String(error));
       logger.error(`Error editing task ${taskId}: ${err.message}`);
