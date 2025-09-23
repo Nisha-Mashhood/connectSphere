@@ -6,12 +6,7 @@ import logger from "../Core/Utils/Logger";
 import { AppNotificationModel } from "../Models/notification.modal";
 import { IAppNotification } from "../Interfaces/Models/IAppNotification";
 import { ITask } from "../Interfaces/Models/ITask";
-import Collaboration from "../Models/collaboration";
-import Group from "../Models/group.model";
-import { IMentor } from "../Interfaces/Models/IMentor";
-import UserConnectionModal from "../Models/userConnection.modal";
 import { Task } from "../Models/task.modal";
-import { CollaborationData, UserIds } from "../Utils/Types/Notification.types";
 import { StatusCodes } from "../Enums/StatusCode.enums";
 import { INotificationRepository } from "../Interfaces/Repository/INotificationRepository";
 
@@ -67,75 +62,6 @@ export class NotificationRepository extends BaseRepository<IAppNotification> imp
       const err = error instanceof Error ? error : new Error(String(error));
       logger.error(`Error fetching all tasks for notification`, err);
       throw new RepositoryError('Error fetching all tasks for notification', StatusCodes.INTERNAL_SERVER_ERROR, err);
-    }
-  }
-
-  public getGroupMembers = async (groupId: string): Promise<Types.ObjectId[]> => {
-    try {
-      logger.debug(`Fetching group members for group: ${groupId}`);
-      const group = await Group.findById(this.toObjectId(groupId))
-        .select("members")
-        .exec();
-      if (!group) {
-        logger.warn(`Group not found: ${groupId}`);
-        throw new RepositoryError(`Group not found with ID: ${groupId}`, StatusCodes.NOT_FOUND);
-      }
-      const members = group.members.map((member) => this.toObjectId(member.userId));
-      logger.info(`Fetched ${members.length} members for group: ${groupId}`);
-      return members;
-    } catch (error: unknown) {
-      const err = error instanceof Error ? error : new Error(String(error));
-      logger.error(`Error fetching group members for group ${groupId}`, err);
-      throw new RepositoryError('Error fetching group members', StatusCodes.INTERNAL_SERVER_ERROR, err);
-    }
-  }
-
-  public getMentorIdAndUserId = async (collaborationId: string): Promise<UserIds | null> => {
-    try {
-      logger.debug(`Fetching mentor and user IDs for collaboration: ${collaborationId}`);
-      const collaborationData = (await Collaboration.findById(this.toObjectId(collaborationId))
-        .populate<{ mentorId: IMentor }>({ path: "mentorId", select: "userId" })
-        .select("userId mentorId")
-        .exec()) as CollaborationData | null;
-
-      if (!collaborationData) {
-        logger.warn(`Collaboration not found: ${collaborationId}`);
-        return null;
-      }
-
-      const result = {
-        userId: collaborationData.userId.toString(),
-        mentorUserId: collaborationData.mentorId?.userId?.toString() || null,
-      };
-      logger.info(`Fetched user IDs for collaboration: ${collaborationId}`);
-      return result;
-    } catch (error: unknown) {
-      const err = error instanceof Error ? error : new Error(String(error));
-      logger.error(`Error fetching collaboration IDs for collaboration ${collaborationId}`, err);
-      throw new RepositoryError('Error fetching collaboration IDs', StatusCodes.INTERNAL_SERVER_ERROR, err);
-    }
-  }
-
-  public getConnectionUserIds = async (connectionId: string): Promise<{ requester: string; recipient: string } | null> => {
-    try {
-      logger.debug(`Fetching connection user IDs for connection: ${connectionId}`);
-      const connection = await  UserConnectionModal.findById(this.toObjectId(connectionId))
-        .select("requester recipient")
-        .exec();
-      if (!connection) {
-        logger.warn(`Connection not found: ${connectionId}`);
-        return null;
-      }
-      const result = {
-        requester: connection.requester.toString(),
-        recipient: connection.recipient.toString(),
-      };
-      logger.info(`Fetched user IDs for connection: ${connectionId}`);
-      return result;
-    } catch (error: unknown) {
-      const err = error instanceof Error ? error : new Error(String(error));
-      logger.error(`Error fetching connection user IDs for connection ${connectionId}`, err);
-      throw new RepositoryError('Error fetching connection user IDs', StatusCodes.INTERNAL_SERVER_ERROR, err);
     }
   }
 

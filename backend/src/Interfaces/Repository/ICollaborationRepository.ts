@@ -1,3 +1,4 @@
+import { UserIds } from "../../Utils/Types/Notification.types";
 import { ICollaboration } from "../../Interfaces/Models/ICollaboration";
 import { IMentorRequest } from "../../Interfaces/Models/IMentorRequest";
 import { LockedSlot } from "../../Utils/Types/Collaboration.types";
@@ -60,4 +61,5 @@ export interface ICollaborationRepository {
   findByMentorId(mentorId: string): Promise<ICollaboration[]>;
   findByDateRange(startDate: Date, endDate: Date): Promise<ICollaboration[]>;
   findByIdAndUpdate(id: string, update: Partial<ICollaboration>, options?: { new?: boolean }): Promise<ICollaboration | null>;
+  getMentorIdAndUserId(collaborationId: string): Promise<UserIds | null>
 }

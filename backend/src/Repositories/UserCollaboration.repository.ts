@@ -206,4 +206,27 @@ export class UserConnectionRepository extends BaseRepository<IUserConnection> im
       throw new RepositoryError('Error checking existing connection', StatusCodes.INTERNAL_SERVER_ERROR, err);
     }
   }
+
+   public getConnectionUserIds = async (connectionId: string): Promise<{ requester: string; recipient: string } | null> => {
+      try {
+        logger.debug(`Fetching connection user IDs for connection: ${connectionId}`);
+        const connection = await  this.model.findById(this.toObjectId(connectionId))
+          .select("requester recipient")
+          .exec();
+        if (!connection) {
+          logger.warn(`Connection not found: ${connectionId}`);
+          return null;
+        }
+        const result = {
+          requester: connection.requester.toString(),
+          recipient: connection.recipient.toString(),
+        };
+        logger.info(`Fetched user IDs for connection: ${connectionId}`);
+        return result;
+      } catch (error: unknown) {
+        const err = error instanceof Error ? error : new Error(String(error));
+        logger.error(`Error fetching connection user IDs for connection ${connectionId}`, err);
+        throw new RepositoryError('Error fetching connection user IDs', StatusCodes.INTERNAL_SERVER_ERROR, err);
+      }
+    }
 }

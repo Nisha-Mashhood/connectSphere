@@ -143,7 +143,7 @@ export class MentorService implements IMentorService {
             "profile"
           );
           logger.info(
-            `Created new_mentor notification for admin ${admin._id}: ${notification._id}`
+            `Created new_mentor notification for admin ${admin._id}: ${notification.id}`
           );
         }
       }
@@ -373,7 +373,7 @@ export class MentorService implements IMentorService {
         "profile"
       );
       logger.info(
-        `Created mentor_approved notification for user ${user._id}: ${notification._id}`
+        `Created mentor_approved notification for user ${user._id}: ${notification.id}`
       );
     } catch (error: unknown) {
       const err = error instanceof Error ? error : new Error(String(error));

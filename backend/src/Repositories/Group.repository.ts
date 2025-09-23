@@ -503,4 +503,33 @@ export class GroupRepository extends BaseRepository<IGroup> implements IGroupRep
       throw new RepositoryError('Error checking group membership', StatusCodes.INTERNAL_SERVER_ERROR, err);
     }
   }
+
+  public getGroupMembers = async (groupId: string): Promise<Types.ObjectId[]> => {
+      try {
+        logger.debug(`Fetching group members for group: ${groupId}`);
+        const group = await this.model.findById(this.toObjectId(groupId))
+          .select("members")
+          .exec();
+        if (!group) {
+          logger.warn(`Group not found: ${groupId}`);
+          throw new RepositoryError(`Group not found with ID: ${groupId}`, StatusCodes.NOT_FOUND);
+        }
+        const members = group.members.map((member) => {
+        const userId =
+          typeof member.userId === "string"
+            ? member.userId
+            : member.userId instanceof Types.ObjectId
+            ? member.userId
+            : member.userId._id; // if it's IUser, take its _id
+
+          return this.toObjectId(userId);
+        });
+        logger.info(`Fetched ${members.length} members for group: ${groupId}`);
+        return members;
+      } catch (error: unknown) {
+        const err = error instanceof Error ? error : new Error(String(error));
+        logger.error(`Error fetching group members for group ${groupId}`, err);
+        throw new RepositoryError('Error fetching group members', StatusCodes.INTERNAL_SERVER_ERROR, err);
+      }
+    }
 }

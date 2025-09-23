@@ -1,9 +1,11 @@
 import { IGroup } from '../Models/IGroup';
 import { IGroupRequest } from '../Models/IGroupRequest';
 import { GroupFormData, GroupQuery } from '../../Utils/Types/Group.types';
+import { Types } from 'mongoose';
 
 export interface IGroupRepository {
   createGroup(groupData: GroupFormData): Promise<IGroup>;
+  findById(id: string): Promise<IGroup | null>;
   getGroupsByAdminId(adminId: string): Promise<IGroup[]>;
   getGroupById(groupId: string): Promise<IGroup | null>;
   getAllGroups(query?: GroupQuery): Promise<{ groups: IGroup[]; total: number }>;
@@ -23,4 +25,5 @@ export interface IGroupRepository {
   getGroupDetailsByUserId(userId: string): Promise<IGroup[]>;
   getAllGroupRequests(): Promise<IGroupRequest[]>;
   isUserInGroup(groupId: string, userId: string): Promise<boolean>;
+  getGroupMembers(groupId: string): Promise<Types.ObjectId[]>
 }

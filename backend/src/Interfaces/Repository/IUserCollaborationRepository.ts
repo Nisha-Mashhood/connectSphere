@@ -9,4 +9,5 @@ export interface IUserConnectionRepository {
   getAllUserConnections(): Promise<IUserConnection[]>;
   getUserConnectionById(connectionId: string): Promise<IUserConnection | null>;
   findExistingConnection(requesterId: string, recipientId: string): Promise<IUserConnection | null>;
+  getConnectionUserIds(connectionId: string): Promise<{ requester: string; recipient: string } | null>
 }

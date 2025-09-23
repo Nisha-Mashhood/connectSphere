@@ -1,6 +1,7 @@
 import { IAppNotification } from "../Models/IAppNotification";
 import { TaskNotificationPayload } from "../../Utils/Types/Notification.types";
 import { Server } from "socket.io";
+import { IAppNotificationDTO } from "../DTOs/IAppNotificationDTO";
 
 export interface INotificationService {
   initializeSocket: (_io: Server) => void;
@@ -21,17 +22,17 @@ export interface INotificationService {
     callId?: string,
     callType?: IAppNotification["callType"],
     customContent?: string
-  ) => Promise<IAppNotification>;
+  ) => Promise<IAppNotificationDTO>;
   updateCallNotificationToMissed: (
     userId: string,
     callId: string,
     content: string
-  ) => Promise<IAppNotification | null>;
-  getNotifications: (userId: string) => Promise<IAppNotification[]>;
+  ) => Promise<IAppNotificationDTO | null>;
+  getNotifications: (userId: string) => Promise<IAppNotificationDTO[]>;
   markNotificationAsRead: (
     notificationId?: string,
     userId?: string,
     type?: IAppNotification["type"]
-  ) => Promise<IAppNotification[]>;
+  ) => Promise<IAppNotificationDTO[]>;
   getUnreadCount: (userId: string, type?: IAppNotification["type"]) => Promise<number>;
 }

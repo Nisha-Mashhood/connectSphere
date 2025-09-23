@@ -1,15 +1,92 @@
-import { IFeedbackDTO } from '../../Interfaces/DTOs/IFeedBackDTO';
 import { IFeedback } from '../../Interfaces/Models/IFeedback';
-
+import { IFeedbackDTO } from '../../Interfaces/DTOs/IFeedbackDTO';
+import { toUserDTO } from './UserMapper';
+import { toMentorDTO } from './mentorMapper';
+import { toCollaborationDTO } from './collaborationMapper';
+import { IUser } from '../../Interfaces/Models/IUser';
+import { IMentor } from '../../Interfaces/Models/IMentor';
+import { ICollaboration } from '../../Interfaces/Models/ICollaboration';
+import logger from '../../Core/Utils/Logger';
+import { Types } from 'mongoose';
+import { IUserDTO } from '../../Interfaces/DTOs/IUserDTO';
+import { IMentorDTO } from '../../Interfaces/DTOs/IMentorDTO';
+import { ICollaborationDTO } from '../../Interfaces/DTOs/ICollaborationDTO';
 
 export function toFeedbackDTO(feedback: IFeedback | null): IFeedbackDTO | null {
-  if (!feedback) return null;
+  if (!feedback) {
+    logger.warn('Attempted to map null feedback to DTO');
+    return null;
+  }
+
+  //userId (populated IUser or just an ID)
+  let userId: string;
+  let user: IUserDTO | undefined;
+
+  if (feedback.userId) {
+    if (typeof feedback.userId === 'string') {
+      userId = feedback.userId;
+    } else if (feedback.userId instanceof Types.ObjectId) {
+      userId = feedback.userId.toString();
+    } else {
+      //IUser object (populated)
+      userId = (feedback.userId as IUser)._id.toString();
+      const userDTO = toUserDTO(feedback.userId as IUser);
+      user = userDTO ?? undefined;
+    }
+  } else {
+    logger.warn(`Feedback ${feedback._id} has no userId`);
+    userId = '';
+  }
+
+  //mentorId (populated IMentor or just an ID)
+  let mentorId: string;
+  let mentor: IMentorDTO | undefined;
+
+  if (feedback.mentorId) {
+    if (typeof feedback.mentorId === 'string') {
+      mentorId = feedback.mentorId;
+    } else if (feedback.mentorId instanceof Types.ObjectId) {
+      mentorId = feedback.mentorId.toString();
+    } else {
+      //IMentor object (populated)
+      mentorId = (feedback.mentorId as IMentor)._id.toString();
+      const mentorDTO = toMentorDTO(feedback.mentorId as IMentor);
+      mentor = mentorDTO ?? undefined;
+    }
+  } else {
+    logger.warn(`Feedback ${feedback._id} has no mentorId`);
+    mentorId = '';
+  }
+
+  //collaborationId (populated ICollaboration or just an ID)
+  let collaborationId: string;
+  let collaboration: ICollaborationDTO | undefined;
+
+  if (feedback.collaborationId) {
+    if (typeof feedback.collaborationId === 'string') {
+      collaborationId = feedback.collaborationId;
+    } else if (feedback.collaborationId instanceof Types.ObjectId) {
+      collaborationId = feedback.collaborationId.toString();
+    } else {
+      //ICollaboration object (populated)
+      collaborationId = (feedback.collaborationId as ICollaboration)._id.toString();
+      const collaborationDTO = toCollaborationDTO(feedback.collaborationId as ICollaboration);
+      collaboration = collaborationDTO ?? undefined;
+    }
+  } else {
+    logger.warn(`Feedback ${feedback._id} has no collaborationId`);
+    collaborationId = '';
+  }
 
   return {
+    id: feedback._id.toString(),
     feedbackId: feedback.feedbackId,
-    userId: feedback.userId.toString(),
-    mentorId: feedback.mentorId.toString(),
-    collaborationId: feedback.collaborationId.toString(),
+    userId,
+    user,
+    mentorId,
+    mentor,
+    collaborationId,
+    collaboration,
     givenBy: feedback.givenBy,
     rating: feedback.rating,
     communication: feedback.communication,
@@ -19,9 +96,12 @@ export function toFeedbackDTO(feedback: IFeedback | null): IFeedbackDTO | null {
     wouldRecommend: feedback.wouldRecommend,
     isHidden: feedback.isHidden,
     createdAt: feedback.createdAt,
+    updatedAt: feedback.updatedAt,
   };
 }
 
 export function toFeedbackDTOs(feedbacks: IFeedback[]): IFeedbackDTO[] {
-  return feedbacks.map(toFeedbackDTO).filter((dto): dto is IFeedbackDTO => dto !== null);
+  return feedbacks
+    .map(toFeedbackDTO)
+    .filter((dto): dto is IFeedbackDTO => dto !== null);
 }

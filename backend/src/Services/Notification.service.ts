@@ -12,21 +12,31 @@ import { TaskNotificationPayload } from "../Utils/Types/Notification.types";
 import { StatusCodes } from "../Enums/StatusCode.enums";
 import { INotificationRepository } from "../Interfaces/Repository/INotificationRepository";
 import { IUserRepository } from "../Interfaces/Repository/IUserRepository";
+import { IGroupRepository } from "../Interfaces/Repository/IGroupRepository";
+import { ICollaborationRepository } from "../Interfaces/Repository/ICollaborationRepository";
+import { IAppNotificationDTO } from "../Interfaces/DTOs/IAppNotificationDTO";
+import { toNotificationDTO, toNotificationDTOs } from "../Utils/Mappers/notificationMapper";
 
 let io: Server | null = null;
 
 @injectable()
 export class NotificationService  implements INotificationService{
   private _notificationRepository: INotificationRepository;
+  private _groupRepository: IGroupRepository;
   private _userRepository: IUserRepository;
+  private _collaborationRepository: ICollaborationRepository;
   private intervalId: NodeJS.Timeout | null = null;
 
   constructor(
     @inject('INotificationRepository') notificationRepository : INotificationRepository,
+    @inject('IGroupRepository') groupRepository : IGroupRepository,
     @inject('IUserRepository') userRepository : IUserRepository,
+    @inject('ICollaborationRepository') collaborationRepository : ICollaborationRepository,
   ) {
     this._notificationRepository = notificationRepository;
+    this._groupRepository = groupRepository;
     this._userRepository = userRepository;
+    this._collaborationRepository = collaborationRepository;
   }
 
   initializeSocket(_io: Server) {
@@ -123,7 +133,7 @@ export class NotificationService  implements INotificationService{
         recipients = [specificUserId];
       } else if (task.contextType === "collaboration") {
         const collaborationIds =
-          await this._notificationRepository.getMentorIdAndUserId(
+          await this._collaborationRepository.getMentorIdAndUserId(
             task.contextId.toString()
           );
         if (collaborationIds) {
@@ -133,7 +143,7 @@ export class NotificationService  implements INotificationService{
           ].filter((id): id is string => id !== null);
         }
       } else if (task.contextType === "group") {
-        const groupMembers = await this._notificationRepository.getGroupMembers(
+        const groupMembers = await this._groupRepository.getGroupMembers(
           task.contextId.toString()
         );
         recipients = groupMembers.map((member) => member.toString());
@@ -308,7 +318,7 @@ export class NotificationService  implements INotificationService{
     callId?: string,
     callType?: IAppNotification["callType"],
     customContent?: string
-  ): Promise<IAppNotification> => {
+  ): Promise<IAppNotificationDTO> => {
     try {
       logger.debug(
         `Sending notification to user: ${userId}, type: ${notificationType}`
@@ -437,45 +447,42 @@ export class NotificationService  implements INotificationService{
       );
       if (!notification) {
         logger.error(`Failed to create notification for user ${userId}`);
-        throw new ServiceError(
-          "Failed to create notification",
-          StatusCodes.INTERNAL_SERVER_ERROR
-        );
+        throw new ServiceError("Failed to create notification", StatusCodes.INTERNAL_SERVER_ERROR);
+      }
+
+      const notificationDTO = toNotificationDTO(notification);
+      if (!notificationDTO) {
+        logger.error(`Failed to map notification ${notification._id} to DTO`);
+        throw new ServiceError("Failed to map notification to DTO", StatusCodes.INTERNAL_SERVER_ERROR);
       }
 
       if (io) {
         const socketsInRoom = await io.in(`user_${userId}`).allSockets();
         if (socketsInRoom.size > 0) {
           const payload: TaskNotificationPayload = {
-            _id: notification._id.toString(),
-            userId: notification.userId.toString(),
-            type: notification.type,
-            content: notification.content,
-            relatedId: notification.relatedId,
-            senderId: notification.senderId.toString(),
-            status: notification.status,
-            callId: notification.callId,
-            callType: notification.callType,
-            notificationDate: notification.notificationDate
-              ?.toISOString()
-              .split("T")[0],
-            notificationTime: notification.notificationTime,
-            createdAt: notification.createdAt,
-            updatedAt: notification.updatedAt,
-            taskContext: notification.taskContext,
+            _id: notificationDTO.id,
+            userId: notificationDTO.userId,
+            type: notificationDTO.type,
+            content: notificationDTO.content,
+            relatedId: notificationDTO.relatedId,
+            senderId: notificationDTO.senderId,
+            status: notificationDTO.status,
+            callId: notificationDTO.callId,
+            callType: notificationDTO.callType,
+            notificationDate: notificationDTO.notificationDate,
+            notificationTime: notificationDTO.notificationTime,
+            createdAt: notificationDTO.createdAt,
+            updatedAt: notificationDTO.updatedAt,
+            taskContext: notificationDTO.taskContext,
           };
           SocketService.notificationEmitter.emit("notification", payload);
-          logger.info(
-            `Emitted notification ${notification._id} to user ${userId}`
-          );
+          logger.info(`Emitted notification ${notification._id} to user ${userId}`);
         } else {
-          logger.info(
-            `User ${userId} not connected, stored notification ${notification._id}`
-          );
+          logger.info(`User ${userId} not connected, stored notification ${notification._id}`);
         }
       }
 
-      return notification;
+      return notificationDTO;
     } catch (error: unknown) {
       const err = error instanceof Error ? error : new Error(String(error));
       logger.error(`Error sending notification to user ${userId}: ${err.message}`);
@@ -493,7 +500,7 @@ export class NotificationService  implements INotificationService{
     userId: string,
     callId: string,
     content: string
-  ): Promise<IAppNotification | null> => {
+  ): Promise<IAppNotificationDTO | null> => {
     try {
       logger.debug(
         `Updating call notification to missed for user: ${userId}, call: ${callId}`
@@ -529,23 +536,27 @@ export class NotificationService  implements INotificationService{
         );
       }
 
-      if (notification && io) {
+      const notificationDTO = toNotificationDTO(notification);
+      if (!notificationDTO) {
+        logger.error(`Failed to map notification ${notification._id} to DTO`);
+        throw new ServiceError("Failed to map notification to DTO", StatusCodes.INTERNAL_SERVER_ERROR);
+      }
+
+      if (io) {
         const payload: TaskNotificationPayload = {
-          _id: notification._id.toString(),
-          userId: notification.userId.toString(),
-          type: notification.type,
-          content: notification.content,
-          relatedId: notification.relatedId,
-          senderId: notification.senderId.toString(),
-          status: notification.status,
-          callId: notification.callId,
-          notificationDate: notification.notificationDate
-            ?.toISOString()
-            .split("T")[0],
-          notificationTime: notification.notificationTime,
-          createdAt: notification.createdAt,
-          updatedAt: notification.updatedAt,
-          taskContext: notification.taskContext,
+          _id: notificationDTO.id,
+          userId: notificationDTO.userId,
+          type: notificationDTO.type,
+          content: notificationDTO.content,
+          relatedId: notificationDTO.relatedId,
+          senderId: notificationDTO.senderId,
+          status: notificationDTO.status,
+          callId: notificationDTO.callId,
+          notificationDate: notificationDTO.notificationDate,
+          notificationTime: notificationDTO.notificationTime,
+          createdAt: notificationDTO.createdAt,
+          updatedAt: notificationDTO.updatedAt,
+          taskContext: notificationDTO.taskContext,
         };
         try {
           SocketService.notificationEmitter.emit("notification.updated", payload);
@@ -553,7 +564,7 @@ export class NotificationService  implements INotificationService{
           logger.error(`Socket emission error: ${socketError.message}`);
         }
       }
-      return notification;
+      return notificationDTO;
     } catch (error: unknown) {
       const err = error instanceof Error ? error : new Error(String(error));
       logger.error(`Error updating call notification to missed for user ${userId}: ${err.message}`);
@@ -567,10 +578,13 @@ export class NotificationService  implements INotificationService{
     }
   };
 
-  getNotifications = async (userId: string): Promise<IAppNotification[]> => {
+  getNotifications = async (userId: string): Promise<IAppNotificationDTO[]> => {
     try {
       logger.debug(`Fetching notifications for user: ${userId}`);
-      return await this._notificationRepository.findNotificationByUserId(userId);
+      const notifications = await this._notificationRepository.findNotificationByUserId(userId);
+      const notificationDTOs = toNotificationDTOs(notifications);
+      logger.info(`Fetched ${notificationDTOs.length} notifications for user: ${userId}`);
+      return notificationDTOs;
     } catch (error: unknown) {
       const err = error instanceof Error ? error : new Error(String(error));
       logger.error(`Error fetching notifications for user ${userId}: ${err.message}`);
@@ -589,7 +603,7 @@ export class NotificationService  implements INotificationService{
     notificationId?: string,
     userId?: string,
     type?: IAppNotification["type"]
-  ): Promise<IAppNotification[]> => {
+  ): Promise<IAppNotificationDTO[]> => {
     logger.info(
       `markNotificationAsRead called with: notificationId=${notificationId}, userId=${userId}, type=${type}`
     );
@@ -686,7 +700,13 @@ export class NotificationService  implements INotificationService{
           StatusCodes.NOT_FOUND
         )
       }
-      return updatedNotifications;
+      const notificationDTOs = toNotificationDTOs(updatedNotifications);
+      if (notificationDTOs.length === 0) {
+        logger.error(`Failed to map notifications to DTOs`);
+        throw new ServiceError("Failed to map notifications to DTO", StatusCodes.INTERNAL_SERVER_ERROR);
+      }
+
+      return notificationDTOs;
     } catch (error: unknown) {
       const err = error instanceof Error ? error : new Error(String(error));
       logger.error(`Error marking notification(s) as read: ${err.message}`, {

@@ -13,6 +13,7 @@ import { IUser } from "../Interfaces/Models/IUser";
 import { LockedSlot } from "../Utils/Types/Collaboration.types";
 import { StatusCodes } from "../Enums/StatusCode.enums";
 import { ICollaborationRepository } from "../Interfaces/Repository/ICollaborationRepository";
+import { CollaborationData, UserIds } from "../Utils/Types/Notification.types";
 
 @injectable()
 export class CollaborationRepository extends BaseRepository<ICollaboration> implements ICollaborationRepository{
@@ -760,4 +761,30 @@ public findByDateRange = async (startDate: Date, endDate: Date): Promise<ICollab
       );
     }
   }
+
+  public getMentorIdAndUserId = async (collaborationId: string): Promise<UserIds | null> => {
+      try {
+        logger.debug(`Fetching mentor and user IDs for collaboration: ${collaborationId}`);
+        const collaborationData = (await this.model.findById(this.toObjectId(collaborationId))
+          .populate<{ mentorId: IMentor }>({ path: "mentorId", select: "userId" })
+          .select("userId mentorId")
+          .exec()) as CollaborationData | null;
+  
+        if (!collaborationData) {
+          logger.warn(`Collaboration not found: ${collaborationId}`);
+          return null;
+        }
+  
+        const result = {
+          userId: collaborationData.userId.toString(),
+          mentorUserId: collaborationData.mentorId?.userId?.toString() || null,
+        };
+        logger.info(`Fetched user IDs for collaboration: ${collaborationId}`);
+        return result;
+      } catch (error: unknown) {
+        const err = error instanceof Error ? error : new Error(String(error));
+        logger.error(`Error fetching collaboration IDs for collaboration ${collaborationId}`, err);
+        throw new RepositoryError('Error fetching collaboration IDs', StatusCodes.INTERNAL_SERVER_ERROR, err);
+      }
+    }
 }

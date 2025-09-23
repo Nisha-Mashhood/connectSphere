@@ -1,14 +1,10 @@
-import { Types } from "mongoose";
 import { IAppNotification } from "../Models/IAppNotification";
 import { ITask } from "../../Interfaces/Models/ITask";
-import { UserIds } from "../../Utils/Types/Notification.types";
 
 export interface INotificationRepository {
   getTasksForNotification(taskId: string): Promise<ITask | null>;
   getAllTasksForNotification(): Promise<ITask[]>;
-  getGroupMembers(groupId: string): Promise<Types.ObjectId[]>;
-  getMentorIdAndUserId(collaborationId: string): Promise<UserIds | null>;
-  getConnectionUserIds(connectionId: string): Promise<{ requester: string; recipient: string } | null>;
+
   findTaskNotification(
     userId: string,
     taskId: string,
