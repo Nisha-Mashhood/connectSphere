@@ -1,21 +1,21 @@
-import { IUserConnection } from "../../Interfaces/Models/IUserConnection";
 import { IContact } from "../../Interfaces/Models/IContact";
+import { IUserConnectionDTO } from "../DTOs/IUserConnectionDTO";
 
 export interface IUserConnectionService {
-  sendUserConnectionRequest: (requesterId: string, recipientId: string) => Promise<IUserConnection>;
+  sendUserConnectionRequest: (requesterId: string, recipientId: string) => Promise<IUserConnectionDTO>;
   respondToConnectionRequest: (
     connectionId: string,
     action: "Accepted" | "Rejected"
   ) => Promise<{
-    updatedConnection: IUserConnection;
+    updatedConnection: IUserConnectionDTO;
     contacts?: IContact[];
   }>;
-  disconnectConnection: (connectionId: string, reason: string) => Promise<IUserConnection | null>;
-  fetchUserConnections: (userId: string) => Promise<IUserConnection[]>;
+  disconnectConnection: (connectionId: string, reason: string) => Promise<IUserConnectionDTO | null>;
+  fetchUserConnections: (userId: string) => Promise<IUserConnectionDTO[]>;
   fetchUserRequests: (userId: string) => Promise<{
-    sentRequests: IUserConnection[];
-    receivedRequests: IUserConnection[];
+    sentRequests: IUserConnectionDTO[];
+    receivedRequests: IUserConnectionDTO[];
   }>;
-  fetchAllUserConnections: () => Promise<IUserConnection[]>;
-  fetchUserConnectionById: (connectionId: string) => Promise<IUserConnection | null>;
+  fetchAllUserConnections: () => Promise<IUserConnectionDTO[]>;
+  fetchUserConnectionById: (connectionId: string) => Promise<IUserConnectionDTO | null>;
 }

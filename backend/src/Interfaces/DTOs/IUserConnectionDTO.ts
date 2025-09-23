@@ -1,8 +1,12 @@
+import { IUserDTO } from "./IUserDTO";
+
 export interface IUserConnectionDTO {
   id: string;
   connectionId: string;
-  requester: string;
-  recipient: string;
+  requesterId: string;
+  requester?: IUserDTO; // Populated requester details when available
+  recipientId: string;
+  recipient?: IUserDTO; // Populated recipient details when available
   requestStatus: "Pending" | "Accepted" | "Rejected";
   connectionStatus: "Connected" | "Disconnected";
   requestSentAt: Date;

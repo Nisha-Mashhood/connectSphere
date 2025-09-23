@@ -1,14 +1,16 @@
 import { inject, injectable } from "inversify";
 import { ServiceError } from "../Core/Utils/ErrorHandler";
 import logger from "../Core/Utils/Logger";
-import { IUserConnection } from "../Interfaces/Models/IUserConnection";
 import { StatusCodes } from "../Enums/StatusCode.enums";
 import { IContact } from "../Interfaces/Models/IContact";
 import { IUserConnectionRepository } from "../Interfaces/Repository/IUserCollaborationRepository";
 import { IContactRepository } from "../Interfaces/Repository/IContactRepository";
+import { toUserConnectionDTO, toUserConnectionDTOs } from "../Utils/Mappers/userConnectionMapper";
+import { IUserConnectionDTO } from "../Interfaces/DTOs/IUserConnectionDTO";
+import { IUserConnectionService } from "../Interfaces/Services/IUserCollaborationService";
 
 @injectable()
-export class UserConnectionService {
+export class UserConnectionService implements IUserConnectionService{
   private _userConnectionRepository: IUserConnectionRepository;
   private _contactRepository: IContactRepository;
 
@@ -23,7 +25,7 @@ export class UserConnectionService {
   public sendUserConnectionRequest = async (
     requesterId: string,
     recipientId: string
-  ): Promise<IUserConnection> => {
+  ): Promise<IUserConnectionDTO> => {
     try {
       logger.debug(
         `Sending connection request: requester=${requesterId}, recipient=${recipientId}`
@@ -55,10 +57,15 @@ export class UserConnectionService {
         requesterId,
         recipientId
       );
+      const connectionDTO = toUserConnectionDTO(connection);
+      if (!connectionDTO) {
+        logger.error(`Failed to map user connection ${connection._id} to DTO`);
+        throw new ServiceError("Failed to map user connection to DTO", StatusCodes.INTERNAL_SERVER_ERROR);
+      }
       logger.info(
         `Connection request created: ${connection._id} (requester=${requesterId}, recipient=${recipientId})`
       );
-      return connection;
+      return connectionDTO;
     } catch (error: unknown) {
       const err = error instanceof Error ? error : new Error(String(error));
       logger.error(
@@ -77,7 +84,7 @@ export class UserConnectionService {
   public respondToConnectionRequest = async (
     connectionId: string,
     action: "Accepted" | "Rejected"
-  ): Promise<{ updatedConnection: IUserConnection; contacts?: IContact[] }> => {
+  ): Promise<{ updatedConnection: IUserConnectionDTO; contacts?: IContact[] }> => {
     try {
       logger.debug(
         `Responding to connection request: connectionId=${connectionId}, action=${action}`
@@ -101,6 +108,12 @@ export class UserConnectionService {
         throw new ServiceError("Connection not found", StatusCodes.NOT_FOUND);
       }
 
+      const updatedConnectionDTO = toUserConnectionDTO(updatedConnection);
+      if (!updatedConnectionDTO) {
+        logger.error(`Failed to map user connection ${updatedConnection._id} to DTO`);
+        throw new ServiceError("Failed to map user connection to DTO", StatusCodes.INTERNAL_SERVER_ERROR);
+      }
+
       if (action === "Accepted") {
         const requesterId = updatedConnection.requester.toString();
         const recipientId = updatedConnection.recipient.toString();
@@ -119,11 +132,11 @@ export class UserConnectionService {
           }),
         ]);
         logger.info(`Contacts created for connection: ${connectionId}`);
-        return { updatedConnection, contacts: [contact1, contact2] };
+        return { updatedConnection: updatedConnectionDTO, contacts: [contact1, contact2] };
       }
 
       logger.info(`Connection request ${connectionId} ${action.toLowerCase()}`);
-      return { updatedConnection };
+      return { updatedConnection: updatedConnectionDTO };
     } catch (error: unknown) {
       const err = error instanceof Error ? error : new Error(String(error));
       logger.error(
@@ -142,7 +155,7 @@ export class UserConnectionService {
   public disconnectConnection = async (
     connectionId: string,
     reason: string
-  ): Promise<IUserConnection | null> => {
+  ): Promise<IUserConnectionDTO | null> => {
     try {
       logger.debug(`Disconnecting connection: connectionId=${connectionId}`);
       if (!reason || reason.trim() === "") {
@@ -160,11 +173,17 @@ export class UserConnectionService {
         throw new ServiceError("Connection not found", StatusCodes.NOT_FOUND);
       }
 
+      const updatedConnectionDTO = toUserConnectionDTO(updatedConnection);
+      if (!updatedConnectionDTO) {
+        logger.error(`Failed to map user connection ${updatedConnection._id} to DTO`);
+        throw new ServiceError("Failed to map user connection to DTO", StatusCodes.INTERNAL_SERVER_ERROR);
+      }
+
       await this._contactRepository.deleteContact(connectionId, "user-user");
       logger.info(
         `Connection ${connectionId} disconnected and associated contacts deleted`
       );
-      return updatedConnection;
+      return updatedConnectionDTO;
     } catch (error: unknown) {
       const err = error instanceof Error ? error : new Error(String(error));
       logger.error(
@@ -182,16 +201,17 @@ export class UserConnectionService {
 
   public fetchUserConnections = async (
     userId: string
-  ): Promise<IUserConnection[]> => {
+  ): Promise<IUserConnectionDTO[]> => {
     try {
       logger.debug(`Fetching connections for user: ${userId}`);
       const connections = await this._userConnectionRepository.getUserConnections(
         userId
       );
+      const connectionDTOs = toUserConnectionDTOs(connections);
       logger.info(
-        `Fetched ${connections.length} connections for user: ${userId}`
+        `Fetched ${connectionDTOs.length} connections for user: ${userId}`
       );
-      return connections;
+      return connectionDTOs;
     } catch (error: unknown) {
       const err = error instanceof Error ? error : new Error(String(error));
       logger.error(
@@ -210,16 +230,18 @@ export class UserConnectionService {
   public fetchUserRequests = async (
     userId: string
   ): Promise<{
-    sentRequests: IUserConnection[];
-    receivedRequests: IUserConnection[];
+    sentRequests: IUserConnectionDTO[];
+    receivedRequests: IUserConnectionDTO[];
   }> => {
     try {
       logger.debug(`Fetching user requests for user: ${userId}`);
       const requests = await this._userConnectionRepository.getUserRequests(userId);
+      const sentRequestDTOs = toUserConnectionDTOs(requests.sentRequests);
+      const receivedRequestDTOs = toUserConnectionDTOs(requests.receivedRequests);
       logger.info(
-        `Fetched ${requests.sentRequests.length} sent and ${requests.receivedRequests.length} received requests for user: ${userId}`
+        `Fetched ${sentRequestDTOs.length} sent and ${receivedRequestDTOs.length} received requests for user: ${userId}`
       );
-      return requests;
+      return { sentRequests: sentRequestDTOs, receivedRequests: receivedRequestDTOs };
     } catch (error: unknown) {
       const err = error instanceof Error ? error : new Error(String(error));
       logger.error(
@@ -235,12 +257,13 @@ export class UserConnectionService {
     }
   };
 
-  public fetchAllUserConnections = async (): Promise<IUserConnection[]> => {
+  public fetchAllUserConnections = async (): Promise<IUserConnectionDTO[]> => {
     try {
       logger.debug("Fetching all user connections");
       const connections = await this._userConnectionRepository.getAllUserConnections();
-      logger.info(`Fetched ${connections.length} user connections`);
-      return connections;
+      const connectionDTOs = toUserConnectionDTOs(connections);
+      logger.info(`Fetched ${connectionDTOs.length} user connections`);
+      return connectionDTOs;
     } catch (error: unknown) {
       const err = error instanceof Error ? error : new Error(String(error));
       logger.error(`Error fetching all user connections: ${err.message}`);
@@ -256,7 +279,7 @@ export class UserConnectionService {
 
   public fetchUserConnectionById = async (
     connectionId: string
-  ): Promise<IUserConnection | null> => {
+  ): Promise<IUserConnectionDTO | null> => {
     try {
       logger.debug(`Fetching user connection by ID: ${connectionId}`);
       const connection = await this._userConnectionRepository.getUserConnectionById(
@@ -267,8 +290,14 @@ export class UserConnectionService {
         throw new ServiceError("Connection not found", StatusCodes.NOT_FOUND);
       }
 
+      const connectionDTO = toUserConnectionDTO(connection);
+      if (!connectionDTO) {
+        logger.error(`Failed to map user connection ${connection._id} to DTO`);
+        throw new ServiceError("Failed to map user connection to DTO", StatusCodes.INTERNAL_SERVER_ERROR);
+      }
+
       logger.info(`Fetched connection: ${connectionId}`);
-      return connection;
+      return connectionDTO;
     } catch (error: unknown) {
       const err = error instanceof Error ? error : new Error(String(error));
       logger.error(`Error fetching connection ${connectionId}: ${err.message}`);

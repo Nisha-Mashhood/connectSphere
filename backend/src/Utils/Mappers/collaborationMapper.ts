@@ -58,7 +58,7 @@ export function toCollaborationDTO(collaboration: ICollaboration | null): IColla
     return null;
   }
 
-  // Handle mentorId
+  //mentorId
   let mentorId: string;
   let mentor: IMentorDTO | undefined;
 
@@ -78,7 +78,7 @@ export function toCollaborationDTO(collaboration: ICollaboration | null): IColla
     mentorId = '';
   }
 
-  // Handle userId
+  //userId
   let userId: string;
   let user: IUserDTO | undefined;
 
