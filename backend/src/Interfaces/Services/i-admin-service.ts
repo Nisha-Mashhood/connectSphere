@@ -1,0 +1,16 @@
+import { RevenueStats, RevenueTrend, TopMentor, UserGrowth } from "../../Utils/Types/admin-types";
+import { IMentorDTO } from "../DTOs/i-mentor-dto";
+import { ICollaborationDTO } from "../DTOs/i-collaboration-dto";
+
+export interface IAdminService {
+  getTotalUsersCount: () => Promise<number>;
+  getTotalMentorsCount: () => Promise<number>;
+  getTotalRevenue: () => Promise<RevenueStats>;
+  getPendingMentorRequestsCount: () => Promise<number>;
+  getActiveCollaborationsCount: () => Promise<number>;
+  getRevenueTrends: (timeFormat: string, days: number) => Promise<RevenueTrend[]>;
+  getUserGrowth: (timeFormat: string, days: number) => Promise<UserGrowth[]>;
+  getPendingMentorRequests: (limit?: number) => Promise<IMentorDTO[]>;
+  getTopMentors: (limit: number) => Promise<TopMentor[]>;
+  getRecentCollaborations: (limit: number) => Promise<ICollaborationDTO[]>;
+}
