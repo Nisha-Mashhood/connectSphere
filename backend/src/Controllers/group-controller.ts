@@ -9,8 +9,8 @@ import { IGroupController } from '../Interfaces/Controller/i-group-controller';
 import { StatusCodes } from "../enums/status-code-enums";
 import { BaseController } from '../core/Controller/base-controller';
 import { IGroupService } from '../Interfaces/Services/i-group-service';
-import { GROUP_MESSAGES } from 'src/constants/messages';
-import { ERROR_MESSAGES } from 'src/constants/error-messages';
+import { GROUP_MESSAGES } from '../constants/messages';
+import { ERROR_MESSAGES } from '../constants/error-messages';
 
 @injectable()
 export class GroupController extends BaseController implements IGroupController{

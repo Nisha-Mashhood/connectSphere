@@ -7,7 +7,7 @@ import { ISkillsService } from "../Interfaces/Services/i-skills-service";
 import { StatusCodes } from "../enums/status-code-enums";
 import { ISkillsRepository } from "../Interfaces/Repository/i-skills-repositry";
 import { ISkillDTO } from "../Interfaces/DTOs/i-skill-dto";
-import { toSkillDTO, toSkillDTOs } from "src/Utils/Mappers/skill-mapper";
+import { toSkillDTO, toSkillDTOs } from "../Utils/Mappers/skill-mapper";
 
 @injectable()
 export class SkillsService implements ISkillsService {

@@ -1,5 +1,5 @@
 import nodemailer from 'nodemailer';
-import config from '../../config/env.config';
+import config from '../../config/env-config';
 import logger from './logger';
 
 const transporter = nodemailer.createTransport({

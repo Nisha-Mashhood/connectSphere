@@ -21,6 +21,7 @@ import { IMentorRequestDTO } from "../Interfaces/DTOs/i-mentor-request-dto";
 import { toMentorRequestDTO, toMentorRequestDTOs } from "../Utils/Mappers/mentor-request-mapper";
 import { toCollaborationDTO } from "../Utils/Mappers/collaboration-mapper";
 import { ICollaborationDTO } from "../Interfaces/DTOs/i-collaboration-dto";
+import Stripe from "stripe";
 
 @injectable()
 export class CollaborationService implements ICollaborationService {
@@ -334,7 +335,7 @@ export class CollaborationService implements ICollaborationService {
     mentorRequestData: Partial<IMentorRequest>,
     email: string,
     returnUrl: string
-  ): Promise<{ paymentIntent: any; contacts?: any[] }> => {
+  ): Promise<{ paymentIntent: Stripe.PaymentIntent; contacts?: any[] }> => {
     try {
       logger.debug(`Processing payment for request: ${requestId}`);
       if (!mentorRequestData.mentorId || !mentorRequestData.userId) {
@@ -1255,7 +1256,7 @@ export class CollaborationService implements ICollaborationService {
   ): Promise<{
     mentorUser: { name: string; email: string };
     user: { name: string; email: string; _id: Types.ObjectId };
-    paymentIntent: any;
+    paymentIntent: Stripe.PaymentIntent;
     collab: ICollaborationDTO;
   }> => {
     try {

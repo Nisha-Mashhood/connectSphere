@@ -20,37 +20,41 @@ import {
   noSequentialRepeatedLetters,
   noNameInPassword,
   noEmailInPassword,
+  noStartingSpecialChar,
+  noExcessiveRepeats,
 } from "../../validation/validationRules.ts"; 
 
 const Signup = () => {
   const Navigate = useNavigate();
   const dispatch = useDispatch();
 
-  // Yup validation
   const validationSchema = Yup.object({
-    name: required("Full name is required")
-      .concat(namePattern())
-      .concat(minLength(3, "Name must be at least 3 characters long"))
-      .concat(maxLength(50, "Name cannot exceed 50 characters"))
-      .concat(noMultipleSpaces()),
-    email: required("Email is required")
-      .concat(emailFormat())
-      .concat(maxLength(100, "Email cannot exceed 100 characters"))
-      .concat(noMultipleSpaces())
-      .notOneOf(
-        ["@example.com"],
-        "Email from @example.com domain is not allowed"
-      ),
-    password: required("Password is required")
-      .concat(passwordPattern())
-      .concat(minLength(8, "Password must be at least 8 characters long"))
-      .concat(maxLength(20, "Password cannot exceed 20 characters"))
-      .concat(noSequentialRepeatedDigits())
-      .concat(noSequentialRepeatedLetters())
-      .concat(noNameInPassword())
-      .concat(noEmailInPassword())
-      .concat(noMultipleSpaces()),
-  });
+  name: required("Full name is required")
+    .concat(namePattern())
+    .concat(minLength(3, "Name must be at least 3 characters long"))
+    .concat(maxLength(50, "Name cannot exceed 50 characters"))
+    .concat(noMultipleSpaces())
+    .concat(noStartingSpecialChar())
+    .concat(noExcessiveRepeats(5)),
+
+  email: required("Email is required")
+    .concat(emailFormat())
+    .concat(maxLength(100, "Email cannot exceed 100 characters"))
+    .concat(noMultipleSpaces())
+    .trim(),
+
+  password: required("Password is required")
+    .concat(passwordPattern())
+    .concat(minLength(8, "Password must be at least 8 characters long"))
+    .concat(maxLength(20, "Password cannot exceed 20 characters"))
+    .concat(noSequentialRepeatedDigits())
+    .concat(noSequentialRepeatedLetters())
+    .concat(noNameInPassword())
+    .concat(noEmailInPassword())
+    .concat(noMultipleSpaces())
+    .concat(noExcessiveRepeats(3))
+    .concat(noStartingSpecialChar()),
+});
 
   const handleSubmit = async (values, { setSubmitting }) => {
     try {

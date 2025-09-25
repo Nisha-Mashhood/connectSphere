@@ -1,4 +1,4 @@
-import config from '../../config/env.config';
+import config from '../../config/env-config';
 import winston from 'winston';
 
 // Winston logger 

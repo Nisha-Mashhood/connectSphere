@@ -1,5 +1,5 @@
 import { v2 as cloudinary } from "cloudinary";
-import  config  from '../../config/env.config';
+import  config  from '../../config/env-config';
 import fs from "fs/promises";
 
 cloudinary.config({

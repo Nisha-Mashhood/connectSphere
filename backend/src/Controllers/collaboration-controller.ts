@@ -8,8 +8,8 @@ import { HttpError } from "../core/Utils/error-handler";
 import { StatusCodes } from "../enums/status-code-enums";
 import { ICollaborationService } from "../Interfaces/Services/i-collaboration-service";
 import { inject, injectable } from "inversify";
-import { COLLABORATION_MESSAGES } from "src/constants/messages";
-import { ERROR_MESSAGES } from "src/constants/error-messages";
+import { COLLABORATION_MESSAGES } from "../constants/messages";
+import { ERROR_MESSAGES } from "../constants/error-messages";
 
 @injectable()
 export class CollaborationController extends BaseController implements ICollaborationController{

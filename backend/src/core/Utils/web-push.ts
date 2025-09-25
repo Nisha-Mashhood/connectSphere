@@ -1,6 +1,6 @@
 import webPush from "web-push";
 import dotenv from "dotenv";
-import config from '../../config/env.config';
+import config from '../../config/env-config';
 
 dotenv.config();
 
