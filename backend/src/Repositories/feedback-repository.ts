@@ -51,7 +51,7 @@ export class FeedbackRepository extends BaseRepository<IFeedback> implements IFe
       logger.debug(`Fetching feedbacks for mentor: ${mentorId}`);
       const feedbacks = await this.model
         .find({ mentorId: this.toObjectId(mentorId) })
-        .populate('userId', 'name email profilePic')
+        .populate('userId', '_id name email profilePic')
         .sort({ createdAt: -1 })
         .exec();
       logger.info(`Fetched ${feedbacks.length} feedbacks for mentorId: ${mentorId}`);
@@ -68,7 +68,7 @@ export class FeedbackRepository extends BaseRepository<IFeedback> implements IFe
       logger.debug(`Fetching feedbacks for user: ${userId}`);
       const feedbacks = await this.model
         .find({ userId: this.toObjectId(userId) })
-        .populate('mentorId', 'name profilePic')
+        .populate('mentorId', '_id name profilePic')
         .sort({ createdAt: -1 })
         .limit(10)
         .exec();
@@ -86,8 +86,8 @@ export class FeedbackRepository extends BaseRepository<IFeedback> implements IFe
       logger.debug(`Fetching feedbacks for collaboration: ${collaborationId}`);
       const feedbacks = await this.model
         .find({ collaborationId: this.toObjectId(collaborationId) })
-        .populate('mentorId', 'name email profilePic')
-        .populate('userId', 'name email profilePic')
+        .populate('mentorId', '_id name email profilePic')
+        .populate('userId', '_id name email profilePic')
         .exec();
       logger.info(`Fetched ${feedbacks.length} feedbacks for collaborationId: ${collaborationId}`);
       return feedbacks;
@@ -133,12 +133,12 @@ export class FeedbackRepository extends BaseRepository<IFeedback> implements IFe
 
       const feedbacks = await this.model
         .find(query)
-        .populate('userId', 'name email profilePic')
+        .populate('userId', '_id name email profilePic')
         .populate({
           path: 'mentorId',
           populate: {
             path: 'userId',
-            select: 'name email profilePic',
+            select: '_id name email profilePic',
           },
         })
         .sort({ createdAt: -1 })

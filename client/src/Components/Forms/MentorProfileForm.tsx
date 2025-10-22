@@ -5,6 +5,7 @@ import { RootState } from "../../redux/store";
 import { useNavigate } from "react-router-dom";
 import { getAllSkills } from "../../Service/Category.Service";
 import { createMentorProfile } from "../../Service/Mentor.Service";
+import { Skill } from "../../redux/types";
 
 interface Errors {
   specialization?: string;
@@ -20,7 +21,7 @@ const MentorProfileForm = () => {
   const navigate = useNavigate();
   const [loading, setLoading] = useState(false);
   const { currentUser } = useSelector((state: RootState) => state.user);
-  const [skills, setSkills] = useState<any[]>([]); 
+  const [skills, setSkills] = useState<Skill[]>([]); 
   const [bio, setBio] = useState("");
   const [price, setPrice] = useState("");
   const [selectedSkills, setSelectedSkills] = useState<string[]>([]);

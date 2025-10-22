@@ -3,6 +3,7 @@ import { sendEmail } from "../core/Utils/email";
 import logger from "../core/Utils/logger";
 import { IMentor } from "../Interfaces/Models/i-mentor";
 import {
+  CompleteMentorDetails,
   MentorAnalytics,
   MentorQuery,
   SalesReport,
@@ -238,7 +239,7 @@ export class MentorService implements IMentorService {
 
   getAllMentors = async (
     query: MentorQuery
-  ): Promise<{ mentors: IMentorDTO[]; total: number }> => {
+  ): Promise<{ mentors: CompleteMentorDetails[]; total: number }> => {
     try {
       logger.debug(
         `Fetching all approved mentors with query: ${JSON.stringify(query)}`
@@ -283,7 +284,7 @@ export class MentorService implements IMentorService {
         `Fetched ${result.mentors.length} mentors, total: ${result.total}`
       );
       return {
-        mentors: toMentorDTOs(result.mentors),
+        mentors: result.mentors,
         total: result.total,
       };
     } catch (error: unknown) {
@@ -314,7 +315,7 @@ export class MentorService implements IMentorService {
       const mentor = await this._mentorRepository.getMentorById(mentorId);
       if (!mentor) {
         logger.warn(`Mentor not found: ${mentorId}`);
-        throw new ServiceError("Mentor not found", StatusCodes.NOT_FOUND);
+        return null;
       }
 
       logger.info(`Fetched mentor: ${mentorId}`);
@@ -501,7 +502,7 @@ export class MentorService implements IMentorService {
       const mentor = await this._mentorRepository.getMentorByUserId(userId);
       if (!mentor) {
         logger.warn(`Mentor not found for user: ${userId}`);
-        throw new ServiceError("Mentor not found", StatusCodes.NOT_FOUND);
+        return null;
       }
 
       logger.info(`Fetched mentor for user: ${userId}`);
@@ -620,9 +621,9 @@ export class MentorService implements IMentorService {
 
       const { mentors, total } = await this._mentorRepository.getAllMentors();
       const analytics: MentorAnalytics[] = await Promise.all(
-        mentors.map(async (mentor: IMentor) => {
+        mentors.map(async (mentor: CompleteMentorDetails) => {
           const collaborations = await this._collabRepository.findByMentorId(
-            mentor._id.toString()
+            mentor.id.toString()
           );
           const totalCollaborations = collaborations.length;
           const totalEarnings = collaborations.reduce(
@@ -634,9 +635,9 @@ export class MentorService implements IMentorService {
             totalCollaborations > 0 ? totalEarnings / totalCollaborations : 0;
 
           if (!mentor.userId) {
-            logger.warn(`Mentor ${mentor._id} is missing userId`);
+            logger.warn(`Mentor ${mentor.id} is missing userId`);
             return {
-              mentorId: mentor._id.toString(),
+              mentorId: mentor.id.toString(),
               name: "Unknown",
               email: "Unknown",
               specialization: mentor.specialization,
@@ -652,7 +653,7 @@ export class MentorService implements IMentorService {
             mentor.userId._id.toString()
           );
           return {
-            mentorId: mentor._id.toString(),
+            mentorId: mentor.id.toString(),
             name: user?.name || "Unknown",
             email: user?.email || "Unknown",
             specialization: mentor.specialization,

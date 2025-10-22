@@ -3,58 +3,43 @@ import { checkMentorProfile } from '../../Service/Mentor.Service';
 import { getAllRequest, getCollabDataforMentor, getCollabDataforUser, getTheRequestByUser } from '../../Service/collaboration.Service';
 import { getGroupRequestsByUser, groupDetailsForMembers, groupDetailsWithAdminId } from '../../Service/Group.Service';
 import { getUser_UserRequests } from '../../Service/User-User.Service';
-import { User } from '../../types';
+import { FetchCollabDetailsArgs, FetchCollabDetailsResponse, FetchRequestsArgs, FetchRequestsResponse, Group, GroupMemberships, GroupRequest, Mentor, ProfileState, RequestData, UserConnection } from '../types'
 
-// Define the argument type for the thunk
-interface FetchCollabDetailsArgs {
-    userId: string;
-    role: 'mentor' | 'user';
-    mentorId?: string;
-  }
-  
-  // Define the return type for the thunk
-  interface FetchCollabDetailsResponse {
-    role: 'mentor' | 'user';
-    data: any; 
-  }
+const initialState: ProfileState = {
+  mentorDetails: null,
+  collabDetails: null,
+  req: { receivedRequests: [], sentRequests: [] },
+  Groups: [],
+  groupRequests: [],
+  groupMemberships: { groups: [] },
+  userConnections: {
+    sent: [],
+    received: [],
+  },
+  loading: false,
+  error: null,
+};
 
-  interface FetchRequestsArgs {
-    userId: string;
-    role: 'mentor' | 'user';
-    mentorId?: string;
-  }
-  
-  interface FetchRequestsResponse {
-    receivedRequests: any[];
-    sentRequests: any[];
-  }
-
-  interface UserConnection {
-    _id: string;
-    requester:User;
-    recipient: User;
-    requestStatus: 'Pending' | 'Accepted' | 'Rejected';
-    connectionStatus: 'Connected' | 'Disconnected';
-    requestSentAt: Date;
-    requestAcceptedAt?: Date;
-    disconnectedAt?: Date;
-    disconnectionReason?: string;
-  }
-
-// Thunk to fetch mentor details
-export const fetchMentorDetails = createAsyncThunk(
-    'profile/fetchMentorDetails',
-    async (userId: string, { rejectWithValue }) => {  
-      try {
-        const response = await checkMentorProfile(userId);
-        return response.mentor; 
-      } catch (error) {
-        return rejectWithValue(error.message);
+// Thunks
+export const fetchMentorDetails = createAsyncThunk<
+  Mentor | null,
+  string,
+  { rejectValue: string }
+>(
+  'profile/fetchMentorDetails',
+  async (userId, { rejectWithValue }) => {
+    try {
+      if (!userId) {
+        return rejectWithValue('User ID is required');
       }
+      const response = await checkMentorProfile(userId);
+      return response.mentor;
+    } catch (error) {
+      return rejectWithValue(error.message);
     }
-  );
+  }
+);
 
-// Thunk to fetch collaboration details
 export const fetchCollabDetails = createAsyncThunk<
   FetchCollabDetailsResponse,
   FetchCollabDetailsArgs,
@@ -63,6 +48,9 @@ export const fetchCollabDetails = createAsyncThunk<
   'profile/fetchCollabDetails',
   async ({ userId, role, mentorId }, { rejectWithValue }) => {
     try {
+      if (!userId) {
+        return rejectWithValue('User ID is required');
+      }
       if (role === 'mentor') {
         if (!mentorId) {
           throw new Error('Mentor ID is required for mentor role');
@@ -77,9 +65,8 @@ export const fetchCollabDetails = createAsyncThunk<
       return rejectWithValue(error.message);
     }
   }
-)
+);
 
-// Thunk to fetch requests
 export const fetchRequests = createAsyncThunk<
   FetchRequestsResponse,
   FetchRequestsArgs,
@@ -88,8 +75,11 @@ export const fetchRequests = createAsyncThunk<
   'profile/fetchRequests',
   async ({ userId, role, mentorId }, { rejectWithValue }) => {
     try {
-      let receivedRequests = [];
-      let sentRequests = [];
+      if (!userId) {
+        return rejectWithValue('User ID is required');
+      }
+      let receivedRequests: RequestData[] = [];
+      let sentRequests: RequestData[] = [];
 
       if (role === 'user') {
         const response = await getTheRequestByUser(userId);
@@ -97,11 +87,10 @@ export const fetchRequests = createAsyncThunk<
       } else if (role === 'mentor' && mentorId) {
         const receivedResponse = await getAllRequest(mentorId);
         receivedRequests = receivedResponse.requests;
-
         const sentResponse = await getTheRequestByUser(userId);
         sentRequests = sentResponse.requests;
       }
-      
+
       return { receivedRequests, sentRequests };
     } catch (error) {
       return rejectWithValue(error.message);
@@ -109,10 +98,13 @@ export const fetchRequests = createAsyncThunk<
   }
 );
 
-// Fetch groups created by the user
-export const fetchGroups = createAsyncThunk(
+export const fetchGroups = createAsyncThunk<
+  Group[],
+  string,
+  { rejectValue: string }
+>(
   'profile/fetchGroups',
-  async (userId: string, { rejectWithValue }) => {
+  async (userId, { rejectWithValue }) => {
     try {
       const response = await groupDetailsWithAdminId(userId);
       return response.data;
@@ -122,14 +114,20 @@ export const fetchGroups = createAsyncThunk(
   }
 );
 
-// Fetch group requests sent by the user
-export const fetchGroupRequests = createAsyncThunk(
+export const fetchGroupRequests = createAsyncThunk<
+  GroupRequest[],
+  string,
+  { rejectValue: string }
+>(
   'profile/fetchGroupRequests',
-  async (userId: string, { rejectWithValue }) => {
+  async (userId, { rejectWithValue }) => {
     try {
+      if (!userId) {
+        return rejectWithValue('User ID is required');
+      }
       const response = await getGroupRequestsByUser(userId);
       const filteredRequests = response.data.filter(
-        (request) => request.groupId?.adminId !== userId
+        (request: GroupRequest) => request.groupId?.adminId !== userId
       );
       return filteredRequests;
     } catch (error) {
@@ -138,11 +136,17 @@ export const fetchGroupRequests = createAsyncThunk(
   }
 );
 
-//Fetch group deatils where user is a member
-export const fetchGroupDetailsForMembers = createAsyncThunk(
+export const fetchGroupDetailsForMembers = createAsyncThunk<
+  GroupMemberships,
+  string,
+  { rejectValue: string }
+>(
   'profile/fetchGroupDetailsForMembers',
-  async (userId: string, { rejectWithValue }) => {
+  async (userId, { rejectWithValue }) => {
     try {
+      if (!userId) {
+        return rejectWithValue('User ID is required');
+      }
       const response = await groupDetailsForMembers(userId);
       return response;
     } catch (error) {
@@ -151,37 +155,32 @@ export const fetchGroupDetailsForMembers = createAsyncThunk(
   }
 );
 
-// Thunk for fetching user-user connection requests
-export const fetchUserConnections = createAsyncThunk(
+export const fetchUserConnections = createAsyncThunk<
+  { sent: UserConnection[]; received: UserConnection[] },
+  string,
+  { rejectValue: string }
+>(
   'profile/fetchUserConnections',
-  async (userId: string, { rejectWithValue }) => {
+  async (userId, { rejectWithValue }) => {
     try {
+      if (!userId) {
+        return rejectWithValue('User ID is required');
+      }
       const response = await getUser_UserRequests(userId);
-      return response;
+      return {
+        sent: response.sentRequests || [],
+        received: response.receivedRequests || [],
+      };
     } catch (error) {
       return rejectWithValue(error.message);
     }
   }
 );
 
-
 // Slice
 const profileSlice = createSlice({
   name: 'profile',
-  initialState: {
-    mentorDetails: null,
-    collabDetails: null,
-    req: { receivedRequests: [], sentRequests: [] },
-    Groups: [],
-    groupRequests: [],
-    groupMemberships: [],
-    userConnections: {
-      sent: [] as UserConnection[],
-      received: [] as UserConnection[],
-    },
-    loading: false,
-    error: null,
-  },
+  initialState,
   reducers: {
     updateMentorInfo: (state, action) => {
       state.mentorDetails = {
@@ -287,10 +286,7 @@ const profileSlice = createSlice({
         state.error = null;
       })
       .addCase(fetchUserConnections.fulfilled, (state, action) => {
-        state.userConnections = {
-          sent: action.payload.sentRequests || [],
-          received: action.payload.receivedRequests || [],
-        };
+        state.userConnections = action.payload;
         state.loading = false;
       })
       .addCase(fetchUserConnections.rejected, (state, action) => {

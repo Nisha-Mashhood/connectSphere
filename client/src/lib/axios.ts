@@ -3,7 +3,7 @@ import axiosRetry from "axios-retry";
 import { store } from "../redux/store"; 
 import { signOut } from "../redux/Slice/userSlice";
 import toast from "react-hot-toast";
-import logger from "./Logger";
+
 
 export const axiosInstance = axios.create({
   baseURL: import.meta.env.VITE_BACKEND_URL,
@@ -81,7 +81,8 @@ export const setupInterceptors = (navigate) => {
 
       if (axios.isCancel(error)) {
         console.warn("Request cancelled - previous request was still pending");
-        return Promise.reject(error);
+        return null;
+        // return Promise.reject(error);
       }
 
       if (error.response?.status === 429) {
@@ -107,7 +108,7 @@ export const setupInterceptors = (navigate) => {
         try {
           const response = await axiosInstance.post("/auth/refresh-token", {}, { withCredentials: true });
           const { newAccessToken } = response.data;
-          logger.info(`New Acess Token created : ${newAccessToken}`);
+          console.log(`New Acess Token created : ${newAccessToken}`);
           // document.cookie = `accessToken=${newAccessToken}; path=/;`;
           // error.config.headers.Authorization = `Bearer ${newAccessToken}`;
           return axiosInstance(error.config);

@@ -1,3 +1,5 @@
+import { User } from "./redux/types";
+
 export interface Contact {
   id: string;
   contactId: string;
@@ -216,29 +218,6 @@ export interface Review {
   isApproved: boolean;
   isSelect: boolean;
   createdAt: string;
-}
-
-export interface User {
-  _id: string;
-  name: string;
-  email: string;
-  phone:number,
-  reasonForJoining:string,
-  industry:string,
-  jobTitle: string;
-  profilePic: string;
-}
-
-export interface UserConnection {
-  _id: string;
-  requester: User;
-  recipient: User;
-  requestStatus: string; 
-  connectionStatus: string; 
-  requestSentAt: string;
-  createdAt: string;
-  updatedAt: string;
-  disconnectionReason: string | null;
 }
 
 export interface MentorForCollab {

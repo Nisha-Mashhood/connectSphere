@@ -52,7 +52,7 @@ export class ReviewRepository extends BaseRepository<IReview> implements IReview
       logger.debug(`Fetching review by ID: ${reviewId}`);
       const review = await this.model
         .findById(this.toObjectId(reviewId))
-        .populate('userId', 'email username')
+        .populate('userId', '_id email username')
         .exec();
       if (!review) {
         logger.warn(`Review not found: ${reviewId}`);
@@ -72,7 +72,7 @@ export class ReviewRepository extends BaseRepository<IReview> implements IReview
       logger.debug('Fetching all reviews');
       const reviews = await this.model
         .find()
-        .populate('userId', 'email username')
+        .populate('userId', '_id email username')
         .sort({ createdAt: -1 })
         .exec();
       logger.info(`Fetched ${reviews.length} reviews`);
@@ -92,7 +92,7 @@ export class ReviewRepository extends BaseRepository<IReview> implements IReview
       logger.debug(`Updating review: ${reviewId}`);
       const review = await this.model
         .findByIdAndUpdate(this.toObjectId(reviewId), updates, { new: true })
-        .populate('userId', 'email username')
+        .populate('userId', '_id email username')
         .exec();
       if (!review) {
         logger.warn(`Review not found: ${reviewId}`);
@@ -112,7 +112,7 @@ export class ReviewRepository extends BaseRepository<IReview> implements IReview
       logger.debug('Fetching selected and approved reviews');
       const reviews = await this.model
         .find({ isSelect: true, isApproved: true })
-        .populate('userId', 'email username')
+        .populate('userId', '_id email username')
         .exec();
       logger.info(`Fetched ${reviews.length} selected and approved reviews`);
       return reviews;

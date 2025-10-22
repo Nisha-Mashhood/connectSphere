@@ -14,17 +14,15 @@ import ProfileDisplay from "../Components/User/Mentor/ProfileDisplay";
 import PageNotFound from "../Components/PageNotFound";
 import { ForbiddenPage } from "../Components/ForebiddenPage";
 import GithubCallback from "../Components/User/Auth/GithubCallback";
-import ExploreMentor from "../Components/User/UserComponents/ExploreMentor";
-// import MyMentorProfilePage from "../Components/User/Mentor/MyMentorProfilePage";
-// import UserProfile from "../Components/User/UserComponents/UserProfile";
+// import ExploreMentor from "../Components/User/UserComponents/ExploreMentor";
 import About from "../Components/User/Common/About";
 import CreateGroupForm from "../Components/Forms/CreateGroupForm";
 import GroupDetails from "../Components/User/Common/Profile/GroupDetails";
 import GroupDetailView from "../Components/User/Common/Profile/GroupDetailView";
 import CollaborationDetails from "../Components/User/Common/Profile/CollaboartionDetails/CollaborationDetails";
 import Chat from "../Components/User/Common/Chat/Chat";
-// import { path } from 'path';
 import MentorDashBoard from "../Components/User/Common/Profile/MentorDashBoard";
+import ExploreMentors from "../pages/User/Explore/Explore";
 
 
 
@@ -46,8 +44,7 @@ const UserRoutes = () => (
         <Route path="/profile" element={<Profile />} />
         <Route path="/mentorProfile" element={<MentorProfileForm />} />
         <Route path="/profileDispaly/:Id" element={< ProfileDisplay />} />
-        <Route path="/explorementor" element={<ExploreMentor />} />
-        {/* <Route path="/userProfile/:userId" element={<UserProfile />} /> */}
+        <Route path="/explorementor" element={<ExploreMentors />} />
         <Route path="/create-group" element={<CreateGroupForm />} />
         <Route path="/groupDetails/:groupId" element={<GroupDetails />} />
         <Route path="/group/:groupId" element={<GroupDetailView />} />

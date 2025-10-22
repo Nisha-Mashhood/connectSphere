@@ -222,6 +222,7 @@ export const MENTOR_MESSAGES = {
   MENTOR_PROFILE_UPDATED: "Mentor profile updated successfully",
   MENTOR_ANALYTICS_RETRIEVED: "Mentor analytics retrieved successfully",
   SALES_REPORT_RETRIEVED: "Sales report retrieved successfully",
+  NO_MENTOR_FOUND: "Mentor Not Found",
 
   //Repositry
   

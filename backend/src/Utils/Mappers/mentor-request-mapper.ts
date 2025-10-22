@@ -69,9 +69,9 @@ export function toMentorRequestDTO(request: IMentorRequest | null): IMentorReque
         }
       : undefined,
     price: request.price,
-    paymentStatus: request.paymentStatus, // Now matches "Pending" | "Paid" | "Failed"
+    paymentStatus: request.paymentStatus, 
     timePeriod: request.timePeriod,
-    isAccepted: request.isAccepted, // Now matches "Pending" | "Accepted" | "Rejected"
+    isAccepted: request.isAccepted,
     createdAt: request.createdAt,
   };
 }

@@ -77,7 +77,9 @@ export const verifyOTP = async (data) => {
       "/auth/register/verify-otp",
       data
     );
-    return response.data.data;
+
+    console.log("Response from backend :",response);
+    return response.data;
   } catch (error) {
     handleError(error)
   }

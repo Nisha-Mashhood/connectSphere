@@ -1,5 +1,5 @@
 import { IMentor } from "../Models/i-mentor";
-import { MentorQuery } from "../../Utils/Types/mentor-types";
+import { CompleteMentorDetails, MentorQuery } from "../../Utils/Types/mentor-types";
 
 export interface IMentorRepository {
   submitMentorRequest(data: Partial<IMentor>): Promise<IMentor>;
@@ -15,7 +15,7 @@ export interface IMentorRepository {
     page: number;
     pages: number;
   }>;
-  getAllMentors(query?: MentorQuery): Promise<{ mentors: IMentor[]; total: number }>;
+  getAllMentors(query?: MentorQuery): Promise<{ mentors: CompleteMentorDetails[]; total: number }>;
   getMentorDetails(id: string): Promise<IMentor | null>;
   approveMentorRequest(id: string): Promise<IMentor | null>;
   rejectMentorRequest(id: string): Promise<IMentor | null>;

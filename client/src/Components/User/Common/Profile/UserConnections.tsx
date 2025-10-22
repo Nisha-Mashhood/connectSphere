@@ -22,20 +22,22 @@ import {
 } from "../../../../Service/User-User.Service";
 import { getRelativeTime } from "../../../../lib/helperforprofile";
 import toast from "react-hot-toast";
+import { useSelector } from "react-redux";
+import { RootState } from "../../../../redux/store";
 
-const UserConnections = ({ currentUser, handleProfileClick }) => {
+const UserConnections = ({ handleProfileClick }) => {
+  const { currentUser } = useSelector((state: RootState) => state.user);
   const [connections, setConnections] = useState([]);
   const [requests, setRequests] = useState([]);
   const [selectedConnection, setSelectedConnection] = useState(null);
   const [disconnectReason, setDisconnectReason] = useState("");
   const { isOpen, onOpen, onClose } = useDisclosure();
-  // const navigate = useNavigate();
 
   // Fetch both connections and requests
   const fetchUserData = useCallback(async () => {
     try {
-      const connectionsData = await getUser_UserConnections(currentUser._id);
-      const requestsData = await getUser_UserRequests(currentUser._id);
+      const connectionsData = await getUser_UserConnections(currentUser.id);
+      const requestsData = await getUser_UserRequests(currentUser.id);
 
       console.log("connectionData :", connectionsData);
       console.log("requsetsdata : ", requestsData);
@@ -52,11 +54,11 @@ const UserConnections = ({ currentUser, handleProfileClick }) => {
       console.error("Error fetching user data:", error);
       toast.error("Failed to fetch user connections");
     }
-  },[currentUser._id]);
+  },[currentUser.id]);
 
   useEffect(() => {
     fetchUserData();
-  }, [currentUser._id, fetchUserData]);
+  }, [fetchUserData]);
 
   // Handle request responses
   const handleRequestResponse = async (requestId, action) => {
@@ -76,7 +78,7 @@ const UserConnections = ({ currentUser, handleProfileClick }) => {
   const handleDisconnect = async () => {
     try {
       await disconnectUser_UserConnection(
-        selectedConnection._id,
+        selectedConnection.id,
         disconnectReason
       );
       toast.success("Connection disconnected successfully");
@@ -89,7 +91,7 @@ const UserConnections = ({ currentUser, handleProfileClick }) => {
       console.log("FAiled to disconnect : ",error);
     }
   };
-  console.log(currentUser._id);
+  console.log(currentUser.id);
 
   return (
     <>
@@ -110,12 +112,12 @@ const UserConnections = ({ currentUser, handleProfileClick }) => {
                   request.requestStatus === "Rejected"
               )
               .map((request) => (
-                <div key={request._id} className="p-4 border rounded-lg">
+                <div key={request.id} className="p-4 border rounded-lg">
                   <div className="flex items-center justify-between">
                     <div className="flex items-center gap-4">
                       <Avatar
                         src={
-                          currentUser._id === request.requester
+                          currentUser.id === request.requester
                             ? request.recipient?.profilePic
                             : request.requester?.profilePic
                         }
@@ -126,13 +128,13 @@ const UserConnections = ({ currentUser, handleProfileClick }) => {
                           className="font-semibold cursor-pointer hover:underline"
                           onClick={() =>
                             handleProfileClick(
-                              currentUser._id === request.requester
-                                ? request.recipient?._id
-                                : request.requester?._id
+                              currentUser.id === request.requester
+                                ? request.recipient?.id
+                                : request.requester?.id
                             )
                           }
                         >
-                          {currentUser._id === request.requester
+                          {currentUser.id === request.requester
                             ? `Request sent to ${request.recipient?.name}`
                             : `Request from ${request.requester?.name}`}
                         </p>
@@ -142,7 +144,7 @@ const UserConnections = ({ currentUser, handleProfileClick }) => {
                       </div>
                     </div>
 
-                    {currentUser._id === request.recipient &&
+                    {currentUser.id === request.recipient &&
                       request.requestStatus === "Pending" && (
                         <div className="flex gap-2">
                           <Button
@@ -150,7 +152,7 @@ const UserConnections = ({ currentUser, handleProfileClick }) => {
                             color="success"
                             variant="flat"
                             onPress={() =>
-                              handleRequestResponse(request._id, "Accepted")
+                              handleRequestResponse(request.id, "Accepted")
                             }
                           >
                             <FaCheckCircle />
@@ -160,7 +162,7 @@ const UserConnections = ({ currentUser, handleProfileClick }) => {
                             color="danger"
                             variant="flat"
                             onPress={() =>
-                              handleRequestResponse(request._id, "Rejected")
+                              handleRequestResponse(request.id, "Rejected")
                             }
                           >
                             <FaTimesCircle />
@@ -210,12 +212,12 @@ const UserConnections = ({ currentUser, handleProfileClick }) => {
                   conn.connectionStatus === "Connected"
               )
               .map((connection) => (
-                <div key={connection._id} className="p-4 border rounded-lg">
+                <div key={connection.id} className="p-4 border rounded-lg">
                   <div className="flex items-center justify-between">
                     <div className="flex items-center gap-4">
                       <Avatar
                         src={
-                          currentUser._id === connection.requester?._id
+                          currentUser.id === connection.requester?.id
                             ? connection.recipient?.profilePic
                             : connection.requester?.profilePic
                         }
@@ -226,14 +228,14 @@ const UserConnections = ({ currentUser, handleProfileClick }) => {
                           className="font-semibold cursor-pointer hover:underline"
                           onClick={() =>
                             handleProfileClick(
-                              currentUser._id === connection.requester?._id
-                                ? connection.recipient?._id
-                                : connection.requester?._id
+                              currentUser.id === connection.requester?.id
+                                ? connection.recipient?.id
+                                : connection.requester?.id
                             )
                           }
                         >
                           Connected with{" "}
-                          {currentUser._id === connection.requester?._id
+                          {currentUser.id === connection.requester?.id
                             ? connection.recipient?.name
                             : connection.requester?.name}
                         </p>
@@ -253,13 +255,6 @@ const UserConnections = ({ currentUser, handleProfileClick }) => {
                     >
                       Disconnect
                     </Button>
-                    {/* <Button
-                      color="primary"
-                      variant="flat"
-                      onPress={() => navigate(`/chat/user-user/${connection._id}`)}
-                    >
-                      Chat
-                    </Button> */}
                   </div>
                 </div>
               ))}
@@ -283,7 +278,7 @@ const UserConnections = ({ currentUser, handleProfileClick }) => {
               <ModalBody>
                 <p>
                   Are you sure you want to disconnect with{" "}
-                  {currentUser._id === selectedConnection?.requester
+                  {currentUser.id === selectedConnection?.requester
                     ? selectedConnection?.recipient?.name
                     : selectedConnection?.requester?.name}
                   ?

@@ -86,7 +86,7 @@ const PaymentForm = ({ request, onSuccessfulPayment }) => {
       const response = await processStripePayment({
         paymentMethodId: paymentMethod.id,
         amount: request.price * 100,
-        requestId: request._id,
+        requestId: request.id,
         email: currentUser.email,
         returnUrl: returnUrl
       });
@@ -175,7 +175,7 @@ const RequestsSection = ({ handleProfileClick }) => {
   setIsLoading(true);
   try {
     // Get requests sent by the user/mentor
-    const sentData = await getTheRequestByUser(currentUser._id);
+    const sentData = await getTheRequestByUser(currentUser.id);
     console.log("Sent Requests:", sentData);
     setSentRequests(sentData.requests || []);
 
@@ -185,7 +185,7 @@ const RequestsSection = ({ handleProfileClick }) => {
     // Get requests received by the mentor
     if (currentUser.role === "mentor" && mentorDetails) {
       console.log("Mentor details : ",mentorDetails);
-      const receivedData = await getAllRequest(mentorDetails._id);
+      const receivedData = await getAllRequest(mentorDetails.id);
       console.log("Received Requests:", receivedData);
       setReceivedRequests(receivedData.requests || []);
     }
@@ -255,23 +255,23 @@ const RequestsSection = ({ handleProfileClick }) => {
         fetchRequests();
       }
     }
-  }, [currentUser._id, fetchRequests]);
+  }, [currentUser.id, fetchRequests]);
 
   // Render a single request card
   const renderRequestCard = (request, isSent) => {
     const otherPerson = isSent 
-      ? (request.mentorId?.userId || {}) 
-      : (request.userId || {});
+      ? (request.mentor?.user || {}) 
+      : (request.user || {});
 
     const profileId = isSent 
-      ? (request.mentorId?._id) // Use mentorId for sent requests to mentors
-      : (otherPerson._id);   
+      ? (request.mentorId) // Use mentorId for sent requests to mentors
+      : (otherPerson.id);   
 
     const profilePic = otherPerson.profilePic || "/default-avatar.png";
     const name = otherPerson.name || "Unknown User";
     
     return (
-      <Card key={request._id} className="mb-4 shadow-sm hover:shadow-md transition-shadow">
+      <Card key={request.id} className="mb-4 shadow-sm hover:shadow-md transition-shadow">
         <CardBody onMouseEnter={() => setSelectedRequest(request)} 
           className="cursor-pointer transition-transform duration-300 hover:scale-105">
           <div className="flex items-start gap-4">
@@ -340,7 +340,7 @@ const RequestsSection = ({ handleProfileClick }) => {
                       variant="flat" 
                       size="sm"
                       startContent={<FaCheckCircle />}
-                      onClick={() => handleAccept(request._id)}
+                      onClick={() => handleAccept(request.id)}
                     >
                       Accept
                     </Button>
@@ -349,7 +349,7 @@ const RequestsSection = ({ handleProfileClick }) => {
                       variant="flat" 
                       size="sm"
                       startContent={<FaTimesCircle />}
-                      onClick={() => handleReject(request._id)}
+                      onClick={() => handleReject(request.id)}
                     >
                       Reject
                     </Button>

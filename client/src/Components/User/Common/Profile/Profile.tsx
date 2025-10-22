@@ -63,7 +63,7 @@ import {
 import { updateUserProfile } from "../../../../redux/Slice/userSlice";
 import { checkProfile } from "../../../../Service/Auth.service";
 import { downloadReceipt } from "../../../../Service/collaboration.Service";
-import { Collaboration } from "../../../../types";
+import { CollabData } from "../../../../redux/types";
 
 // Lazy load components
 const RequestsSection = lazy(() => import("./RequestSection"));
@@ -78,7 +78,7 @@ const Profile = () => {
   const {
     mentorDetails,
     collabDetails,
-    userConnections,
+    // userConnections,
     loading: profileLoading,
   } = useSelector((state: RootState) => state.profile);
   const navigate = useNavigate();
@@ -133,7 +133,7 @@ const Profile = () => {
   const [ampm, setAmpm] = useState("AM");
   const [mentorNames, setMentorNames] = useState<{ [key: string]: string }>({});
   const [isPaymentLoading, setIsPaymentLoading] = useState(false);
-  const [selectedCollab, setSelectedCollab] = useState<Collaboration | null>(null);
+  const [selectedCollab, setSelectedCollab] = useState<CollabData | null>(null);
   const {
     isOpen: isReceiptModalOpen,
     onOpen: onReceiptModalOpen,
@@ -149,12 +149,12 @@ const Profile = () => {
 
   // Fetch collaboration details
   useEffect(() => {
-    if (currentUser?._id) {
+    if (currentUser?.id) {
       dispatch(
-        fetchCollabDetails({ userId: currentUser._id, role: currentUser.role })
+        fetchCollabDetails({ userId: currentUser.id, role: currentUser.role })
       );
     }
-  }, [dispatch, currentUser?._id, currentUser?.role]);
+  }, [dispatch, currentUser?.id, currentUser?.role]);
 
   useEffect(() => {
     if (
@@ -168,11 +168,11 @@ const Profile = () => {
 
       const names = collabDetails.data.reduce(
         (acc: { [key: string]: string }, c) => {
-          if (typeof c.mentorId === "object" && c.mentorId.userId?.name) {
+          if (typeof c.mentor === "object" && c.mentor.user?.name) {
             console.log(
-              `Mapping mentor ID ${c.mentorId._id} to name: ${c.mentorId.userId.name}`
+              `Mapping mentor ID ${c.mentorId} to name: ${c.mentor.user.name}`
             );
-            acc[c.mentorId._id] = c.mentorId.userId.name;
+            acc[c.mentorId] = c.mentor.user.name;
           } else if (typeof c.mentorId === "string") {
             console.log(
               `No name available for mentor ID ${c.mentorId}, using fallback`
@@ -181,11 +181,11 @@ const Profile = () => {
           } else {
             console.warn(
               "Invalid mentorId data for collaboration",
-              c._id,
+              c.id,
               ":",
               c.mentorId
             );
-            acc[c.mentorId?._id || c._id] = "Unknown Mentor";
+            acc[c.mentorId || c.id] = "Unknown Mentor";
           }
           return acc;
         },
@@ -232,10 +232,10 @@ const Profile = () => {
       : "Not specified";
 
   console.log("COLLAB DETAILS OF THIS CURRENT USER : ", collabDetails);
-  console.log(
-    "USER CONNECTION DETAILS OF THIS CURRENT USER : ",
-    userConnections
-  );
+  // console.log(
+  //   "USER CONNECTION DETAILS OF THIS CURRENT USER : ",
+  //   userConnections
+  // );
 
   // Time utility functions
   const toMinutes = (h: string, m: string, ampm: string) => {
@@ -259,7 +259,7 @@ const Profile = () => {
     const formData = new FormData();
     formData.append(type, file);
     try {
-      const { user } = await updateUserImages(currentUser._id, formData);
+      const { user } = await updateUserImages(currentUser.id, formData);
       dispatch(updateUserProfile(user));
       toast.success("Image updated successfully");
     } catch (error) {
@@ -274,7 +274,7 @@ const Profile = () => {
       return;
     }
     try {
-      const { user } = await updateUserProfessionalInfo(currentUser._id, {
+      const { user } = await updateUserProfessionalInfo(currentUser.id, {
         ...professionalInfo,
         jobTitle: currentUser.jobTitle,
       });
@@ -293,7 +293,7 @@ const Profile = () => {
       return;
     }
     try {
-      const { user } = await updateContactInfo(currentUser._id, contactInfo);
+      const { user } = await updateContactInfo(currentUser.id, contactInfo);
       dispatch(updateUserProfile(user));
       toast.success("Contact info updated");
       onContactModalClose();
@@ -310,7 +310,7 @@ const Profile = () => {
     }
     try {
       const { MentorData } = await updateMentorProfile(
-        mentorDetails._id,
+        mentorDetails.id,
         mentorshipInfo
       );
       dispatch(updateMentorInfo(MentorData));
@@ -435,7 +435,7 @@ const Profile = () => {
       return;
     }
     try {
-      await updateUserPassword(currentUser._id, {
+      await updateUserPassword(currentUser.id, {
         currentPassword: passwordInfo.currentPassword,
         newPassword: passwordInfo.newPassword,
       });
@@ -454,13 +454,13 @@ const Profile = () => {
 
   const handleBecomeMentor = async () => {
     try {
-      const profileResponse = await checkProfile(currentUser._id);
+      const profileResponse = await checkProfile(currentUser.id);
       if (!profileResponse.isProfileComplete) {
         toast.error("Please complete your profile first");
         navigate("/complete-profile");
         return;
       }
-      const mentorResponse = await checkMentorProfile(currentUser._id);
+      const mentorResponse = await checkMentorProfile(currentUser.id);
       if (!mentorResponse.mentor) navigate("/mentorProfile");
       else {
         switch (mentorResponse.mentor.isApproved) {
@@ -801,8 +801,8 @@ const Profile = () => {
                                       {typeof collab.mentorId === "string"
                                         ? mentorNames[collab.mentorId] ||
                                           "Unknown Mentor"
-                                        : mentorNames[collab.mentorId._id] ||
-                                          collab.mentorId.userId?.name ||
+                                        : mentorNames[collab.mentorId] ||
+                                          collab.mentor.user?.name ||
                                           "Unknown Mentor"}
                                     </p>
                                     <p className="text-sm font-semibold text-gray-900">
@@ -876,9 +876,9 @@ const Profile = () => {
                                                 selectedCollab.mentorId
                                               ] || "Unknown Mentor"
                                             : mentorNames[
-                                                selectedCollab.mentorId._id
+                                                selectedCollab.mentorId
                                               ] ||
-                                              selectedCollab.mentorId.userId
+                                              selectedCollab.mentor.user
                                                 ?.name ||
                                               "Unknown Mentor"}
                                         </p>
@@ -917,7 +917,7 @@ const Profile = () => {
                                           className="w-full"
                                           onPress={() =>
                                             handleDownloadReceipt(
-                                              selectedCollab._id
+                                              selectedCollab.id
                                             )
                                           }
                                         >
@@ -1067,7 +1067,6 @@ const Profile = () => {
                             }
                           >
                             <UserConnections
-                              currentUser={currentUser}
                               handleProfileClick={(id: string) =>
                                 navigate(`/profileDispaly/${id}`)
                               }

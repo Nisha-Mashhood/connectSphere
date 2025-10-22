@@ -19,7 +19,9 @@ export function toGroupDTO(group: IGroup | null): IGroupDTO | null {
     return null;
   }
 
-  // Handle adminId (populated IUser or just an ID)
+  // logger.debug(`Mapping group ${group._id}: ${JSON.stringify(group, null, 2)}`);
+
+  // Handle adminId
   let adminId: string;
   let admin: IUserDTO | undefined;
 
@@ -30,7 +32,7 @@ export function toGroupDTO(group: IGroup | null): IGroupDTO | null {
       adminId = group.adminId.toString();
     } else {
       // Assume it's an IUser object (populated)
-      adminId = (group.adminId as IUser)._id.toString();
+      adminId = (group.adminId as IUser)._id?.toString() || '';
       const adminDTO = toUserDTO(group.adminId as IUser);
       admin = adminDTO ?? undefined;
     }
@@ -42,8 +44,9 @@ export function toGroupDTO(group: IGroup | null): IGroupDTO | null {
   const members: { userId: string; joinedAt: Date }[] = [];
   const membersDetails: { user: IUserDTO; joinedAt: Date }[] = [];
 
-  if (group.members && group.members.length > 0) {
+  if (Array.isArray(group.members) && group.members.length > 0) {
     group.members.forEach((member) => {
+      // logger.debug(`Processing member for group ${group._id}: ${JSON.stringify(member, null, 2)}`);
       let memberUserId: string;
       let memberUser: IUserDTO | undefined;
 
@@ -54,7 +57,7 @@ export function toGroupDTO(group: IGroup | null): IGroupDTO | null {
           memberUserId = member.userId.toString();
         } else {
           // Assume it's an IUser object (populated)
-          memberUserId = (member.userId as IUser)._id.toString();
+          memberUserId = (member.userId as IUser)._id?.toString() || '';
           const memberUserDTO = toUserDTO(member.userId as IUser);
           memberUser = memberUserDTO ?? undefined;
         }
@@ -63,13 +66,13 @@ export function toGroupDTO(group: IGroup | null): IGroupDTO | null {
         memberUserId = '';
       }
 
-      members.push({ userId: memberUserId, joinedAt: member.joinedAt });
+      members.push({ userId: memberUserId, joinedAt: member.joinedAt || new Date() });
       if (memberUser) {
-        membersDetails.push({ user: memberUser, joinedAt: member.joinedAt });
+        membersDetails.push({ user: memberUser, joinedAt: member.joinedAt || new Date() });
       }
     });
   } else {
-    logger.warn(`Group ${group._id} has no members`);
+    logger.info(`Group ${group._id} has no members or members is not an array`);
   }
 
   return {

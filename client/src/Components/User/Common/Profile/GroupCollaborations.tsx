@@ -4,15 +4,14 @@ import { FaUsers } from "react-icons/fa";
 import { useNavigate } from "react-router-dom";
 import { fetchGroupDetailsForMembers } from "../../../../redux/Slice/profileSlice";
 import { useEffect } from "react";
-// import { Button } from "@nextui-org/react";
 
 const GroupCollaborations = ({ handleProfileClick }) => {
   const navigate = useNavigate();
   const dispatch = useDispatch<AppDispatch>();
   const { groupMemberships } = useSelector((state: RootState) => state.profile);
   const { currentUser } = useSelector((state: RootState) => state.user);
-  const filteredGroupmembership = groupMemberships?.filter(
-    (group) => group.adminId?._id !== currentUser._id
+  const filteredGroupmembership = groupMemberships?.groups.filter(
+    (group) => group.adminId !== currentUser.id
   );
 
   const handleGroupClick = (groupId: string) => {
@@ -20,8 +19,8 @@ const GroupCollaborations = ({ handleProfileClick }) => {
   };
 
   useEffect(() => {
-    if (currentUser?._id) {
-      dispatch(fetchGroupDetailsForMembers(currentUser._id));
+    if (currentUser?.id) {
+      dispatch(fetchGroupDetailsForMembers(currentUser.id));
     }
   }, [dispatch, currentUser]);
 
@@ -33,9 +32,9 @@ const GroupCollaborations = ({ handleProfileClick }) => {
       <div className="space-y-4">
         {filteredGroupmembership?.map((group) => (
           <div
-            key={group._id}
+            key={group.id}
             className="bg-white dark:bg-gray-700 p-4 rounded-lg shadow-sm border border-gray-200 dark:border-gray-600 cursor-pointer"
-            onClick={() => handleGroupClick(group._id)}
+            onClick={() => handleGroupClick(group.id)}
           >
             <div className="flex items-center space-x-4">
               {/* Group Image */}
@@ -62,9 +61,9 @@ const GroupCollaborations = ({ handleProfileClick }) => {
                 <div className="flex items-center space-x-4 mt-2 text-sm">
                   <span
                     className="text-blue-600 dark:text-blue-400 cursor-pointer hover:underline"
-                    onClick={() => handleProfileClick(group.adminId?._id)}
+                    onClick={() => handleProfileClick(group.adminId)}
                   >
-                    Admin: {group.adminId?.name}
+                    Admin: {group.admin?.name}
                   </span>
                 </div>
               </div>
@@ -72,7 +71,8 @@ const GroupCollaborations = ({ handleProfileClick }) => {
               {/* Status Badge */}
               <div className="flex items-center">
                 <span className="px-3 py-1 text-sm font-medium rounded-full bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200">
-                  {group.status || "Active"}
+                  { "Active"}  
+                   {/* make it like  if end date has not passed then active else deactive */}
                 </span>
               </div>
             </div>
@@ -84,7 +84,7 @@ const GroupCollaborations = ({ handleProfileClick }) => {
           </div>
         ))}
 
-        {(!groupMemberships || groupMemberships.length === 0) && (
+        {(!groupMemberships || groupMemberships.groups.length === 0) && (
           <p className="text-center text-gray-500 dark:text-gray-400 py-4">
             No group collaborations found
           </p>

@@ -63,7 +63,7 @@ export const uploadMedia = async (filePath: string,
 
     await fs.unlink(filePath); // Remove the file from local storage
     console.log(`Deleted local file: ${filePath}`);
-    return { url: result.secure_url, thumbnailUrl, publicId : result.public_id };
+    return { url: result.secure_url, thumbnailUrl, publicId : result.public_id, version: result.version };
   } catch (error) {
     console.error(`Failed to upload image or delete file: ${filePath}`, error);
     throw error;
@@ -79,15 +79,19 @@ export const generateCloudinaryUrl = (
     crop?: string;
     format?: string;
     resourceType?: "image" | "video" | "auto";
+    version?: number;
   } = {}
 ): string => {
-  const { width, height, crop, format, resourceType = "image" } = options;
+  const { width, height, crop, format, resourceType = "image", version } = options;
 
   // Construct the full ID (folder + publicId)
-  const fullPublicId = folder ? `${folder}/${publicId}` : publicId;
+  const fullPublicId = folder && !publicId.startsWith(`${folder}/`)
+    ? `${folder}/${publicId}`
+    : publicId;
 
   return cloudinary.url(fullPublicId, {
     secure: true,
+    version,
     resource_type: resourceType,
     transformation: [
       ...(width && height ? [{ width, height, crop: crop || "fill" }] : []),

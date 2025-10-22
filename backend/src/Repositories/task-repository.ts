@@ -126,18 +126,18 @@ import { ITaskRepository } from '../Interfaces/Repository/i-task-repositry';
             ],
           };
           populatePaths = [
-            { path: 'createdBy', model: 'User', select: 'name email jobTitle profilePic' },
-            { path: 'assignedUsers', model: 'User', select: 'name email jobTitle profilePic' },
-            { path: 'contextId', model: 'User', select: 'name email jobTitle profilePic' },
+            { path: 'createdBy', model: 'User', select: '_id name email jobTitle profilePic' },
+            { path: 'assignedUsers', model: 'User', select: '_id name email jobTitle profilePic' },
+            { path: 'contextId', model: 'User', select: '_id name email jobTitle profilePic' },
           ];
         } else {
           query = { contextType, contextId: this.toObjectId(contextId) };
           populatePaths = [
-            { path: 'createdBy', model: 'User', select: 'name email jobTitle profilePic' },
+            { path: 'createdBy', model: 'User', select: '_id name email jobTitle profilePic' },
             {
               path: 'contextId',
               model: contextType === 'group' ? 'Group' : 'Collaboration',
-              populate: contextType === 'group' ? { path: 'members.userId', model: 'User', select: 'name email jobTitle profilePic' } : undefined,
+              populate: contextType === 'group' ? { path: 'members.userId', model: 'User', select: '_id name email jobTitle profilePic' } : undefined,
             },
           ];
         }

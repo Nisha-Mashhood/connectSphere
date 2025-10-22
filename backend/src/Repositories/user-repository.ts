@@ -32,9 +32,9 @@ export class UserRepository extends BaseRepository<IUser> implements IUserReposi
       logger.debug(`Fetching user by email: ${email}`);
       const user = await this.findOne({ email });
       if (!user) {
-        logger.warn(`User not found with email: ${email}`);
-        throw new RepositoryError(`User not found with email: ${email}`, StatusCodes.NOT_FOUND);
-      }
+      logger.info(`No user found with email: ${email}`);
+      return null;
+    }
       logger.info(`User fetched: ${user._id} (${email})`);
       return user;
     } catch (error: unknown) {
@@ -242,9 +242,9 @@ export class UserRepository extends BaseRepository<IUser> implements IUserReposi
       matchStage.$or = [
         { name: { $regex: search, $options: 'i' } },
         { email: { $regex: search, $options: 'i' } },
-        { jobTitle: { $regex: search, $options: 'i' } },
-        { industry: { $regex: search, $options: 'i' } },
-        { reasonForJoining: { $regex: search, $options: 'i' } },
+        { jobTitle: { $regex: `^${search}`, $options: 'i' } },
+        { industry: { $regex: `^${search}`, $options: 'i' } },
+        { reasonForJoining: { $regex: `^${search}`, $options: 'i' } },
       ];
     }
     if (excludeId) {

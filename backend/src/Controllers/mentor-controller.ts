@@ -36,7 +36,9 @@ export class MentorController extends BaseController implements IMentorControlle
       const { mentorId } = req.params;
       const mentor = await this._mentorService.getMentorByMentorId(mentorId);
       if (!mentor) {
-        throw new HttpError(ERROR_MESSAGES.MENTOR_NOT_FOUND, StatusCodes.NOT_FOUND);
+        // throw new HttpError(ERROR_MESSAGES.MENTOR_NOT_FOUND, StatusCodes.NOT_FOUND);
+        this.sendSuccess(res,  mentor, MENTOR_MESSAGES.NO_MENTOR_FOUND);
+        return;
       }
       this.sendSuccess(res, { mentor }, MENTOR_MESSAGES.MENTOR_DETAILS_RETRIEVED);
     } catch (error: any) {
@@ -153,7 +155,8 @@ export class MentorController extends BaseController implements IMentorControlle
       const { userId } = req.params;
       const mentor = await this._mentorService.getMentorByUserId(userId);
       if (!mentor) {
-        throw new HttpError(ERROR_MESSAGES.MENTOR_NOT_FOUND, StatusCodes.NOT_FOUND);
+        this.sendSuccess(res,  mentor, MENTOR_MESSAGES.NO_MENTOR_FOUND);
+        return;
       }
       this.sendSuccess(res, mentor, MENTOR_MESSAGES.MENTOR_RETRIEVED);
     } catch (error: any) {

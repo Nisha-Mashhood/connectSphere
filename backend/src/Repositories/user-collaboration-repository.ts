@@ -110,8 +110,8 @@ export class UserConnectionRepository extends BaseRepository<IUserConnection> im
           $or: [{ requester: this.toObjectId(userId) }, { recipient: this.toObjectId(userId) }],
           requestStatus: 'Accepted',
         })
-        .populate('requester', 'name email jobTitle profilePic')
-        .populate('recipient', 'name email jobTitle profilePic')
+        .populate('requester', '_id name email jobTitle profilePic')
+        .populate('recipient', '_id name email jobTitle profilePic')
         .exec();
       logger.info(`Fetched ${connections.length} connections for user ${userId}`);
       return connections;
@@ -127,13 +127,13 @@ export class UserConnectionRepository extends BaseRepository<IUserConnection> im
       logger.debug(`Fetching sent and received requests for user: ${userId}`);
       const sentRequests = await this.model
         .find({ requester: this.toObjectId(userId) })
-        .populate('recipient', 'name email jobTitle profilePic')
+        .populate('recipient', '_id name email jobTitle profilePic')
         .sort({ requestSentAt: -1 })
         .exec();
 
       const receivedRequests = await this.model
         .find({ recipient: this.toObjectId(userId), requestStatus: 'Pending' })
-        .populate('requester', 'name email jobTitle profilePic')
+        .populate('requester', '_id name email jobTitle profilePic')
         .sort({ requestSentAt: -1 })
         .exec();
 
@@ -151,8 +151,8 @@ export class UserConnectionRepository extends BaseRepository<IUserConnection> im
       logger.debug('Fetching all user connections');
       const connections = await this.model
         .find()
-        .populate('requester', 'name email jobTitle profilePic')
-        .populate('recipient', 'name email jobTitle profilePic')
+        .populate('requester', '_id name email jobTitle profilePic')
+        .populate('recipient', '_id name email jobTitle profilePic')
         .exec();
       logger.info(`Fetched ${connections.length} user connections`);
       return connections;
@@ -168,8 +168,8 @@ export class UserConnectionRepository extends BaseRepository<IUserConnection> im
       logger.debug(`Fetching user connection by ID: ${connectionId}`);
       const connection = await this.model
         .findById(this.toObjectId(connectionId))
-        .populate('requester', 'name email jobTitle profilePic')
-        .populate('recipient', 'name email jobTitle profilePic')
+        .populate('requester', '_id name email jobTitle profilePic')
+        .populate('recipient', '_id name email jobTitle profilePic')
         .exec();
       if (!connection) {
         logger.warn(`User connection not found: ${connectionId}`);

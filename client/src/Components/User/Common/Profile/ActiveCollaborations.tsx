@@ -34,23 +34,23 @@ const ActiveCollaborations = ({ handleProfileClick }) => {
 
   // Fetch collaboration data and feedback for mentor view
   const fetchCollaborations = useCallback(async () => {
-    if (currentUser && currentUser._id) {
+    if (currentUser && currentUser.id) {
       try {
         if (currentUser.role === "mentor") {
           const mentorDetails = await dispatch(
-            fetchMentorDetails(currentUser._id)
+            fetchMentorDetails(currentUser.id)
           ).unwrap();
           setMentorDetails(mentorDetails);
-          if (mentorDetails?._id) {
+          if (mentorDetails?.id) {
             await dispatch(
-              fetchCollabDetails({ userId: mentorDetails._id, role: "mentor" })
+              fetchCollabDetails({ userId: mentorDetails.id, role: "mentor" })
             );
           } else {
             console.error("Unable to retrieve mentor details");
           }
         } else {
           await dispatch(
-            fetchCollabDetails({ userId: currentUser._id, role: "user" })
+            fetchCollabDetails({ userId: currentUser.id, role: "user" })
           );
         }
       } catch (error) {
@@ -66,15 +66,15 @@ const ActiveCollaborations = ({ handleProfileClick }) => {
       .filter((collab) => collab.feedbackGiven)
       .map(async (collab) => {
         try {
-          const feedback = await getFeedbackByCollaborationId(collab._id);
+          const feedback = await getFeedbackByCollaborationId(collab.id);
           console.log("FeedBack Accessed :", feedback);
-          return { [collab._id]: feedback[0] || null };
+          return { [collab.id]: feedback[0] || null };
         } catch (error) {
           console.error(
-            `Error fetching feedback for collab ${collab._id}:`,
+            `Error fetching feedback for collab ${collab.id}:`,
             error
           );
-          return { [collab._id]: null };
+          return { [collab.id]: null };
         }
       });
     const feedbackResults = await Promise.all(feedbackPromises);
@@ -132,25 +132,25 @@ const ActiveCollaborations = ({ handleProfileClick }) => {
   const mentorOngoingCollabs =
     currentUser.role === "mentor"
       ? ongoingCollabs.filter(
-          (collab) => collab.mentorId?.userId?._id === currentUser._id
+          (collab) => collab.mentor?.userId === currentUser.id
         )
       : [];
   const mentorCompletedCollabs =
     currentUser.role === "mentor"
       ? completedCollabs.filter(
-          (collab) => collab.mentorId?.userId?._id === currentUser._id
+          (collab) => collab.mentor?.userId === currentUser.id
         )
       : [];
   const userOngoingCollabs =
     currentUser.role === "mentor"
       ? ongoingCollabs.filter(
-          (collab) => collab.userId?._id === currentUser._id
+          (collab) => collab.userId === currentUser.id
         )
       : ongoingCollabs;
   const userCompletedCollabs =
     currentUser.role === "mentor"
       ? completedCollabs.filter(
-          (collab) => collab.userId?._id === currentUser._id
+          (collab) => collab.userId === currentUser.id
         )
       : completedCollabs;
 
@@ -160,7 +160,7 @@ const ActiveCollaborations = ({ handleProfileClick }) => {
   console.log("Completed collaborations (User):", userCompletedCollabs);
 
   const renderFeedbackTooltip = (collab) => {
-    const feedback = feedbackData[collab._id];
+    const feedback = feedbackData[collab.id];
     if (!feedback) return null;
     return (
       <div className="p-4 bg-white dark:bg-gray-700 rounded-lg shadow border border-gray-200 dark:border-gray-600 max-w-md">
@@ -199,13 +199,13 @@ const ActiveCollaborations = ({ handleProfileClick }) => {
   const renderCollaboration = (collab, isCompleted = false) => {
     const isUserRole =
       currentUser.role === "user" ||
-      (currentUser.role === "mentor" && collab.userId?._id === currentUser._id);
-    const displayUser = isUserRole ? collab.mentorId?.userId : collab.userId;
+      (currentUser.role === "mentor" && collab.userId === currentUser.id);
+    const displayUser = isUserRole ? collab.mentor?.user : collab.user;
     return (
       <div
-        key={collab._id}
+        key={collab.id}
         className="bg-white dark:bg-gray-700 p-4 rounded-lg shadow-sm border border-gray-200 dark:border-gray-600 cursor-pointer"
-        onClick={() => handleCollabClick(collab._id)}
+        onClick={() => handleCollabClick(collab.id)}
       >
         <div className="flex items-center space-x-4">
           <img
@@ -219,7 +219,7 @@ const ActiveCollaborations = ({ handleProfileClick }) => {
               onClick={(e) => {
                 e.stopPropagation();
                 handleProfileClick(
-                  isUserRole ? collab.mentorId?._id : collab.userId?._id
+                  isUserRole ? collab.mentorId : collab.userId
                 );
               }}
             >
@@ -415,7 +415,7 @@ const ActiveCollaborations = ({ handleProfileClick }) => {
       {selectedCollab &&
         (currentUser.role === "user" ||
           (currentUser.role === "mentor" &&
-            selectedCollab.userId?._id === currentUser._id)) && (
+            selectedCollab.userId === currentUser.id)) && (
           <FeedbackModal
             isOpen={feedbackModalOpen}
             onClose={() => setFeedbackModalOpen(false)}

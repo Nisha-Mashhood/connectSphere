@@ -41,7 +41,7 @@ export class TaskController extends BaseController implements ITaskController{
       taskData.createdBy = this.toObjectId(id);
       logger.debug(`Creating task for user: ${id}, task: ${taskData.name}`);
       const newTask = await this._taskService.createTask(taskData, imagePath, fileSize);
-      this.sendCreated(res, newTask, TASK_MESSAGES.taskCreated);
+      this.sendCreated(res, newTask, TASK_MESSAGES.TASK_CREATED);
     } catch (error: any) {
       logger.error(`Error creating task: ${error.message}`);
       next(error);
@@ -55,7 +55,7 @@ export class TaskController extends BaseController implements ITaskController{
       const tasks = await this._taskService.getTasksByContext(contextType, contextId, userId);
 
       const data = tasks.length === 0 ? [] : tasks;
-      const message = tasks.length === 0 ? TASK_MESSAGES.noTasksFound : TASK_MESSAGES.tasksFetched;
+      const message = tasks.length === 0 ? TASK_MESSAGES.NO_TASKS_FOUND : TASK_MESSAGES.TASKS_FETCHED;
       this.sendSuccess(res, data, message);
     } catch (error: any) {
       logger.error(`Error fetching tasks: ${error.message}`);
@@ -72,7 +72,7 @@ export class TaskController extends BaseController implements ITaskController{
       if (!updatedTask) {
         throw new HttpError(ERROR_MESSAGES.TASK_NOT_FOUND, StatusCodes.NOT_FOUND);
       }
-      this.sendSuccess(res, updatedTask, TASK_MESSAGES.taskPriorityUpdated);
+      this.sendSuccess(res, updatedTask, TASK_MESSAGES.TASK_PRIORITY_UPDATED);
     } catch (error: any) {
       logger.error(`Error updating task priority: ${error.message}`);
       next(error);
@@ -88,7 +88,7 @@ export class TaskController extends BaseController implements ITaskController{
       if (!updatedTask) {
         throw new HttpError(ERROR_MESSAGES.TASK_NOT_FOUND, StatusCodes.NOT_FOUND);
       }
-      this.sendSuccess(res, updatedTask, TASK_MESSAGES.taskStatusUpdated);
+      this.sendSuccess(res, updatedTask, TASK_MESSAGES.TASK_STATUS_UPDATED);
     } catch (error: any) {
       logger.error(`Error updating task status: ${error.message}`);
       next(error);
@@ -104,7 +104,7 @@ export class TaskController extends BaseController implements ITaskController{
       if (!updatedTask) {
         throw new HttpError(ERROR_MESSAGES.TASK_NOT_FOUND, StatusCodes.NOT_FOUND);
       }
-      this.sendSuccess(res, updatedTask, TASK_MESSAGES.taskUpdated);
+      this.sendSuccess(res, updatedTask, TASK_MESSAGES.TASK_UPDATED);
     } catch (error: any) {
       logger.error(`Error editing task: ${error.message}`);
       next(error);
@@ -116,7 +116,7 @@ export class TaskController extends BaseController implements ITaskController{
       const { taskId } = req.params;
       logger.debug(`Deleting task: ${taskId}`);
       await this._taskService.deleteTask(taskId);
-      this.sendSuccess(res, null, TASK_MESSAGES.taskDeleted);
+      this.sendSuccess(res, null, TASK_MESSAGES.TASK_DELETED);
     } catch (error: any) {
       logger.error(`Error deleting task: ${error.message}`);
       next(error);

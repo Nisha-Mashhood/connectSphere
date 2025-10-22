@@ -83,9 +83,9 @@ export class CollaborationRepository extends BaseRepository<ICollaboration> impl
         .find({ mentorId: this.toObjectId(mentorId), isAccepted: "Pending" })
         .populate({
           path: "mentorId",
-          populate: { path: "userId", select: "name email profilePic" },
+          populate: { path: "userId", select: "_id name email profilePic" },
         })
-        .populate("userId", "name email profilePic")
+        .populate("userId", "_id name email profilePic")
         .lean()
         .exec();
       logger.info(`Fetched ${requests.length} mentor requests for mentorId: ${mentorId}`);
@@ -148,7 +148,7 @@ export class CollaborationRepository extends BaseRepository<ICollaboration> impl
         .find({ userId: this.toObjectId(userId) })
         .populate({
           path: "mentorId",
-          populate: { path: "userId", select: "name email profilePic" },
+          populate: { path: "userId", select: "_id name email profilePic" },
         })
         .exec();
       logger.info(`Fetched ${requests.length} mentor requests for userId: ${userId}`);
@@ -725,7 +725,7 @@ export class CollaborationRepository extends BaseRepository<ICollaboration> impl
       logger.debug(`Fetching collaborations for mentor: ${mentorId}`);
       const collaborations = await this.model
         .find({ mentorId: this.toObjectId(mentorId), isCancelled: false })
-        .populate("userId", "name email")
+        .populate("userId", "_id name email")
         .populate("mentorId", "userId")
         .exec();
       logger.info(`Fetched ${collaborations.length} collaborations for mentorId: ${mentorId}`);

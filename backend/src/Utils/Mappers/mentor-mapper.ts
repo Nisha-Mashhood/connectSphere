@@ -15,46 +15,63 @@ export function toMentorDTO(mentor: IMentor | null): IMentorDTO | null {
     return null;
   }
 
+  // Debug: Log the entire mentor object to inspect its structure
+  logger.debug(`Mapping mentor to DTO: ${JSON.stringify(mentor, null, 2)}`);
+
+  // Handle _id
+  if (!mentor._id) {
+    logger.error(`Mentor has no _id: ${JSON.stringify(mentor)}`);
+    return null;
+  }
+  const id = mentor._id.toString();
+  logger.debug(`Mentor ID: ${id}`);
+
   // Handle userId
-  let userId: string;
+  let userId: string = '';
   let user: IUserDTO | undefined;
 
-  if (mentor.userId) {
-    if (typeof mentor.userId === 'string') {
-      userId = mentor.userId;
-    } else if (mentor.userId instanceof Types.ObjectId) {
-      userId = mentor.userId.toString();
+  if (!mentor.userId) {
+    logger.warn(`Mentor ${id} has no userId`);
+  } else if (typeof mentor.userId === 'string') {
+    userId = mentor.userId;
+    logger.debug(`Mentor ${id} userId is string: ${userId}`);
+  } else if (mentor.userId instanceof Types.ObjectId) {
+    userId = mentor.userId.toString();
+    logger.debug(`Mentor ${id} userId is ObjectId: ${userId}`);
+  } else if (typeof mentor.userId === 'object' && '_id' in mentor.userId) {
+    // Populated IUser object
+    userId = (mentor.userId as IUser)._id.toString();
+    logger.debug(`Mentor ${id} userId is populated, _id: ${userId}`);
+    const userDTO = toUserDTO(mentor.userId as IUser);
+    if (!userDTO) {
+      logger.warn(`Failed to convert user to DTO for mentor ${id}`);
     } else {
-      // IUser object (populated)
-      userId = (mentor.userId as IUser)._id.toString();
-      const userDTO = toUserDTO(mentor.userId as IUser);
-      user = userDTO ?? undefined; 
+      user = userDTO;
     }
   } else {
-    logger.warn(`Mentor ${mentor._id} has no userId`);
-    userId = '';
+    logger.error(`Invalid userId format for mentor ${id}: ${JSON.stringify(mentor.userId)}`);
   }
 
-  // Handle skills (string[] or ISkill[])
-  let skills: string[] | undefined = [];
-  let skillsDetails: ISkillDTO[] | undefined = [];
+  // Handle skills
+  let skills: string[] = [];
+  let skillsDetails: ISkillDTO[] = [];
 
-  if (mentor.skills) {
-    if (mentor.skills.every((skill) => typeof skill === 'string')) {
-      skills = mentor.skills as string[];
-    } else if (mentor.skills.every((skill) => typeof skill === 'object' && skill !== null && 'name' in skill)) {
-      // ISkill[] (populated)
-      skillsDetails = toSkillDTOs(mentor.skills as ISkill[]);
-      skills = skillsDetails.map((skill) => skill.name);
-    } else {
-      logger.warn(`Mentor ${mentor._id} has invalid skills format`);
-    }
+  if (!mentor.skills) {
+    logger.warn(`Mentor ${id} has no skills`);
+  } else if (mentor.skills.every((skill) => typeof skill === 'string')) {
+    skills = mentor.skills as string[];
+    logger.debug(`Mentor ${id} skills are strings: ${skills.join(', ')}`);
+  } else if (mentor.skills.every((skill) => typeof skill === 'object' && skill !== null && 'name' in skill)) {
+    // Populated ISkill[] objects
+    skillsDetails = toSkillDTOs(mentor.skills as ISkill[]);
+    skills = skillsDetails.map((skill) => skill.name);
+    logger.debug(`Mentor ${id} skills are populated: ${skills.join(', ')}`);
   } else {
-    logger.warn(`Mentor ${mentor._id} has no skills`);
+    logger.error(`Invalid skills format for mentor ${id}: ${JSON.stringify(mentor.skills)}`);
   }
 
-  return {
-    id: mentor._id.toString(),
+  const mentorDTO: IMentorDTO = {
+    id,
     mentorId: mentor.mentorId,
     userId,
     user,
@@ -62,19 +79,32 @@ export function toMentorDTO(mentor: IMentor | null): IMentorDTO | null {
     rejectionReason: mentor.rejectionReason,
     skills,
     skillsDetails,
-    certifications: mentor.certifications,
-    specialization: mentor.specialization,
-    bio: mentor.bio,
-    price: mentor.price,
-    availableSlots: mentor.availableSlots,
+    certifications: mentor.certifications || [],
+    specialization: mentor.specialization || '',
+    bio: mentor.bio || '',
+    price: mentor.price || 0,
+    availableSlots: mentor.availableSlots || [],
     timePeriod: mentor.timePeriod,
     createdAt: mentor.createdAt,
     updatedAt: mentor.updatedAt,
   };
+
+  logger.debug(`Mentor DTO created for ${id}: ${JSON.stringify(mentorDTO, null, 2)}`);
+  return mentorDTO;
 }
 
 export function toMentorDTOs(mentors: IMentor[]): IMentorDTO[] {
-  return mentors
-    .map(toMentorDTO)
+  logger.debug(`Mapping ${mentors.length} mentors to DTOs`);
+  const dtos = mentors
+    .map((mentor, index) => {
+      logger.debug(`Processing mentor at index ${index}`);
+      const dto = toMentorDTO(mentor);
+      if (!dto) {
+        logger.warn(`Skipping null DTO for mentor at index ${index}`);
+      }
+      return dto;
+    })
     .filter((dto): dto is IMentorDTO => dto !== null);
+  logger.info(`Successfully mapped ${dtos.length} mentor DTOs`);
+  return dtos;
 }

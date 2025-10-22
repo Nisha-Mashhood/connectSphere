@@ -78,13 +78,13 @@ const TaskManagement = ({ context, currentUser, contextData }) => {
   // Fetch user connections for profile context
   const fetchUserConnections = useCallback(async () => {
     try {
-      const connectionsData = await getUser_UserConnections(currentUser._id);
+      const connectionsData = await getUser_UserConnections(currentUser.id);
       const users = connectionsData
         .filter((conn) => conn.requestStatus === "Accepted" && conn.connectionStatus === "Connected")
         .map((conn) => {
-          const otherUser = conn.requester._id === currentUser._id ? conn.recipient : conn.requester;
+          const otherUser = conn.requester.id === currentUser.id ? conn.recipient : conn.requester;
           return {
-            userId: otherUser._id,
+            userId: otherUser.id,
             name: otherUser.name || "Unnamed User",
           };
         })
@@ -96,12 +96,12 @@ const TaskManagement = ({ context, currentUser, contextData }) => {
       console.error("Error fetching user connections:", error);
       toast.error("Failed to fetch user connections");
     }
-  }, [currentUser._id]);
+  }, [currentUser.id]);
 
   // Fetch all tasks
   const fetchTasks = useCallback(async () => {
     try {
-      const response = await get_tasks_by_context(context, contextData?._id, currentUser._id);
+      const response = await get_tasks_by_context(context, contextData?.id, currentUser.id);
       console.log(`TASK FOR CONTEXT ${context} is:`, response);
       if (response) {
         const sortedTasks = response.sort((a, b) => 
@@ -117,14 +117,14 @@ const TaskManagement = ({ context, currentUser, contextData }) => {
       toast.error("Failed to fetch tasks");
       setAllTasks([]);
     }
-  }, [context, contextData?._id, currentUser._id]);
+  }, [context, contextData?.id, currentUser.id]);
 
   useEffect(() => {
     fetchTasks();
     if (context === "profile") {
       fetchUserConnections();
     }
-  }, [context, currentUser?._id, contextData, fetchTasks, fetchUserConnections]);
+  }, [context, currentUser?.id, contextData, fetchTasks, fetchUserConnections]);
 
   const formatDate = (dateString: string) => {
     if (!dateString) return "";
@@ -205,9 +205,9 @@ const TaskManagement = ({ context, currentUser, contextData }) => {
       const newTask = {
         ...filteredTaskData,
         status: autoStatus,
-        createdBy: currentUser._id,
+        createdBy: currentUser.id,
         createdAt: new Date(),
-        contextId: context === "profile" ? currentUser._id : contextData?._id,
+        contextId: context === "profile" ? currentUser.id : contextData?.id,
         contextType: context,
         assignedUsers: context === "profile" && showUserSelect ? Array.from(taskData.assignedUsers) : [],
       };
@@ -215,7 +215,7 @@ const TaskManagement = ({ context, currentUser, contextData }) => {
       formData.append("taskData", JSON.stringify(newTask));
       if (taskData.taskImage) formData.append("image", taskData.taskImage);
 
-      const response = await create_task(currentUser._id, formData);
+      const response = await create_task(currentUser.id, formData);
       if (response) {
         toast.success("Task created successfully!");
         setIsOpen(false);
@@ -258,7 +258,7 @@ const TaskManagement = ({ context, currentUser, contextData }) => {
         assignedCollaborations: [],
       };
 
-      const response = await edit_task(selectedTask._id, updatedTask);
+      const response = await edit_task(selectedTask.id, updatedTask);
       if (response) {
         toast.success("Task updated successfully!");
         setIsEditOpen(false);
@@ -273,7 +273,7 @@ const TaskManagement = ({ context, currentUser, contextData }) => {
   const handleTaskDelete = async () => {
     try {
       if (!selectedTask) return;
-      const response = await delete_task(selectedTask._id);
+      const response = await delete_task(selectedTask.id);
       if (response) {
         toast.success("Task deleted successfully!");
         setIsViewOpen(false);

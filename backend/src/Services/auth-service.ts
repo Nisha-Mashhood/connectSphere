@@ -23,7 +23,7 @@ import { INotificationService } from "../Interfaces/Services/i-notification-serv
 import { IJWTService } from "../Interfaces/Services/i-jwt-service";
 
 // Temporary OTP storage (replace with Redis in production)
-const otpStore: Record<string, string> = {};
+const otpStore: { [email: string]: string } = {};
 
 @injectable()
 export class AuthService implements IAuthService {
@@ -474,50 +474,46 @@ export class AuthService implements IAuthService {
 
   public forgotPassword = async (email: string): Promise<string> => {
     try {
-      const user = await this._userRepository.findUserByEmail(email);
+      const normalizedEmail = email.toLowerCase().trim();
+      const user = await this._userRepository.findUserByEmail(normalizedEmail);
       if (!user) {
         throw new ServiceError("User not found", StatusCodes.NOT_FOUND);
       }
       const otp = generateOTP();
-      otpStore[email] = otp;
-      await sendEmail(email, "Password Reset OTP", `Your OTP is ${otp}`);
-      logger.info(`Sent OTP to ${email}`);
+      otpStore[normalizedEmail] = otp;
+      logger.info(`Stored OTP for ${normalizedEmail}: ${otp}`);
+      await sendEmail(normalizedEmail, "Password Reset OTP", `Your OTP is ${otp}`);
+      logger.info(`Sent OTP to ${normalizedEmail}`);
       return otp; // Remove in production
     } catch (error: unknown) {
       const err = error instanceof Error ? error : new Error(String(error));
       logger.error(`Error in forgot password for ${email}: ${err.message}`);
       throw error instanceof ServiceError
         ? error
-        : new ServiceError(
-            "Failed to send OTP",
-            StatusCodes.INTERNAL_SERVER_ERROR,
-            err
-          );
+        : new ServiceError("Failed to send OTP", StatusCodes.INTERNAL_SERVER_ERROR, err);
     }
   };
 
   public verifyOTP = async (email: string, otp: string): Promise<string> => {
+    const normalizedEmail = email.toLowerCase().trim();
+    logger.info(`Verifying OTP for ${normalizedEmail}, Stored OTP: ${otpStore[normalizedEmail] || "undefined"}, Provided OTP: ${otp}`);
     try {
-      if (otpStore[email] !== otp) {
-        throw new ServiceError(
-          "Invalid or expired OTP",
-          StatusCodes.BAD_REQUEST
-        );
+      if (!otpStore[normalizedEmail]) {
+        throw new ServiceError("No OTP found for this email", StatusCodes.BAD_REQUEST);
       }
-      delete otpStore[email];
-      const token = this._jwtService.generateAccessToken({ email }, "10m");
-      logger.info(`OTP verified for ${email}`);
-      return token;
+      if (otpStore[normalizedEmail] !== otp) {
+        throw new ServiceError("Invalid or expired OTP", StatusCodes.BAD_REQUEST);
+      }
+      delete otpStore[normalizedEmail];
+      const token = this._jwtService.generateAccessToken({ email: normalizedEmail }, "10m");
+      logger.info(`OTP verified for ${normalizedEmail}`);
+      return  token ;
     } catch (error: unknown) {
       const err = error instanceof Error ? error : new Error(String(error));
-      logger.error(`Error verifying OTP for ${email}: ${err.message}`);
+      logger.error(`Error verifying OTP for ${normalizedEmail}: ${err.message}`);
       throw error instanceof ServiceError
         ? error
-        : new ServiceError(
-            "Failed to verify OTP",
-            StatusCodes.INTERNAL_SERVER_ERROR,
-            err
-          );
+        : new ServiceError("Failed to verify OTP", StatusCodes.INTERNAL_SERVER_ERROR, err);
     }
   };
 
@@ -654,20 +650,20 @@ export class AuthService implements IAuthService {
       let profilePic = user.profilePic ?? undefined;
       let coverPic = user.coverPic ?? undefined;
       if (data.profilePicFile) {
-        const { publicId } = await uploadMedia(
+        const { url } = await uploadMedia(
           data.profilePicFile.path,
           "profiles",
           data.profilePicFile.size
         );
-        profilePic = publicId;
+        profilePic = url;
       }
       if (data.coverPicFile) {
-        const { publicId } = await uploadMedia(
+        const { url } = await uploadMedia(
           data.coverPicFile.path,
           "covers",
           data.coverPicFile.size
         );
-        coverPic = publicId
+        coverPic = url
       }
       const updatedData: Partial<IUser> = {
         name: data.name ?? user.name,

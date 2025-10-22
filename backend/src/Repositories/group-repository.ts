@@ -63,8 +63,8 @@ export class GroupRepository extends BaseRepository<IGroup> implements IGroupRep
       logger.debug(`Fetching groups for admin: ${adminId}`);
       const groups = await this.model
         .find({ adminId: this.toObjectId(adminId) })
-        .populate('members.userId', 'name email jobTitle profilePic')
-        .populate('adminId', 'name email jobTitle profilePic')
+        .populate('members.userId', '_id name email jobTitle profilePic')
+        .populate('adminId', '_id name email jobTitle profilePic')
         .exec();
       logger.info(`Fetched ${groups.length} groups for adminId: ${adminId}`);
       return groups;
@@ -100,8 +100,8 @@ export class GroupRepository extends BaseRepository<IGroup> implements IGroupRep
       if (!search && !page && !limit) {
         const groups = await this.model
           .find()
-          .populate('members.userId', 'name email jobTitle profilePic')
-          .populate('adminId', 'name email jobTitle profilePic')
+          .populate('members.userId', '_id name email jobTitle profilePic')
+          .populate('adminId', '_id name email jobTitle profilePic')
           .exec();
         logger.info(`Fetched ${groups.length} groups`);
         return { groups, total: groups.length };
@@ -116,34 +116,96 @@ export class GroupRepository extends BaseRepository<IGroup> implements IGroupRep
       }
 
       const pipeline = [
-        { $match: matchStage },
-        {
-          $lookup: {
-            from: 'users',
-            localField: 'members.userId',
-            foreignField: '_id',
-            as: 'members.userId',
+      { $match: matchStage },
+      // Unwind the members array to process each member individually
+      { $unwind: { path: '$members', preserveNullAndEmptyArrays: true } },
+      // Lookup to populate members.userId
+      {
+        $lookup: {
+          from: 'users', // Ensure this matches the actual collection name
+          localField: 'members.userId',
+          foreignField: '_id',
+          as: 'members.userId',
+        },
+      },
+      // Unwind members.userId to convert the array into a single document
+      {
+        $unwind: {
+          path: '$members.userId',
+          preserveNullAndEmptyArrays: true,
+        },
+      },
+      // Group back to restore the original document structure
+      {
+        $group: {
+          _id: '$_id',
+          groupId: { $first: '$groupId' },
+          name: { $first: '$name' },
+          bio: { $first: '$bio' },
+          price: { $first: '$price' },
+          maxMembers: { $first: '$maxMembers' },
+          isFull: { $first: '$isFull' },
+          availableSlots: { $first: '$availableSlots' },
+          profilePic: { $first: '$profilePic' },
+          coverPic: { $first: '$coverPic' },
+          startDate: { $first: '$startDate' },
+          createdAt: { $first: '$createdAt' },
+          updatedAt: { $first: '$updatedAt' },
+          adminId: { $first: '$adminId' },
+          members: {
+            $push: {
+              $cond: [
+                { $eq: ['$members', {}] }, // If members is empty, push null
+                null,
+                {
+                  userId: '$members.userId', // Populated user object
+                  joinedAt: '$members.joinedAt',
+                  _id: '$members._id',
+                },
+              ],
+            },
           },
         },
-        {
-          $lookup: {
-            from: 'users',
-            localField: 'adminId',
-            foreignField: '_id',
-            as: 'adminId',
+      },
+      // Filter out null members
+      {
+        $addFields: {
+          members: {
+            $filter: {
+              input: '$members',
+              as: 'member',
+              cond: { $ne: ['$$member', null] },
+            },
           },
         },
-        { $unwind: '$adminId' },
-        {
-          $facet: {
-            groups: [
-              { $skip: ((page || 1) - 1) * (limit || 10) },
-              { $limit: limit || 10 },
-            ],
-            total: [{ $count: 'count' }],
-          },
+      },
+      // Lookup to populate adminId
+      {
+        $lookup: {
+          from: 'users', // Ensure this matches the actual collection name
+          localField: 'adminId',
+          foreignField: '_id',
+          as: 'adminId',
         },
-      ];
+      },
+      // Unwind adminId to convert the array into a single document
+      {
+        $unwind: {
+          path: '$adminId',
+          preserveNullAndEmptyArrays: true,
+        },
+      },
+      // Facet for pagination and total count
+      {
+        $facet: {
+          groups: [
+            { $skip: ((page || 1) - 1) * (limit || 10) },
+            { $limit: limit || 10 },
+          ],
+          total: [{ $count: 'count' }],
+        },
+      },
+    ];
 
       const result = await this.model.aggregate(pipeline).exec();
       const groups = result[0]?.groups || [];
@@ -186,10 +248,10 @@ export class GroupRepository extends BaseRepository<IGroup> implements IGroupRep
           populate: {
             path: 'members.userId',
             model: 'User',
-            select: 'name email jobTitle profilePic',
+            select: '_id name email jobTitle profilePic',
           },
         })
-        .populate('userId', 'name email jobTitle profilePic')
+        .populate('userId', '_id name email jobTitle profilePic')
         .exec();
       logger.info(`Fetched ${requests.length} group requests for groupId: ${groupId}`);
       return requests;
@@ -211,10 +273,10 @@ export class GroupRepository extends BaseRepository<IGroup> implements IGroupRep
           populate: {
             path: 'members.userId',
             model: 'User',
-            select: 'name email jobTitle profilePic',
+            select: '_id name email jobTitle profilePic',
           },
         })
-        .populate('userId', 'name email jobTitle profilePic')
+        .populate('userId', '_id name email jobTitle profilePic')
         .exec()
         .then((requests) => requests.filter((req) => req.groupId));
       logger.info(`Fetched ${requests.length} group requests for adminId: ${adminId}`);
@@ -236,10 +298,10 @@ export class GroupRepository extends BaseRepository<IGroup> implements IGroupRep
           populate: {
             path: 'members.userId',
             model: 'User',
-            select: 'name email jobTitle profilePic',
+            select: '_id name email jobTitle profilePic',
           },
         })
-        .populate('userId', 'name email jobTitle profilePic')
+        .populate('userId', '_id name email jobTitle profilePic')
         .exec();
       logger.info(`Fetched ${requests.length} group requests for userId: ${userId}`);
       return requests;
@@ -261,16 +323,16 @@ export class GroupRepository extends BaseRepository<IGroup> implements IGroupRep
             {
               path: 'adminId',
               model: 'User',
-              select: 'name email jobTitle profilePic',
+              select: '_id name email jobTitle profilePic',
             },
             {
               path: 'members.userId',
               model: 'User',
-              select: 'name email jobTitle profilePic',
+              select: '_id name email jobTitle profilePic',
             },
           ],
         })
-        .populate('userId', 'name email jobTitle profilePic')
+        .populate('userId', '_id name email jobTitle profilePic')
         .exec();
       logger.info(`Group request ${request ? 'found' : 'not found'}: ${requestId}`);
       return request;
@@ -452,8 +514,8 @@ export class GroupRepository extends BaseRepository<IGroup> implements IGroupRep
       logger.debug(`Fetching group details for user: ${userId}`);
       const groups = await this.model
         .find({ 'members.userId': this.toObjectId(userId) })
-        .populate('members.userId', 'name email jobTitle profilePic')
-        .populate('adminId', 'name email jobTitle profilePic')
+        .populate('members.userId', '_id name email jobTitle profilePic')
+        .populate('adminId', '_id name email jobTitle profilePic')
         .exec();
       logger.info(`Fetched ${groups.length} groups for userId: ${userId}`);
       return groups;
@@ -474,10 +536,10 @@ export class GroupRepository extends BaseRepository<IGroup> implements IGroupRep
           populate: {
             path: 'members.userId',
             model: 'User',
-            select: 'name email jobTitle profilePic',
+            select: '_id name email jobTitle profilePic',
           },
         })
-        .populate('userId', 'name email jobTitle profilePic')
+        .populate('userId', '_id name email jobTitle profilePic')
         .exec();
       logger.info(`Fetched ${requests.length} group requests`);
       return requests;

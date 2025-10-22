@@ -1,3 +1,4 @@
+import logger from '../../../core/Utils/logger';
 import { generateCloudinaryUrl } from '../../../core/Utils/cloudinary';
 
 export function resolveImage(value: string | null | undefined , folder: string): string | undefined {
@@ -5,5 +6,7 @@ export function resolveImage(value: string | null | undefined , folder: string):
   if (value.startsWith("http://") || value.startsWith("https://")) {
     return value;
   }
-  return generateCloudinaryUrl(value, folder, { width: 200, height: 200 });
+  const url = generateCloudinaryUrl(value, folder, { width: 200, height: 200 });
+  logger.info("The cloudinary url for the image is : ",url);
+  return url;
 }

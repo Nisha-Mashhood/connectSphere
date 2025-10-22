@@ -37,3 +37,34 @@ export interface MentorQuery {
   sortOrder?: 'asc' | 'desc';
   excludeMentorId?:string;
 }
+
+export interface CompleteMentorDetails {
+  id: string;
+  mentorId?: string;
+  userId: {
+    _id: string;
+    name: string;
+    email: string;
+    profilePic?: string;
+  };
+  skills: {
+    _id: string;
+    name: string;
+    subcategoryId: string;
+  }[];
+  categories?: {
+    name: string;
+  }[];
+  isApproved?: string;
+  rejectionReason?: string;
+  certifications?: string[];
+  specialization?: string;
+  bio: string;
+  price: number;
+  availableSlots?: object[];
+  timePeriod?: number;
+  avgRating: number;
+  feedbackCount: number;
+  createdAt: Date;
+  updatedAt: Date;
+}

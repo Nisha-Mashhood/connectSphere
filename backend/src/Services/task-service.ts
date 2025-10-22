@@ -75,7 +75,7 @@ export class TaskService  implements ITaskService{
   public getTasksByContext = async (contextType: string, contextId: string, userId: string): Promise<ITaskDTO[]> => {
     try {
       logger.debug(`Fetching tasks for contextType=${contextType}, contextId=${contextId}, userId=${userId}`);
-      const validContextTypes = ["collaboration", "group", "user"];
+      const validContextTypes = ["collaboration", "group", "profile"];
       if (!validContextTypes.includes(contextType)) {
         logger.error(`Invalid contextType: ${contextType}`);
         throw new ServiceError(

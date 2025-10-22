@@ -184,8 +184,9 @@ export class GroupService implements IGroupService {
     try {
       logger.debug(`Fetching all groups with query: ${JSON.stringify(query)}`);
       const result = await this._groupRepository.getAllGroups(query);
+      // logger.debug(`Raw group data from repository: ${JSON.stringify(result.groups, null, 2)}`);
       logger.info(
-        `Fetched ${result.groups.length} groups, total: ${result.total}`
+        `Fetched ${result.groups} groups, total: ${result.total}`
       );
       return {
         groups: toGroupDTOs(result.groups),

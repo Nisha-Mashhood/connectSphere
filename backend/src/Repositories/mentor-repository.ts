@@ -6,7 +6,7 @@ import logger from "../core/Utils/logger";
 import Mentor from "../Models/mentor-model";
 import { IMentor } from "../Interfaces/Models/i-mentor";
 import { IUser } from "../Interfaces/Models/i-user";
-import { MentorQuery } from "../Utils/Types/mentor-types";
+import { CompleteMentorDetails, MentorQuery } from "../Utils/Types/mentor-types";
 import { StatusCodes } from "../enums/status-code-enums";
 import { IMentorRepository } from "../Interfaces/Repository/i-mentor-repositry";
 
@@ -97,7 +97,7 @@ export class MentorRepository extends BaseRepository<IMentor> implements IMentor
 
   public getAllMentors = async (
     query: MentorQuery = {}
-  ): Promise<{ mentors: IMentor[]; total: number }> => {
+  ): Promise<{ mentors: CompleteMentorDetails[]; total: number }> => {
     try {
       logger.debug(`Fetching all approved mentors with query: ${JSON.stringify(query)}`);
       const {
@@ -129,7 +129,7 @@ export class MentorRepository extends BaseRepository<IMentor> implements IMentor
             localField: 'userId',
             foreignField: '_id',
             as: 'userId',
-            pipeline: [{ $project: { name: 1, email: 1, profilePic: 1 } }],
+            pipeline: [{ $project: { id : 1, name: 1, email: 1, profilePic: 1 } }],
           },
         },
         { $unwind: { path: '$userId', preserveNullAndEmptyArrays: true } },
@@ -139,7 +139,7 @@ export class MentorRepository extends BaseRepository<IMentor> implements IMentor
             localField: 'skills',
             foreignField: '_id',
             as: 'skills',
-            pipeline: [{ $project: { name: 1, subcategoryId: 1 } }],
+            pipeline: [{ $project: { id: 1, name: 1, subcategoryId: 1 } }],
           },
         },
         {
@@ -193,11 +193,20 @@ export class MentorRepository extends BaseRepository<IMentor> implements IMentor
       pipeline.push({ $match: matchStage });
 
       pipeline.push({
+      $addFields: {
+        id: '$_id',
+      },
+    });
+
+      pipeline.push({
         $project: {
-          _id: 1,
+          _id: 0,
+          id: 1,
+          'userId._id':1,
           'userId.name': 1,
           'userId.email': 1,
           'userId.profilePic': 1,
+          'skills._id': 1,
           'skills.name': 1,
           'skills.subcategoryId': 1,
           'categories.name': 1,
@@ -231,7 +240,7 @@ export class MentorRepository extends BaseRepository<IMentor> implements IMentor
         },
       });
 
-      logger.debug(`Executing mentor aggregation pipeline: ${JSON.stringify(pipeline, null, 2)}`);
+      // logger.debug(`Executing mentor aggregation pipeline: ${JSON.stringify(pipeline, null, 2)}`);
       const result = await this.model.aggregate(pipeline).exec();
       const mentors = result[0]?.mentors || [];
       const total = result[0]?.total[0]?.count || 0;
@@ -336,8 +345,8 @@ export class MentorRepository extends BaseRepository<IMentor> implements IMentor
       logger.debug(`Fetching mentor by ID: ${id}`);
       const mentor = await this.model
         .findById(this.toObjectId(id))
-        .populate("userId", "name email")
-        .populate("skills", "name")
+        .populate("userId", "_id name email profilePic coverPic")
+        .populate("skills", "_id name")
         .exec();
       logger.info(`Mentor ${mentor ? 'found' : 'not found'}: ${id}`);
       return mentor;

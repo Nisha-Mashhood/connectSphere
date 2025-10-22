@@ -18,7 +18,7 @@ export const noMultipleSpaces = () =>
     (value) => !/\s{2,}/.test(value || "")
   );
 
-export const noExcessiveRepeats = (limit: number = 2) =>
+export const noExcessiveRepeats = (limit: number = 4) =>
   Yup.string().test(
     "no-excessive-repeats",
     `Cannot contain a character repeated more than ${limit} times in a row`,
@@ -61,7 +61,7 @@ export const noNameInPassword = () =>
     "Password cannot contain your name",
     function (value) {
       const { name } = this.parent;
-      return !value.includes(name?.trim());
+      return !name || !value || !value.includes(name.trim());
     }
   );
 
@@ -71,7 +71,7 @@ export const noEmailInPassword = () =>
     "Password cannot contain email parts",
     function (value) {
       const { email } = this.parent;
-      return !value.includes(email?.split("@")[0]);
+      return !email || !value || !value.includes(email.split("@")[0]);
     }
   );
 
@@ -87,3 +87,46 @@ export const fileUploadRule = (minFiles: number = 2, maxFiles: number = 5) =>
     .of(Yup.mixed().required("File is required"))
     .min(minFiles, `At least ${minFiles} files required`)
     .max(maxFiles, `Cannot upload more than ${maxFiles} files`);
+
+export const confirmPasswordRule = () =>
+  Yup.string().oneOf([Yup.ref("newPassword")], "Passwords must match");
+
+export const mustMatchEmail = (expectedEmail: string) =>
+  Yup.string()
+    .oneOf([expectedEmail], "Email mismatch")
+    .required("Email is required");
+
+export const phonePattern = () =>
+  Yup.string().matches(/^\d{10}$/, "Phone number must be exactly 10 digits");
+
+export const dateOfBirth = () =>
+  Yup.string()
+    .required("Date of Birth is required")
+    .test(
+      "not-in-future",
+      "Date of Birth cannot be in the future",
+      (value) => {
+        if (!value) return false;
+        const dob = new Date(value);
+        const today = new Date();
+        today.setHours(0, 0, 0, 0);
+        return dob <= today;
+      }
+    )
+    .test(
+      "minimum-age",
+      "You must be at least 16 years old",
+      (value) => {
+        if (!value) return false;
+        const dob = new Date(value);
+        const today = new Date();
+        today.setHours(0, 0, 0, 0);
+        const age = today.getFullYear() - dob.getFullYear();
+        const monthDiff = today.getMonth() - dob.getMonth();
+        const isUnderAge =
+          monthDiff < 0 || (monthDiff === 0 && today.getDate() < dob.getDate())
+            ? age - 1 < 16
+            : age < 16;
+        return !isUnderAge;
+      }
+    );

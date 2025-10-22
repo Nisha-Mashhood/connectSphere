@@ -1,5 +1,5 @@
 import { IMentor } from "../Models/i-mentor";
-import { MentorAnalytics, MentorQuery, SalesReport } from "../../Utils/Types/mentor-types";
+import { CompleteMentorDetails, MentorAnalytics, MentorQuery, SalesReport } from "../../Utils/Types/mentor-types";
 import { IMentorDTO } from "../DTOs/i-mentor-dto";
 
 export interface IMentorService {
@@ -25,7 +25,7 @@ export interface IMentorService {
     page: number;
     pages: number;
   }>;
-  getAllMentors: (query: MentorQuery) => Promise<{ mentors: IMentorDTO[]; total: number }>;
+  getAllMentors: (query: MentorQuery) => Promise<{ mentors: CompleteMentorDetails[]; total: number }>;
   getMentorByMentorId: (mentorId: string) => Promise<IMentorDTO | null>;
   approveMentorRequest: (id: string) => Promise<void>;
   rejectMentorRequest: (id: string, reason: string) => Promise<void>;
