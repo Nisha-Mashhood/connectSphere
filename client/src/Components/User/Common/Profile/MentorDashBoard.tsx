@@ -17,7 +17,6 @@ import {
 import {
   FaChartBar,
   FaUsers,
-  // FaCreditCard,
   FaCalendarAlt,
   FaUserGraduate,
   FaPencilAlt,
@@ -29,7 +28,6 @@ import { fetchCollabDetails } from "../../../../redux/Slice/profileSlice";
 import { updateUserProfile } from "../../../../redux/Slice/userSlice";
 import toast from "react-hot-toast";
 import { updateUserImages } from "../../../../Service/User.Service";
-// import { updateMentorProfile } from "../../../../Service/Mentor.Service";
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from "recharts";
 import { format, parseISO } from "date-fns";
 
@@ -58,20 +56,20 @@ const MentorDashboard = () => {
 
   // Fetch data on mount
   useEffect(() => {
-    if (currentUser?._id && currentUser.role === "mentor") {
-      dispatch(fetchCollabDetails({ userId: currentUser._id, role: "mentor" }));
+    if (currentUser?.id && currentUser.role === "mentor") {
+      dispatch(fetchCollabDetails({ userId: currentUser.id, role: "mentor" }));
     } else {
       toast.error("Access denied. You must be a mentor to view this page.");
       navigate("/profile");
     }
-  }, [dispatch, currentUser?._id, currentUser?.role, navigate]);
+  }, [dispatch, currentUser?.id, currentUser?.role, navigate]);
 
   //stats and chart data
   useEffect(() => {
     if (collabDetails?.data && collabDetails.data.length > 0) {
       // Stats
       const earnings = collabDetails.data.reduce((sum: number, collab) => sum + (collab.price || 0), 0);
-      const uniqueMentees = new Set(collabDetails.data.map((collab) => collab.userId?._id)).size;
+      const uniqueMentees = new Set(collabDetails.data.map((collab) => collab.user?.id)).size;
       const activeCount = collabDetails.data.filter((collab) => !collab.isCompleted && !collab.isCancelled).length;
 
       setTotalEarnings(earnings);
@@ -110,7 +108,7 @@ const MentorDashboard = () => {
     const formData = new FormData();
     formData.append(type, file);
     try {
-      const { user } = await updateUserImages(currentUser._id, formData);
+      const { user } = await updateUserImages(currentUser.id, formData);
       dispatch(updateUserProfile(user));
       toast.success("Image updated successfully");
     } catch (error) {
@@ -410,7 +408,7 @@ const MentorDashboard = () => {
                       <div key={i} className="p-3 bg-gray-50 rounded-lg">
                         <div className="flex justify-between items-start mb-2">
                           <p className="text-sm font-medium text-gray-900">
-                            {collab.userId?.name || "Unknown Mentee"}
+                            {collab.user?.name || "Unknown Mentee"}
                           </p>
                           <p className="text-sm font-semibold text-gray-900">
                             {formatCurrency(collab.price)}

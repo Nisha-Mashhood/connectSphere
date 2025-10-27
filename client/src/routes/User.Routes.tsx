@@ -6,7 +6,6 @@ import Signup from "../Components/Forms/Signup";
 import ForgotPassword from "../Components/Forms/ForgotPassword";
 import OTPVerification from "../Components/Forms/OtpVerification";
 import ResetPassword from "../Components/Forms/ResetPassword";
-import Profile from "../Components/User/Common/Profile/Profile";
 import PrivateRoute from "../Components/User/PrivateRoute";
 import CompleteProfile from "../Components/User/UserComponents/CompleteProfile";
 import MentorProfileForm from "../Components/Forms/MentorProfileForm";
@@ -14,7 +13,6 @@ import ProfileDisplay from "../Components/User/Mentor/ProfileDisplay";
 import PageNotFound from "../Components/PageNotFound";
 import { ForbiddenPage } from "../Components/ForebiddenPage";
 import GithubCallback from "../Components/User/Auth/GithubCallback";
-// import ExploreMentor from "../Components/User/UserComponents/ExploreMentor";
 import About from "../Components/User/Common/About";
 import CreateGroupForm from "../Components/Forms/CreateGroupForm";
 import GroupDetails from "../Components/User/Common/Profile/GroupDetails";
@@ -23,6 +21,7 @@ import CollaborationDetails from "../Components/User/Common/Profile/Collaboartio
 import Chat from "../Components/User/Common/Chat/Chat";
 import MentorDashBoard from "../Components/User/Common/Profile/MentorDashBoard";
 import ExploreMentors from "../pages/User/Explore/Explore";
+import Profile from "../pages/User/Profile/Profile";
 
 
 

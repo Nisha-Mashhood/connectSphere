@@ -58,8 +58,8 @@ export interface Mentor {
   bio: string;
   certifications: string[];
   skills: string[];
-  skillsDetails: { id: string; name: string, categoryId?: string, subcategoryId?: string; }[];
-  availableSlots: { _id: string; day: string; timeSlots: string[] }[];
+  skillsDetails: { id?: string; name: string, categoryId?: string, subcategoryId?: string; }[];
+  availableSlots: { _id?: string; day: string; timeSlots: string[] }[];
   specialization: string;
   price: number;
   timePeriod: number;

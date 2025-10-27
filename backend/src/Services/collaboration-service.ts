@@ -6,6 +6,7 @@ import { StatusCodes } from "../enums/status-code-enums";
 import { ICollaboration } from "../Interfaces/Models/i-collaboration";
 import { IMentorRequest } from "../Interfaces/Models/i-mentor-request";
 import { IUser } from "../Interfaces/Models/i-user";
+import { IMentor } from "../Interfaces/Models/i-mentor";
 import { ICollaborationService } from "../Interfaces/Services/i-collaboration-service";
 import { LockedSlot } from "../Utils/Types/collaboration-types";
 import { ServiceError } from "../core/Utils/error-handler";
@@ -1277,6 +1278,7 @@ export class CollaborationService implements ICollaborationService {
       }
 
       const collabDTO = toCollaborationDTO(collab);
+      logger.debug("Collaboartion DTO Structure : ",collabDTO)
       if (!collabDTO) {
         logger.error(`Failed to map collaboration ${collab._id} to DTO`);
         throw new ServiceError("Failed to map collaboration to DTO", StatusCodes.INTERNAL_SERVER_ERROR);
@@ -1291,10 +1293,8 @@ export class CollaborationService implements ICollaborationService {
           StatusCodes.NOT_FOUND
         );
       }
-
-      const mentor = await this._mentorRepository.getMentorById(
-        collab.mentorId.toString()
-      );
+      const mentorId = (collab.mentorId as IMentor)._id.toString();
+      const mentor = await this._mentorRepository.getMentorById(mentorId);
       if (!mentor || !mentor.userId) {
         throw new ServiceError(
           "Mentor or mentor’s userId not found",
@@ -1303,7 +1303,8 @@ export class CollaborationService implements ICollaborationService {
       }
       const mentorUser = mentor.userId as { name: string; email: string };
 
-      const user = await this._userRepository.findById(collab.userId.toString());
+      const userId = (collab.userId as IUser)._id.toString()
+      const user = await this._userRepository.findById(userId);
       if (!user) {
         throw new ServiceError("User not found", StatusCodes.NOT_FOUND);
       }
