@@ -1,9 +1,9 @@
-import HeaderSection from './sections/HeaderSection';
-import SearchFilterSection from './sections/SearchFilterSection';
-import TabsSection from './sections/TabsSection';
-import ResultsSummary from './sections/ResultsSummary';
-import ExploreContent from './sections/ExploreContent';
-import ExplorePagination from './sections/ExplorePagination';
+import HeaderSection from '../../../Components/User/Explore/HeaderSection';
+import SearchFilterSection from '../../../Components/User/Explore/SearchFilterSection';
+import TabsSection from '../../../Components/User/Explore/TabsSection';
+import ResultsSummary from '../../../Components/User/Explore/ResultsSummary';
+import ExploreContent from '../../../Components/User/Explore/ExploreContent';
+import ExplorePagination from '../../../Components/User/Explore/ExplorePagination';
 import { getMentorButtonConfig, getUserButtonConfig, getGroupButtonConfig } from './helpers/getButtonConfigs';
 import ExploreModal from '../../../Components/ReusableComponents/ExploreModal';
 import RequestStatusHandler from '../../../Components/User/UserComponents/HelperComponents/RequestStatusHandler';

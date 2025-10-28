@@ -2,6 +2,7 @@ import { Button } from "@nextui-org/react";
 import { FaCalendarAlt, FaClock, FaBan } from "react-icons/fa";
 
 const DetailsTab = ({
+  currentUser,
   collaboration,
   setShowTimeSlotsModal,
   setShowUnavailableDatesModal,
@@ -71,7 +72,9 @@ const DetailsTab = ({
         <div className="flex items-center gap-3 p-4 bg-gray-100 dark:bg-gray-800 rounded-lg">
           <FaCalendarAlt className="text-xl text-indigo-500" />
           <div>
-            <p className="text-sm text-gray-600 dark:text-gray-400">Start Date</p>
+            <p className="text-sm text-gray-600 dark:text-gray-400">
+              Start Date
+            </p>
             <p className="text-lg font-semibold text-gray-900 dark:text-gray-100">
               {startDateDisplay}
             </p>
@@ -160,10 +163,13 @@ const DetailsTab = ({
                 >
                   <p className="text-sm text-gray-900 dark:text-gray-100">
                     {new Date(change.date).toLocaleDateString()}:{" "}
-                    <span className="font-medium">{change.newTimeSlots.join(", ")}</span>
+                    <span className="font-medium">
+                      {change.newTimeSlots.join(", ")}
+                    </span>
                   </p>
                   <span className="text-xs text-gray-500 dark:text-gray-400">
-                    Requested by {change.requestedBy === "mentor" ? "Mentor" : "User"}
+                    Requested by{" "}
+                    {change.requestedBy === "mentor" ? "Mentor" : "User"}
                   </span>
                 </div>
               ))}
@@ -190,7 +196,8 @@ const DetailsTab = ({
                   <span className="font-medium">{day.reason}</span>
                 </p>
                 <span className="text-xs text-gray-500 dark:text-gray-400">
-                  Requested by {day.requestedBy === "mentor" ? "Mentor" : "User"}
+                  Requested by{" "}
+                  {day.requestedBy === "mentor" ? "Mentor" : "User"}
                 </span>
               </div>
             ))}
@@ -199,18 +206,20 @@ const DetailsTab = ({
       )}
 
       {/* Cancel Button */}
-      {!collaboration.isCancelled && !isCollaborationCompleted && (
-        <div className="flex justify-end">
-          <Button
-            color="danger"
-            variant="light"
-            onPress={() => setShowCancelDialog(true)}
-            className="text-red-600 hover:bg-red-100 dark:text-red-400 dark:hover:bg-red-900"
-          >
-            Cancel Mentorship
-          </Button>
-        </div>
-      )}
+      {!collaboration.isCancelled &&
+        !isCollaborationCompleted &&
+        currentUser.role === "user" && ( 
+          <div className="flex justify-end">
+            <Button
+              color="danger"
+              variant="light"
+              onPress={() => setShowCancelDialog(true)}
+              className="text-red-600 hover:bg-red-100 dark:text-red-400 dark:hover:bg-red-900"
+            >
+              Cancel Mentorship
+            </Button>
+          </div>
+        )}
     </div>
   );
 };

@@ -81,27 +81,23 @@ export const setupInterceptors = (navigate) => {
 
       if (axios.isCancel(error)) {
         console.warn("Request cancelled - previous request was still pending");
-        return null;
-        // return Promise.reject(error);
+        return;
       }
 
       if (error.response?.status === 429) {
         toast.error("Too many requests. Please try again later.", { duration: 3000 });
-        console.log(error.response.data?.message);
-        throw new Error("Too many requests. Please wait before trying again.");
+        console.warn(error.response.data?.message);
+        return;
       }
 
-      if (error.response?.status === 403) {
-        console.log(error.response.data?.message);
-        throw new Error(error.response?.data?.message || "Access forbidden");
-      }
+      if (error.response?.status === 403 && error.response.data?.message === "Blocked") {
+      toast.error("Your account has been blocked. Please contact support.");
+      store.dispatch(signOut());
+      navigate("/login");
+      console.error("User blocked:", error.response.data);
+      return;
+    }
 
-      if (error.response?.status === 403 && error.response.data?.message === "Your account has been blocked. Please contact support.") {
-        toast.error("Your account has been blocked. Please contact support.");
-        store.dispatch(signOut());
-        navigate("/login");
-        throw new Error("Your account has been blocked. Please contact support.");
-      }
 
       if (error.response?.status === 401 && !error.config?._retry) {
         error.config._retry = true;
@@ -109,19 +105,18 @@ export const setupInterceptors = (navigate) => {
           const response = await axiosInstance.post("/auth/refresh-token", {}, { withCredentials: true });
           const { newAccessToken } = response.data;
           console.log(`New Acess Token created : ${newAccessToken}`);
-          // document.cookie = `accessToken=${newAccessToken}; path=/;`;
-          // error.config.headers.Authorization = `Bearer ${newAccessToken}`;
           return axiosInstance(error.config);
         } catch (refreshError) {
+          console.log(refreshError);
           store.dispatch(signOut());
           navigate("/login");
-          return Promise.reject(refreshError);
+          return;
+          // return Promise.reject(refreshError);
         }
       }
 
-      // Let the error handler deal with specific error cases
       console.error(error);
-      throw new Error(error || "An error occurred");
+       return Promise.reject(error);
     }
   );
 };

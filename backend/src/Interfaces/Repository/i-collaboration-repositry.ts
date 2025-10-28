@@ -18,6 +18,7 @@ export interface ICollaborationRepository {
   updateCollabFeedback(collabId: string): Promise<ICollaboration | null>;
   getCollabDataForUser(userId: string): Promise<ICollaboration[]>;
   getCollabDataForMentor(mentorId: string): Promise<ICollaboration[]>;
+  findByIdAndUpdateWithPopulate(id: string, update: Partial<ICollaboration>, options?: { new: boolean; } ): Promise<ICollaboration | null>;
   findMentorRequest(params: {
     page: number;
     limit: number;

@@ -177,6 +177,21 @@ export const fetchUserConnections = createAsyncThunk<
   }
 );
 
+
+export const refreshCollaborations = createAsyncThunk<
+  void,
+  { userId: string; role: 'mentor' | 'user'; mentorId?: string }
+>('profile/refreshCollaborations', async (args, { dispatch }) => {
+  await dispatch(
+    fetchCollabDetails({
+      userId: args.userId,
+      role: args.role,
+      mentorId: args.mentorId,
+    })
+  );
+});
+
+
 // Slice
 const profileSlice = createSlice({
   name: 'profile',

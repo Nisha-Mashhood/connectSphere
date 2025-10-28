@@ -32,8 +32,8 @@ import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, Legend, Responsi
 import { format, parseISO } from "date-fns";
 
 // Lazy load 
-const ActiveCollaborations = lazy(() => import("./ActiveCollaborations"));
-const RequestsSection = lazy(() => import("./RequestSection"));
+const ActiveCollaborations = lazy(() => import("../../Profile/ActiveCollaborations/ActiveCollaborations"));
+const RequestsSection = lazy(() => import("../../Profile/RequestSection/RequestSection"));
 
 const MentorDashboard = () => {
   const { currentUser } = useSelector((state: RootState) => state.user);

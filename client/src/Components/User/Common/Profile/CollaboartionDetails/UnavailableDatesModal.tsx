@@ -2,6 +2,7 @@ import { Modal, ModalContent, ModalHeader, ModalBody, ModalFooter, Button, Texta
 import { FaTimes, FaInfoCircle } from "react-icons/fa";
 import { markDatesUnavailable } from "../../../../../Service/collaboration.Service";
 import { fetchCollabDetails } from "../../../../../redux/Slice/profileSlice";
+import toast from "react-hot-toast";
 
 const UnavailableDatesModal = ({
   isOpen,
@@ -92,13 +93,14 @@ const UnavailableDatesModal = ({
       await markDatesUnavailable(collabId, {
         datesAndReasons: selectedUnavailableDates,
         requestedBy,
-        requesterId: currentUser._id,
+        requesterId: currentUser.id,
         approvedById,
         isApproved: "pending",
         projectedEndDate,
       });
-      await dispatch(fetchCollabDetails({ userId: currentUser._id, role: currentUser.role }));
+      await dispatch(fetchCollabDetails({ userId: currentUser.id, role: currentUser.role }));
       onClose();
+      toast.success("Requset Send Successfully");
     } catch (error) {
       console.error("Error marking dates as unavailable:", error);
       alert("Failed to update unavailable dates");

@@ -19,10 +19,11 @@ const PendingRequests = ({
   const handleRequestResponse = async (requestId, isApproved, requestType) => {
     setLoading(true);
     try {
+      console.log("Pending Requests :",pendingRequests);
       const response = await approveTimeSlotRequest(collabId, requestId, isApproved, requestType);
       //should change this to mentorID
-      await dispatch(fetchCollabDetails({ userId: currentUser._id, role: currentUser.role }));
-      setPendingRequests(pendingRequests.filter((req) => req._id !== requestId));
+      await dispatch(fetchCollabDetails({ userId: currentUser.id, role: currentUser.role }));
+      setPendingRequests(pendingRequests.filter((req) => req.id !== requestId));
       console.log(response);
       if(response){
         toast.success("Time slot updated successfully");
@@ -57,7 +58,7 @@ const PendingRequests = ({
 
             return (
               <div
-                key={request._id}
+                key={request.id}
                 className="bg-gray-50 dark:bg-gray-800 p-4 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700"
               >
                 <div className="flex justify-between items-center mb-3">
@@ -74,7 +75,7 @@ const PendingRequests = ({
                       size="sm"
                       color="success"
                       isLoading={loading}
-                      onPress={() => handleRequestResponse(request._id, true, requestType)}
+                      onPress={() => handleRequestResponse(request.id, true, requestType)}
                       startContent={<FaCheck />}
                     >
                       Accept
@@ -83,7 +84,7 @@ const PendingRequests = ({
                       size="sm"
                       color="danger"
                       isLoading={loading}
-                      onPress={() => handleRequestResponse(request._id, false, requestType)}
+                      onPress={() => handleRequestResponse(request.id, false, requestType)}
                       startContent={<FaTimes />}
                     >
                       Reject

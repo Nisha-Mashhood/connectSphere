@@ -1,6 +1,6 @@
 import { Tabs, Tab } from '@nextui-org/react';
-import { getTabIcon } from '../helpers/getTabIcon';
-import { PaginationState } from '../../../../Hooks/User/useExploreMentors';
+import { getTabIcon } from '../../../pages/User/Explore/helpers/getTabIcon';
+import { PaginationState } from '../../../Hooks/User/useExploreMentors';
 
 interface TabsSectionProps {
   activeTab: string;

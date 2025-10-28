@@ -1,7 +1,7 @@
 import { Card, CardBody, Divider, Badge } from "@nextui-org/react";
 
 const InfoTab = ({ collaboration, isMentor }) => {
-  const otherPartyDetails = isMentor ? collaboration.userId : collaboration.mentorId?.userId;
+  const otherPartyDetails = isMentor ? collaboration.user : collaboration.mentor?.user;
   const displayName = otherPartyDetails?.name || "Unknown";
   const profilePic = otherPartyDetails?.profilePic;
 

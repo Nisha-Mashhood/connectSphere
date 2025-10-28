@@ -349,8 +349,8 @@ export class CollaborationRepository extends BaseRepository<ICollaboration> impl
       const collaborations = await this.model
         .find({
           $or: [
-            { mentorId: this.toObjectId(mentorId), isCancelled: false, isCompleted: false },
-            { userId, isCancelled: false, isCompleted: false },
+            { mentorId: this.toObjectId(mentorId), isCancelled: false },
+            { userId, isCancelled: false },
           ],
         })
         .populate({
@@ -371,6 +371,33 @@ export class CollaborationRepository extends BaseRepository<ICollaboration> impl
       );
     }
   }
+
+  public findByIdAndUpdateWithPopulate = async (
+  id: string,
+  update: Partial<ICollaboration>,
+  options = { new: true }
+): Promise<ICollaboration | null> => {
+  try {
+    const updated = await this.model
+      .findByIdAndUpdate(this.toObjectId(id), update, options)
+      .populate({
+        path: "mentorId",
+        populate: { path: "userId" },
+      })
+      .populate("userId")
+      .exec();
+
+    return updated;
+  } catch (error: unknown) {
+    const err = error instanceof Error ? error : new Error(String(error));
+    logger.error(`Error updating and populating collaboration ${id}: ${err.message}`);
+    throw new RepositoryError(
+      "Error updating and populating collaboration",
+      StatusCodes.INTERNAL_SERVER_ERROR,
+      err
+    );
+  }
+};
 
   public findMentorRequest = async ({
     page = 1,

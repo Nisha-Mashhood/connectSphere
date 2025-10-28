@@ -18,8 +18,8 @@ export interface ICollaborationService {
     email: string,
     returnUrl: string
   ) => Promise<{ paymentIntent: any; contacts?: any[] }>;
-  getCollabDataForUserService: (userId: string) => Promise<ICollaborationDTO[]>;
-  getCollabDataForMentorService: (mentorId: string) => Promise<ICollaborationDTO[]>;
+  getCollabDataForUserService: (userId: string, includeCompleted: boolean) => Promise<ICollaborationDTO[]>;
+  getCollabDataForMentorService: (mentorId: string, includeCompleted: boolean) => Promise<ICollaborationDTO[]>;
   cancelAndRefundCollab: (collabId: string, reason: string, amount: number) => Promise<ICollaborationDTO | null>;
   getMentorRequestsService: (params: {
     page: number;

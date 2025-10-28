@@ -20,10 +20,10 @@ import {
   respondToUser_UserRequest,
   disconnectUser_UserConnection,
 } from "../../../../Service/User-User.Service";
-import { getRelativeTime } from "../../../../lib/helperforprofile";
 import toast from "react-hot-toast";
 import { useSelector } from "react-redux";
 import { RootState } from "../../../../redux/store";
+import { getRelativeTime } from "../../../../pages/User/Profile/helper";
 
 const UserConnections = ({ handleProfileClick }) => {
   const { currentUser } = useSelector((state: RootState) => state.user);

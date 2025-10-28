@@ -1,8 +1,8 @@
 import { Button } from '@nextui-org/react';
 import { FaFilter } from 'react-icons/fa';
-import SearchBar from '../../../../Components/ReusableComponents/SearchBar';
-import FilterSection from '../../../../Components/ReusableComponents/FilterSection';
-import { FilterType } from '../../../../Hooks/User/useExploreMentors';
+import SearchBar from '../../ReusableComponents/SearchBar';
+import FilterSection from '../../ReusableComponents/FilterSection';
+import { FilterType } from '../../../Hooks/User/useExploreMentors';
 
 
 interface SearchFilterSectionProps {

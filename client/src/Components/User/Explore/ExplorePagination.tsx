@@ -1,5 +1,5 @@
 import { Pagination } from '@nextui-org/react';
-import { PaginationState } from '../../../../Hooks/User/useExploreMentors';
+import { PaginationState } from '../../../Hooks/User/useExploreMentors';
 
 interface ExplorePaginationProps {
   activeTab: string;

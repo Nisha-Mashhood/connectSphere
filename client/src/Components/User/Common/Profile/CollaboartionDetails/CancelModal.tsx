@@ -12,7 +12,7 @@ const CancelModal = ({ isOpen, onClose, reason, setReason, collabId, currentUser
     try {
       await cancelAndRefundCollab(collabId, reason, collaboration.price / 2);
       console.log('Cancel and refund processed, fetching updated collab details');
-      await dispatch(fetchCollabDetails({ userId: currentUser._id, role: currentUser.role }));
+      await dispatch(fetchCollabDetails({ userId: currentUser.id, role: currentUser.role }));
       navigate("/profile");
       toast.success("Mentorship cancelled with 50% refund");
     } catch (error) {

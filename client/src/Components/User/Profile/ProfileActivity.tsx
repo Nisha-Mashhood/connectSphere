@@ -14,9 +14,9 @@ import { Mentor, User } from "../../../redux/types";
 import { NavigateFunction } from "react-router-dom";
 
 // Lazy load components
-const RequestsSection = lazy(() => import("../../../Components/User/Common/Profile/RequestSection"));
+const RequestsSection = lazy(() => import("./RequestSection/RequestSection"));
 const GroupRequests = lazy(() => import("../../../Components/User/Common/Profile/GroupRequests"));
-const ActiveCollaborations = lazy(() => import("../../../Components/User/Common/Profile/ActiveCollaborations"));
+const ActiveCollaborations = lazy(() => import("./ActiveCollaborations/ActiveCollaborations"));
 const GroupCollaborations = lazy(() => import("../../../Components/User/Common/Profile/GroupCollaborations"));
 const TaskManagement = lazy(() => import("../../../Components/User/TaskManagement/TaskManagemnt"));
 const UserConnections = lazy(() => import("../../../Components/User/Common/Profile/UserConnections"));

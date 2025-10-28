@@ -3,7 +3,6 @@ import { RootState } from "../../../../redux/store";
 import { useCallback, useEffect, useState } from "react";
 import toast from "react-hot-toast";
 import GroupsSection from "../../Groups/Groups.Section";
-import { getRelativeTime } from "../../../../lib/helperforprofile";
 import {
   getGroupRequestsByUser,
   groupDetailsWithAdminId,
@@ -19,6 +18,7 @@ import {
 import { Button } from "@nextui-org/react";
 import { FaCreditCard } from "react-icons/fa";
 import { Group } from "../../../../types";
+import { getRelativeTime } from "../../../../pages/User/Profile/helper";
 
 // Initialize Stripe outside the component
 const stripePromise = loadStripe(

@@ -2,14 +2,14 @@ import { Card, CardBody } from "@nextui-org/react";
 
 const CollaborationHeader = ({ collaboration, currentUser }) => {
   const otherPartyDetails =
-    collaboration.userId._id === currentUser._id
-      ? collaboration.mentorId?.userId
-      : collaboration.mentorId.userId._id === currentUser._id
-      ? collaboration.userId
+    collaboration.userId === currentUser.id
+      ? collaboration.mentor?.user
+      : collaboration.mentor.userId === currentUser.id
+      ? collaboration.user
       : null;
   const displayName = otherPartyDetails?.name || "Unknown";
   const profilePic = otherPartyDetails?.profilePic || "/default-profile.png"; // Fallback image
-  const roleLabel = collaboration.userId._id === currentUser._id ? "Mentor" : "Mentee";
+  const roleLabel = collaboration.userId === currentUser.id ? "Mentor" : "Mentee";
 
   return (
     <Card className="mb-6 shadow-md">

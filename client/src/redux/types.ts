@@ -71,6 +71,7 @@ export interface Mentor {
 
 // Collaboration data 
 export interface UnavailableDay {
+  id: string;
   datesAndReasons: { date: string; reason: string }[];
   requestedBy: 'user' | 'mentor';
   requesterId: string;
@@ -79,6 +80,7 @@ export interface UnavailableDay {
 }
 
 export interface TemporarySlotChange {
+  id: string;
   datesAndNewSlots: { date: string; newTimeSlots: string[] }[];
   requestedBy: 'user' | 'mentor';
   requesterId: string;
@@ -119,7 +121,8 @@ export interface RequestData {
   mentorRequestId: string;
   mentorId: string,
   mentor: Mentor
-  userId: User;
+  userId:string;
+  user: User;
   selectedSlot: { day: string; timeSlots: string } | null;
   price: number;
   timePeriod: number;

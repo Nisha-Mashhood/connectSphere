@@ -20,7 +20,7 @@ import {
 import { login, checkProfile } from "../../Service/Auth.service";
 import { LoginFormValues } from "../../validation/loginValidation";
 import { useState } from "react";
-import { AxiosError } from "axios"; 
+import { AxiosError } from "axios";
 
 export interface BackendError {
   status: string;
@@ -38,7 +38,10 @@ export function useLogin() {
     setIsLoading(true);
     try {
       dispatch(signinStart());
-      const { user, needsReviewPrompt } = await login({ ...values, role: "user" });
+      const { user, needsReviewPrompt } = await login({
+        ...values,
+        role: "user",
+      });
 
       if (user.role === "admin") {
         toast.error("Invalid credentials for user login");
@@ -59,13 +62,21 @@ export function useLogin() {
       if (user.role === "mentor") {
         mentorDetails = await dispatch(fetchMentorDetails(user.id)).unwrap();
         if (mentorDetails?.id) {
-          await dispatch(fetchCollabDetails({ userId: mentorDetails.id, role: "mentor" }));
+          await dispatch(
+            fetchCollabDetails({ userId: mentorDetails.id, role: "mentor" })
+          );
         }
       } else {
         dispatch(fetchCollabDetails({ userId: user.id, role: "user" }));
       }
 
-      dispatch(fetchRequests({ userId: user.id, role: user.role, mentorId: mentorDetails?.id }));
+      dispatch(
+        fetchRequests({
+          userId: user.id,
+          role: user.role,
+          mentorId: mentorDetails?.id,
+        })
+      );
       dispatch(fetchGroups(user.id));
       dispatch(fetchGroupRequests(user.id));
       dispatch(fetchGroupDetailsForMembers(user.id));
@@ -82,10 +93,12 @@ export function useLogin() {
       navigate("/", { replace: true });
     } catch (error) {
       const axiosError = error as AxiosError<BackendError>;
-      const errorMessage = axiosError.response?.data?.message || "Invalid Credentials";
+      const errorMessage =
+        axiosError.response?.data?.message ||
+        error.message ||
+        "Invalid Credentials";
       dispatch(signinFailure(errorMessage));
-      toast.error(errorMessage);
-      console.error("Login Failed:", errorMessage);
+      // toast.error(errorMessage);
     } finally {
       setIsLoading(false);
     }

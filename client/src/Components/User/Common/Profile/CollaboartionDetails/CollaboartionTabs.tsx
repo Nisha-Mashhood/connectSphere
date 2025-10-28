@@ -13,7 +13,7 @@ const CollaborationTabs = ({
   setShowUnavailableDatesModal,
   setShowCancelDialog,
 }) => {
-  const isMentorInCollab = collaboration.mentorId.userId._id === currentUser._id;
+  const isMentorInCollab = collaboration.mentor.userId === currentUser.id;
 
   return (
     <Tabs
@@ -34,6 +34,7 @@ const CollaborationTabs = ({
         }
       >
         <DetailsTab
+          currentUser={currentUser}
           collaboration={collaboration}
           setShowTimeSlotsModal={setShowTimeSlotsModal}
           setShowUnavailableDatesModal={setShowUnavailableDatesModal}

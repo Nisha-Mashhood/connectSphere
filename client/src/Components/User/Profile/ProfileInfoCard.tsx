@@ -23,6 +23,7 @@ import { checkMentorProfile } from "../../../Service/Mentor.Service";
 import { CollabData, CollabDetails, Mentor, User } from "../../../redux/types";
 import ProfileSection from "../../ReusableComponents/ProfileSection";
 import EmptyStateCard from "../../ReusableComponents/EmptyStateCard";
+import { formatCurrency, formatDate } from "../../../pages/User/Profile/helper";
 
 interface ProfileInfoCardProps {
   currentUser: User;
@@ -55,21 +56,6 @@ const ProfileInfoCard: FC<ProfileInfoCardProps> = ({
   onReceiptModalOpen,
 }) => {
   const navigate = useNavigate();
-
-  const formatCurrency = (amount: number) =>
-    new Intl.NumberFormat("en-IN", {
-      style: "currency",
-      currency: "INR",
-    }).format(amount);
-
-  const formatDate = (dateString: string) =>
-    dateString
-      ? new Date(dateString).toLocaleDateString("en-US", {
-          year: "numeric",
-          month: "long",
-          day: "numeric",
-        })
-      : "Not specified";
 
   const handleBecomeMentor = async () => {
     try {

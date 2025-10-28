@@ -111,8 +111,8 @@ const TimeSlotsModal = ({
         date,
         newTimeSlots: newTimeSlotsMap[date.toDateString()],
       }));
-      await updateTimeSlots(collabId, { datesAndNewSlots, requestedBy, requesterId: currentUser._id, approvedById, isApproved: "pending" });
-      await dispatch(fetchCollabDetails({ userId: currentUser._id, role: currentUser.role }));
+      await updateTimeSlots(collabId, { datesAndNewSlots, requestedBy, requesterId: currentUser.id, approvedById, isApproved: "pending" });
+      await dispatch(fetchCollabDetails({ userId: currentUser.id, role: currentUser.role }));
       onClose();
       toast.success("Requset Send Successfully");
     } catch (error) {

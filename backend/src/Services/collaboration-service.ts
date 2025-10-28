@@ -514,7 +514,7 @@ export class CollaborationService implements ICollaborationService {
       ) {
         logger.debug(`Marking collaboration ${collab._id} as complete`);
 
-        const updatedCollab = await this._collabRepository.findByIdAndUpdate(
+        const updatedCollab = await this._collabRepository.findByIdAndUpdateWithPopulate(
           collab._id.toString(),
           { isCompleted: true },
           { new: true }
@@ -556,7 +556,8 @@ export class CollaborationService implements ICollaborationService {
   };
 
   public getCollabDataForUserService = async (
-    userId: string
+    userId: string,
+    includeCompleted: boolean = true
   ): Promise<ICollaborationDTO[]> => {
     try {
       logger.debug(`Fetching collaboration data for user: ${userId}`);
@@ -572,14 +573,14 @@ export class CollaborationService implements ICollaborationService {
           return await this.checkAndCompleteCollaboration(collab);
         })
       );
-      const activeCollaborations = updatedCollaborations.filter(
-        (collab): collab is ICollaborationDTO =>
-          collab !== null && !collab.isCompleted
-      );
-      logger.info(
-        `Fetched ${activeCollaborations.length} active collaborations for userId: ${userId}`
-      );
-      return activeCollaborations;
+      const finalCollaborations = includeCompleted
+      ? updatedCollaborations.filter((c): c is ICollaborationDTO => c !== null)
+      : updatedCollaborations.filter((c): c is ICollaborationDTO => c !== null && !c.isCompleted);
+
+    logger.info(
+      `Fetched ${finalCollaborations.length} ${includeCompleted ? "total" : "active"} collaborations for userId: ${userId}`
+    );
+    return finalCollaborations;
     } catch (error: unknown) {
       const err = error instanceof Error ? error : new Error(String(error));
       logger.error(
@@ -596,7 +597,8 @@ export class CollaborationService implements ICollaborationService {
   };
 
   public getCollabDataForMentorService = async (
-    mentorId: string
+    mentorId: string,
+    includeCompleted: boolean = true
   ): Promise<ICollaborationDTO[]> => {
     try {
       logger.debug(`Fetching collaboration data for mentor: ${mentorId}`);
@@ -614,14 +616,15 @@ export class CollaborationService implements ICollaborationService {
           return await this.checkAndCompleteCollaboration(collab);
         })
       );
-      const activeCollaborations = updatedCollaborations.filter(
-        (collab): collab is ICollaborationDTO =>
-          collab !== null && !collab.isCompleted
-      );
-      logger.info(
-        `Fetched ${activeCollaborations.length} active collaborations for mentorId: ${mentorId}`
-      );
-      return activeCollaborations;
+      const finalCollaborations = includeCompleted
+      ? updatedCollaborations.filter((c): c is ICollaborationDTO => c !== null)
+      : updatedCollaborations.filter((c): c is ICollaborationDTO => c !== null && !c.isCompleted);
+
+    logger.info(
+      `Fetched ${finalCollaborations.length} ${includeCompleted ? "total" : "active"} collaborations for userId: ${mentorId}`
+    );
+    return finalCollaborations;
+
     } catch (error: unknown) {
       const err = error instanceof Error ? error : new Error(String(error));
       logger.error(

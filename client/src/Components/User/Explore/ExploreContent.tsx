@@ -1,7 +1,7 @@
 import { Spinner } from '@nextui-org/react';
-import { User, Group, CompleteMentorDetails, UserConnection, CollabDetails, Mentor, GroupMemberships, GroupRequest, Request } from '../../../../redux/types';
-import ExploreCard from '../../../../Components/ReusableComponents/ExploreCard';
-import { ButtonConfig } from '../helpers/getButtonConfigs';
+import { User, Group, CompleteMentorDetails, UserConnection, CollabDetails, Mentor, GroupMemberships, GroupRequest, Request } from '../../../redux/types';
+import ExploreCard from '../../ReusableComponents/ExploreCard';
+import { ButtonConfig } from '../../../pages/User/Explore/helpers/getButtonConfigs';
 
 interface ExploreContentProps {
   activeTab: string;

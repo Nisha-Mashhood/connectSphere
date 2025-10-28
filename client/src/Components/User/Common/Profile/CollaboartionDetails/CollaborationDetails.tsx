@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useMemo, useCallback } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { useDispatch, useSelector } from "react-redux";
 import { AppDispatch, RootState } from "../../../../../redux/store";
@@ -8,11 +8,13 @@ import CollaborationTabs from "./CollaboartionTabs";
 import TimeSlotsModal from "./TimeSlotsModal";
 import UnavailableDatesModal from "./UnavailableDatesModal";
 import PendingRequests from "./PendingRequset";
+import { CollabData, TemporarySlotChange, UnavailableDay, User } from "../../../../../redux/types";
 
 const CollaborationDetails = () => {
   const { collabId } = useParams();
   const navigate = useNavigate();
   const dispatch = useDispatch<AppDispatch>();
+
   const [showCancelDialog, setShowCancelDialog] = useState(false);
   const [showTimeSlotsModal, setShowTimeSlotsModal] = useState(false);
   const [showUnavailableDatesModal, setShowUnavailableDatesModal] = useState(false);
@@ -21,31 +23,52 @@ const CollaborationDetails = () => {
   const [selectedUnavailableDates, setSelectedUnavailableDates] = useState<{ date: Date; reason: string }[]>([]);
   const [selectedDatesForTimeSlot, setSelectedDatesForTimeSlot] = useState<Date[]>([]);
   const [newTimeSlotsMap, setNewTimeSlotsMap] = useState<{ [dateString: string]: string[] }>({});
-  const [pendingRequests, setPendingRequests] = useState<Array<any>>([]);
+  const [pendingRequests, setPendingRequests] = useState<Array<UnavailableDay | TemporarySlotChange>>([]);
   const [loading, setLoading] = useState(false);
 
   const { currentUser } = useSelector((state: RootState) => state.user);
   const { collabDetails } = useSelector((state: RootState) => state.profile);
 
-  const collaboration = collabDetails?.data?.find((collab) => collab._id === collabId);
+  // ✅ Memoize collaboration lookup
+  const collaboration = useMemo(
+    () => collabDetails?.data?.find((collab) => collab.id === collabId),
+    [collabDetails, collabId]
+  );
+
+  const mongoCollabId = collaboration?.id;
+
+  // ✅ Memoized logic to extract pending requests (stable across renders)
+  const getPendingRequests = useCallback(
+    (collaboration: CollabData, currentUser: User): Array<UnavailableDay | TemporarySlotChange> => {
+      if (!collaboration || !currentUser) return [];
+
+      const isPending = (r: UnavailableDay | TemporarySlotChange) => r.isApproved === "pending";
+
+      const allPending = [
+        ...(collaboration.unavailableDays?.filter(isPending) ?? []),
+        ...(collaboration.temporarySlotChanges?.filter(isPending) ?? []),
+      ];
+
+      return allPending.filter((req) => req.requesterId !== currentUser.id);
+    },
+    []
+  );
 
   useEffect(() => {
-    if (collaboration) {
-      console.log("Raw collaboration data:", collaboration);
-      console.log("Unavailable Days:", collaboration.unavailableDays);
-      console.log("Temporary Slot Changes:", collaboration.temporarySlotChanges);
+    if (collaboration && currentUser) {
+      const updatedPending = getPendingRequests(collaboration, currentUser);
 
-      const unavailableRequests = collaboration.unavailableDays.filter(
-        (req) => req.isApproved === "pending"
-      );
-      const timeSlotRequests = collaboration.temporarySlotChanges.filter(
-        (req) => req.isApproved === "pending"
-      );
-      console.log("Filtered unavailableRequests:", unavailableRequests);
-      console.log("Filtered timeSlotRequests:", timeSlotRequests);
-      setPendingRequests([...unavailableRequests, ...timeSlotRequests]);
+      // Prevent unnecessary re-renders
+      setPendingRequests((prev) => {
+        const same =
+          prev.length === updatedPending.length &&
+          prev.every((p, i) => p.id === updatedPending[i].id);
+        return same ? prev : updatedPending;
+      });
+
+      console.log("Pending Requests (updated):", updatedPending);
     }
-  }, [collaboration]);
+  }, [collaboration, currentUser, getPendingRequests]);
 
   if (!collaboration) {
     return (
@@ -59,15 +82,17 @@ const CollaborationDetails = () => {
     <div className="min-h-screen bg-gray-50 dark:bg-gray-900 py-8 px-4">
       <div className="max-w-5xl mx-auto">
         <CollaborationHeader collaboration={collaboration} currentUser={currentUser} />
+
         <PendingRequests
           pendingRequests={pendingRequests}
           setPendingRequests={setPendingRequests}
-          collabId={collabId}
+          collabId={mongoCollabId}
           currentUser={currentUser}
           loading={loading}
           setLoading={setLoading}
           dispatch={dispatch}
         />
+
         <CollaborationTabs
           activeTab={activeTab}
           setActiveTab={setActiveTab}
