@@ -133,7 +133,7 @@ const Header = () => {
       return;
     }
     try {
-      const profileResponse = await checkProfile(currentUser._id);
+      const profileResponse = await checkProfile(currentUser.id);
       const isProfileComplete = profileResponse.isProfileComplete;
 
       if (!isProfileComplete) {
@@ -142,7 +142,7 @@ const Header = () => {
         return;
       }
 
-      const mentorResponse = await checkMentorProfile(currentUser._id);
+      const mentorResponse = await checkMentorProfile(currentUser.id);
       const mentor = mentorResponse.mentor;
 
       if (!mentor) {

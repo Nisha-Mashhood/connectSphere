@@ -2,6 +2,7 @@ import { FieldError, UseFormRegisterReturn } from "react-hook-form";
 
 interface TextFieldProps {
   label: string;
+  description?: string;
   type?: string;
   placeholder?: string;
   registration: UseFormRegisterReturn;
@@ -10,6 +11,7 @@ interface TextFieldProps {
 
 const TextField: React.FC<TextFieldProps> = ({
   label,
+  description,
   type = "text",
   placeholder,
   registration,
@@ -17,7 +19,14 @@ const TextField: React.FC<TextFieldProps> = ({
 }) => {
   return (
     <div className="mt-4">
-      <label className="block text-gray-700">{label}</label>
+      <label className="block font-medium">
+        {label}
+        {description && (
+          <span className="block text-sm font-normal text-gray-600 mt-1">
+            {description}
+          </span>
+        )}
+      </label>
       <input
         type={type}
         placeholder={placeholder}

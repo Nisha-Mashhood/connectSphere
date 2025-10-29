@@ -29,7 +29,7 @@ const CollaborationDetails = () => {
   const { currentUser } = useSelector((state: RootState) => state.user);
   const { collabDetails } = useSelector((state: RootState) => state.profile);
 
-  // ✅ Memoize collaboration lookup
+  //collaboration lookup
   const collaboration = useMemo(
     () => collabDetails?.data?.find((collab) => collab.id === collabId),
     [collabDetails, collabId]
@@ -37,7 +37,7 @@ const CollaborationDetails = () => {
 
   const mongoCollabId = collaboration?.id;
 
-  // ✅ Memoized logic to extract pending requests (stable across renders)
+  //extract pending requests (stable across renders)
   const getPendingRequests = useCallback(
     (collaboration: CollabData, currentUser: User): Array<UnavailableDay | TemporarySlotChange> => {
       if (!collaboration || !currentUser) return [];

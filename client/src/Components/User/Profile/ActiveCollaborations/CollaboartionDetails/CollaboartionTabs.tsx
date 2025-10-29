@@ -43,6 +43,7 @@ const CollaborationTabs = ({
       </Tab>
       <Tab
         key="tasks"
+        isDisabled={collaboration.isCancelled || collaboration.isCompleted}
         title={
           <div className="flex items-center gap-2">
             <FaClipboardList />
@@ -50,7 +51,10 @@ const CollaborationTabs = ({
           </div>
         }
       >
-        <TasksTab collaboration={collaboration} currentUser={currentUser} />
+        <TasksTab 
+        collaboration={collaboration} 
+        currentUser={currentUser}
+        />
       </Tab>
       <Tab
         key="info"

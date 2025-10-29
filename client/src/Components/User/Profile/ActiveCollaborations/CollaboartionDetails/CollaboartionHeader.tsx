@@ -9,7 +9,8 @@ const CollaborationHeader = ({ collaboration, currentUser }) => {
       : null;
   const displayName = otherPartyDetails?.name || "Unknown";
   const profilePic = otherPartyDetails?.profilePic || "/default-profile.png"; // Fallback image
-  const roleLabel = collaboration.userId === currentUser.id ? "Mentor" : "Mentee";
+  const roleLabel =
+    collaboration.userId === currentUser.id ? "Mentor" : "Mentee";
 
   return (
     <Card className="mb-6 shadow-md">
@@ -29,12 +30,16 @@ const CollaborationHeader = ({ collaboration, currentUser }) => {
           <div className="flex flex-col items-end gap-2">
             <span
               className={`px-4 py-1 rounded-full text-sm font-medium ${
-                collaboration.isCancelled
+                collaboration.isCancelled || collaboration.isCompleted
                   ? "bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-200"
                   : "bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200"
               }`}
             >
-              {collaboration.isCancelled ? "Cancelled" : "Active"}
+              {collaboration.isCancelled
+                ? "Cancelled"
+                : collaboration.isCompleted
+                ? "Completed"
+                : "Active"}
             </span>
             <p className="text-xl font-bold">₹{collaboration.price}</p>
           </div>

@@ -17,7 +17,7 @@ import About from "../Components/User/Common/About";
 import CreateGroupForm from "../Components/Forms/CreateGroupForm";
 import GroupDetails from "../Components/User/Common/Profile/GroupDetails";
 import GroupDetailView from "../Components/User/Common/Profile/GroupDetailView";
-import CollaborationDetails from "../Components/User/Common/Profile/CollaboartionDetails/CollaborationDetails";
+import CollaborationDetails from "../Components/User/Profile/ActiveCollaborations/CollaboartionDetails/CollaborationDetails";
 import Chat from "../Components/User/Common/Chat/Chat";
 import MentorDashBoard from "../Components/User/Common/Profile/MentorDashBoard";
 import ExploreMentors from "../pages/User/Explore/Explore";

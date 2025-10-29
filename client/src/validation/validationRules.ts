@@ -83,10 +83,13 @@ export const priceRule = (min: number = 1, max: number = 100000) =>
     .max(max, `Price cannot exceed ${max}`);
 
 export const fileUploadRule = (minFiles: number = 2, maxFiles: number = 5) =>
-  Yup.array()
-    .of(Yup.mixed().required("File is required"))
-    .min(minFiles, `At least ${minFiles} files required`)
-    .max(maxFiles, `Cannot upload more than ${maxFiles} files`);
+  (
+    Yup.array()
+      .of(Yup.mixed().required("File is required"))
+      .min(minFiles, `At least ${minFiles} files required`)
+      .max(maxFiles, `Cannot upload more than ${maxFiles} files`)
+  ) as Yup.ArraySchema<File[], Yup.AnyObject, undefined, "">;
+
 
 export const confirmPasswordRule = () =>
   Yup.string().oneOf([Yup.ref("newPassword")], "Passwords must match");
@@ -102,31 +105,77 @@ export const phonePattern = () =>
 export const dateOfBirth = () =>
   Yup.string()
     .required("Date of Birth is required")
-    .test(
-      "not-in-future",
-      "Date of Birth cannot be in the future",
-      (value) => {
-        if (!value) return false;
-        const dob = new Date(value);
-        const today = new Date();
-        today.setHours(0, 0, 0, 0);
-        return dob <= today;
+    .test("not-in-future", "Date of Birth cannot be in the future", (value) => {
+      if (!value) return false;
+      const dob = new Date(value);
+      const today = new Date();
+      today.setHours(0, 0, 0, 0);
+      return dob <= today;
+    })
+    .test("minimum-age", "You must be at least 16 years old", (value) => {
+      if (!value) return false;
+      const dob = new Date(value);
+      const today = new Date();
+      today.setHours(0, 0, 0, 0);
+      const age = today.getFullYear() - dob.getFullYear();
+      const monthDiff = today.getMonth() - dob.getMonth();
+      const isUnderAge =
+        monthDiff < 0 || (monthDiff === 0 && today.getDate() < dob.getDate())
+          ? age - 1 < 16
+          : age < 16;
+      return !isUnderAge;
+    });
+
+/** At least one time-slot object { day, timeSlots[] } */
+const slotSchema = Yup.object({
+  day: Yup.string().required("Day is required"),
+  timeSlots: Yup.array()
+    .of(Yup.string().required("Time slot is required"))
+    .min(1, "At least one time slot is required"),
+})
+
+export const atLeastOneSlot = () =>
+  Yup.array()
+    .of(slotSchema)
+    .min(1, "At least one slot must be added")
+    .required("Available slots are required")
+    .test("unique-day-time", "Duplicate time slot on the same day", (slots) => {
+      if (!Array.isArray(slots)) return false;
+      const seen = new Set<string>();
+      for (const s of slots) {
+        for (const t of s.timeSlots) {
+          const key = `${s.day}-${t}`;
+          if (seen.has(key)) return false;
+          seen.add(key);
+        }
       }
-    )
-    .test(
-      "minimum-age",
-      "You must be at least 16 years old",
-      (value) => {
-        if (!value) return false;
-        const dob = new Date(value);
-        const today = new Date();
-        today.setHours(0, 0, 0, 0);
-        const age = today.getFullYear() - dob.getFullYear();
-        const monthDiff = today.getMonth() - dob.getMonth();
-        const isUnderAge =
-          monthDiff < 0 || (monthDiff === 0 && today.getDate() < dob.getDate())
-            ? age - 1 < 16
-            : age < 16;
-        return !isUnderAge;
-      }
-    );
+      return true;
+    });
+
+/** Future date (strictly after today) */
+export const futureDate = (msg = "Start date must be a future date") =>
+  Yup.string()
+    .required("Start date is required")
+    .test("is-future", msg, (value) => {
+      if (!value) return false;
+      const selected = new Date(value);
+      const today = new Date();
+      today.setHours(0, 0, 0, 0);
+      return selected > today;
+    });
+
+/** Integer between min and max (inclusive) */
+export const intBetween = (min: number, max: number, field: string) =>
+  Yup.number()
+    .typeError(`${field} must be a number`)
+    .required(`${field} is required`)
+    .integer(`${field} must be an integer`)
+    .min(min, `${field} must be at least ${min}`)
+    .max(max, `${field} cannot exceed ${max}`);
+
+/** Optional URL string (http(s) or data-uri) – useful for profile/cover pics */
+export const optionalUrl = () =>
+  Yup.string().test("valid-url-or-datauri", "Invalid image URL", (value) => {
+    if (!value) return true;
+    return /^(https?:\/\/|\s*data:image\/)/.test(value);
+  });

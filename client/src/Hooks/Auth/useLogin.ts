@@ -98,7 +98,7 @@ export function useLogin() {
         error.message ||
         "Invalid Credentials";
       dispatch(signinFailure(errorMessage));
-      // toast.error(errorMessage);
+      toast.error(errorMessage);
     } finally {
       setIsLoading(false);
     }

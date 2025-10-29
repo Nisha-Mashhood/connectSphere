@@ -4,6 +4,7 @@ import { FieldError, UseFormRegisterReturn } from "react-hook-form";
 
 interface TextAreaProps {
   label?: string;
+  description?: string;
   placeholder?: string;
   registration: UseFormRegisterReturn;
   error?: FieldError;
@@ -11,13 +12,21 @@ interface TextAreaProps {
 
 const TextArea: React.FC<TextAreaProps> = ({
   label = "Text Area",
+  description,
   placeholder,
   registration,
   error,
 }) => {
   return (
     <div className="mt-4">
-      {label && <label className="block text-gray-600 font-medium">{label}</label>}
+     <label className="block font-medium">
+        {label}
+        {description && (
+          <span className="block text-sm font-normal text-gray-600 mt-1">
+            {description}
+          </span>
+        )}
+      </label>
       <Textarea
         {...registration}
         placeholder={placeholder}
