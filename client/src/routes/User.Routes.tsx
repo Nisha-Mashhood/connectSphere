@@ -15,8 +15,8 @@ import { ForbiddenPage } from "../Components/ForebiddenPage";
 import GithubCallback from "../Components/User/Auth/GithubCallback";
 import About from "../Components/User/Common/About";
 import CreateGroupForm from "../Components/Forms/CreateGroupForm";
-import GroupDetails from "../Components/User/Common/Profile/GroupDetails";
-import GroupDetailView from "../Components/User/Common/Profile/GroupDetailView";
+import GroupDashboard from "../Components/User/Profile/GroupSection/GroupDashboard/GroupDashboard";
+import GroupDetail from "../Components/User/Profile/GroupSection/GroupDetails/GroupDetails";
 import CollaborationDetails from "../Components/User/Profile/ActiveCollaborations/CollaboartionDetails/CollaborationDetails";
 import Chat from "../Components/User/Common/Chat/Chat";
 import MentorDashBoard from "../Components/User/Common/Profile/MentorDashBoard";
@@ -45,8 +45,8 @@ const UserRoutes = () => (
         <Route path="/profileDispaly/:Id" element={< ProfileDisplay />} />
         <Route path="/explorementor" element={<ExploreMentors />} />
         <Route path="/create-group" element={<CreateGroupForm />} />
-        <Route path="/groupDetails/:groupId" element={<GroupDetails />} />
-        <Route path="/group/:groupId" element={<GroupDetailView />} />
+        <Route path="/groupDashboard/:groupId" element={<GroupDashboard />} />
+        <Route path="/group/:groupId" element={<GroupDetail />} />
         <Route path="/collaboration/:collabId" element={<CollaborationDetails />} />
         <Route path="/chat" element={<Chat />} />
         <Route path="/chat/:type/:id" element={<Chat />} />

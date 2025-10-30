@@ -15,6 +15,7 @@ export const createGroup = async (groupData) => {
 export const groupDetailsWithAdminId = async (id) => {
   try {
     const response = await axiosInstance.get(`/group/fetch-groups/${id}`);
+    console.log("Response from backend for groupDetailsWithAdminId: ",response);
     return response.data.data;
   } catch (error) {
     handleError(error);
@@ -47,6 +48,7 @@ export const getGroupRequestsByUser = async (userId: string) => {
     const response = await axiosInstance.get(
       `/group/group-request-details-UI/${userId}`
     );
+    console.log("Response from backend for getGroupRequestsByUser: ",response);
     return response.data.data;
   } catch (error) {
     throw new Error(

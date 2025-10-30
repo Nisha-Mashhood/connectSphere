@@ -10,10 +10,10 @@ const GroupCollaborations = ({ handleProfileClick }) => {
   const dispatch = useDispatch<AppDispatch>();
   const { groupMemberships } = useSelector((state: RootState) => state.profile);
   const { currentUser } = useSelector((state: RootState) => state.user);
-  const filteredGroupmembership = groupMemberships?.groups.filter(
-    (group) => group.adminId !== currentUser.id
-  );
-
+  const filteredGroupmembership =
+    groupMemberships?.groups?.filter(
+      (group) => group.adminId !== currentUser?.id
+    ) || [];
   const handleGroupClick = (groupId: string) => {
     navigate(`/group/${groupId}`);
   };
@@ -29,6 +29,11 @@ const GroupCollaborations = ({ handleProfileClick }) => {
       <h2 className="text-2xl font-semibold mb-4 dark:text-white">
         Group Collaborations
       </h2>
+      <p className="text-sm text-gray-600 dark:text-gray-400 mb-4">
+        These are the groups you've <strong>joined as a member</strong> — not
+        the ones you created. Collaborate, learn, and grow with other members
+        under the group admin's guidance.
+      </p>
       <div className="space-y-4">
         {filteredGroupmembership?.map((group) => (
           <div
@@ -46,18 +51,16 @@ const GroupCollaborations = ({ handleProfileClick }) => {
 
               {/* Group Details */}
               <div className="flex-1">
-                {/* Group Name */}
                 <p className="font-semibold text-gray-900 dark:text-white">
                   {group.name}
                 </p>
-
-                {/* Member Count */}
                 <div className="flex items-center space-x-2 text-sm text-gray-600 dark:text-gray-300">
                   <FaUsers className="text-blue-500" />
-                  <span>{group.members?.length || 0} members {group.isFull ? "(Full)" : ""}</span>
+                  <span>
+                    {group.members?.length || 0} members{" "}
+                    {group.isFull ? "(Full)" : ""}
+                  </span>
                 </div>
-
-                {/* Admin Info */}
                 <div className="flex items-center space-x-4 mt-2 text-sm">
                   <span
                     className="text-blue-600 dark:text-blue-400 cursor-pointer hover:underline"
@@ -68,18 +71,13 @@ const GroupCollaborations = ({ handleProfileClick }) => {
                 </div>
               </div>
 
-              {/* Status Badge */}
               <div className="flex items-center">
                 <span className="px-3 py-1 text-sm font-medium rounded-full bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200">
-                  { "Active"}  
-                   {/* make it like  if end date has not passed then active else deactive */}
                 </span>
               </div>
             </div>
-
-            {/* Group Description */}
             <div className="mt-3 text-gray-600 dark:text-gray-400 text-sm">
-              {group.bio  || "No description available"}
+              {group.bio || "No description available"}
             </div>
           </div>
         ))}

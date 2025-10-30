@@ -147,10 +147,10 @@ export interface Group {
   price: number;
   maxMembers: number;
   members: { userId: string; joinedAt: string }[];
-  membersDetails: User[];
+  membersDetails: GroupMemberDetail[];
   admin: User | null;
   adminId: string;
-  availableSlots: { day: string; timeSlots: string[] }[];
+  availableSlots: { id?:string, day: string; timeSlots: string[] }[];
   coverPic: string;
   profilePic: string;
   startDate: string | null;
@@ -174,13 +174,32 @@ export interface GroupMembership {
   isFull: boolean;
   maxMembers: number;
   members: { userId: string; joinedAt: string }[];
-  membersDetails: User[];
+  membersDetails: GroupMemberDetail[];
   createdAt: string;
+}
+
+export interface GroupMemberDetail {
+  joinedAt: string;
+  user: User;
 }
 
 // GroupMemberships 
 export interface GroupMemberships {
   groups: GroupMembership[];
+}
+
+export interface GroupRequests {
+  id: string;
+  groupRequestId: string;
+  groupId: string; 
+  group: Group;   
+  userId: string;
+  user: User;
+  status: "Pending" | "Accepted" | "Rejected";
+  paymentStatus: "Pending" | "Paid" | "Failed";
+  amountPaid: number;
+  paymentId: string | null;
+  createdAt: string;
 }
 
 // GroupRequest

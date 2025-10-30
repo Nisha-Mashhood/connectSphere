@@ -5,7 +5,7 @@ const GroupsSection = ({ groups }) => {
   const navigate = useNavigate();
 
   const handleGroupClick = (groupId) => {
-    navigate(`/groupDetails/${groupId}`); // Navigate to group details page
+    navigate(`/groupDashboard/${groupId}`);
   };
 
   return (
@@ -13,8 +13,8 @@ const GroupsSection = ({ groups }) => {
       <h2 className="text-2xl font-semibold mb-4 dark:text-white">Your Groups</h2>
       <div className="space-y-4">
         {groups?.map((group) => (
-          <div key={group._id} className="bg-white dark:bg-gray-700 p-4 rounded-lg shadow-sm border border-gray-200 dark:border-gray-600 cursor-pointer"
-          onClick={() => handleGroupClick(group._id)}
+          <div key={group.id} className="bg-white dark:bg-gray-700 p-4 rounded-lg shadow-sm border border-gray-200 dark:border-gray-600 cursor-pointer"
+          onClick={() => handleGroupClick(group.id)}
           >
             <div className="flex items-center space-x-4">
               {/* Group Image */}

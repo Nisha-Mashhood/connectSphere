@@ -15,9 +15,9 @@ import { NavigateFunction } from "react-router-dom";
 
 // Lazy load components
 const RequestsSection = lazy(() => import("./RequestSection/RequestSection"));
-const GroupRequests = lazy(() => import("../../../Components/User/Common/Profile/GroupRequests"));
+const GroupRequests = lazy(() => import("./GroupSection/GroupRequest/GroupRequests"));
 const ActiveCollaborations = lazy(() => import("./ActiveCollaborations/ActiveCollaborations"));
-const GroupCollaborations = lazy(() => import("../../../Components/User/Common/Profile/GroupCollaborations"));
+const GroupCollaborations = lazy(() => import("./GroupSection/GroupCollaborations"));
 const TaskManagement = lazy(() => import("../../../Components/User/TaskManagement/TaskManagemnt"));
 const UserConnections = lazy(() => import("../../../Components/User/Common/Profile/UserConnections"));
 

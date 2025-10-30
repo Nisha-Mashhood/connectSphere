@@ -175,7 +175,6 @@ export class GroupController extends BaseController implements IGroupController{
   makeStripePayment = async (req: Request, res: Response, next: NextFunction): Promise<void> => {
     try {
       const { paymentMethodId, amount, requestId, email, groupRequestData, returnUrl } = req.body;
-      logger.debug(`Processing payment for group request: ${requestId}`);
       if (!paymentMethodId || !amount || !requestId || !email || !groupRequestData || !returnUrl) {
         throw new HttpError(ERROR_MESSAGES.MISSING_PAYMENT_INFO, StatusCodes.BAD_REQUEST);
       }
