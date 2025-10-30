@@ -19,7 +19,7 @@ import GroupDashboard from "../Components/User/Profile/GroupSection/GroupDashboa
 import GroupDetail from "../Components/User/Profile/GroupSection/GroupDetails/GroupDetails";
 import CollaborationDetails from "../Components/User/Profile/ActiveCollaborations/CollaboartionDetails/CollaborationDetails";
 import Chat from "../Components/User/Common/Chat/Chat";
-import MentorDashBoard from "../Components/User/Common/Profile/MentorDashBoard";
+import MentorDashBoard from "../Components/User/Profile/MentorDashboard/MentorDashBoard";
 import ExploreMentors from "../pages/User/Explore/Explore";
 import Profile from "../pages/User/Profile/Profile";
 
