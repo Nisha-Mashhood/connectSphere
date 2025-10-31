@@ -13,9 +13,9 @@ export const fetchAllUsers = async (params) => {
   }
 };
 
-export const getAllUsers = async () => {
+export const getAllUsers = async (params) => {
   try {
-    const response = await axiosInstance.get("/auth/fetchallusers");
+    const response = await axiosInstance.get("/auth/fetchallusers", {params});
     return response.data.data;
   } catch (error) {
     handleError(error);

@@ -13,6 +13,7 @@ export interface User {
   reasonForJoining?: string;
   hasReviewed?: boolean;
   loginCount?: number;
+  isBlocked?: boolean;
   role?: 'mentor' | 'user';
 }
 

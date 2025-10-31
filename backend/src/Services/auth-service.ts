@@ -5,7 +5,6 @@ import bcrypt from "bcryptjs";
 import { generateOTP } from "../Utils/utils/auth-utils/o-t-p";
 import { sendEmail } from "../core/Utils/email";
 import config from "../config/env-config";
-import { uploadMedia } from "../core/Utils/cloudinary";
 import { OAuth2Client } from "../Utils/utils/auth-utils/google-config";
 import axios from "axios";
 import logger from "../core/Utils/logger";
@@ -21,6 +20,7 @@ import { toUserAdminDTOs, toUserDTO, toUserDTOs } from "../Utils/Mappers/user-ma
 import { IUserRepository } from "../Interfaces/Repository/i-user-repositry";
 import { INotificationService } from "../Interfaces/Services/i-notification-service";
 import { IJWTService } from "../Interfaces/Services/i-jwt-service";
+import { uploadMedia } from "../core/Utils/cloudinary";
 
 // Temporary OTP storage (replace with Redis in production)
 const otpStore: { [email: string]: string } = {};

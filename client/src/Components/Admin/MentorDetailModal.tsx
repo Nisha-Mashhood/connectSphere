@@ -30,28 +30,10 @@ import {
   TableRow,
   TableCell,
 } from "@nextui-org/react";
-import { Feedback } from "../../types";
+import { Feedback, Mentor } from "../../redux/types";
 
 interface MentorDetailModalProps {
-  mentor: {
-    _id: string;
-    userId: {
-      _id: string;
-      name: string;
-      email: string;
-      jobTitle?: string;
-    };
-    isApproved: string;
-    specialization: string;
-    skills: Array<{ name: string }>;
-    certifications: string[];
-    price: number;
-    bio: string;
-    availableSlots: {
-      day:string,
-      timeSlots:string[]
-    }[];
-  };
+  mentor: Mentor;
   onClose: () => void;
 }
 
@@ -66,9 +48,9 @@ const MentorDetailModal: React.FC<MentorDetailModalProps> = ({ mentor, onClose }
   const fetchFeedback = useCallback(async () => {
     try {
       setLoadingFeedback(true);
-      const data = await getFeedbackByMentorId(mentor._id);
-      console.log("Feedback for mentor", mentor._id, ":", JSON.stringify(data, null, 2));
-      setFeedbacks(Array.isArray(data) ? data : []);
+      const data = await getFeedbackByMentorId(mentor.id);
+      console.log("Feedback for mentor", mentor.id, ":", JSON.stringify(data, null, 2));
+      setFeedbacks(Array.isArray(data.feedbacks) ? data.feedbacks : []);
     } catch (error) {
       toast.error("Failed to fetch feedback.");
       console.error("Error fetching feedback:", error);
@@ -107,7 +89,7 @@ const MentorDetailModal: React.FC<MentorDetailModalProps> = ({ mentor, onClose }
 
   const approveMentor = async () => {
     try {
-      await approveMentorService(mentor._id);
+      await approveMentorService(mentor.id);
       toast.success("Mentor approved successfully.");
       onClose();
     } catch (error) {
@@ -118,7 +100,7 @@ const MentorDetailModal: React.FC<MentorDetailModalProps> = ({ mentor, onClose }
 
   const cancelMentorship = async () => {
     try {
-      await cancelMentorshipService(mentor._id);
+      await cancelMentorshipService(mentor.id);
       toast.success("Mentorship canceled successfully.");
       onClose();
     } catch (error) {
@@ -133,7 +115,7 @@ const MentorDetailModal: React.FC<MentorDetailModalProps> = ({ mentor, onClose }
       return;
     }
     try {
-      await rejectMentor(mentor._id, rejectionReason);
+      await rejectMentor(mentor.id, rejectionReason);
       toast.success("Mentor rejected successfully.");
       setRejectionModal(false);
       onClose();
@@ -160,9 +142,9 @@ const MentorDetailModal: React.FC<MentorDetailModalProps> = ({ mentor, onClose }
                   <div>
                     <h3 className="text-xl font-semibold mb-4">Personal Information</h3>
                     <div className="space-y-3">
-                      <p><strong>Name:</strong> {mentor.userId.name}</p>
-                      <p><strong>Email:</strong> {mentor.userId.email}</p>
-                      <p><strong>Job Title:</strong> {mentor.userId.jobTitle || "Not specified"}</p>
+                      <p><strong>Name:</strong> {mentor.user.name}</p>
+                      <p><strong>Email:</strong> {mentor.user.email}</p>
+                      <p><strong>Job Title:</strong> {mentor.user.jobTitle || "Not specified"}</p>
                       <p><strong>Specialization:</strong> {mentor.specialization}</p>
                     </div>
                   </div>
@@ -174,7 +156,7 @@ const MentorDetailModal: React.FC<MentorDetailModalProps> = ({ mentor, onClose }
                       <div>
                         <strong>Skills:</strong>
                         <div className="flex flex-wrap gap-2 mt-2">
-                          {mentor.skills.map((skill, index) => (
+                          {mentor.skillsDetails.map((skill, index) => (
                             <Chip key={index} color="primary" variant="flat">{skill.name}</Chip>
                           ))}
                         </div>
@@ -233,7 +215,7 @@ const MentorDetailModal: React.FC<MentorDetailModalProps> = ({ mentor, onClose }
                         <TableBody>
                           {feedbacks.map((feedback) => (
                             <TableRow key={feedback.feedbackId}>
-                              <TableCell>{feedback.userId.name}</TableCell>
+                              <TableCell>{feedback.user.name}</TableCell>
                               <TableCell>
                                 <div className="flex items-center space-x-1">
                                   {[...Array(5)].map((_, i) => (
@@ -257,7 +239,7 @@ const MentorDetailModal: React.FC<MentorDetailModalProps> = ({ mentor, onClose }
                                 <Button
                                   size="sm"
                                   color={feedback.isHidden ? "success" : "danger"}
-                                  onPress={() => handleToggleVisibility(feedback._id)}
+                                  onPress={() => handleToggleVisibility(feedback.id)}
                                 >
                                   {feedback.isHidden ? "Unhide" : "Hide"}
                                 </Button>

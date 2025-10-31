@@ -199,7 +199,7 @@ export class MentorService implements IMentorService {
         );
       }
 
-      const validStatuses = ["pending", "approved", "rejected", ""];
+      const validStatuses = ["Processing", "Completed", "Rejected", ""];
       if (!validStatuses.includes(status)) {
         logger.error(`Invalid status: ${status}`);
         throw new ServiceError(

@@ -137,7 +137,7 @@ const ExploreCard = ({ item, type, getButtonConfig, onButtonPress }: ExploreCard
           <>
             <div className="space-y-2">
               {profileId ? (
-                <Link to={`/profileDispaly/${profileId}`}>
+                <Link to={`/profileDisplay/${profileId}`}>
                   <h3 className="text-lg font-bold hover:text-primary transition-colors line-clamp-1">
                     {isMentor ? mentorItem.userId?.name : userItem.name}
                   </h3>

@@ -21,39 +21,22 @@ import {
   TableRow,
   TableCell,
 } from "@nextui-org/react";
-
-interface MentorRequest {
-  _id: string;
-  userId: {
-    _id: string;
-    name: string;
-    email: string;
-  };
-  isApproved: string;
-  specialization: string;
-  skills: Array<{ name: string }>;
-  certifications: string[];
-  price: number;
-  bio: string;
-  availableSlots:{
-      day:string,
-      timeSlots:string[]
-    }[];
-}
+import { Mentor } from "../../redux/types";
 
 const AdminMentorRequests: React.FC = () => {
-  const [mentorRequests, setMentorRequests] = useState<MentorRequest[]>([]);
-  const [selectedMentor, setSelectedMentor] = useState<MentorRequest | null>(null);
+  const [mentorRequests, setMentorRequests] = useState<Mentor[]>([]);
+  const [selectedMentor, setSelectedMentor] = useState<Mentor | null>(null);
   const [page, setPage] = useState(1);
   const [totalPages, setTotalPages] = useState(1);
   const [search, setSearch] = useState("");
   const [statusFilter, setStatusFilter] = useState("");
-  const limit = 5; // Items per page
+  const limit = 5;
 
   // Fetch mentor requests with pagination, search, and filter
   const fetchMentorRequests = useCallback(async () => {
     try {
       const response= await fetchMentorRequestsService(page, limit, search, statusFilter, "desc");
+      console.log(response.mentors);
       setMentorRequests(response.mentors);
       setTotalPages(response.totalPages);
     } catch (error) {
@@ -66,7 +49,7 @@ const AdminMentorRequests: React.FC = () => {
     fetchMentorRequests();
   }, [fetchMentorRequests]);
 
-  const handleViewDetails = (mentor: MentorRequest) => {
+  const handleViewDetails = (mentor: Mentor) => {
     setSelectedMentor(mentor);
   };
 
@@ -124,9 +107,9 @@ const AdminMentorRequests: React.FC = () => {
             </TableHeader>
             <TableBody>
               {mentorRequests.map((mentor) => (
-                <TableRow key={mentor._id} className="hover:bg-gray-50">
-                  <TableCell>{mentor.userId ? mentor.userId.name : "Unknown User"}</TableCell>
-                  <TableCell>{mentor.userId ? mentor.userId.email : "N/A"}</TableCell>
+                <TableRow key={mentor.id} className="hover:bg-gray-50">
+                  <TableCell>{mentor.user ? mentor.user.name : "Unknown User"}</TableCell>
+                  <TableCell>{mentor.user ? mentor.user.email: "N/A"}</TableCell>
                   <TableCell>
                     <span className={`px-2 py-1 rounded-full text-sm ${
                       mentor.isApproved === "Completed" ? "bg-green-100 text-green-800" :

@@ -3,13 +3,13 @@ import Modal from "react-modal";
 import { FaTimes, FaStar, FaGraduationCap, FaMoneyBillWave, FaClock } from "react-icons/fa";
 import toast from "react-hot-toast";
 import { useDispatch } from "react-redux";
-import { SendRequsetToMentor } from "../../../../Service/collaboration.Service";
-import { useProfileData } from "../../../../Hooks/User/useProfileData";
-import { ProfileHeader } from "./ProfileHeader";
-import { CollaborationSection } from "./CollaborationSection";
-import { FeedbackSection } from "./FeedbackSection";
-import { Skill } from "../../../../redux/types";
-import { Slot } from "../../../../validation/createGroupValidation";
+import { SendRequsetToMentor } from "../../Service/collaboration.Service";
+import { useProfileData } from "../../Hooks/User/useProfileData";
+import { ProfileHeader } from "../../Components/User/Common/OthersProfile/ProfileHeader";
+import { CollaborationSection } from "../../Components/User/Common/OthersProfile/CollaborationSection";
+import { FeedbackSection } from "../../Components/User/Common/OthersProfile/FeedbackSection";
+import { Skill } from "../../redux/types";
+import { Slot } from "../../validation/createGroupValidation";
 
 const ProfileDisplay = () => {
   const dispatch = useDispatch();

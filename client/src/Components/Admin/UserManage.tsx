@@ -1,95 +1,151 @@
-import React, { useState, useEffect } from "react";
-import { 
-  Table, 
-  TableHeader, 
-  TableColumn, 
-  TableBody, 
-  TableRow, 
-  TableCell, 
-  User, 
-  Chip, 
+import { useState, useEffect, useCallback, useMemo } from "react";
+import {
+  Table,
+  TableHeader,
+  TableColumn,
+  TableBody,
+  TableRow,
+  TableCell,
+  User,
+  Chip,
   Button,
-  Pagination
+  Pagination,
+  Input,
 } from "@nextui-org/react";
-import { FaEye } from "react-icons/fa";
-import { useNavigate } from 'react-router-dom';
-import { 
-  blockUserService, 
-  getAllUsers, 
-  unblockUserService 
+import { FaEye, FaSearch, FaTimes } from "react-icons/fa";
+import { useNavigate } from "react-router-dom";
+import {
+  blockUserService,
+  getAllUsers,
+  unblockUserService,
 } from "../../Service/User.Service";
 import { toast } from "react-hot-toast";
+import { User as user } from "../../redux/types";
+import debounce from "lodash.debounce";
+
+const LIMIT = 10;
+export interface UserListParams {
+  page: number;
+  limit: number;
+  search?: string;
+  role?: string;
+}
 
 const UserManagementList = () => {
-  const [users, setUsers] = useState([]);
-  const [page, setPage] = useState(1);
   const navigate = useNavigate();
-  const rowsPerPage = 10;
+  const [users, setUsers] = useState<user[]>([]);
+  const [total, setTotal] = useState(0);
+  const [page, setPage] = useState(1);
+  const [searchInput, setSearchInput] = useState(""); 
+  const [debouncedSearch, setDebouncedSearch] = useState("");
+  const [loading, setLoading] = useState(false);
 
-  // Fetch users on component mount
+  const debouncedSetSearch = useMemo(
+    () =>
+      debounce((value: string) => {
+        setDebouncedSearch(value);
+        setPage(1);
+      }, 500),
+    []
+  );
+
   useEffect(() => {
-    const getUsers = async () => {
-      try {
-        const data = await getAllUsers();
-        console.log("Users: ",data.users);
-        setUsers(data.users);
-      } catch (error) {
-        console.log(error)
-        toast.error("Failed to fetch users");
-      }
-    };
-    getUsers();
-  }, []);
+    return () => debouncedSetSearch.cancel();
+  }, [debouncedSetSearch]);
 
-  // Navigate to user details
-  const viewUserDetails = (userId) => {
+  const fetchUsers = useCallback(async () => {
+    setLoading(true);
+    try {
+      const params = {
+        page,
+        limit: LIMIT,
+        ...(debouncedSearch && { search: debouncedSearch })
+      };
+
+      const data = await getAllUsers(params);
+      setUsers(data.users);
+      setTotal(data.total);
+      setPage(data.page ?? page);
+    } catch (err) {
+      console.log(err)
+      toast.error("Failed to load users");
+    } finally {
+      setLoading(false);
+    }
+  }, [page, debouncedSearch]);
+
+  useEffect(() => {
+    fetchUsers();
+  }, [fetchUsers]);
+
+  const clearSearch = () => {
+    setSearchInput("");
+    setDebouncedSearch("");
+    setPage(1);
+  };
+
+  const viewUserDetails = (userId: string) => {
     navigate(`/admin/users/${userId}`);
   };
 
-  // Block/Unblock user
-  const toggleUserBlock = async (userId, currentBlockStatus) => {
+  const toggleUserBlock = async (userId: string, isBlocked: boolean) => {
     try {
-      if (currentBlockStatus) {
-        await unblockUserService(userId);
-      } else {
-        await blockUserService(userId);
-      }
-      // Refresh user list
-      const updatedUsers = await getAllUsers();
-      setUsers(updatedUsers.users);
-      toast.success(`User ${currentBlockStatus ? 'unblocked' : 'blocked'} successfully`);
-    } catch (error) {
-      console.log(error)
-      toast.error(`Failed to ${currentBlockStatus ? 'unblock' : 'block'} user`);
+      if (isBlocked) await unblockUserService(userId);
+      else await blockUserService(userId);
+      toast.success(`User ${isBlocked ? "unblocked" : "blocked"}`);
+      fetchUsers();
+    } catch (err) {
+      console.log(err)
+      toast.error("Action failed");
     }
   };
 
-  // Pagination logic
-  const pages = Math.ceil(users.length / rowsPerPage);
-  const paginatedUsers = React.useMemo(() => {
-    const start = (page - 1) * rowsPerPage;
-    const end = start + rowsPerPage;
-    return users.slice(start, end);
-  }, [page, users]);
+  const totalPages = Math.ceil(total / LIMIT);
 
   return (
-    <div className="p-6">
-      <h1 className="text-3xl font-bold mb-6">User Management</h1>
-      
-      <Table 
+    <div className="p-6 space-y-6">
+      <h1 className="text-3xl font-bold">User Management</h1>
+
+        {/* Search */}
+        <div className="relative max-w-xs w-full">
+          <Input
+            placeholder="Search name, email, job..."
+            startContent={<FaSearch className="text-gray-400" />}
+            value={searchInput}
+            onValueChange={(value) => {
+              setSearchInput(value);
+              debouncedSetSearch(value);
+            }}
+            className="pr-10"
+          />
+          {searchInput && (
+            <button
+              onClick={clearSearch}
+              className="absolute right-2 top-1/2 -translate-y-1/2 text-gray-500 hover:text-red-500"
+            >
+              <FaTimes className="w-4 h-4" />
+            </button>
+          )}
+        </div>
+
+      {/* TABLE */}
+      <Table
+        isStriped
         aria-label="User management table"
         bottomContent={
-          <div className="flex w-full justify-center">
-            <Pagination
-              isCompact
-              showControls
-              showShadow
-              color="secondary"
-              page={page}
-              total={pages}
-              onChange={(page) => setPage(page)}
-            />
-          </div>
+          totalPages > 1 && (
+            <div className="flex w-full justify-center mt-4">
+              <Pagination
+                isCompact
+                showControls
+                showShadow
+                color="secondary"
+                page={page}
+                total={totalPages}
+                onChange={setPage}
+              />
+            </div>
+          )
         }
       >
         <TableHeader>
@@ -99,48 +155,51 @@ const UserManagementList = () => {
           <TableColumn>STATUS</TableColumn>
           <TableColumn>ACTIONS</TableColumn>
         </TableHeader>
-        <TableBody emptyContent={"No users to display."}>
-          {paginatedUsers.map((user) => (
-            <TableRow key={user._id}>
+
+        <TableBody
+          items={users}
+          isLoading={loading}
+          loadingContent="Loading users..."
+          emptyContent="No users found."
+        >
+          {(u) => (
+            <TableRow key={u.id}>
               <TableCell>
                 <User
-                  avatarProps={{ radius: "lg", src: user.profilePic }}
-                  description={user.jobTitle}
-                  name={user.name}
+                  avatarProps={{ radius: "lg", src: u.profilePic }}
+                  name={u.name}
+                  description={u.jobTitle}
                 />
               </TableCell>
-              <TableCell>{user.email}</TableCell>
-              <TableCell>{user.role}</TableCell>
+              <TableCell>{u.email}</TableCell>
+              <TableCell>{u.role}</TableCell>
               <TableCell>
-                <Chip 
-                  color={user.isBlocked ? "danger" : "success"}
-                  variant="flat"
-                >
-                  {user.isBlocked ? "Blocked" : "Active"}
+                <Chip color={u.isBlocked ? "danger" : "success"} variant="flat">
+                  {u.isBlocked ? "Blocked" : "Active"}
                 </Chip>
               </TableCell>
               <TableCell>
-                <div className="flex items-center gap-2">
-                  <Button 
-                    isIconOnly 
-                    variant="light" 
+                <div className="flex gap-2">
+                  <Button
+                    isIconOnly
+                    variant="light"
                     color="primary"
-                    onPress={() => viewUserDetails(user._id)}
+                    onPress={() => viewUserDetails(u.id)}
                   >
                     <FaEye />
                   </Button>
-                  <Button 
-                    size="sm" 
-                    color={user.isBlocked ? "success" : "danger"}
+                  <Button
+                    size="sm"
+                    color={u.isBlocked ? "success" : "danger"}
                     variant="flat"
-                    onPress={() => toggleUserBlock(user._id, user.isBlocked)}
+                    onPress={() => toggleUserBlock(u.id, u.isBlocked)}
                   >
-                    {user.isBlocked ? "Unblock" : "Block"}
+                    {u.isBlocked ? "Unblock" : "Block"}
                   </Button>
                 </div>
               </TableCell>
             </TableRow>
-          ))}
+          )}
         </TableBody>
       </Table>
     </div>

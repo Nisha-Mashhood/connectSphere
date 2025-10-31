@@ -377,15 +377,35 @@ export class AuthController extends BaseController implements IAuthController{
     }
   };
 
-  fetchAllUsers = async (_req: Request, res: Response, next: NextFunction): Promise<void> => {
+  fetchAllUsers = async (req: Request, res: Response, next: NextFunction): Promise<void> => {
     try {
-      const users = await this._authService.fetchAllUsers();
-      if (users.length === 0) {
-        this.sendSuccess(res, { users: [] }, AUTH_MESSAGES.NO_USERS_FOUND);
+
+      const { search, page, limit, excludeId } = req.query;
+      const query: UserQuery = {};
+
+      if (search) query.search = search as string;
+      if (page) query.page = parseInt(page as string, 10);
+      if (limit) query.limit = parseInt(limit as string, 10);
+      if (excludeId) query.excludeId = excludeId as string;
+
+      logger.debug(`Fetching users with query: ${JSON.stringify(query)}`);
+      const result = await this._authService.getAllUsersAdmin(query);
+
+      const data = {
+        users: result.users,
+        total: result.total,
+        page: query.page || 1,
+        limit: query.limit || 10,
+      };
+
+      if (result.users.length === 0) {
+        this.sendSuccess(res, { users: [], total: 0, page: query.page || 1, limit: query.limit || 10 }, AUTH_MESSAGES.NO_USERS_FOUND);
+      } else if (!search && !page && !limit) {
+        this.sendSuccess(res, { users: result.users }, AUTH_MESSAGES.USERS_FETCHED);
       } else {
-        this.sendSuccess(res, { users }, AUTH_MESSAGES.USERS_FETCHED);
+        this.sendSuccess(res, data, AUTH_MESSAGES.USERS_FETCHED);
       }
-      logger.info("Fetched all users");
+      logger.info("Users fetched successfully");
     } catch (error) {
       logger.info(error);
       next(error);
