@@ -19,7 +19,7 @@ const GroupRequests = lazy(() => import("./GroupSection/GroupRequest/GroupReques
 const ActiveCollaborations = lazy(() => import("./ActiveCollaborations/ActiveCollaborations"));
 const GroupCollaborations = lazy(() => import("./GroupSection/GroupCollaborations"));
 const TaskManagement = lazy(() => import("../../../Components/User/TaskManagement/TaskManagemnt"));
-const UserConnections = lazy(() => import("../../../Components/User/Common/Profile/UserConnections"));
+const UserConnections = lazy(() => import("./UserConnection/UserConnections"));
 
 interface ProfileActivityProps {
   currentUser: User;

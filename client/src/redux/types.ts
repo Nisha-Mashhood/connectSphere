@@ -4,7 +4,7 @@ export interface User {
   userId?: string;
   name: string;
   email: string;
-  phone: string;
+  phone?: string;
   dateOfBirth?: string;
   coverPic?: string;
   profilePic?: string;
@@ -227,6 +227,16 @@ export interface UserConnection {
   createdAt: string;
   updatedAt: string;
 }
+
+export interface UserUserRequestsResponse {
+  receivedRequests: UserConnection[];
+  sentRequests: UserConnection[];
+}
+
+export type UserConnections = {
+  sent: UserConnection[];
+  received: UserConnection[];
+};
 
 // ProfileState
 export interface ProfileState {

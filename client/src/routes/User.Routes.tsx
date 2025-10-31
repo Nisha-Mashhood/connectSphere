@@ -9,7 +9,7 @@ import ResetPassword from "../Components/Forms/ResetPassword";
 import PrivateRoute from "../Components/User/PrivateRoute";
 import CompleteProfile from "../Components/User/UserComponents/CompleteProfile";
 import MentorProfileForm from "../Components/Forms/MentorProfileForm";
-import ProfileDisplay from "../Components/User/Mentor/ProfileDisplay";
+import ProfileDisplay from "../Components/User/Common/OthersProfile/ProfileDisplay";
 import PageNotFound from "../Components/PageNotFound";
 import { ForbiddenPage } from "../Components/ForebiddenPage";
 import GithubCallback from "../Components/User/Auth/GithubCallback";
@@ -42,7 +42,7 @@ const UserRoutes = () => (
         <Route path="/complete-profile" element={<CompleteProfile />} />
         <Route path="/profile" element={<Profile />} />
         <Route path="/mentorProfile" element={<MentorProfileForm />} />
-        <Route path="/profileDispaly/:Id" element={< ProfileDisplay />} />
+        <Route path="/profileDisplay/:Id" element={< ProfileDisplay />} />
         <Route path="/explorementor" element={<ExploreMentors />} />
         <Route path="/create-group" element={<CreateGroupForm />} />
         <Route path="/groupDashboard/:groupId" element={<GroupDashboard />} />

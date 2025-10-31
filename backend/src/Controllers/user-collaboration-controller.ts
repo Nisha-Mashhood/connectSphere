@@ -48,9 +48,8 @@ export class UserConnectionController extends BaseController implements IUserCon
   disconnectConnection = async (req: Request, res: Response, next: NextFunction): Promise<void> => {
     try {
       const { connectionId } = req.params;
-      const { reason } = req.body;
-      logger.debug(`Disconnecting connection: connectionId=${connectionId}`);
-      const disconnected = await this._userConnectionService.disconnectConnection(connectionId, reason);
+      const { disconnectionReason } = req.body;
+      const disconnected = await this._userConnectionService.disconnectConnection(connectionId, disconnectionReason);
       this.sendSuccess(res, disconnected, USER_CONNECTION_MESSAGES.CONNECTION_DISCONNECTED);
       res.status(200).json({
         success: true,
