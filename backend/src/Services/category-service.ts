@@ -58,16 +58,16 @@ export class CategoryService implements ICategoryService {
   ): Promise<ICategoryDTO> => {
     try {
       logger.debug(`Creating category with name: ${data.name}`);
-      let imageId: string | null = null;
+      let imageUrl: string = '';
       if (imagePath) {
         const folder = "categories";
         const { url } = await uploadMedia(imagePath, folder, fileSize);
-        imageId = url;
-        logger.info(`Uploaded image for category: ${imageId}`);
+        imageUrl = url;
+        logger.info(`Uploaded image for category: ${imageUrl}`);
       }
       const category = await this.categoryRepo.createCategory({
         ...data,
-        imageId,
+        imageUrl,
       });
       const categoryDTO = toCategoryDTO(category);
       if (!categoryDTO) {
@@ -103,10 +103,7 @@ export class CategoryService implements ICategoryService {
         `Fetching all categories with query: ${JSON.stringify(query)}`
       );
       const result = await this.categoryRepo.getAllCategories(query);
-      const categoriesDTO = toCategoryDTOs(result.categories);
-      logger.info(
-        `Fetched ${categoriesDTO.length} categories, total: ${result.total}`
-      );
+      const categoriesDTO = toCategoryDTOs(result.categories);;
       return { categories: categoriesDTO, total: result.total };
     } catch (error: unknown) {
       const err = error instanceof Error ? error : new Error(String(error));

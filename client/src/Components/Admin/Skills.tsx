@@ -10,11 +10,21 @@ const Skills = () => {
   const [skills, setSkills] = useState([]);
   const { categoryId, subcategoryId } = useParams();
   const [isModalOpen, setIsModalOpen] = useState(false);
+  const [editingItem, setEditingItem] = useState(null); 
+  const [isEditModalOpen, setIsEditModalOpen] = useState(false);
+
+  const handleEditOpen = (item) => {
+  setEditingItem(item);
+  console.log(item);
+  toast.success("edit was pressed")
+  setIsEditModalOpen(true);
+};
 
   // Fetch categories from the backend
   const fetchSkills = useCallback(async (subcategoryId: string) => {
     try {
       const data = await fetchSkillsService(subcategoryId);
+      console.log(data);
       setSkills(data); 
     } catch (error) {
       console.error("Error fetching categories:", error);
@@ -47,7 +57,7 @@ const Skills = () => {
     if (categoryId) {
       fetchSkills(subcategoryId);
     }
-  }, [categoryId,subcategoryId,fetchSkills]);
+  }, [categoryId,subcategoryId]);
 
   return (
     <div>
@@ -68,6 +78,7 @@ const Skills = () => {
           headers={["Image", "Name", "Description", "Actions"]}
           updateData={handleUpdate}
           deleteData={handleDelete}
+          onEdit={handleEditOpen}
         />
 
         <AddModal

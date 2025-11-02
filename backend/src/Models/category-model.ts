@@ -18,7 +18,7 @@ const categorySchema: Schema<ICategory> = new mongoose.Schema(
       type: String,
       default: null,
     },
-    imageId: {
+    imageUrl: {
       type: String,
       default: null,
     },

@@ -1,4 +1,4 @@
-import { injectable } from 'inversify';
+import { injectable } from "inversify";
 import { ICategoryRepository } from "../Interfaces/Repository/i-category-repositry";
 import { BaseRepository } from "../core/Repositries/base-repositry";
 import { RepositoryError } from "../core/Utils/error-handler";
@@ -7,16 +7,20 @@ import { ICategory } from "../Interfaces/Models/i-category";
 import { Category } from "../Models/category-model";
 import { StatusCodes } from "../enums/status-code-enums";
 import { Model } from "mongoose";
-import { ERROR_MESSAGES } from '../constants/error-messages';
+import { ERROR_MESSAGES } from "../constants/error-messages";
 
 @injectable()
-export class CategoryRepository extends BaseRepository<ICategory> implements ICategoryRepository {
-
+export class CategoryRepository
+  extends BaseRepository<ICategory>
+  implements ICategoryRepository
+{
   constructor() {
     super(Category as Model<ICategory>);
   }
 
-  public createCategory = async (data: Partial<ICategory>): Promise<ICategory> => {
+  public createCategory = async (
+    data: Partial<ICategory>
+  ): Promise<ICategory> => {
     try {
       logger.debug(`Creating category: ${data.name}`);
       const category = await this.create(data);
@@ -31,18 +35,28 @@ export class CategoryRepository extends BaseRepository<ICategory> implements ICa
         err
       );
     }
-  }
+  };
 
   public getAllCategories = async (
-    query: { search?: string; page?: number; limit?: number; sort?: string } = {}
+    query: {
+      search?: string;
+      page?: number;
+      limit?: number;
+      sort?: string;
+    } = {}
   ): Promise<{ categories: ICategory[]; total: number }> => {
     try {
-      logger.debug(`Fetching all categories with query: ${JSON.stringify(query)}`);
+      logger.debug(
+        `Fetching all categories with query: ${JSON.stringify(query)}`
+      );
       const { search, page = 1, limit = 10, sort } = query;
 
       if (!search && !sort) {
-        const categories = await this.model.find().sort({ createdAt: -1 }).exec();
-        logger.info(`Fetched ${categories.length} categories`);
+        const categories = await this.model
+          .find()
+          .sort({ createdAt: -1 })
+          .exec();
+          logger.info(`Fetched ${JSON.stringify(categories)} categories`);
         return { categories, total: categories.length };
       }
 
@@ -58,6 +72,17 @@ export class CategoryRepository extends BaseRepository<ICategory> implements ICa
         { $match: matchStage },
         { $sort: sortStage },
         {
+          $project: {
+            _id: 1,
+            categoryId: 1,
+            name: 1,
+            description: 1,
+            imageUrl: 1,
+            createdAt: 1,
+            updatedAt: 1,
+          },
+        },
+        {
           $facet: {
             categories: [{ $skip: (page - 1) * limit }, { $limit: limit }],
             total: [{ $count: "count" }],
@@ -68,8 +93,7 @@ export class CategoryRepository extends BaseRepository<ICategory> implements ICa
       const result = await this.model.aggregate(pipeline).exec();
       const categories: ICategory[] = result[0]?.categories || [];
       const total: number = result[0]?.total[0]?.count || 0;
-
-      logger.info(`Fetched ${categories.length} categories, total: ${total}`);
+      logger.info(`Fetched ${JSON.stringify(categories)} categories`);
       return { categories, total };
     } catch (error: unknown) {
       const err = error instanceof Error ? error : new Error(String(error));
@@ -80,7 +104,7 @@ export class CategoryRepository extends BaseRepository<ICategory> implements ICa
         err
       );
     }
-  }
+  };
 
   public getCategoryById = async (id: string): Promise<ICategory | null> => {
     try {
@@ -104,7 +128,7 @@ export class CategoryRepository extends BaseRepository<ICategory> implements ICa
         err
       );
     }
-  }
+  };
 
   public updateCategory = async (
     id: string,
@@ -131,7 +155,7 @@ export class CategoryRepository extends BaseRepository<ICategory> implements ICa
         err
       );
     }
-  }
+  };
 
   public deleteCategory = async (id: string): Promise<ICategory | null> => {
     try {
@@ -155,7 +179,7 @@ export class CategoryRepository extends BaseRepository<ICategory> implements ICa
         err
       );
     }
-  }
+  };
 
   public isDuplicateCategoryName = async (
     name?: string,
@@ -180,5 +204,5 @@ export class CategoryRepository extends BaseRepository<ICategory> implements ICa
         err
       );
     }
-  }
+  };
 }

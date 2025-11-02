@@ -18,7 +18,7 @@ export function toMentorDTO(mentor: IMentor | null): IMentorDTO | null {
   }
 
   // Debug: Log the entire mentor object to inspect its structure
-  logger.debug(`Mapping mentor to DTO: ${JSON.stringify(mentor, null, 2)}`);
+  // logger.debug(`Mapping mentor to DTO: ${JSON.stringify(mentor, null, 2)}`);
 
   // Handle _id
   if (!mentor._id) {
@@ -111,7 +111,7 @@ if (!mentor.skills) {
     updatedAt: mentor.updatedAt,
   };
 
-  logger.debug(`Mentor DTO created for ${id}: ${JSON.stringify(mentorDTO, null, 2)}`);
+  // logger.debug(`Mentor DTO created for ${id}: ${JSON.stringify(mentorDTO, null, 2)}`);
   return mentorDTO;
 }
 

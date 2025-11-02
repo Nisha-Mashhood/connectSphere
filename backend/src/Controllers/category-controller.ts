@@ -88,7 +88,6 @@ export class CategoryController extends BaseController implements ICategoryContr
         },
         CATEGORY_MESSAGES.CATEGORIES_FETCHED
       );
-      logger.info(`Fetched ${result.categories.length} categories, total: ${result.total}`);
     } catch (error) {
       logger.error(`Error fetching categories: ${error}`);
       next(error);

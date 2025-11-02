@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import toast from "react-hot-toast";
 import TableComponent from "./Table";
 import AddCategoryModal from "./AddModal";
@@ -8,17 +8,28 @@ const Categories = () => {
   // State to store categories
   const [categories, setCategories] = useState([]);
   const [isModalOpen, setIsModalOpen] = useState(false);
+  const [editingItem, setEditingItem] = useState(null); 
+  const [isEditModalOpen, setIsEditModalOpen] = useState(false);
+
+
+  const handleEditOpen = (item) => {
+  setEditingItem(item);
+  console.log(item);
+  toast.success("edit was pressed")
+  setIsEditModalOpen(true);
+  };
 
   // Fetch categories from the backend
-  const fetchCategories = async () => {
+  const fetchCategories =  useCallback(async () => {
     try {
       const data = await fetchCategoriesService();
+      console.log(data);
       setCategories(data.categories);
     } catch (error) {
       console.error("Error fetching categories:", error);
       toast.error("Failed to fetch categories");
     }
-  };
+  },[])
 
   // Fetch data on component mount
   useEffect(() => {
@@ -66,6 +77,7 @@ const Categories = () => {
           headers={["Image", "Name", "Description", "Actions"]}
           updateData={handleUpdate}
           deleteData={handleDelete}
+          onEdit={handleEditOpen}
         />
         <AddCategoryModal
           isOpen={isModalOpen}

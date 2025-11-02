@@ -93,7 +93,11 @@ const UserManagementList = () => {
       if (isBlocked) await unblockUserService(userId);
       else await blockUserService(userId);
       toast.success(`User ${isBlocked ? "unblocked" : "blocked"}`);
-      fetchUsers();
+      setUsers((prevUsers) =>
+      prevUsers.map((user) =>
+        user.id === userId ? { ...user, isBlocked: !isBlocked } : user
+      )
+    );
     } catch (err) {
       console.log(err)
       toast.error("Action failed");

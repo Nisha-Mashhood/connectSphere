@@ -55,45 +55,116 @@ export class MentorRepository extends BaseRepository<IMentor> implements IMentor
     }
   }
 
-  public getAllMentorRequests = async (
-    page: number = 1,
-    limit: number = 10,
-    search: string = "",
-    status: string = "",
-    sort: string = "desc"
-  ): Promise<{
-    mentors: IMentor[];
-    total: number;
-    page: number;
-    pages: number;
-  }> => {
-    try {
-      logger.debug(`Fetching mentor requests with page: ${page}, limit: ${limit}, search: ${search}`);
-      const query: Record<string, any> = {};
-      if (status) query.isApproved = status;
-      if (search) {
-        query.$or = [
-          { "userId.name": { $regex: search, $options: "i" } },
-          { "userId.email": { $regex: search, $options: "i" } },
-        ];
-      }
-      const total = await this.model.countDocuments(query);
-      const mentors = await this.model
-        .find(query)
-        .populate("userId", "id name email")
-        .populate("skills", "id name")
-        .sort({ createdAt: sort === "desc" ? -1 : 1 })
-        .skip((page - 1) * limit)
-        .limit(limit)
-        .exec();
-      logger.info(`Fetched ${mentors.length} mentor requests, total: ${total}`);
-      return { mentors, total, page, pages: Math.ceil(total / limit) };
-    } catch (error: unknown) {
-      const err = error instanceof Error ? error : new Error(String(error));
-      logger.error(`Error fetching mentor requests`, err);
-      throw new RepositoryError('Error fetching mentor requests', StatusCodes.INTERNAL_SERVER_ERROR, err);
+ public getAllMentorRequests = async (
+  page: number = 1,
+  limit: number = 10,
+  search: string = "",
+  status: string = "",
+  sort: string = "desc"
+): Promise<{
+  mentors: IMentor[];
+  total: number;
+  page: number;
+  pages: number;
+}> => {
+  try {
+    logger.debug(
+      `Fetching mentor requests: page=${page}, limit=${limit}, search="${search}", status="${status}"`
+    );
+
+    const pipeline: any[] = [];
+
+    // 1. Base match (status)
+    const match: any = {};
+    if (status) match.isApproved = status;
+    pipeline.push({ $match: match });
+
+    // 2. $lookup: Populate user
+    pipeline.push({
+      $lookup: {
+        from: "users", // Ensure this matches your User collection name706 name in DB
+        localField: "userId",
+        foreignField: "_id",
+        as: 'userId',
+      },
+    });
+    pipeline.push({ $unwind: { path: "$userId", preserveNullAndEmptyArrays: true } });
+
+    // 3. $lookup: Populate skills
+    pipeline.push({
+      $lookup: {
+        from: "skills", // Ensure this matches your Skill collection name
+        localField: "skills",
+        foreignField: "_id",
+        as: 'skills',
+      },
+    });
+
+    // 4. Search on populated user fields
+    if (search) {
+      pipeline.push({
+        $match: {
+          $or: [
+            { "userId.name": { $regex: search, $options: "i" } },
+            { "userId.email": { $regex: search, $options: "i" } },
+          ],
+        },
+      });
     }
+
+    // 5. Facet for count + pagination
+    pipeline.push({
+      $facet: {
+        metadata: [{ $count: "total" }],
+        data: [
+          { $sort: { createdAt: sort === "desc" ? -1 : 1 } },
+          { $skip: (page - 1) * limit },
+          { $limit: limit },
+          {
+            $project: {
+              id: "$_id",
+              mentorId: 1,
+              userId: 1,
+              isApproved: 1,
+              rejectionReason: 1,
+              bio: 1,
+              price: 1,
+              timePeriod: 1,
+              availableSlots: 1,
+              certifications: 1,
+              specialization: 1,
+              createdAt: 1,
+              updatedAt: 1,
+              skills: 1,
+            },
+          },
+        ],
+      },
+    });
+
+    const [result] = await this.model.aggregate(pipeline).exec();
+
+    const total = result.metadata[0]?.total ?? 0;
+    const mentors = result.data ?? [];
+
+    logger.info(`Fetched ${mentors.length} mentors, total: ${total}`);
+
+    return {
+      mentors,
+      total,
+      page,
+      pages: Math.ceil(total / limit),
+    };
+  } catch (error: unknown) {
+    const err = error instanceof Error ? error : new Error(String(error));
+    logger.error("Error fetching mentor requests", err);
+    throw new RepositoryError(
+      "Error fetching mentor requests",
+      StatusCodes.INTERNAL_SERVER_ERROR,
+      err
+    );
   }
+};
 
   public getAllMentors = async (
     query: MentorQuery = {}

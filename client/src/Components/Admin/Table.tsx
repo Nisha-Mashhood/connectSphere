@@ -1,59 +1,27 @@
-import { useState } from "react";
 import toast from "react-hot-toast";
 import { Link } from "react-router-dom";
-import { FaPencilAlt, FaTrashAlt, FaSave, FaTimes } from 'react-icons/fa';
+import { FaPencilAlt, FaTrashAlt } from 'react-icons/fa';
+
+interface TableComponentProps {
+  type: string;
+  datas: any[];
+  headers: string[];
+  updateData: (id: string, formData: FormData) => Promise<void>;
+  deleteData: (id: string) => Promise<void>;
+  categoryId?: string;
+  onEdit: (item: any) => void; 
+}
 
 const TableComponent = ({
   type,
   datas,
   headers,
-  updateData,
   deleteData,
-  categoryId = null,
-}) => {
-  const [editingdataId, setEditingdataId] = useState(null);
-  const [editeddata, setEditeddata] = useState(null);
+  categoryId,
+  onEdit,
+}: TableComponentProps) => { 
 
-  const handleEditClick = (item) => {
-    setEditingdataId(item._id);
-    setEditeddata({ ...item });
-  };
-
-  const handleInputChange = (e, field) => {
-    setEditeddata((prev) => ({ ...prev, [field]: e.target.value }));
-  };
-
-  const handleImageChange = (e) => {
-    const file = e.target.files[0];
-    setEditeddata((prev) => ({
-      ...prev,
-      image: file,
-      preview: URL.createObjectURL(file),
-    }));
-  };
-
-  const handleCancel = () => {
-    setEditingdataId(null);
-    setEditeddata(null);
-  };
-
-  const handleSave = async () => {
-    try {
-      const formData = new FormData();
-      formData.append("name", editeddata.name);
-      formData.append("description", editeddata.description);
-      if (editeddata.image) {
-        formData.append("image", editeddata.image);
-      }
-
-      updateData(editingdataId, formData);
-      setEditingdataId(null);
-    } catch (error) {
-      toast.error(error.response?.data?.message || "Failed to update category");
-    }
-  };
-
-  const deletedata = async (id) => {
+  const deletedata = async (id: string) => {
     toast((t) => (
       <div className="p-4">
         <p className="text-lg font-medium">
@@ -80,13 +48,21 @@ const TableComponent = ({
     ));
   };
 
-  const confirmDeleteCategory = async (id) => {
+  const confirmDeleteCategory = async (id: string) => {
     try {
-      deleteData(id);
+      await deleteData(id);
     } catch (error) {
-      toast.error(error.response?.data?.message || "Failed to delete category");
+      toast.error((error).response?.data?.message || `Failed to delete ${type}`);
     }
   };
+
+  if (datas.length === 0) {
+    return (
+      <div className="text-center py-8 text-gray-500">
+        No {type.toLowerCase()}s yet.
+      </div>
+    );
+  }
 
   return (
     <div className="overflow-x-auto max-w-full">
@@ -110,43 +86,23 @@ const TableComponent = ({
               className="hover:bg-gray-50 transition-colors duration-200"
             >
               <td className="border-b border-gray-200 px-6 py-4">
-                {editingdataId === item._id ? (
-                  <>
-                    <input type="file" onChange={handleImageChange} />
-                    {editeddata?.preview && (
-                      <img
-                        src={editeddata.preview}
-                        alt="Preview"
-                        className="mt-2 w-16 h-16 object-cover rounded-md"
-                      />
-                    )}
-                  </>
-                ) : (
-                  <img
-                    src={item.imageUrl || "https://via.placeholder.com/100"}
-                    alt={item.name}
-                    className="w-16 h-16 object-cover"
-                  />
-                )}
+                <img
+                  src={item.imageUrl || "https://via.placeholder.com/100"}
+                  alt={`${item.name} image`}
+                  className="w-16 h-16 object-cover rounded-md"
+                />
               </td>
               <td className="border-b border-gray-200 px-6 py-4">
-                {editingdataId === item._id ? (
-                  <input
-                    type="text"
-                    value={editeddata.name}
-                    onChange={(e) => handleInputChange(e, "name")}
-                    className="border border-gray-300 rounded-md w-full p-2"
-                  />
-                ) : type === "Category" ? (
+                {type === "Category" ? (
                   <Link
-                    to={`/admin/subcategories/${item._id}`}
+                    to={`/admin/subcategories/${item.id}`}
                     className="text-blue-600 hover:underline"
                   >
                     {item.name}
                   </Link>
                 ) : type === "Subcategory" ? (
                   <Link
-                    to={`/admin/skills/${categoryId}/${item._id}`}
+                    to={`/admin/skills/${categoryId}/${item.id}`}
                     className="text-blue-600 hover:underline"
                   >
                     {item.name}
@@ -156,48 +112,25 @@ const TableComponent = ({
                 )}
               </td>
               <td className="border-b border-gray-200 px-6 py-4">
-                {editingdataId === item._id ? (
-                  <textarea
-                    value={editeddata.description}
-                    onChange={(e) => handleInputChange(e, "description")}
-                    className="border border-gray-300 rounded-md w-full p-2"
-                  />
-                ) : (
-                  item.description
-                )}
+                {item.description}
               </td>
               <td className="border-b border-gray-200 px-6 py-4">
-                {editingdataId === item._id ? (
-                  <>
-                    <button
-                      onClick={handleSave}
-                      className="px-2 py-2  bg-gray-300 text-white rounded-md hover:bg-green-600 mr-2"
-                    >
-                      <FaSave className="h-2 w-2" />
-                    </button>
-                    <button
-                      onClick={handleCancel}
-                      className="px-2 py-2 bg-gray-300 text-gray-700 rounded-md hover:bg-red-600"
-                    >
-                      <FaTimes className="h-2 w-2" />
-                    </button>
-                  </>
-                ) : (
-                  <div className="flex gap-4">
-                    <button
-                      onClick={() => handleEditClick(item)}
-                      className="px-2 py-2  bg-gray-300 text-white rounded-md hover:bg-blue-600"
-                    >
-                      <FaPencilAlt className="h-2 w-2" />
-                    </button>
-                    <button
-                      onClick={() => deletedata(item._id)}
-                      className="px-2 py-2  bg-gray-300 text-white rounded-md hover:bg-red-600"
-                    >
-                      <FaTrashAlt className="h-2 w-2" />
-                    </button>
-                  </div>
-                )}
+                <div className="flex gap-2">
+                  <button
+                    onClick={() => onEdit(item)}
+                    className="p-2 bg-blue-500 text-white rounded-md hover:bg-blue-600"
+                    aria-label={`Edit ${item.name}`}
+                  >
+                    <FaPencilAlt className="h-4 w-4" />
+                  </button>
+                  <button
+                    onClick={() => deletedata(item._id)}
+                    className="p-2 bg-red-500 text-white rounded-md hover:bg-red-600"
+                    aria-label={`Delete ${item.name}`}
+                  >
+                    <FaTrashAlt className="h-4 w-4" />
+                  </button>
+                </div>
               </td>
             </tr>
           ))}

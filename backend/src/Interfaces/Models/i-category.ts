@@ -5,7 +5,7 @@ export interface ICategory extends Document {
   categoryId: string;
   name: string;
   description?: string;
-  imageId?: string | null;
+  imageUrl?: string;
   createdAt: Date;
   updatedAt: Date;
 }

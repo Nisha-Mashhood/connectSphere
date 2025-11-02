@@ -90,6 +90,20 @@ export const fileUploadRule = (minFiles: number = 2, maxFiles: number = 5) =>
       .max(maxFiles, `Cannot upload more than ${maxFiles} files`)
   ) as Yup.ArraySchema<File[], Yup.AnyObject, undefined, "">;
 
+  export const imageFile = (maxMB = 2) =>
+  Yup.mixed<File>()
+    .test("file-required", "Image is required", (v) => !!v)
+    .test(
+      "file-type",
+      "Only JPEG and PNG images are allowed",
+      (v) => v && ["image/jpeg", "image/png"].includes(v.type)
+    )
+    .test(
+      "file-size",
+      `Image must be smaller than ${maxMB} MB`,
+      (v) => v && v.size <= maxMB * 1024 * 1024
+    );
+
 
 export const confirmPasswordRule = () =>
   Yup.string().oneOf([Yup.ref("newPassword")], "Passwords must match");
@@ -172,10 +186,3 @@ export const intBetween = (min: number, max: number, field: string) =>
     .integer(`${field} must be an integer`)
     .min(min, `${field} must be at least ${min}`)
     .max(max, `${field} cannot exceed ${max}`);
-
-/** Optional URL string (http(s) or data-uri) – useful for profile/cover pics */
-export const optionalUrl = () =>
-  Yup.string().test("valid-url-or-datauri", "Invalid image URL", (value) => {
-    if (!value) return true;
-    return /^(https?:\/\/|\s*data:image\/)/.test(value);
-  });

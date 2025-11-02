@@ -53,9 +53,15 @@ const AdminMentorRequests: React.FC = () => {
     setSelectedMentor(mentor);
   };
 
+  const handleMentorUpdate = useCallback((updatedMentor: Mentor) => {
+  setMentorRequests((prev) =>
+    prev.map((m) => (m.id === updatedMentor.id ? updatedMentor : m))
+  );
+}, []);
+
   const handleCloseModal = () => {
     setSelectedMentor(null);
-    fetchMentorRequests(); 
+    // fetchMentorRequests(); 
   };
 
   const handleSearchChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -149,7 +155,7 @@ const AdminMentorRequests: React.FC = () => {
       </Card>
 
       {selectedMentor && (
-        <MentorDetailModal mentor={selectedMentor} onClose={handleCloseModal} />
+        <MentorDetailModal mentor={selectedMentor} onClose={handleCloseModal} onMentorUpdate={handleMentorUpdate}/>
       )}
     </div>
   );

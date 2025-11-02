@@ -13,7 +13,7 @@ export function toCategoryDTO(category: ICategory | null): ICategoryDTO | null {
     categoryId: category.categoryId,
     name: category.name,
     description: category.description,
-    imageId: category.imageId ?? undefined,
+    imageUrl: category.imageUrl,
     createdAt: category.createdAt,
     updatedAt: category.updatedAt,
   };

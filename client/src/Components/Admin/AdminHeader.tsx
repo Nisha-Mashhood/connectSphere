@@ -35,12 +35,12 @@ const AdminSidebar = ({ children }: AdminSidebarProps) => {
   const { currentAdmin } = useSelector((state: RootState) => state.user);
 
   useEffect(() => {
-    if (currentAdmin?._id) {
-      console.log(`AdminSidebar: Initializing for admin ID: ${currentAdmin._id}`);
+    if (currentAdmin?.id) {
+      console.log(`AdminSidebar: Initializing for admin ID: ${currentAdmin.id}`);
       const fetchUnreadCounts = async () => {
         try {
-          const userCount = await getUnreadCount(currentAdmin._id, 'new_user');
-          const mentorCount = await getUnreadCount(currentAdmin._id, 'new_mentor');
+          const userCount = await getUnreadCount(currentAdmin.id, 'new_user');
+          const mentorCount = await getUnreadCount(currentAdmin.id, 'new_mentor');
           console.log(`AdminSidebar: Initial unread counts - new_user: ${userCount}, new_mentor: ${mentorCount}`);
           setNewUserCount(userCount);
           setNewMentorCount(mentorCount);
@@ -51,11 +51,11 @@ const AdminSidebar = ({ children }: AdminSidebarProps) => {
       };
       fetchUnreadCounts();
 
-      socketService.connect(currentAdmin._id, currentAdmin.token);
+      socketService.connect(currentAdmin.id, currentAdmin.token);
 
       const handleNewNotification = (notification: { type: string; userId: string }) => {
         console.log(`Socket: Received notification.new for type ${notification.type}, user ${notification.userId}`);
-        if (notification.userId === currentAdmin._id) {
+        if (notification.userId === currentAdmin.id) {
           if (notification.type === 'new_user') {
             setNewUserCount((prev) => {
               const newCount = prev + 1;
@@ -73,7 +73,7 @@ const AdminSidebar = ({ children }: AdminSidebarProps) => {
       };
 
       const handleNotificationRead = (data: { userId?: string; type?: string }) => {
-        if (data.userId === currentAdmin._id) {
+        if (data.userId === currentAdmin.id) {
           console.log(`Socket: Notification read event for type ${data.type}, user ${data.userId}`);
           fetchUnreadCounts();
         }
@@ -88,7 +88,7 @@ const AdminSidebar = ({ children }: AdminSidebarProps) => {
         socketService.disconnect();
       };
     }
-  }, [currentAdmin?._id, currentAdmin?.token]);
+  }, [currentAdmin?.id, currentAdmin?.token]);
 
   const handleLogout = async () => {
     const email = currentAdmin?.email;
@@ -108,13 +108,13 @@ const AdminSidebar = ({ children }: AdminSidebarProps) => {
   };
 
   const handleUserManagementClick = async () => {
-    if (currentAdmin?._id && newUserCount > 0) {
+    if (currentAdmin?.id && newUserCount > 0) {
       console.log(`newUserCount ${newUserCount} and it is making the newuser count -1`);
       try {
-        const response = await markNotificationAsRead(currentAdmin._id, undefined, 'new_user');
+        const response = await markNotificationAsRead(currentAdmin.id, undefined, 'new_user');
         setNewUserCount(0);
         if(response){
-          console.log(`AdminSidebar: Marked all new_user notifications as read for admin ${currentAdmin._id}`);
+          console.log(`AdminSidebar: Marked all new_user notifications as read for admin ${currentAdmin.id}`);
         }
       } catch (error) {
         console.error('AdminSidebar: Failed to mark new_user notifications as read:', error);
@@ -125,11 +125,11 @@ const AdminSidebar = ({ children }: AdminSidebarProps) => {
   };
 
   const handleMentorManagementClick = async () => {
-    if (currentAdmin?._id && newMentorCount > 0) {
+    if (currentAdmin?.id && newMentorCount > 0) {
     try {
-      await markNotificationAsRead(currentAdmin._id, undefined, "new_mentor");
+      await markNotificationAsRead(currentAdmin.id, undefined, "new_mentor");
       setNewMentorCount(0);
-      console.log(`AdminSidebar: Marked all new_mentor notifications as read for admin ${currentAdmin._id}`);
+      console.log(`AdminSidebar: Marked all new_mentor notifications as read for admin ${currentAdmin.id}`);
     } catch (error) {
       console.error("AdminSidebar: Failed to mark new_mentor notifications as read:", error);
       toast.error("Failed to mark new_mentor notifications as read");

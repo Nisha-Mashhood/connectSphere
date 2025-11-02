@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import toast from "react-hot-toast";
 import TableComponent from "./Table";
 import { useParams } from "react-router-dom";
@@ -11,16 +11,27 @@ const SubCategories = () => {
   const [subcategories, setSubCategories] = useState([]);
   const { categoryId } = useParams();
   const [isModalOpen, setIsModalOpen] = useState(false);
+  const [editingItem, setEditingItem] = useState(null);  
+  const [isEditModalOpen, setIsEditModalOpen] = useState(false);
+
+
+  const handleEditOpen = (item) => {
+  setEditingItem(item);
+  console.log(item);
+  toast.success("edit was pressed")
+  setIsEditModalOpen(true);
+};
 
   // Fetch categories from the backend
-  const fetchSubCategories = async (categoryId: string) => {
+  const fetchSubCategories =  useCallback(async (categoryId: string) => {
     try {
       const data = await fetchSubCategoriesService(categoryId);
+      console.log(data);
       setSubCategories(data); 
     } catch (error) {
       console.error("Error fetching categories:", error);
     }
-  };
+  },[]);
   
   // Handle Save
   const handleUpdate = async (editingsubCategoryId, formData) => {
@@ -70,6 +81,7 @@ const SubCategories = () => {
           updateData={handleUpdate}
           deleteData={handleDelete}
           categoryId={categoryId}
+          onEdit={handleEditOpen}
         />
         <AddModal
           isOpen={isModalOpen}

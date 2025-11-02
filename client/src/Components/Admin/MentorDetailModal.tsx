@@ -35,9 +35,10 @@ import { Feedback, Mentor } from "../../redux/types";
 interface MentorDetailModalProps {
   mentor: Mentor;
   onClose: () => void;
+  onMentorUpdate: (updatedMentor: Mentor) => void;
 }
 
-const MentorDetailModal: React.FC<MentorDetailModalProps> = ({ mentor, onClose }) => {
+const MentorDetailModal: React.FC<MentorDetailModalProps> = ({ mentor, onClose, onMentorUpdate }) => {
   const [rejectionModal, setRejectionModal] = useState(false);
   const [rejectionReason, setRejectionReason] = useState("");
   const [selectedCertificate, setSelectedCertificate] = useState<string | null>(null);
@@ -90,6 +91,11 @@ const MentorDetailModal: React.FC<MentorDetailModalProps> = ({ mentor, onClose }
   const approveMentor = async () => {
     try {
       await approveMentorService(mentor.id);
+      const updatedMentor: Mentor = {
+      ...mentor,
+      isApproved: "Completed",
+    };
+      onMentorUpdate(updatedMentor);
       toast.success("Mentor approved successfully.");
       onClose();
     } catch (error) {
@@ -101,6 +107,11 @@ const MentorDetailModal: React.FC<MentorDetailModalProps> = ({ mentor, onClose }
   const cancelMentorship = async () => {
     try {
       await cancelMentorshipService(mentor.id);
+      const updatedMentor: Mentor = {
+      ...mentor,
+      isApproved: "Pending", 
+    };
+      onMentorUpdate(updatedMentor);
       toast.success("Mentorship canceled successfully.");
       onClose();
     } catch (error) {
@@ -116,6 +127,11 @@ const MentorDetailModal: React.FC<MentorDetailModalProps> = ({ mentor, onClose }
     }
     try {
       await rejectMentor(mentor.id, rejectionReason);
+      const updatedMentor: Mentor = {
+      ...mentor,
+      isApproved: "Rejected",
+    };
+      onMentorUpdate(updatedMentor);
       toast.success("Mentor rejected successfully.");
       setRejectionModal(false);
       onClose();
