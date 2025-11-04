@@ -6,7 +6,7 @@ import logger from "../core/Utils/logger";
 import { ISkill, } from "../Interfaces/Models/i-skill";
 import { Skill } from "../Models/skills-model";
 import { StatusCodes } from "../enums/status-code-enums";
-import { Model } from "mongoose";
+import { Model, Types } from "mongoose";
 
 @injectable()
 export class SkillsRepository extends BaseRepository<ISkill> implements ISkillsRepository{
@@ -27,22 +27,68 @@ export class SkillsRepository extends BaseRepository<ISkill> implements ISkillsR
     }
   }
 
-   public getAllSkills = async(subcategoryId: string): Promise<ISkill[]> =>{
+   public getAllSkills = async (
+    subcategoryId: string,
+    query: { search?: string; page?: number; limit?: number } = {}
+  ): Promise<{ skills: ISkill[]; total: number }> => {
     try {
-      logger.debug(`Fetching skills for subcategory: ${subcategoryId}`);
-      const skills = await this.model
-        .find({ subcategoryId })
-        .populate("categoryId")
-        .populate("subcategoryId")
-        .exec();
-      logger.info(`Fetched ${skills.length} skills for subcategory ${subcategoryId}`);
-      return skills;
+      logger.debug(
+        `Fetching skills for subcategory: ${subcategoryId} with query: ${JSON.stringify(query)}`
+      );
+
+      const { search, page = 1, limit = 10 } = query;
+
+      const matchStage: Record<string, any> = {
+        subcategoryId: new Types.ObjectId(subcategoryId),
+      };
+
+      if (search) {
+        matchStage.name = { $regex: `${search}`, $options: "i" };
+      }
+
+      const pipeline= [
+        { $match: matchStage },
+        {
+          $project: {
+            _id: 1,
+            skillId: 1,
+            name: 1,
+            description: 1,
+            imageUrl: 1,
+            categoryId: 1,
+            subcategoryId: 1,
+            createdAt: 1,
+            updatedAt: 1,
+          },
+        },
+        {
+          $facet: {
+            skills: [
+              { $skip: (page - 1) * limit },
+              { $limit: limit },
+            ],
+            total: [{ $count: "count" }],
+          },
+        },
+      ];
+
+      const result = await this.model.aggregate(pipeline).exec();
+
+      const skills: ISkill[] = result[0]?.skills || [];
+      const total: number = result[0]?.total[0]?.count || 0;
+
+      logger.info(`Fetched ${skills.length} skills (total: ${total})`);
+      return { skills, total };
     } catch (error: unknown) {
       const err = error instanceof Error ? error : new Error(String(error));
-      logger.error(`Error fetching skills for subcategory ${subcategoryId}`, err);
-      throw new RepositoryError('Error fetching skills', StatusCodes.INTERNAL_SERVER_ERROR, err);
+      logger.error(`Error fetching skills`, err);
+      throw new RepositoryError(
+        "Failed to fetch skills",
+        StatusCodes.INTERNAL_SERVER_ERROR,
+        err
+      );
     }
-  }
+  };
 
    public getSkillById = async(id: string): Promise<ISkill | null> =>{
     try {

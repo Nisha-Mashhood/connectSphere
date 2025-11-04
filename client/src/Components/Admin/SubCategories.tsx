@@ -1,96 +1,110 @@
-import { useCallback, useEffect, useState } from "react";
-import toast from "react-hot-toast";
-import TableComponent from "./Table";
 import { useParams } from "react-router-dom";
-import AddModal from "./AddModal";
-import { deleteSubCategory, fetchSubCategoriesService, updateSubCategory } from "../../Service/Category.Service";
-
+import { useState } from "react";
+import TableComponent from "./Table";
+import FormModal from "./FormModal";
+import SearchBar from "../ReusableComponents/SearchBar";
+import Pagination from "../ReusableComponents/Pagination";
+import Breadcrumb from "../ReusableComponents/Breadcrumb";
+import {
+  fetchSubCategoriesService,
+  deleteSubCategory,
+  updateSubCategory,
+} from "../../Service/Category.Service";
+import { ISubCategory } from "../../Interface/Admin/ISubCategory";
+import { useCategoryTable } from "../../Hooks/Admin/useCategoryTable";
 
 const SubCategories = () => {
-  // State to store categories
-  const [subcategories, setSubCategories] = useState([]);
-  const { categoryId } = useParams();
+  const { categoryId } = useParams<{ categoryId: string }>();
   const [isModalOpen, setIsModalOpen] = useState(false);
-  const [editingItem, setEditingItem] = useState(null);  
-  const [isEditModalOpen, setIsEditModalOpen] = useState(false);
+  const [editingItem, setEditingItem] = useState<ISubCategory | null>(null);
 
+  const {
+      items: subcategories,
+      page,
+      total,
+      setPage,
+      search,
+      limit,
+      handleSearch,
+      handleDelete,
+      handleUpdate,
+      handleCreate,
+      handleUpdateLocal,
+      refetch,
+    } = useCategoryTable<ISubCategory>({
+      fetchFn: fetchSubCategoriesService,
+      deleteFn: deleteSubCategory,
+      updateFn: updateSubCategory,
+      parentId: categoryId,
+      createSuccess: (newItem) => console.log("Created:", newItem),
+      updateSuccess: (updated) => console.log("Updated:", updated),
+    });
 
-  const handleEditOpen = (item) => {
-  setEditingItem(item);
-  console.log(item);
-  toast.success("edit was pressed")
-  setIsEditModalOpen(true);
-};
-
-  // Fetch categories from the backend
-  const fetchSubCategories =  useCallback(async (categoryId: string) => {
-    try {
-      const data = await fetchSubCategoriesService(categoryId);
-      console.log(data);
-      setSubCategories(data); 
-    } catch (error) {
-      console.error("Error fetching categories:", error);
-    }
-  },[]);
-  
-  // Handle Save
-  const handleUpdate = async (editingsubCategoryId, formData) => {
-    try {
-      await updateSubCategory(editingsubCategoryId, formData);
-      toast.success("Sub-Category updated successfully!");
-      fetchSubCategories(categoryId);
-    } catch (error) {
-      toast.error(error.response?.data?.message || "Failed to update sub-category");
-    }
+  const handleEditOpen = (item: ISubCategory) => {
+    setEditingItem(item);
+    setIsModalOpen(true);
   };
 
-  const handleDelete = async (id) => {
-    try {
-      await deleteSubCategory(id);
-      toast.success("sub-category deleted successfully!");
-      fetchSubCategories(categoryId); 
-    } catch (error) {
-      toast.error(error.response?.data?.message || "Failed to delete category");
-    }
+  const handleOnClose = () => {
+    setIsModalOpen(false);
+    setEditingItem(null);
   };
-  // Fetch sub-categories when the component mounts
-  useEffect(() => {
-    if (categoryId) {
-      fetchSubCategories(categoryId);
-    }
-  }, [categoryId]);
 
   return (
-    <div>
-      <div className="p-6 bg-gray-100 min-h-screen">
-        <div className="flex justify-between items-center mb-4">
-          <h1 className="text-2xl font-bold">Sub-Categories</h1>
-          <button
-            onClick={() => setIsModalOpen(true)}
-            className="px-4 py-2 bg-green-500 text-white rounded-md hover:bg-green-600"
-          >
-            Add Sub-Category
-          </button>
-        </div>
+    <div className="p-6 bg-gray-100 min-h-screen">
+      <Breadcrumb
+        items={[
+          { label: "Categories", to: "/admin/categories" },
+          { label: "Sub-Categories" },
+        ]}
+      />
+      <div className="flex justify-between items-center mb-4">
+        <h1 className="text-2xl font-bold">Sub-Categories</h1>
+        <button
+          onClick={() => setIsModalOpen(true)}
+          className="px-4 py-2 bg-green-500 text-white rounded-md hover:bg-green-600"
+        >
+          Add Sub-Category
+        </button>
+      </div>
 
-        {/* Pass sub categories to the TableComponent */}
-        <TableComponent
-          type="Subcategory"
-          datas={subcategories}
-          headers={["Image", "Name", "Description", "Actions"]}
-          updateData={handleUpdate}
-          deleteData={handleDelete}
-          categoryId={categoryId}
-          onEdit={handleEditOpen}
-        />
-        <AddModal
-          isOpen={isModalOpen}
-          onClose={() => setIsModalOpen(false)}
-          type='sub-category'
-          fetch={fetchSubCategories}
-          categoryId={categoryId}
+      <div className="mb-4">
+        <SearchBar
+          activeTab="Sub-Categories"
+          searchQuery={search}
+          setSearchQuery={() => {}}
+          onSearchChange={handleSearch}
         />
       </div>
+
+      <TableComponent
+        type="Subcategory"
+        datas={subcategories}
+        headers={["Image", "Name", "Description", "Actions"]}
+        updateData={handleUpdate}
+        deleteData={handleDelete}
+        categoryId={categoryId}
+        onEdit={handleEditOpen}
+      />
+
+      <Pagination
+        page={page}
+        limit={limit}
+        total={total}
+        onPageChange={setPage}
+      />
+
+      <FormModal
+        isOpen={isModalOpen}
+        onClose={handleOnClose}
+        type="sub-category"
+        fetch={refetch}
+        categoryId={categoryId}
+        isEdit={!!editingItem}
+        item={editingItem}
+        update={handleUpdate}
+        onSuccess={editingItem ? handleUpdateLocal : handleCreate}
+      />
     </div>
   );
 };

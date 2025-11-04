@@ -6,46 +6,24 @@ import {
   noMultipleSpaces,
   noExcessiveRepeats,
   noStartingSpecialChar,
-  imageFile,
-} from "./validationRules";
+  noSequentialRepeatedLetters,
+} from "./validationRules"; 
 
-export interface CategoryFormValues {
+export interface FormValues {
   name: string;
   description: string;
-  image: File | null;
-  imageFile?: File | null;
-  imageUrl?: string;
 }
-
-export const addCategorySchema = Yup.object({
-  name: required("Name is required")
-    .concat(minLength(3, "Name must be at least 3 characters"))
-    .concat(maxLength(50, "Name cannot exceed 50 characters"))
+export const baseSchema = Yup.object({
+  name: required()
+    .concat(minLength(3))
+    .concat(maxLength(20))
     .concat(noMultipleSpaces())
     .concat(noExcessiveRepeats(3))
+    .concat(noStartingSpecialChar())
+    .concat(noSequentialRepeatedLetters()),
+  description: required()
+    .concat(minLength(10))
+    .concat(maxLength(300))
+    .concat(noMultipleSpaces())
     .concat(noStartingSpecialChar()),
-
-  description: required("Description is required")
-    .concat(minLength(10, "Description must be at least 10 characters"))
-    .concat(maxLength(500, "Description cannot exceed 500 characters"))
-    .concat(noMultipleSpaces())
-    .concat(noExcessiveRepeats(3)),
-
-  image: imageFile(2), 
-});
-
-export const editCategorySchema = Yup.object({
-  name: required("Name is required")
-    .concat(minLength(3, "Name must be at least 3 characters"))
-    .concat(maxLength(50, "Name cannot exceed 50 characters"))
-    .concat(noMultipleSpaces())
-    .concat(noExcessiveRepeats(3))
-    .concat(noStartingSpecialChar()),
-
-  description: required("Description is required")
-    .concat(minLength(10, "Description must be at least 10 characters"))
-    .concat(maxLength(500, "Description cannot exceed 500 characters"))
-    .concat(noMultipleSpaces())
-    .concat(noExcessiveRepeats(3)),
-
 });

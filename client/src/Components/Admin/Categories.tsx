@@ -1,91 +1,106 @@
-import { useCallback, useEffect, useState } from "react";
-import toast from "react-hot-toast";
+import { useState } from "react";
+import Breadcrumb from "../ReusableComponents/Breadcrumb";
+import SearchBar from "../ReusableComponents/SearchBar";
+import Pagination from "../ReusableComponents/Pagination";
 import TableComponent from "./Table";
-import AddCategoryModal from "./AddModal";
-import { deleteCategory, fetchCategoriesService, updateCategory } from "../../Service/Category.Service";
+import FormModal from "./FormModal";
+import {
+  fetchCategoriesService,
+  deleteCategory,
+  updateCategory,
+} from "../../Service/Category.Service";
+import { ICategory } from "../../Interface/Admin/ICategory";
+import { useCategoryTable } from "../../Hooks/Admin/useCategoryTable";
 
 const Categories = () => {
-  // State to store categories
-  const [categories, setCategories] = useState([]);
   const [isModalOpen, setIsModalOpen] = useState(false);
-  const [editingItem, setEditingItem] = useState(null); 
-  const [isEditModalOpen, setIsEditModalOpen] = useState(false);
+  const [editingItem, setEditingItem] = useState<ICategory | null>(null);
 
+  const {
+    items: categories,
+    search,
+    page,
+    total,
+    limit,
+    loading,
+    setPage,
+    handleSearch,
+    handleDelete,
+    handleUpdate,
+    handleCreate,
+    handleUpdateLocal,
+    refetch,
+  } = useCategoryTable<ICategory>({
+    fetchFn: fetchCategoriesService,
+    deleteFn: deleteCategory,
+    updateFn: updateCategory,
+    parentId: undefined,
+    createSuccess: (item) => console.log("Created:", item),
+    updateSuccess: (item) => console.log("Updated:", item),
+  });
 
-  const handleEditOpen = (item) => {
-  setEditingItem(item);
-  console.log(item);
-  toast.success("edit was pressed")
-  setIsEditModalOpen(true);
-  };
-
-  // Fetch categories from the backend
-  const fetchCategories =  useCallback(async () => {
-    try {
-      const data = await fetchCategoriesService();
-      console.log(data);
-      setCategories(data.categories);
-    } catch (error) {
-      console.error("Error fetching categories:", error);
-      toast.error("Failed to fetch categories");
-    }
-  },[])
-
-  // Fetch data on component mount
-  useEffect(() => {
-    fetchCategories();
-  }, []);
-
-  // Handle Save
-  const handleUpdate = async (editingCategoryId, formData) => {
-    try {
-      await updateCategory(editingCategoryId, formData);
-      toast.success("Category updated successfully!");
-      fetchCategories(); // Refresh categories after update
-    } catch (error) {
-      toast.error(error.response?.data?.message || "Failed to update category");
-    }
-  };
-
-  const handleDelete = async (id) => {
-    try {
-      await deleteCategory(id);
-      toast.success("Category deleted successfully!");
-      fetchCategories(); // Refresh categories after delete
-    } catch (error) {
-      toast.error(error.response?.data?.message || "Failed to delete category");
-    }
+  const handleOnClose = () => {
+    setIsModalOpen(false);
+    setEditingItem(null);
   };
 
   return (
-    <div>
-      <div className="p-6 bg-gray-100 min-h-screen">
-        <div className="flex justify-between items-center mb-4">
-          <h1 className="text-2xl font-bold">Categories</h1>
-          <button
-            onClick={() => setIsModalOpen(true)}
-            className="px-4 py-2 bg-green-500 text-white rounded-md hover:bg-green-600"
-          >
-            Add Category
-          </button>
-        </div>
+    <div className="p-6 bg-gray-100 min-h-screen">
+      <Breadcrumb items={[{ label: "Categories" }]} />
+      <div className="flex justify-between items-center mb-4">
+        <h1 className="text-2xl font-bold">Categories</h1>
+        <button
+          onClick={() => setIsModalOpen(true)}
+          className="px-4 py-2 bg-green-500 text-white rounded-md hover:bg-green-600"
+        >
+          Add Category
+        </button>
+      </div>
 
-        {/* Pass categories and fetchCategories to the TableComponent */}
-        <TableComponent
-          type="Category"
-          datas={categories}
-          headers={["Image", "Name", "Description", "Actions"]}
-          updateData={handleUpdate}
-          deleteData={handleDelete}
-          onEdit={handleEditOpen}
-        />
-        <AddCategoryModal
-          isOpen={isModalOpen}
-          onClose={() => setIsModalOpen(false)}
-          type="Category"
-          fetch={fetchCategories} // Pass fetchCategories to refresh data
+      <div className="mb-4">
+        <SearchBar
+          activeTab="Categories"
+          searchQuery={search}
+          setSearchQuery={handleSearch}
+          onSearchChange={handleSearch}
         />
       </div>
+
+      {loading ? (
+        <div className="text-center py-8">Loading…</div>
+      ) : (
+        <>
+          <TableComponent
+            type="Category"
+            datas={categories}
+            headers={["Image", "Name", "Description", "Actions"]}
+            updateData={handleUpdate}
+            deleteData={handleDelete}
+            onEdit={(item) => {
+              setEditingItem(item);
+              setIsModalOpen(true);
+            }}
+          />
+
+          <Pagination
+            page={page}
+            limit={limit}
+            total={total}
+            onPageChange={setPage}
+          />
+        </>
+      )}
+
+      <FormModal
+        isOpen={isModalOpen}
+        onClose={handleOnClose}
+        type="Category"
+        fetch={refetch}
+        isEdit={!!editingItem}
+        item={editingItem}
+        update={handleUpdate}
+        onSuccess={editingItem ? handleUpdateLocal : handleCreate}
+      />
     </div>
   );
 };

@@ -36,9 +36,27 @@ export const createSkill = async (formData) => {
 };
 
 //Fetch categories
-export const fetchCategoriesService = async () => {
+export const fetchCategoriesService = async (params: {
+  search?: string;
+  page?: number;
+  limit?: number;
+} = {}) => {
   try {
-    const response = await axiosInstance.get("category/get-categories");
+    const { search, page = 1, limit = 10 } = params;
+    const response = await axiosInstance.get("category/get-categories", {
+      params: { search, page, limit },
+    });
+    const { categories, total } = response.data.data;
+    return { items: categories, total };
+  } catch (error) {
+    handleError(error);
+  }
+};
+
+
+export const getCategoriesService = async () => {
+  try {
+    const response = await axiosInstance.get("category/fetch-categories");
     return response.data.data;
   } catch (error) {
     handleError(error);
@@ -71,14 +89,23 @@ export const deleteCategory = async (id: string) => {
 };
 
 // Fetch subcategories
-export const fetchSubCategoriesService = async (categoryId: string) => {
+export const fetchSubCategoriesService = async (
+  categoryId: string,
+  params: { search?: string; page?: number; limit?: number } = {}
+) => {
   try {
+    const { search, page = 1, limit = 10 } = params;
     const response = await axiosInstance.get(
-      `subcategory/get-subcategories/${categoryId}`
+      `subcategory/get-subcategories/${categoryId}`,
+      {
+        params: { search, page, limit },
+      }
     );
-    return response.data.data;
+    const { subcategories, total } = response.data.data;
+    return { items: subcategories, total };
   } catch (error) {
     handleError(error);
+    throw error;
   }
 };
 
@@ -111,14 +138,23 @@ export const deleteSubCategory = async (id: string) => {
 };
 
 // Fetch skills
-export const fetchSkillsService = async (subcategoryId: string) => {
+export const fetchSkillsService = async (
+  subcategoryId: string,
+  params: { search?: string; page?: number; limit?: number } = {}
+) => {
   try {
+    const { search, page = 1, limit = 10 } = params;
     const response = await axiosInstance.get(
-      `skills/get-skills/${subcategoryId}`
+      `skills/get-skills/${subcategoryId}`,
+      {
+        params: { search, page, limit },
+      }
     );
-    return response.data.data;
+    const { skills, total } = response.data.data;
+    return { items: skills, total };
   } catch (error) {
     handleError(error);
+    throw error;
   }
 };
 

@@ -1,15 +1,18 @@
 import toast from "react-hot-toast";
 import { Link } from "react-router-dom";
 import { FaPencilAlt, FaTrashAlt } from 'react-icons/fa';
+import { ICategory } from "../../Interface/Admin/ICategory";
+import { ISubCategory } from "../../Interface/Admin/ISubCategory";
+import { ISkill } from "../../Interface/Admin/ISkill";
 
 interface TableComponentProps {
   type: string;
-  datas: any[];
+  datas: ICategory[] | ISubCategory[] | ISkill[];
   headers: string[];
   updateData: (id: string, formData: FormData) => Promise<void>;
   deleteData: (id: string) => Promise<void>;
   categoryId?: string;
-  onEdit: (item: any) => void; 
+  onEdit: (item: ICategory | ISubCategory | ISkill) => void; 
 }
 
 const TableComponent = ({
@@ -82,7 +85,7 @@ const TableComponent = ({
         <tbody>
           {datas.map((item) => (
             <tr
-              key={item._id}
+              key={item.id}
               className="hover:bg-gray-50 transition-colors duration-200"
             >
               <td className="border-b border-gray-200 px-6 py-4">
@@ -124,7 +127,7 @@ const TableComponent = ({
                     <FaPencilAlt className="h-4 w-4" />
                   </button>
                   <button
-                    onClick={() => deletedata(item._id)}
+                    onClick={() => deletedata(item.id)}
                     className="p-2 bg-red-500 text-white rounded-md hover:bg-red-600"
                     aria-label={`Delete ${item.name}`}
                   >

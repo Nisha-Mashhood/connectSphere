@@ -70,23 +70,23 @@ export class SkillsService implements ISkillsService {
     }
   };
 
-  getAllSkills = async (subcategoryId: string): Promise<ISkillDTO[]> => {
+  public getAllSkills = async (
+    subcategoryId: string,
+    query: { search?: string; page?: number; limit?: number } = {}
+  ): Promise<{ skills: ISkillDTO[]; total: number }> => {
     try {
-      logger.debug(`Fetching skills for subcategory: ${subcategoryId}`);
-      const skills = await this._skillsRepository.getAllSkills(subcategoryId);
-      const skillsDTO = toSkillDTOs(skills);
-      logger.info(`Fetched ${skillsDTO.length} skills for subcategory: ${subcategoryId}`);
-      return skillsDTO;
+      logger.debug(`Service: Fetching skills for subcategory: ${subcategoryId}`);
+      const result = await this._skillsRepository.getAllSkills(subcategoryId, query);
+      const skillsDTO = toSkillDTOs(result.skills);
+      return { skills: skillsDTO, total: result.total };
     } catch (error: unknown) {
       const err = error instanceof Error ? error : new Error(String(error));
-      logger.error(`Error fetching skills for subcategory ${subcategoryId}: ${err.message}`);
-      throw error instanceof ServiceError
-        ? error
-        : new ServiceError(
-            "Failed to fetch skills",
-            StatusCodes.INTERNAL_SERVER_ERROR,
-            err
-          );
+      logger.error(`Error in SkillService: ${err.message}`);
+      throw new ServiceError(
+        "Failed to fetch skills",
+        StatusCodes.INTERNAL_SERVER_ERROR,
+        err
+      );
     }
   };
 
@@ -138,7 +138,7 @@ export class SkillsService implements ISkillsService {
         }
         const isDuplicate = await this._skillsRepository.isDuplicateSkill(
           data.name,
-          existingSkill.subcategoryId.toString(),
+          existingSkill.subcategoryId._id.toString(),
           id
         );
         if (isDuplicate) {

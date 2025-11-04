@@ -35,7 +35,7 @@ router.put(
   authController.updateUserDetails.bind(authController)
 );
 router.get(AUTH_ROUTES.GetAllUsers, [apiLimiter, authMiddleware.verifyToken], authController.getAllUsers.bind(authController));
-router.get(AUTH_ROUTES.FetchAllUsers, [apiLimiter, authMiddleware.verifyToken], authController.fetchAllUsers.bind(authController))
+router.get(AUTH_ROUTES.FetchAllUsers, [apiLimiter, authMiddleware.verifyToken, authMiddleware.authorize('admin')], authController.fetchAllUsers.bind(authController))
 router.get(AUTH_ROUTES.GetUser, [apiLimiter, authMiddleware.verifyToken], authController.getUserById.bind(authController));
 router.put(
   AUTH_ROUTES.UpdateUser,

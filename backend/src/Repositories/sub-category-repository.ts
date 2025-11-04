@@ -1,5 +1,5 @@
 import { injectable } from "inversify";
-import { Model } from "mongoose";
+import { Model, Types } from "mongoose";
 import { BaseRepository } from "../core/Repositries/base-repositry";
 import { RepositoryError } from "../core/Utils/error-handler";
 import logger from "../core/Utils/logger";
@@ -27,21 +27,67 @@ export class SubcategoryRepository extends BaseRepository<ISubcategory> implemen
     }
   }
 
-   public getAllSubcategories = async(categoryId: string): Promise<ISubcategory[]> =>{
+   public getAllSubcategories = async (
+    categoryId: string,
+    query: { search?: string; page?: number; limit?: number }
+  ): Promise<{ subcategories: ISubcategory[]; total: number }> => {
     try {
-      logger.debug(`Fetching subcategories for category: ${categoryId}`);
-      const subcategories = await this.model
-        .find({ categoryId })
-        .populate("categoryId")
-        .exec();
-      logger.info(`Fetched ${subcategories.length} subcategories for category ${categoryId}`);
-      return subcategories;
+      logger.debug(
+        `Fetching subcategories for category: ${categoryId} with query: ${JSON.stringify(query)}`
+      );
+
+      const { search, page = 1, limit = 10 } = query;
+
+      const matchStage: Record<string, any> = {
+        categoryId: new Types.ObjectId(categoryId),
+      };
+
+      if (search) {
+        matchStage.name = { $regex: `${search}`, $options: "i" };
+      }
+
+      const pipeline = [
+        { $match: matchStage },
+        {
+          $project: {
+            _id: 1,
+            subcategoryId: 1,
+            name: 1,
+            description: 1,
+            imageUrl: 1,
+            categoryId: 1,
+            createdAt: 1,
+            updatedAt: 1,
+          },
+        },
+        {
+          $facet: {
+            subcategories: [
+              { $skip: (page - 1) * limit },
+              { $limit: limit },
+            ],
+            total: [{ $count: "count" }],
+          },
+        },
+      ]
+
+      const result = await this.model.aggregate(pipeline).exec();
+
+      const subcategories: ISubcategory[] = result[0]?.subcategories || [];
+      const total: number = result[0]?.total[0]?.count || 0;
+
+      logger.info(`Fetched ${subcategories.length} subcategories (total: ${total})`);
+      return { subcategories, total };
     } catch (error: unknown) {
       const err = error instanceof Error ? error : new Error(String(error));
-      logger.error(`Error fetching subcategories for category ${categoryId}`, err);
-      throw new RepositoryError('Error fetching subcategories', StatusCodes.INTERNAL_SERVER_ERROR, err);
+      logger.error(`Error fetching subcategories`, err);
+      throw new RepositoryError(
+        "Failed to fetch subcategories",
+        StatusCodes.INTERNAL_SERVER_ERROR,
+        err
+      );
     }
-  }
+  };
 
    getSubcategoryById = async(id: string): Promise<ISubcategory | null> =>{
     try {

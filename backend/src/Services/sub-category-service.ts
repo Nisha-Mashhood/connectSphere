@@ -76,23 +76,23 @@ export class SubcategoryService  implements ISubcategoryService{
     }
   };
 
-  public getAllSubcategories = async (categoryId: string): Promise<ISubcategoryDTO[]> => {
+  public getAllSubcategories = async (
+    categoryId: string,
+    query: { search?: string; page?: number; limit?: number }
+  ): Promise<{ subcategories: ISubcategoryDTO[]; total: number }> => {
     try {
-      logger.debug(`Fetching subcategories for category: ${categoryId}`);
-      const subcategories = await this._subcategoryRepository.getAllSubcategories(categoryId);
-      const subcategoriesDTO = toSubcategoryDTOs(subcategories);
-      logger.info(`Fetched ${subcategoriesDTO.length} subcategories for category: ${categoryId}`);
-      return subcategoriesDTO;
+      logger.debug(`Service: Fetching subcategories for category: ${categoryId}`);
+      const result = await this._subcategoryRepository.getAllSubcategories(categoryId, query);
+      const subcategoriesDTO = toSubcategoryDTOs(result.subcategories);
+      return { subcategories: subcategoriesDTO, total: result.total };
     } catch (error: unknown) {
       const err = error instanceof Error ? error : new Error(String(error));
-      logger.error(`Error fetching subcategories for category ${categoryId}: ${err.message}`);
-      throw error instanceof ServiceError
-        ? error
-        : new ServiceError(
-            "Failed to fetch subcategories",
-            StatusCodes.INTERNAL_SERVER_ERROR,
-            err
-          );
+      logger.error(`Error in SubcategoryService: ${err.message}`);
+      throw new ServiceError(
+        "Failed to fetch subcategories",
+        StatusCodes.INTERNAL_SERVER_ERROR,
+        err
+      );
     }
   };
 
@@ -135,14 +135,6 @@ export class SubcategoryService  implements ISubcategoryService{
   ): Promise<ISubcategoryDTO> => {
     try {
       logger.debug(`Updating subcategory: ${id}`);
-      if (data.categoryId) {
-        logger.error("Invalid category ID in update data");
-        throw new ServiceError(
-          "Category ID must be a valid ObjectId",
-          StatusCodes.BAD_REQUEST
-        );
-      }
-
       if (data.name) {
         const existingSubcategory = await this._subcategoryRepository.getSubcategoryById(id);
         if (!existingSubcategory) {
@@ -151,7 +143,7 @@ export class SubcategoryService  implements ISubcategoryService{
         }
         const isDuplicate = await this._subcategoryRepository.isDuplicateSubcategory(
           data.name,
-          existingSubcategory.categoryId.toString(),
+          existingSubcategory.categoryId._id.toString(),
           id
         );
         if (isDuplicate) {

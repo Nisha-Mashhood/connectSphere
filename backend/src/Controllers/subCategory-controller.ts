@@ -40,18 +40,69 @@ export class SubcategoryController extends BaseController implements ISubcategor
   };
 
   getAllSubcategories = async (req: SubcategoryRequest, res: Response, next: NextFunction): Promise<void> => {
+    logger.debug(`Fetching subcategories for category: ${req.params.categoryId}`);
     try {
-      logger.debug(`Fetching subcategories for category: ${req.params.categoryId}`);
-      const subcategories = await this._subcategoryService.getAllSubcategories(req.params.categoryId!);
-      if (subcategories.length === 0) {
-        this.sendSuccess(res, [], SUBCATEGORY_MESSAGES.NO_SUBCATEGORIES_FOUND);
-        logger.info(`No subcategories found for category: ${req.params.categoryId}`);
-        return;
-      }
-      this.sendSuccess(res, subcategories, SUBCATEGORY_MESSAGES.SUBCATEGORIES_FETCHED);
-    } catch (error) {
-      next(error);
-    }
+          const { categoryId } = req.params;
+          const { search, page, limit } = req.query;
+          const query: any = {};
+    
+          if (search) query.search = search as string;
+          if (page) query.page = parseInt(page as string, 10);
+          if (limit) query.limit = parseInt(limit as string, 10);
+    
+          logger.debug(`Fetching sub-categories with query: ${JSON.stringify(query)}`);
+    
+          const result = await this._subcategoryService.getAllSubcategories(categoryId!, query);
+    
+          if (!search) {
+            if (result.subcategories.length === 0) {
+              this.sendSuccess(res, { subcategories: [], 
+              total: result.total,
+              page: query.page || 1,
+              limit: query.limit || 10, 
+            }, SUBCATEGORY_MESSAGES.NO_SUBCATEGORIES_FOUND);
+              logger.info("No sub-categories found");
+              return;
+            }
+            this.sendSuccess(res, { 
+              subcategories: result.subcategories, 
+              total: result.total,
+              page: query.page || 1,
+              limit: query.limit || 10, 
+            }, SUBCATEGORY_MESSAGES.SUBCATEGORIES_FETCHED);
+            logger.info(`Fetched ${result.subcategories.length} sub-categories`);
+            return;
+          }
+    
+          if (result.subcategories.length === 0) {
+            this.sendSuccess(
+              res,
+              {
+                subcategories: [],
+                total: 0,
+                page: query.page || 1,
+                limit: query.limit || 10,
+              },
+              query.search ? SUBCATEGORY_MESSAGES.NO_SUBCATEGORIES_FOUND : SUBCATEGORY_MESSAGES.NO_SUBCATEGORIES_FOUND
+            );
+            logger.info(`No categories found for query: ${JSON.stringify(query)}`);
+            return;
+          }
+    
+          this.sendSuccess(
+            res,
+            {
+              subcategories: result.subcategories,
+              total: result.total,
+              page: query.page || 1,
+              limit: query.limit || 10,
+            },
+            SUBCATEGORY_MESSAGES.SUBCATEGORIES_FETCHED
+          );
+        } catch (error) {
+          logger.error(`Error fetching sub-categories: ${error}`);
+          next(error);
+        }
   };
 
   getSubcategoryById = async (req: SubcategoryRequest, res: Response, next: NextFunction): Promise<void> => {

@@ -95,7 +95,6 @@ export class CategoryService implements ICategoryService {
       search?: string;
       page?: number;
       limit?: number;
-      sort?: string;
     } = {}
   ): Promise<{ categories: ICategoryDTO[]; total: number }> => {
     try {
@@ -104,7 +103,25 @@ export class CategoryService implements ICategoryService {
       );
       const result = await this.categoryRepo.getAllCategories(query);
       const categoriesDTO = toCategoryDTOs(result.categories);;
+      logger.info(`Fetched categories with total ${result.total}`);
       return { categories: categoriesDTO, total: result.total };
+    } catch (error: unknown) {
+      const err = error instanceof Error ? error : new Error(String(error));
+      logger.error(`Error fetching categories: ${err.message}`);
+      throw new ServiceError(
+        "Failed to fetch categories",
+        StatusCodes.INTERNAL_SERVER_ERROR,
+        err
+      );
+    }
+  };
+
+  fetchAllCategories = async (): Promise<{ categories: ICategoryDTO[]}> => {
+    try {
+      logger.debug(`Fetching all categories`);
+      const result = await this.categoryRepo.fetchAllCategories();
+      const categoriesDTO = toCategoryDTOs(result.categories);;
+      return { categories: categoriesDTO };
     } catch (error: unknown) {
       const err = error instanceof Error ? error : new Error(String(error));
       logger.error(`Error fetching categories: ${err.message}`);

@@ -38,20 +38,40 @@ export class SkillsController extends BaseController implements ISkillsControlle
     }
   };
 
-  getAllSkills = async (req: SkillRequest, res: Response, next: NextFunction): Promise<void> => {
+  getAllSkills = async (req: Request, res: Response, next: NextFunction): Promise<void> => {
     try {
-      logger.debug(`Fetching skills for subcategory: ${req.params.subcategoryId}`);
-      const skills = await this._skillsService.getAllSkills(req.params.subcategoryId!);
-      if (skills.length === 0) {
-        this.sendSuccess(res, [], SKILL_MESSAGES.NO_SKILLS_FOUND_FOR_SUBCATEGORY);
-        logger.info(`No skills found for subcategory: ${req.params.subcategoryId}`);
+      const { subcategoryId } = req.params;
+      const { search, page, limit } = req.query;
+
+      const query: any = {};
+      if (search) query.search = search as string;
+      if (page) query.page = parseInt(page as string, 10);
+      if (limit) query.limit = parseInt(limit as string, 10);
+
+      const result = await this._skillsService.getAllSkills(subcategoryId!, query);
+
+      if (result.skills.length === 0) {
+        this.sendSuccess(
+          res,
+          { skills: [], total: 0, page: query.page || 1, limit: query.limit || 10 },
+          query.search
+            ? SKILL_MESSAGES.NO_SKILLS_FOUND
+            : SKILL_MESSAGES.NO_SKILLS_FOUND_FOR_SUBCATEGORY
+        );
         return;
       }
-      this.sendSuccess(res, skills, SKILL_MESSAGES.SKILLS_FETCHED);
+
+      this.sendSuccess(res, {
+        skills: result.skills,
+        total: result.total,
+        page: query.page || 1,
+        limit: query.limit || 10,
+      }, SKILL_MESSAGES.SKILLS_FETCHED);
     } catch (error) {
       next(error);
     }
   };
+
 
   getSkillById = async (req: SkillRequest, res: Response, next: NextFunction): Promise<void> => {
     try {

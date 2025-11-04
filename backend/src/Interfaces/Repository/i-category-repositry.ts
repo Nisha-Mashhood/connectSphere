@@ -10,6 +10,8 @@ export interface ICategoryRepository {
     sort?: string;
   }): Promise<{ categories: ICategory[]; total: number }>;
 
+  fetchAllCategories(): Promise<{ categories: ICategory[] }>
+
   getCategoryById(id: string): Promise<ICategory | null>;
 
   updateCategory(

@@ -42,16 +42,15 @@ export class CategoryRepository
       search?: string;
       page?: number;
       limit?: number;
-      sort?: string;
     } = {}
   ): Promise<{ categories: ICategory[]; total: number }> => {
     try {
       logger.debug(
         `Fetching all categories with query: ${JSON.stringify(query)}`
       );
-      const { search, page = 1, limit = 10, sort } = query;
+      const { search, page = 1, limit = 10 } = query;
 
-      if (!search && !sort) {
+      if (!search) {
         const categories = await this.model
           .find()
           .sort({ createdAt: -1 })
@@ -62,15 +61,11 @@ export class CategoryRepository
 
       const matchStage: Record<string, any> = {};
       if (search) {
-        matchStage.name = { $regex: `^${search}`, $options: "i" };
+        matchStage.name = { $regex: `${search}`, $options: "i" };
       }
-
-      const sortStage: Record<string, 1 | -1> =
-        sort === "alphabetical" ? { name: 1 } : { createdAt: -1 };
 
       const pipeline = [
         { $match: matchStage },
-        { $sort: sortStage },
         {
           $project: {
             _id: 1,
@@ -93,8 +88,29 @@ export class CategoryRepository
       const result = await this.model.aggregate(pipeline).exec();
       const categories: ICategory[] = result[0]?.categories || [];
       const total: number = result[0]?.total[0]?.count || 0;
-      logger.info(`Fetched ${JSON.stringify(categories)} categories`);
+      logger.info(`Fetched categories with total ${total}`);
       return { categories, total };
+    } catch (error: unknown) {
+      const err = error instanceof Error ? error : new Error(String(error));
+      logger.error(`Error fetching categories`, err);
+      throw new RepositoryError(
+        ERROR_MESSAGES.FAILED_TO_FETCH_CATEGORIES,
+        StatusCodes.INTERNAL_SERVER_ERROR,
+        err
+      );
+    }
+  };
+
+  public fetchAllCategories = async (): Promise<{ categories: ICategory[] }> => {
+    try {
+      logger.debug( `Fetching all categories` );
+
+        const categories = await this.model
+          .find()
+          .sort({ createdAt: -1 })
+          .exec();
+          logger.info(`Fetched ${JSON.stringify(categories)} categories`);
+        return { categories };
     } catch (error: unknown) {
       const err = error instanceof Error ? error : new Error(String(error));
       logger.error(`Error fetching categories`, err);

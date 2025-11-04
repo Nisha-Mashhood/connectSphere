@@ -40,25 +40,33 @@ export class CategoryController extends BaseController implements ICategoryContr
 
   getAllCategories = async (req: Request, res: Response, next: NextFunction): Promise<void> => {
     try {
-      const { search, page, limit, sort } = req.query;
+      const { search, page, limit } = req.query;
       const query: any = {};
 
       if (search) query.search = search as string;
       if (page) query.page = parseInt(page as string, 10);
       if (limit) query.limit = parseInt(limit as string, 10);
-      if (sort) query.sort = sort as string;
 
       logger.debug(`Fetching categories with query: ${JSON.stringify(query)}`);
 
       const result = await this._categoryService.getAllCategories(query);
 
-      if (!search && !sort) {
+      if (!search) {
         if (result.categories.length === 0) {
-          this.sendSuccess(res, { categories: [] }, CATEGORY_MESSAGES.NO_CATEGORIES_FOUND);
+          this.sendSuccess(res, { categories: [], 
+          total: result.total,
+          page: query.page || 1,
+          limit: query.limit || 10, 
+        }, CATEGORY_MESSAGES.NO_CATEGORIES_FOUND);
           logger.info("No categories found");
           return;
         }
-        this.sendSuccess(res, { categories: result.categories }, CATEGORY_MESSAGES.CATEGORIES_FETCHED);
+        this.sendSuccess(res, { 
+          categories: result.categories, 
+          total: result.total,
+          page: query.page || 1,
+          limit: query.limit || 10, 
+        }, CATEGORY_MESSAGES.CATEGORIES_FETCHED);
         logger.info(`Fetched ${result.categories.length} categories`);
         return;
       }
@@ -88,6 +96,24 @@ export class CategoryController extends BaseController implements ICategoryContr
         },
         CATEGORY_MESSAGES.CATEGORIES_FETCHED
       );
+    } catch (error) {
+      logger.error(`Error fetching categories: ${error}`);
+      next(error);
+    }
+  };
+
+  fetchAllCategories = async (_req: Request, res: Response, next: NextFunction): Promise<void> => {
+    try {
+      const result = await this._categoryService.fetchAllCategories();
+
+        if (result.categories.length === 0) {
+          this.sendSuccess(res, { categories: [] }, CATEGORY_MESSAGES.NO_CATEGORIES_FOUND);
+          logger.info("No categories found");
+          return;
+        }
+        this.sendSuccess(res, { categories: result.categories }, CATEGORY_MESSAGES.CATEGORIES_FETCHED);
+        logger.info(`Fetched ${result.categories.length} categories`);
+        return;
     } catch (error) {
       logger.error(`Error fetching categories: ${error}`);
       next(error);

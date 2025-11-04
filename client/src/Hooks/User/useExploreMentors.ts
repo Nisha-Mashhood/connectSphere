@@ -2,7 +2,7 @@ import { useEffect, useState, useCallback } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import { AppDispatch, RootState } from "../../redux/store";
 import { fetchAllMentors } from "../../Service/Mentor.Service";
-import { fetchCategoriesService, getAllSkills } from "../../Service/Category.Service";
+import { getAllSkills, getCategoriesService } from "../../Service/Category.Service";
 import { groupDetails, sendRequsettoGroup } from "../../Service/Group.Service";
 import { fetchAllUsers } from "../../Service/User.Service";
 import { getLockedMentorSlot, SendRequsetToMentor } from "../../Service/collaboration.Service";
@@ -231,7 +231,7 @@ export const useExploreMentors = (): UseExploreMentorsReturn => {
       try {
         setIsLoading(true);
         const [categoriesData, skillsData] = await Promise.all([
-          fetchCategoriesService(),
+          getCategoriesService(),
           getAllSkills(),
         ]);
         setCategories(
