@@ -3,11 +3,11 @@ import { ServiceError } from "../core/Utils/error-handler";
 import { IUser } from "../Interfaces/Models/i-user";
 import bcrypt from "bcryptjs";
 import { generateOTP } from "../Utils/utils/auth-utils/o-t-p";
-import { sendEmail } from "../core/Utils/email";
+import { sendEmail } from "../core/Utils/Email";
 import config from "../config/env-config";
 import { OAuth2Client } from "../Utils/utils/auth-utils/google-config";
 import axios from "axios";
-import logger from "../core/Utils/logger";
+import logger from "../core/Utils/Logger";
 import {
   ProfileUpdateData,
   SignupData,

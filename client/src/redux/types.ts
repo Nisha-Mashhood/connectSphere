@@ -1,3 +1,7 @@
+import { Slot } from "../validation/createGroupValidation";
+
+export type UserRole = "user" | "mentor" | "admin";
+
 // User type
 export interface User {
   id: string;
@@ -14,7 +18,7 @@ export interface User {
   hasReviewed?: boolean;
   loginCount?: number;
   isBlocked?: boolean;
-  role?: 'mentor' | 'user';
+  role?: UserRole;
 }
 
 //Complete user Details
@@ -96,7 +100,7 @@ export interface CollabData {
   userId: string;
   mentor: Mentor;
   user: User;
-  selectedSlot: { day: string; timeSlots: string[] }[];
+  selectedSlot: Slot[];
   unavailableDays: UnavailableDay[];
   temporarySlotChanges: TemporarySlotChange[];
   payment: boolean;
@@ -124,7 +128,7 @@ export interface RequestData {
   mentor: Mentor
   userId:string;
   user: User;
-  selectedSlot: { day: string; timeSlots: string } | null;
+  selectedSlot: Slot | null;
   price: number;
   timePeriod: number;
   paymentStatus: 'Pending' | 'Paid' | 'Failed';

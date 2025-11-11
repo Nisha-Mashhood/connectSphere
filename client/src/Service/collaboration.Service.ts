@@ -121,9 +121,11 @@ export const fetchCollabDetails = async (collabId) => {
     const response = await axiosInstance.get(
       `/collaboration/getCollab/${collabId}`
     );
+    console.log("Response from backend : ",response);
     return response.data.data;
   } catch (error) {
     handleError(error);
+    return { requests: [], total: 0, pages: 1 };
   }
 };
 //get requset details
@@ -135,14 +137,16 @@ export const fetchCollabRequsetDetails = async (requestId) => {
     return response.data.data;
   } catch (error) {
     handleError(error);
+    return { requests: [], total: 0, pages: 1 };
   }
 };
 
 //get all user-mentor  requset
-export const UserToMentorRequset = async (page = 1, limit = 10, search = "") => {
+export const UserToMentorRequset = async (page = 1, limit = 10, search = "", signal?: AbortSignal) => {
   try {
     const response = await axiosInstance.get("/collaboration/getAllRequest", {
       params: { page, limit, search },
+      signal,
     });
     return response.data.data;
   } catch (error) {
@@ -152,10 +156,11 @@ export const UserToMentorRequset = async (page = 1, limit = 10, search = "") => 
 };
 
 //get all user-mentor collab
-export const UserToMentorCollab = async (page = 1, limit = 10, search = "") => {
+export const UserToMentorCollab = async (page = 1, limit = 10, search = "", signal?: AbortSignal) => {
   try {
     const response = await axiosInstance.get("/collaboration/getAllCollab", {
       params: { page, limit, search },
+      signal,
     });
     return response.data.data;
   } catch (error) {

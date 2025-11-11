@@ -2,7 +2,7 @@ import mongoose, { Schema, Model } from "mongoose";
 import config from "../config/env-config";
 import { generateCustomId } from "../core/Utils/id-generator";
 import { IUser } from "../Interfaces/Models/i-user";
-import logger from "../core/Utils/logger";
+import logger from "../core/Utils/Logger";
 
 const userSchema: Schema<IUser> = new mongoose.Schema(
   {

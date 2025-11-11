@@ -1,6 +1,6 @@
 import { NextFunction, Request, Response } from 'express';
 import { inject, injectable } from 'inversify';
-import logger from '../core/Utils/logger';
+import logger from '../core/Utils/Logger';
 import { IUserConnectionController } from '../Interfaces/Controller/i-user-collaboration-controller';
 import { BaseController } from '../core/Controller/base-controller';
 import { IUserConnectionService } from '../Interfaces/Services/i-user-collaboration-service';
@@ -97,20 +97,23 @@ export class UserConnectionController extends BaseController implements IUserCon
     }
   };
 
-  getAllUserConnections = async (_req: Request, res: Response, next: NextFunction): Promise<void> => {
-    try {
-      logger.debug("Fetching all user connections");
-      const connections = await this._userConnectionService.fetchAllUserConnections();
+  getAllUserConnections = async ( req: Request, res: Response, next: NextFunction): Promise<void> => {
+  try {
+    const page = parseInt(req.query.page as string, 10) || 1;
+    const limit = parseInt(req.query.limit as string, 10) || 12;
+    const search = (req.query.search as string) || '';
 
+    const { connections, total } =
+      await this._userConnectionService.fetchAllUserConnections( page, limit, search );
       const data = connections.length === 0 ? [] : connections;
-      const message = connections.length === 0 ? USER_CONNECTION_MESSAGES.NO_CONNECTIONS_FOUND : USER_CONNECTION_MESSAGES.CONNECTIONS_FETCHED;
 
-      this.sendSuccess(res, data, message);
-    } catch (error: any) {
-      logger.error(`Error in getAllUserConnections: ${error.message}`);
-      next(error);
-    }
-  };
+    this.sendSuccess(res, { data, pagination: { page, limit, total, totalPages: Math.ceil(total / limit) },
+     });
+  } catch (error: any) {
+    logger.error(`Error in getAllUserConnectionsPaginated: ${error.message}`);
+    next(error);
+  }
+};
 
   getUserConnectionById = async (req: Request, res: Response, next: NextFunction): Promise<void> => {
     try {

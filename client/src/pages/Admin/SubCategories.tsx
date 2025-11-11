@@ -1,47 +1,46 @@
 import { useParams } from "react-router-dom";
 import { useState } from "react";
-import TableComponent from "./Table";
-import FormModal from "./FormModal";
-import SearchBar from "../ReusableComponents/SearchBar";
-import Pagination from "../ReusableComponents/Pagination";
-import Breadcrumb from "../ReusableComponents/Breadcrumb";
+import TableComponent from "../../Components/ReusableComponents/Table";
+import FormModal from "../../Components/Admin/FormModal";
+import SearchBar from "../../Components/ReusableComponents/SearchBar";
+import Pagination from "../../Components/ReusableComponents/Pagination";
+import Breadcrumb from "../../Components/ReusableComponents/Breadcrumb";
 import {
-  fetchSkillsService,
-  deleteSkill,
-  updateSkill,
+  fetchSubCategoriesService,
+  deleteSubCategory,
+  updateSubCategory,
 } from "../../Service/Category.Service";
-import { ISkill } from "../../Interface/Admin/ISkill";
+import { ISubCategory } from "../../Interface/Admin/ISubCategory";
 import { useCategoryTable } from "../../Hooks/Admin/useCategoryTable";
 
-const Skills = () => {
-  const { categoryId, subcategoryId } = useParams<{
-    categoryId: string;
-    subcategoryId: string;
-  }>();
+const SubCategories = () => {
+  const { categoryId } = useParams<{ categoryId: string }>();
   const [isModalOpen, setIsModalOpen] = useState(false);
-  const [editingItem, setEditingItem] = useState<ISkill | null>(null);
+  const [editingItem, setEditingItem] = useState<ISubCategory | null>(null);
 
   const {
-    items: skills,
-    search,
-    page,
-    total,
-    limit,
-    setPage,
-    handleSearch,
-    handleDelete,
-    handleUpdate,
-    handleCreate,
-    handleUpdateLocal,
-    refetch,
-  } = useCategoryTable<ISkill>({
-    fetchFn:fetchSkillsService,
-    deleteFn: deleteSkill,
-    updateFn: updateSkill,
-    parentId: subcategoryId,
-  });
+      items: subcategories,
+      page,
+      total,
+      setPage,
+      search,
+      limit,
+      handleSearch,
+      handleDelete,
+      handleUpdate,
+      handleCreate,
+      handleUpdateLocal,
+      refetch,
+    } = useCategoryTable<ISubCategory>({
+      fetchFn: fetchSubCategoriesService,
+      deleteFn: deleteSubCategory,
+      updateFn: updateSubCategory,
+      parentId: categoryId,
+      createSuccess: (newItem) => console.log("Created:", newItem),
+      updateSuccess: (updated) => console.log("Updated:", updated),
+    });
 
-  const handleEditOpen = (item: ISkill) => {
+  const handleEditOpen = (item: ISubCategory) => {
     setEditingItem(item);
     setIsModalOpen(true);
   };
@@ -56,23 +55,22 @@ const Skills = () => {
       <Breadcrumb
         items={[
           { label: "Categories", to: "/admin/categories" },
-          { label: "Sub-Categories", to: `/admin/subcategories/${categoryId}` },
-          { label: "Skills" },
+          { label: "Sub-Categories" },
         ]}
       />
       <div className="flex justify-between items-center mb-4">
-        <h1 className="text-2xl font-bold">Skills</h1>
+        <h1 className="text-2xl font-bold">Sub-Categories</h1>
         <button
           onClick={() => setIsModalOpen(true)}
           className="px-4 py-2 bg-green-500 text-white rounded-md hover:bg-green-600"
         >
-          Add Skill
+          Add Sub-Category
         </button>
       </div>
 
       <div className="mb-4">
         <SearchBar
-          activeTab="Skills"
+          activeTab="Sub-Categories"
           searchQuery={search}
           setSearchQuery={() => {}}
           onSearchChange={handleSearch}
@@ -80,11 +78,12 @@ const Skills = () => {
       </div>
 
       <TableComponent
-        type="Skill"
-        datas={skills}
+        type="Subcategory"
+        datas={subcategories}
         headers={["Image", "Name", "Description", "Actions"]}
         updateData={handleUpdate}
         deleteData={handleDelete}
+        categoryId={categoryId}
         onEdit={handleEditOpen}
       />
 
@@ -98,10 +97,9 @@ const Skills = () => {
       <FormModal
         isOpen={isModalOpen}
         onClose={handleOnClose}
-        type="skill"
+        type="sub-category"
         fetch={refetch}
         categoryId={categoryId}
-        subcategoryId={subcategoryId}
         isEdit={!!editingItem}
         item={editingItem}
         update={handleUpdate}
@@ -111,4 +109,4 @@ const Skills = () => {
   );
 };
 
-export default Skills;
+export default SubCategories;

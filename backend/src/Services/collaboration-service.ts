@@ -866,10 +866,10 @@ export class CollaborationService implements ICollaborationService {
         );
       }
       const collab = await this._collabRepository.findCollabById(collabId);
-      if (collab && (collab.isCancelled || collab.isCompleted)) {
-        logger.info(`Collaboration ${collabId} is cancelled or completed`);
-        return null;
-      }
+      // if (collab && (collab.isCancelled || collab.isCompleted)) {
+      //   logger.info(`Collaboration ${collabId} is cancelled or completed`);
+      //   return null;
+      // }
       const collabDTO = toCollaborationDTO(collab);
       if (!collabDTO && collab) {
         logger.error(`Failed to map collaboration ${collab._id} to DTO`);

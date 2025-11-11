@@ -83,13 +83,16 @@ export const getUser_UserRequests = async (userId: string) => {
 };
 
   //Fetch all user-user connection
-  export const fetchAllUserConnections = async () => {
+  export const fetchAllUserConnections = async (page: number, limit: number, search: string = '', signal?: AbortSignal) => {
     try {
-      const response = await axiosInstance.get(
-        `/user-userCollab/getAllconnection`
-      );
-      return response.data.data;
-    } catch (error) {
-      handleError(error);
-    }
+    const response = await axiosInstance.get(`/user-userCollab/getAllconnection`, { 
+      params: { page, limit, search, 
+        signal, 
+      } },
+
+    );
+    return response.data.data;
+  } catch (error) {
+    handleError(error);
+  }
   };

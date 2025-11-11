@@ -2,7 +2,7 @@ import { IGroup, TimeSlot } from '../../Interfaces/Models/i-group';
 import { IGroupDTO, TimeSlotDTO } from '../../Interfaces/DTOs/i-group-dto';
 import { IUserDTO } from '../../Interfaces/DTOs/i-user-dto';
 import { IUser } from '../../Interfaces/Models/i-user';
-import logger from '../../core/Utils/logger';
+import logger from '../../core/Utils/Logger';
 import { Types } from 'mongoose';
 import { toUserDTO } from './user-mapper';
 

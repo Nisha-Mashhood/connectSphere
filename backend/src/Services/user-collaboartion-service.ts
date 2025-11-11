@@ -1,6 +1,6 @@
 import { inject, injectable } from "inversify";
 import { ServiceError } from "../core/Utils/error-handler";
-import logger from "../core/Utils/logger";
+import logger from "../core/Utils/Logger";
 import { StatusCodes } from "../enums/status-code-enums";
 import { IContact } from "../Interfaces/Models/i-contact";
 import { IUserConnectionRepository } from "../Interfaces/Repository/i-user-collaboration-repositry";
@@ -257,25 +257,35 @@ export class UserConnectionService implements IUserConnectionService{
     }
   };
 
-  public fetchAllUserConnections = async (): Promise<IUserConnectionDTO[]> => {
-    try {
-      logger.debug("Fetching all user connections");
-      const connections = await this._userConnectionRepository.getAllUserConnections();
-      const connectionDTOs = toUserConnectionDTOs(connections);
-      logger.info(`Fetched ${connectionDTOs.length} user connections`);
-      return connectionDTOs;
-    } catch (error: unknown) {
-      const err = error instanceof Error ? error : new Error(String(error));
-      logger.error(`Error fetching all user connections: ${err.message}`);
-      throw error instanceof ServiceError
-        ? error
-        : new ServiceError(
-            "Failed to fetch all user connections",
-            StatusCodes.INTERNAL_SERVER_ERROR,
-            err
-          );
-    }
-  };
+
+  public fetchAllUserConnections = async (
+  page: number,
+  limit: number,
+  search: string
+): Promise<{ connections: IUserConnectionDTO[]; total: number }> => {
+  try {
+    logger.debug(`Service – page:${page} limit:${limit} search:"${search}"`);
+    const { connections, total } =
+      await this._userConnectionRepository.getAllUserConnections(
+        page,
+        limit,
+        search
+      );
+
+    const connectionDTOs = toUserConnectionDTOs(connections);
+    return { connections: connectionDTOs, total };
+  } catch (error: unknown) {
+    const err = error instanceof Error ? error : new Error(String(error));
+    logger.error(`Error fetching paginated connections: ${err.message}`);
+    throw error instanceof ServiceError
+      ? error
+      : new ServiceError(
+          'Failed to fetch paginated connections',
+          StatusCodes.INTERNAL_SERVER_ERROR,
+          err
+        );
+  }
+};
 
   public fetchUserConnectionById = async (
     connectionId: string

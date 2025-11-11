@@ -3,9 +3,9 @@ import User from "../Models/user-model";
 import { IUser } from '../Interfaces/Models/i-user';
 import { BaseRepository } from "../core/Repositries/base-repositry";
 import { RepositoryError } from "../core/Utils/error-handler";
-import logger from "../core/Utils/logger";
+import logger from "../core/Utils/Logger";
 import { UserQuery } from "../Utils/Types/auth-types";
-import { Model } from "mongoose";
+import { Model, PipelineStage, Types } from "mongoose";
 import { IUserRepository } from "../Interfaces/Repository/i-user-repositry";
 import { StatusCodes } from "../enums/status-code-enums";
 
@@ -14,6 +14,19 @@ export class UserRepository extends BaseRepository<IUser> implements IUserReposi
   constructor() {
     super(User as Model<IUser>);
   }
+
+  private toObjectId = (id?: string | Types.ObjectId): Types.ObjectId => {
+      if (!id) {
+        logger.warn('Missing ID when converting to ObjectId');
+        throw new RepositoryError('Invalid ID: ID is required', StatusCodes.BAD_REQUEST);
+      }
+      const idStr = typeof id === 'string' ? id : id.toString();
+      if (!Types.ObjectId.isValid(idStr)) {
+        logger.warn(`Invalid ObjectId format: ${idStr}`);
+        throw new RepositoryError('Invalid ID: must be a 24 character hex string', StatusCodes.BAD_REQUEST);
+      }
+      return new Types.ObjectId(idStr);
+    }
 
   // Create a new user
    public createUser=async(userData: Partial<IUser>): Promise<IUser> =>{
@@ -226,56 +239,67 @@ export class UserRepository extends BaseRepository<IUser> implements IUserReposi
   }
 
   //Fetch All User Details
-   public getAllUsers = async (query: UserQuery = {}): Promise<{ users: IUser[]; total: number }> => {
-    try {
-      logger.debug(`Fetching all users with query: ${JSON.stringify(query)}`);
-      const { search, page, limit, excludeId } = query;
+   public getAllUsers = async (
+  query: UserQuery = {}
+): Promise<{ users: IUser[]; total: number }> => {
+  try {
+    const { search, page = 1, limit = 10, excludeId } = query;
 
-      if (!search && !page && !limit) {
-        const users = await this.model.find({ role: { $ne: 'admin' } }).exec();
-        logger.info(`Fetched ${users.length} users`);
-        return { users, total: users.length };
-      }
+    logger.debug(`Fetching users → ${JSON.stringify({ search, page, limit, excludeId })}`);
 
-      const matchStage: Record<string, any> = { role: { $ne: 'admin' } };
-      if (search) {
-      matchStage.$or = [
-        { name: { $regex: search, $options: 'i' } },
-        { email: { $regex: search, $options: 'i' } },
-        { jobTitle: { $regex: `^${search}`, $options: 'i' } },
-        { industry: { $regex: `^${search}`, $options: 'i' } },
-        { reasonForJoining: { $regex: `^${search}`, $options: 'i' } },
-      ];
-    }
+    const matchStage: Record<string, any> = {
+      role: 'user',
+    };
+
     if (excludeId) {
-      matchStage._id = { $ne: excludeId };
+      try {
+        matchStage._id = { $ne: this.toObjectId(excludeId) };
+      } catch (err) {
+        logger.warn(`Invalid excludeId: ${excludeId} error ${err}`);
+      }
     }
 
-      const pipeline = [
-        { $match: matchStage },
-        {
-          $facet: {
-            users: [
-              { $skip: ((page || 1) - 1) * (limit || 10) },
-              { $limit: limit || 10 },
-            ],
-            total: [{ $count: 'count' }],
-          },
-        },
+    if (search?.trim()) {
+      const regex = { $regex: search.trim(), $options: 'i' };
+      matchStage.$or = [
+        { name: regex },
+        { email: regex },
+        { jobTitle: { $regex: `^${search.trim()}`, $options: 'i' } },
+        { industry: { $regex: `^${search.trim()}`, $options: 'i' } },
+        { reasonForJoining: { $regex: `^${search.trim()}`, $options: 'i' } },
       ];
-
-      const result = await this.model.aggregate(pipeline).exec();
-      const users = result[0]?.users || [];
-      const total = result[0]?.total[0]?.count || 0;
-
-      logger.info(`Fetched ${users.length} users, total: ${total}`);
-      return { users, total };
-    } catch (error: unknown) {
-      const err = error instanceof Error ? error : new Error(String(error));
-      logger.error(`Error fetching all users`, err);
-      throw new RepositoryError('Error fetching all users', StatusCodes.INTERNAL_SERVER_ERROR, err);
     }
+
+    const pipeline: PipelineStage[] = [
+      { $match: matchStage },
+      {
+        $facet: {
+          users: [
+            { $skip: (page - 1) * limit },
+            { $limit: limit },
+          ],
+          total: [{ $count: 'count' }],
+        },
+      },
+    ];
+
+    const [result] = await this.model.aggregate(pipeline).exec();
+
+    const users: IUser[] = result?.users ?? [];
+    const total: number = result?.total?.[0]?.count ?? 0;
+
+    logger.info(`Fetched ${users.length} users (total: ${total})`);
+    return { users, total };
+  } catch (error: unknown) {
+    const err = error instanceof Error ? error : new Error(String(error));
+    logger.error('Error in getAllUsers', err);
+    throw new RepositoryError(
+      'Error fetching users',
+      StatusCodes.INTERNAL_SERVER_ERROR,
+      err
+    );
   }
+};
 
   //Update The User Profile
    public updateUserProfile = async (id: string, data: Partial<IUser>): Promise<IUser | null> => {

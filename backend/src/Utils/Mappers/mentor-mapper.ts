@@ -5,7 +5,7 @@ import { toUserDTO } from './user-mapper';
 import { toSkillDTOs } from './skill-mapper';
 import { IUser } from '../../Interfaces/Models/i-user';
 import { ISkill } from '../../Interfaces/Models/i-skill';
-import logger from '../../core/Utils/logger';
+import logger from '../../core/Utils/Logger';
 import { IUserDTO } from '../../Interfaces/DTOs/i-user-dto';
 import { ISkillDTO } from '../../Interfaces/DTOs/i-skill-dto';
 

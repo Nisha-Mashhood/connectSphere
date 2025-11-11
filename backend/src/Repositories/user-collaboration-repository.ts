@@ -1,8 +1,8 @@
 import { injectable } from 'inversify';
-import { Model, Types } from 'mongoose';
+import { Model, PipelineStage, Types } from 'mongoose';
 import { BaseRepository } from '../core/Repositries/base-repositry';
 import { RepositoryError } from '../core/Utils/error-handler';
-import logger from '../core/Utils/logger';
+import logger from '../core/Utils/Logger';
 import UserConnection from '../Models/user-connection-model';
 import { IUserConnection } from '../Interfaces/Models/i-user-connection';
 import { StatusCodes } from '../enums/status-code-enums';
@@ -122,6 +122,104 @@ export class UserConnectionRepository extends BaseRepository<IUserConnection> im
     }
   }
 
+  public getAllUserConnections = async (
+  page: number = 1,
+  limit: number = 12,
+  search: string = ''
+): Promise<{ connections: IUserConnection[]; total: number; page: number; pages: number }> => {
+  try {
+    logger.debug(`getAllUserConnections → page=${page}, limit=${limit}, search="${search}"`);
+
+    const basePipeline = [
+      {
+        $lookup: {
+          from: 'users',
+          localField: 'requester',
+          foreignField: '_id',
+          as: 'requester',
+        },
+      },
+      { $unwind: { path: '$requester', preserveNullAndEmptyArrays: true } },
+
+      // Populate recipient
+      {
+        $lookup: {
+          from: 'users',
+          localField: 'recipient',
+          foreignField: '_id',
+          as: 'recipient',
+        },
+      },
+      { $unwind: { path: '$recipient', preserveNullAndEmptyArrays: true } },
+    ] as const;
+
+    const matchStage: any = { requestStatus: 'Accepted' };
+
+    if (search.trim()) {
+      const regex = { $regex: search.trim(), $options: 'i' };
+      matchStage.$or = [
+        { 'requester.name': regex },
+        { 'requester.email': regex },
+        { 'recipient.name': regex },
+        { 'recipient.email': regex },
+      ];
+    }
+
+    const dataPipeline = [
+      ...basePipeline,
+      { $match: matchStage },
+      { $sort: { requestSentAt: -1 } },
+      { $skip: (page - 1) * limit },
+      { $limit: limit },
+      {
+        $project: {
+          _id: 1,
+          connectionId: 1,
+          requester: 1,
+          recipient: 1,
+          requestStatus: 1,
+          connectionStatus: 1,
+          requestSentAt: 1,
+          requestAcceptedAt: 1,
+          disconnectedAt: 1,
+          disconnectionReason: 1,
+          createdAt: 1,
+          updatedAt: 1,
+        },
+      },
+    ] as PipelineStage[];
+
+    const connections = await this.model.aggregate<IUserConnection>(dataPipeline).exec();
+
+    const countPipeline = [
+      ...basePipeline,
+      { $match: matchStage },
+      { $count: 'total' },
+    ] as PipelineStage[];
+
+    const countResult = await this.model.aggregate(countPipeline).exec();
+    const total = countResult[0]?.total ?? 0;
+    const pages = Math.ceil(total / limit) || 1;
+
+    logger.info(`Fetched ${connections.length} connections | Total: ${total} | Pages: ${pages}`);
+
+    return {
+      connections,
+      total,
+      page,
+      pages,
+    };
+  } catch (error: unknown) {
+    const err = error instanceof Error ? error : new Error(String(error));
+    logger.error('Error in getAllUserConnections', err);
+    throw new RepositoryError(
+      'Error fetching user connections',
+      StatusCodes.INTERNAL_SERVER_ERROR,
+      err
+    );
+  }
+};
+
   public getUserRequests = async (userId: string): Promise<{ sentRequests: IUserConnection[]; receivedRequests: IUserConnection[] }> => {
     try {
       logger.debug(`Fetching sent and received requests for user: ${userId}`);
@@ -143,23 +241,6 @@ export class UserConnectionRepository extends BaseRepository<IUserConnection> im
       const err = error instanceof Error ? error : new Error(String(error));
       logger.error(`Error fetching user requests for user ${userId}`, err);
       throw new RepositoryError('Error fetching user requests', StatusCodes.INTERNAL_SERVER_ERROR, err);
-    }
-  }
-
-  public getAllUserConnections = async (): Promise<IUserConnection[]> => {
-    try {
-      logger.debug('Fetching all user connections');
-      const connections = await this.model
-        .find()
-        .populate('requester', '_id name email jobTitle profilePic')
-        .populate('recipient', '_id name email jobTitle profilePic')
-        .exec();
-      logger.info(`Fetched ${connections.length} user connections`);
-      return connections;
-    } catch (error: unknown) {
-      const err = error instanceof Error ? error : new Error(String(error));
-      logger.error(`Error fetching all user connections`, err);
-      throw new RepositoryError('Error fetching all user connections', StatusCodes.INTERNAL_SERVER_ERROR, err);
     }
   }
 

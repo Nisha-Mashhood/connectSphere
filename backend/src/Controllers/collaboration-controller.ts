@@ -2,7 +2,7 @@ import { Request, Response, NextFunction } from "express";
 import { BaseController } from "../core/Controller/base-controller";
 import MentorRequest from "../Models/mentor-requset-model";
 import { IMentorRequest } from "../Interfaces/Models/i-mentor-request";
-import logger from "../core/Utils/logger";
+import logger from "../core/Utils/Logger";
 import { ICollaborationController } from "../Interfaces/Controller/i-collaboration-controller";
 import { HttpError } from "../core/Utils/error-handler";
 import { StatusCodes } from "../enums/status-code-enums";
@@ -128,7 +128,8 @@ export class CollaborationController extends BaseController implements ICollabor
   getCollabDataForUserController = async (req: Request, res: Response, next: NextFunction): Promise<void> => {
     try {
       const { id } = req.params;
-      const collabData = await this._collabService.getCollabDataForUserService(id);
+      const { includeCompleted } = req.body;
+      const collabData = await this._collabService.getCollabDataForUserService(id, includeCompleted);
       if (collabData.length === 0) {
         this.sendSuccess(res, { collabData: [] }, COLLABORATION_MESSAGES.NO_COLLABORATIONS_FOUND);
         logger.info(`No collaborations found for userId: ${id}`);
@@ -143,7 +144,8 @@ export class CollaborationController extends BaseController implements ICollabor
   getCollabDataForMentorController = async (req: Request, res: Response, next: NextFunction): Promise<void> => {
     try {
       const { id } = req.params;
-      const collabData = await this._collabService.getCollabDataForMentorService(id);
+      const { includeCompleted} = req.body;
+      const collabData = await this._collabService.getCollabDataForMentorService(id, includeCompleted);
       if (collabData.length === 0) {
         this.sendSuccess(res, { collabData: [] }, COLLABORATION_MESSAGES.NO_COLLABORATIONS_FOUND);
         logger.info(`No collaborations found for mentorId: ${id}`);

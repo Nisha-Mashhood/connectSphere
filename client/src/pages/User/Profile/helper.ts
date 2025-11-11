@@ -1,10 +1,12 @@
 import { RequestData } from "../../../redux/types";
 
-export const formatCurrency = (amount: number) =>
-    new Intl.NumberFormat("en-IN", {
-      style: "currency",
-      currency: "INR",
-    }).format(amount);
+export const formatCurrency = (amount: number): string =>
+  new Intl.NumberFormat("en-IN", {
+    style: "currency",
+    currency: "INR",
+    minimumFractionDigits: 2,
+    maximumFractionDigits: 2,
+  }).format(amount);
 
 export const formatDate = (dateString: string) =>
     dateString

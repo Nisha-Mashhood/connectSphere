@@ -1,8 +1,8 @@
 import { injectable } from "inversify";
-import { Types, Model } from "mongoose";
+import { Types, Model, PipelineStage } from "mongoose";
 import { BaseRepository } from "../core/Repositries/base-repositry";
 import { RepositoryError } from "../core/Utils/error-handler";
-import logger from "../core/Utils/logger";
+import logger from "../core/Utils/Logger";
 import Collaboration from "../Models/collaboration-model";
 import MentorRequest from "../Models/mentor-requset-model";
 import Mentor from "../Models/mentor-model";
@@ -399,99 +399,181 @@ export class CollaborationRepository extends BaseRepository<ICollaboration> impl
   }
 };
 
-  public findMentorRequest = async ({
-    page = 1,
-    limit = 10,
-    search = "",
-  }: {
-    page: number;
-    limit: number;
-    search: string;
-  }): Promise<{ requests: IMentorRequest[]; total: number; page: number; pages: number }> => {
-    try {
-      logger.debug(`Fetching mentor requests with page: ${page}, limit: ${limit}, search: ${search}`);
-      const query: Record<string, any> = {};
-      if (search) {
-        query.$or = [
-          { "userId.name": { $regex: search, $options: "i" } },
-          { "userId.email": { $regex: search, $options: "i" } },
-          { "mentorId.userId.name": { $regex: search, $options: "i" } },
-          { "mentorId.userId.email": { $regex: search, $options: "i" } },
-          { "mentorId.specialization": { $regex: search, $options: "i" } },
-        ];
-      }
-      const total = await this._mentorRequestModel.countDocuments(query);
-      const requests = await this._mentorRequestModel
-        .find(query)
-        .populate({
-          path: "mentorId",
-          model: "Mentor",
-          populate: { path: "userId", model: "User" },
-        })
-        .populate({ path: "userId", model: "User" })
-        .skip((page - 1) * limit)
-        .limit(limit)
-        .lean()
-        .exec();
-      logger.info(`Fetched ${requests.length} mentor requests, total: ${total}`);
-      return { requests, total, page, pages: Math.ceil(total / limit) || 1 };
-    } catch (error: unknown) {
-      const err = error instanceof Error ? error : new Error(String(error));
-      logger.error(`Error fetching mentor requests`, err);
-      throw new RepositoryError(
-        "Error fetching mentor requests",
-        StatusCodes.INTERNAL_SERVER_ERROR,
-        err
-      );
-    }
-  }
 
-  public findCollab = async ({
-    page = 1,
-    limit = 10,
-    search = "",
-  }: {
-    page: number;
-    limit: number;
-    search: string;
-  }): Promise<{ collabs: ICollaboration[]; total: number; page: number; pages: number }> => {
-    try {
-      logger.debug(`Fetching collaborations with page: ${page}, limit: ${limit}, search: ${search}`);
-      const query: Record<string, any> = {};
-      if (search) {
-        query.$or = [
-          { "userId.name": { $regex: search, $options: "i" } },
-          { "userId.email": { $regex: search, $options: "i" } },
-          { "mentorId.userId.name": { $regex: search, $options: "i" } },
-          { "mentorId.userId.email": { $regex: search, $options: "i" } },
-          { "mentorId.specialization": { $regex: search, $options: "i" } },
-        ];
-      }
-      const total = await this.model.countDocuments(query);
-      const collabs = await this.model
-        .find(query)
-        .populate({
-          path: "mentorId",
-          model: "Mentor",
-          populate: { path: "userId", model: "User" },
-        })
-        .populate({ path: "userId", model: "User" })
-        .skip((page - 1) * limit)
-        .limit(limit)
-        .lean()
-        .exec();
-      logger.info(`Fetched ${collabs.length} collaborations, total: ${total}`);
-      return { collabs, total, page, pages: Math.ceil(total / limit) || 1 };
-    } catch (error: unknown) {
-      const err = error instanceof Error ? error : new Error(String(error));
-      logger.error(`Error fetching collaborations`, err);
-      throw new RepositoryError(
-        "Error fetching collaborations",
-        StatusCodes.INTERNAL_SERVER_ERROR,
-        err
-      );
-    }
+  public findMentorRequest = async ({
+  page = 1,
+  limit = 10,
+  search = "",
+}: {
+  page: number;
+  limit: number;
+  search: string;
+}): Promise<{ requests: IMentorRequest[]; total: number; page: number; pages: number }> => {
+
+  logger.debug(`MentorRequest page=${page}, limit=${limit}, search="${search}"`);
+
+  try {
+    const matchStage: PipelineStage.Match = search
+      ? {
+          $match: {
+            $or: [
+              { "userId.name": { $regex: search, $options: "i" } },
+              { "userId.email": { $regex: search, $options: "i" } },
+              { "mentorId.userId.name": { $regex: search, $options: "i" } },
+              { "mentorId.userId.email": { $regex: search, $options: "i" } },
+              { "mentorId.specialization": { $regex: search, $options: "i" } },
+            ],
+          },
+        }
+      : { $match: {} };
+
+    const pipeline: PipelineStage[] = [
+      {
+        $lookup: {
+          from: "mentors",
+          localField: "mentorId",
+          foreignField: "_id",
+          as: "mentorId",
+        },
+      },
+      { $unwind: { path: "$mentorId", preserveNullAndEmptyArrays: true } },
+
+      {
+        $lookup: {
+          from: "users",
+          localField: "mentorId.userId",
+          foreignField: "_id",
+          as: "mentorId.userId",
+        },
+      },
+      { $unwind: { path: "$mentorId.userId", preserveNullAndEmptyArrays: true } },
+
+      {
+        $lookup: {
+          from: "users",
+          localField: "userId",
+          foreignField: "_id",
+          as: "userId",
+        },
+      },
+      { $unwind: { path: "$userId", preserveNullAndEmptyArrays: true } },
+
+      matchStage,
+      { $sort: { createdAt: -1 } },
+      { $skip: (page - 1) * limit },
+      { $limit: limit },
+    ];
+
+    const data = await this._mentorRequestModel.aggregate(pipeline);
+
+    const totalPipeline: PipelineStage[] = [
+      ...pipeline.slice(0, -2),
+      { $count: "total" },
+    ];
+
+    const totalResult = await this._mentorRequestModel.aggregate(totalPipeline);
+    const total = totalResult[0]?.total || 0;
+    const pages = Math.ceil(total / limit) || 1;
+
+    return { requests: data, total, page, pages };
+  } catch (error: unknown) {
+    const err = error instanceof Error ? error : new Error(String(error));
+    logger.error(`[findMentorRequest] FAILED → ${err.message}\n${err.stack}`);
+    throw new RepositoryError(
+      "Error fetching mentor requests",
+      StatusCodes.INTERNAL_SERVER_ERROR,
+      err
+    );
   }
+};
+
+
+  
+public findCollab = async ({
+  page = 1,
+  limit = 10,
+  search = "",
+}: {
+  page: number;
+  limit: number;
+  search: string;
+}): Promise<{ collabs: ICollaboration[]; total: number; page: number; pages: number }> => {
+
+  logger.debug(`findCollab page=${page}, limit=${limit}, search="${search}"`);
+
+  try {
+    const matchStage: PipelineStage.Match = search
+      ? {
+          $match: {
+            $or: [
+              { "userId.name": { $regex: search, $options: "i" } },
+              { "userId.email": { $regex: search, $options: "i" } },
+              { "mentorId.userId.name": { $regex: search, $options: "i" } },
+              { "mentorId.userId.email": { $regex: search, $options: "i" } },
+              { "mentorId.specialization": { $regex: search, $options: "i" } },
+            ],
+          },
+        }
+      : { $match: {} };
+
+    const pipeline: PipelineStage[] = [
+      {
+        $lookup: {
+          from: "mentors",
+          localField: "mentorId",
+          foreignField: "_id",
+          as: "mentorId",
+        },
+      },
+      { $unwind: { path: "$mentorId", preserveNullAndEmptyArrays: true } },
+      {
+        $lookup: {
+          from: "users",
+          localField: "mentorId.userId",
+          foreignField: "_id",
+          as: "mentorId.userId",
+        },
+      },
+      { $unwind: { path: "$mentorId.userId", preserveNullAndEmptyArrays: true } },
+      {
+        $lookup: {
+          from: "users",
+          localField: "userId",
+          foreignField: "_id",
+          as: "userId",
+        },
+      },
+      { $unwind: { path: "$userId", preserveNullAndEmptyArrays: true } },
+      matchStage,
+      { $sort: { createdAt: -1 } },
+      { $skip: (page - 1) * limit },
+      { $limit: limit },
+    ];
+
+    const data = await this.model.aggregate(pipeline);
+  
+    const totalPipeline: PipelineStage[] = [
+      ...pipeline.slice(0, -2),
+      { $count: "total" },
+    ];
+
+    const totalResult = await this.model.aggregate(totalPipeline);
+    const total = totalResult[0]?.total || 0;
+
+
+    const pages = Math.ceil(total / limit) || 1;
+
+    return { collabs: data, total, page, pages };
+  } catch (error: unknown) {
+    const err = error instanceof Error ? error : new Error(String(error));
+    logger.error(`[findCollab] FAILED → ${err.message}\n${err.stack}`);
+    throw new RepositoryError(
+      "Error fetching collaborations",
+      StatusCodes.INTERNAL_SERVER_ERROR,
+      err
+    );
+  }
+};
 
   public fetchMentorRequestDetails = async (requestId: string): Promise<IMentorRequest | null> => {
     try {

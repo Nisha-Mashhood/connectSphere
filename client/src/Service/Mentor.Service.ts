@@ -24,7 +24,7 @@ export const createMentorProfile = async (formdata:FormData) => {
 };
 
 // Fetch mentor requests
-export const fetchMentorRequests = async (
+export const fetchMentorRequestsService = async (
   page: number = 1,
   limit: number = 10,
   search: string = "",

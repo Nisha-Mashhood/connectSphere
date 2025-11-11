@@ -2,7 +2,7 @@ import { injectable } from "inversify";
 import { Types, Model } from "mongoose";
 import { BaseRepository } from "../core/Repositries/base-repositry";
 import { RepositoryError } from "../core/Utils/error-handler";
-import logger from "../core/Utils/logger";
+import logger from "../core/Utils/Logger";
 import Mentor from "../Models/mentor-model";
 import { IMentor } from "../Interfaces/Models/i-mentor";
 import { IUser } from "../Interfaces/Models/i-user";
@@ -74,15 +74,13 @@ export class MentorRepository extends BaseRepository<IMentor> implements IMentor
 
     const pipeline: any[] = [];
 
-    // 1. Base match (status)
     const match: any = {};
     if (status) match.isApproved = status;
     pipeline.push({ $match: match });
 
-    // 2. $lookup: Populate user
     pipeline.push({
       $lookup: {
-        from: "users", // Ensure this matches your User collection name706 name in DB
+        from: "users",
         localField: "userId",
         foreignField: "_id",
         as: 'userId',
@@ -90,17 +88,15 @@ export class MentorRepository extends BaseRepository<IMentor> implements IMentor
     });
     pipeline.push({ $unwind: { path: "$userId", preserveNullAndEmptyArrays: true } });
 
-    // 3. $lookup: Populate skills
     pipeline.push({
       $lookup: {
-        from: "skills", // Ensure this matches your Skill collection name
+        from: "skills",
         localField: "skills",
         foreignField: "_id",
         as: 'skills',
       },
     });
 
-    // 4. Search on populated user fields
     if (search) {
       pipeline.push({
         $match: {
@@ -112,7 +108,6 @@ export class MentorRepository extends BaseRepository<IMentor> implements IMentor
       });
     }
 
-    // 5. Facet for count + pagination
     pipeline.push({
       $facet: {
         metadata: [{ $count: "total" }],

@@ -16,6 +16,6 @@ export interface IUserConnectionService {
     sentRequests: IUserConnectionDTO[];
     receivedRequests: IUserConnectionDTO[];
   }>;
-  fetchAllUserConnections: () => Promise<IUserConnectionDTO[]>;
+  fetchAllUserConnections: ( page: number, limit: number, search: string) => Promise<{ connections: IUserConnectionDTO[]; total: number }>;
   fetchUserConnectionById: (connectionId: string) => Promise<IUserConnectionDTO | null>;
 }
