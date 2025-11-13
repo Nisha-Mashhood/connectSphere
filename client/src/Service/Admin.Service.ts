@@ -14,7 +14,7 @@ import { handleError } from "./ErrorHandler";
 export const getTotalUsersCount = async () => {
   try {
     const response = await axiosInstance.get("/admin/total-users");
-    return response.data;
+    return response.data.data;
   } catch (error) {
     handleError(error);
   }
@@ -24,7 +24,7 @@ export const getTotalUsersCount = async () => {
 export const getTotalMentorsCount = async () => {
   try {
     const response = await axiosInstance.get("/admin/total-mentors");
-    return response.data;
+    return response.data.data;
   } catch (error) {
     handleError(error);
   }
@@ -34,7 +34,7 @@ export const getTotalMentorsCount = async () => {
 export const getTotalRevenue = async () => {
   try {
     const response = await axiosInstance.get("/admin/total-revenue");
-    return response.data;
+    return response.data.data;
   } catch (error) {
     handleError(error);
   }
@@ -44,7 +44,7 @@ export const getTotalRevenue = async () => {
 export const getPendingMentorRequestsCount = async () => {
   try {
     const response = await axiosInstance.get("/admin/pending-mentor-requests/count");
-    return response.data;
+    return response.data.data;
   } catch (error) {
     handleError(error);
   }
@@ -54,7 +54,7 @@ export const getPendingMentorRequestsCount = async () => {
 export const getActiveCollaborationsCount = async () => {
   try {
     const response = await axiosInstance.get("/admin/active-collaborations/count");
-    return response.data;
+    return response.data.data;
   } catch (error) {
     handleError(error);
   }
@@ -66,7 +66,7 @@ export const getRevenueTrends = async (timeFormat, days) => {
     const response = await axiosInstance.get("/admin/revenue-trends", {
       params: { timeFormat, days }
     });
-    return response.data;
+    return response.data.data;
   } catch (error) {
     handleError(error);
   }
@@ -78,7 +78,7 @@ export const getUserGrowth = async (timeFormat, days) => {
     const response = await axiosInstance.get("/admin/user-growth", {
       params: { timeFormat, days }
     });
-    return response.data;
+    return response.data.data;
   } catch (error) {
     handleError(error);
   }
@@ -90,7 +90,7 @@ export const getPendingMentorRequests = async (limit) => {
     const response = await axiosInstance.get("/admin/pending-mentor-requests", {
       params: { limit }
     });
-    return response.data;
+    return response.data.data;
   } catch (error) {
     handleError(error);
   }
@@ -102,7 +102,7 @@ export const getTopMentors = async (limit) => {
     const response = await axiosInstance.get("/admin/top-mentors", {
       params: { limit }
     });
-    return response.data;
+    return response.data.data;
   } catch (error) {
     handleError(error);
   }
@@ -114,7 +114,7 @@ export const getRecentCollaborations = async (limit) => {
     const response = await axiosInstance.get("/admin/recent-collaborations", {
       params: { limit }
     });
-    return response.data;
+    return response.data.data;
   } catch (error) {
     handleError(error);
   }

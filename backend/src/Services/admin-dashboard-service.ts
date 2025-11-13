@@ -1,5 +1,5 @@
 import { inject, injectable } from "inversify";
-import logger from "../core/Utils/logger";
+import logger from "../core/Utils/Logger";
 import { ServiceError } from "../core/Utils/error-handler";
 import { StatusCodes } from "../enums/status-code-enums";
 import { IAdminService } from "../Interfaces/Services/i-admin-service";

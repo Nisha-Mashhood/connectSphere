@@ -251,6 +251,7 @@ export class AdminRepository implements IAdminRepository {
             _id: "$mentorInfo._id",
             name: "$userInfo.name",
             email: "$userInfo.email",
+            userId: "$userInfo._id",
             profilePic: "$userInfo.profilePic",
             totalEarnings: 1,
             collaborationCount: 1,

@@ -20,6 +20,7 @@ export interface TopMentor {
   _id: string;
   name: string;
   email: string;
+  userId:string;
   profilePic?: string;
   totalEarnings: number;
   collaborationCount: number;

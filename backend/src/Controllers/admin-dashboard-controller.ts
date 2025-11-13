@@ -1,6 +1,6 @@
 import { Request, Response, NextFunction } from "express";
 import { inject, injectable } from "inversify";
-import logger from "../core/Utils/logger";
+import logger from "../core/Utils/Logger";
 import { IAdminController } from "../Interfaces/Controller/i-admin-controller";
 import { BaseController } from "../core/Controller/base-controller";
 import { IAdminService } from "../Interfaces/Services/i-admin-service";
