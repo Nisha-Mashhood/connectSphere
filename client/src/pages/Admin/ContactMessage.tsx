@@ -9,9 +9,9 @@ import {
   Input,
   Textarea,
 } from "@nextui-org/react";
-import SearchBar from "../ReusableComponents/SearchBar";
-import DataTable from "../ReusableComponents/DataTable";
-import BaseModal from "../ReusableComponents/BaseModal";
+import SearchBar from "../../Components/ReusableComponents/SearchBar";
+import DataTable from "../../Components/ReusableComponents/DataTable";
+import BaseModal from "../../Components/ReusableComponents/BaseModal";
 import { useContactMessages } from "../../Hooks/Admin/useContactMessages";
 import { ContactMessage } from "../../Interface/Admin/IContactMessage";
 import { useState, useMemo } from "react";

@@ -18,9 +18,9 @@ import UserUserCollabDetails from "../Components/Admin/User-User/UserConnectionD
 import GroupDetails from "../pages/Admin/GroupAndRequsetDetails";
 import CollaborationDetails from "../pages/Admin/CollaborationDetails";
 import ReviewManagement from "../pages/Admin/ReviewManagement";
-import Messages from "../Components/Admin/ContactMessage";
-import MentorAnalytics from "../Components/Admin/MentorAnalytics";
-import SalesReport from "../Components/Admin/SalesReport";
+import Messages from "../pages/Admin/ContactMessage";
+import MentorAnalytics from "../pages/Admin/MentorAnalytics";
+import SalesReport from "../pages/Admin/SalesReport";
 
 const AdminRoutes = () => (
   <Routes>

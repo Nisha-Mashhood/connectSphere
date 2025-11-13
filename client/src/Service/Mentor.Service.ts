@@ -122,11 +122,12 @@ export const updateMentorProfile = async(mentorId, mentorInfo) =>{
   page: number,
   limit: number,
   sortBy: 'totalEarnings' | 'platformFees' | 'totalCollaborations' | 'avgCollabPrice',
-  sortOrder: 'asc' | 'desc'
+  sortOrder: 'asc' | 'desc',
+  search: string = ""
 ) => {
   try {
     const response = await axiosInstance.get('/mentors/mentor-analytics', {
-      params: { page, limit, sortBy, sortOrder },
+      params: { page, limit, sortBy, sortOrder, search },
     });
     return response.data.data;
   } catch (error) {

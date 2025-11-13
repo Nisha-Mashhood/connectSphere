@@ -2,7 +2,7 @@ import type { Request, Response, Express, NextFunction } from "express";
 import { inject, injectable } from "inversify";
 import { BaseController } from "../core/Controller/base-controller";
 import { uploadMedia } from "../core/Utils/cloudinary";
-import logger from "../core/Utils/logger";
+import logger from "../core/Utils/Logger";
 import { IMentorController } from "../Interfaces/Controller/i-mentor-controller";
 import { HttpError } from "../core/Utils/error-handler";
 import { StatusCodes } from "../enums/status-code-enums";
@@ -211,7 +211,7 @@ export class MentorController extends BaseController implements IMentorControlle
 
   getMentorAnalytics = async (req: Request, res: Response, next: NextFunction): Promise<void> => {
     try {
-      const { page = "1", limit = "10", sortBy = "totalEarnings", sortOrder = "desc" } = req.query;
+      const { page = "1", limit = "10", sortBy = "totalEarnings", sortOrder = "desc", search = "" } = req.query;
 
       const validSortFields = ["totalEarnings", "platformFees", "totalCollaborations", "avgCollabPrice"] as const;
       type SortByType = (typeof validSortFields)[number];
@@ -229,7 +229,8 @@ export class MentorController extends BaseController implements IMentorControlle
         parseInt(page as string) || 1,
         parseInt(limit as string) || 10,
         validatedSortBy,
-        validatedSortOrder
+        validatedSortOrder,
+        search as string
       );
       this.sendSuccess(
         res,

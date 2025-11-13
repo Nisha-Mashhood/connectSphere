@@ -305,8 +305,6 @@ export class MentorRepository extends BaseRepository<IMentor> implements IMentor
           total: [{ $count: 'count' }],
         },
       });
-
-      // logger.debug(`Executing mentor aggregation pipeline: ${JSON.stringify(pipeline, null, 2)}`);
       const result = await this.model.aggregate(pipeline).exec();
       const mentors = result[0]?.mentors || [];
       const total = result[0]?.total[0]?.count || 0;

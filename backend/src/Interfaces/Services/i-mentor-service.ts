@@ -36,7 +36,8 @@ export interface IMentorService {
     page?: number,
     limit?: number,
     sortBy?: "totalEarnings" | "platformFees" | "totalCollaborations" | "avgCollabPrice",
-    sortOrder?: "asc" | "desc"
+    sortOrder?: "asc" | "desc",
+    search?: string
   ) => Promise<{
     mentors: MentorAnalytics[];
     total: number;

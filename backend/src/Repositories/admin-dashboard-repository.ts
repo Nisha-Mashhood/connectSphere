@@ -4,7 +4,7 @@ import collaboration from "../Models/collaboration-model";
 import User from "../Models/user-model";
 import MentorRequest from "../Models/mentor-requset-model";
 import { IAdminRepository } from "../Interfaces/Repository/i-admin-repositry";
-import logger from "../core/Utils/logger";
+import logger from "../core/Utils/Logger";
 import { RepositoryError } from "../core/Utils/error-handler";
 import {
   RevenueStats,

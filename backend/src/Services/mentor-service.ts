@@ -1,6 +1,6 @@
 import { inject, injectable } from "inversify";
-import { sendEmail } from "../core/Utils/email";
-import logger from "../core/Utils/logger";
+import { sendEmail } from "../core/Utils/Email";
+import logger from "../core/Utils/Logger";
 import { IMentor } from "../Interfaces/Models/i-mentor";
 import {
   CompleteMentorDetails,
@@ -568,136 +568,229 @@ export class MentorService implements IMentorService {
     }
   };
 
+  // getMentorAnalytics = async (
+  //   page: number = 1,
+  //   limit: number = 10,
+  //   sortBy:
+  //     | "totalEarnings"
+  //     | "platformFees"
+  //     | "totalCollaborations"
+  //     | "avgCollabPrice" = "totalEarnings",
+  //   sortOrder: "asc" | "desc" = "desc"
+  // ): Promise<{
+  //   mentors: MentorAnalytics[];
+  //   total: number;
+  //   page: number;
+  //   pages: number;
+  // }> => {
+  //   try {
+  //     logger.debug(
+  //       `Fetching mentor analytics with page: ${page}, limit: ${limit}, sortBy: ${sortBy}, sortOrder: ${sortOrder}`
+  //     );
+
+  //     if (page < 1 || limit < 1) {
+  //       logger.error("Invalid pagination parameters");
+  //       throw new ServiceError(
+  //         "Page and limit must be positive numbers",
+  //         StatusCodes.BAD_REQUEST
+  //       );
+  //     }
+
+  //     const validSortFields = [
+  //       "totalEarnings",
+  //       "platformFees",
+  //       "totalCollaborations",
+  //       "avgCollabPrice",
+  //     ];
+  //     if (!validSortFields.includes(sortBy)) {
+  //       logger.error(`Invalid sortBy field: ${sortBy}`);
+  //       throw new ServiceError(
+  //         `SortBy must be one of: ${validSortFields.join(", ")}`,
+  //         StatusCodes.BAD_REQUEST
+  //       );
+  //     }
+
+  //     const validSortOrders = ["asc", "desc"];
+  //     if (!validSortOrders.includes(sortOrder)) {
+  //       logger.error(`Invalid sort order: ${sortOrder}`);
+  //       throw new ServiceError(
+  //         `Sort order must be one of: ${validSortOrders.join(", ")}`,
+  //         StatusCodes.BAD_REQUEST
+  //       );
+  //     }
+
+  //     const { mentors, total } = await this._mentorRepository.getAllMentors();
+  //     const analytics: MentorAnalytics[] = await Promise.all(
+  //       mentors.map(async (mentor: CompleteMentorDetails) => {
+  //         const collaborations = await this._collabRepository.findByMentorId(
+  //           mentor.id.toString()
+  //         );
+  //         const totalCollaborations = collaborations.length;
+  //         const totalEarnings = collaborations.reduce(
+  //           (sum, collab) => sum + (collab.price - 100),
+  //           0
+  //         );
+  //         const platformFees = totalCollaborations * 100;
+  //         const avgCollabPrice =
+  //           totalCollaborations > 0 ? totalEarnings / totalCollaborations : 0;
+
+  //         if (!mentor.userId) {
+  //           logger.warn(`Mentor ${mentor.id} is missing userId`);
+  //           return {
+  //             mentorId: mentor.id.toString(),
+  //             name: "Unknown",
+  //             email: "Unknown",
+  //             specialization: mentor.specialization,
+  //             approvalStatus: mentor.isApproved,
+  //             totalCollaborations,
+  //             totalEarnings,
+  //             platformFees,
+  //             avgCollabPrice,
+  //           };
+  //         }
+
+  //         const user = await this._authRepository.getUserById(
+  //           mentor.userId._id.toString()
+  //         );
+  //         return {
+  //           mentorId: mentor.id.toString(),
+  //           name: user?.name || "Unknown",
+  //           email: user?.email || "Unknown",
+  //           specialization: mentor.specialization,
+  //           approvalStatus: mentor.isApproved,
+  //           totalCollaborations,
+  //           totalEarnings,
+  //           platformFees,
+  //           avgCollabPrice,
+  //         };
+  //       })
+  //     );
+
+  //     const sortedAnalytics = analytics.sort((a, b) => {
+  //       const multiplier = sortOrder === "asc" ? 1 : -1;
+  //       return multiplier * (a[sortBy] - b[sortBy]);
+  //     });
+
+  //     const startIndex = (page - 1) * limit;
+  //     const paginatedAnalytics = sortedAnalytics.slice(
+  //       startIndex,
+  //       startIndex + limit
+  //     );
+
+  //     logger.info(
+  //       `Fetched ${paginatedAnalytics.length} mentor analytics, total: ${total}`
+  //     );
+  //     return {
+  //       mentors: paginatedAnalytics,
+  //       total,
+  //       page,
+  //       pages: Math.ceil(total / limit),
+  //     };
+  //   } catch (error: unknown) {
+  //     const err = error instanceof Error ? error : new Error(String(error));
+  //     logger.error(`Error fetching mentor analytics: ${err.message}`);
+  //     throw error instanceof ServiceError
+  //       ? error
+  //       : new ServiceError(
+  //           "Failed to fetch mentor analytics",
+  //           StatusCodes.INTERNAL_SERVER_ERROR,
+  //           err
+  //         );
+  //   }
+  // };
+
   getMentorAnalytics = async (
-    page: number = 1,
-    limit: number = 10,
-    sortBy:
-      | "totalEarnings"
-      | "platformFees"
-      | "totalCollaborations"
-      | "avgCollabPrice" = "totalEarnings",
-    sortOrder: "asc" | "desc" = "desc"
-  ): Promise<{
-    mentors: MentorAnalytics[];
-    total: number;
-    page: number;
-    pages: number;
-  }> => {
-    try {
-      logger.debug(
-        `Fetching mentor analytics with page: ${page}, limit: ${limit}, sortBy: ${sortBy}, sortOrder: ${sortOrder}`
-      );
+  page: number = 1,
+  limit: number = 10,
+  sortBy:
+    | "totalEarnings"
+    | "platformFees"
+    | "totalCollaborations"
+    | "avgCollabPrice" = "totalEarnings",
+  sortOrder: "asc" | "desc" = "desc",
+  search: string = ""
+): Promise<{
+  mentors: MentorAnalytics[];
+  total: number;
+  page: number;
+  pages: number;
+}> => {
+  try {
+    logger.debug(
+      `Fetching mentor analytics with page=${page}, limit=${limit}, sortBy=${sortBy}, sortOrder=${sortOrder}, search=${search}`
+    );
 
-      if (page < 1 || limit < 1) {
-        logger.error("Invalid pagination parameters");
-        throw new ServiceError(
-          "Page and limit must be positive numbers",
-          StatusCodes.BAD_REQUEST
+    const { mentors } = await this._mentorRepository.getAllMentors();
+
+    const analytics: MentorAnalytics[] = await Promise.all(
+      mentors.map(async (mentor: CompleteMentorDetails) => {
+        const collaborations = await this._collabRepository.findByMentorId(
+          mentor.id.toString()
         );
-      }
 
-      const validSortFields = [
-        "totalEarnings",
-        "platformFees",
-        "totalCollaborations",
-        "avgCollabPrice",
-      ];
-      if (!validSortFields.includes(sortBy)) {
-        logger.error(`Invalid sortBy field: ${sortBy}`);
-        throw new ServiceError(
-          `SortBy must be one of: ${validSortFields.join(", ")}`,
-          StatusCodes.BAD_REQUEST
+        const totalCollaborations = collaborations.length;
+        const totalEarnings = collaborations.reduce(
+          (sum, c) => sum + (c.price - 100),
+          0
         );
-      }
 
-      const validSortOrders = ["asc", "desc"];
-      if (!validSortOrders.includes(sortOrder)) {
-        logger.error(`Invalid sort order: ${sortOrder}`);
-        throw new ServiceError(
-          `Sort order must be one of: ${validSortOrders.join(", ")}`,
-          StatusCodes.BAD_REQUEST
-        );
-      }
+        const platformFees = totalCollaborations * 100;
+        const avgCollabPrice =
+          totalCollaborations > 0 ? totalEarnings / totalCollaborations : 0;
 
-      const { mentors, total } = await this._mentorRepository.getAllMentors();
-      const analytics: MentorAnalytics[] = await Promise.all(
-        mentors.map(async (mentor: CompleteMentorDetails) => {
-          const collaborations = await this._collabRepository.findByMentorId(
-            mentor.id.toString()
-          );
-          const totalCollaborations = collaborations.length;
-          const totalEarnings = collaborations.reduce(
-            (sum, collab) => sum + (collab.price - 100),
-            0
-          );
-          const platformFees = totalCollaborations * 100;
-          const avgCollabPrice =
-            totalCollaborations > 0 ? totalEarnings / totalCollaborations : 0;
+        const user = mentor.userId
+          ? await this._authRepository.getUserById(mentor.userId._id.toString())
+          : null;
 
-          if (!mentor.userId) {
-            logger.warn(`Mentor ${mentor.id} is missing userId`);
-            return {
-              mentorId: mentor.id.toString(),
-              name: "Unknown",
-              email: "Unknown",
-              specialization: mentor.specialization,
-              approvalStatus: mentor.isApproved,
-              totalCollaborations,
-              totalEarnings,
-              platformFees,
-              avgCollabPrice,
-            };
-          }
+        return {
+          mentorId: mentor.id.toString(),
+          name: user?.name || "Unknown",
+          email: user?.email || "Unknown",
+          specialization: mentor.specialization,
+          approvalStatus: mentor.isApproved,
+          totalCollaborations,
+          totalEarnings,
+          platformFees,
+          avgCollabPrice,
+        };
+      })
+    );
 
-          const user = await this._authRepository.getUserById(
-            mentor.userId._id.toString()
-          );
-          return {
-            mentorId: mentor.id.toString(),
-            name: user?.name || "Unknown",
-            email: user?.email || "Unknown",
-            specialization: mentor.specialization,
-            approvalStatus: mentor.isApproved,
-            totalCollaborations,
-            totalEarnings,
-            platformFees,
-            avgCollabPrice,
-          };
-        })
-      );
+    const searchLower = search.toLowerCase();
+    const filteredAnalytics = analytics.filter((mentor) =>
+      mentor.name.toLowerCase().includes(searchLower) ||
+      mentor.email.toLowerCase().includes(searchLower) ||
+      (mentor.specialization?.toLowerCase() || "").includes(searchLower)
+    );
 
-      const sortedAnalytics = analytics.sort((a, b) => {
-        const multiplier = sortOrder === "asc" ? 1 : -1;
-        return multiplier * (a[sortBy] - b[sortBy]);
-      });
+    const sortedAnalytics = filteredAnalytics.sort((a, b) => {
+      const mul = sortOrder === "asc" ? 1 : -1;
+      return mul * (a[sortBy] - b[sortBy]);
+    });
 
-      const startIndex = (page - 1) * limit;
-      const paginatedAnalytics = sortedAnalytics.slice(
-        startIndex,
-        startIndex + limit
-      );
+    const total = sortedAnalytics.length;
+    const startIndex = (page - 1) * limit;
+    const paginatedAnalytics = sortedAnalytics.slice(
+      startIndex,
+      startIndex + limit
+    );
 
-      logger.info(
-        `Fetched ${paginatedAnalytics.length} mentor analytics, total: ${total}`
-      );
-      return {
-        mentors: paginatedAnalytics,
-        total,
-        page,
-        pages: Math.ceil(total / limit),
-      };
-    } catch (error: unknown) {
-      const err = error instanceof Error ? error : new Error(String(error));
-      logger.error(`Error fetching mentor analytics: ${err.message}`);
-      throw error instanceof ServiceError
-        ? error
-        : new ServiceError(
-            "Failed to fetch mentor analytics",
-            StatusCodes.INTERNAL_SERVER_ERROR,
-            err
-          );
-    }
-  };
+    return {
+      mentors: paginatedAnalytics,
+      total,
+      page,
+      pages: Math.ceil(total / limit),
+    };
+  } catch (error: any) {
+    logger.error("Error fetching mentor analytics:", error);
+    throw new ServiceError(
+      "Failed to fetch mentor analytics",
+      StatusCodes.INTERNAL_SERVER_ERROR,
+      error
+    );
+  }
+};
+
 
   getSalesReport = async (period: string): Promise<SalesReport> => {
     try {

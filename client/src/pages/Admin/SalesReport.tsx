@@ -1,76 +1,119 @@
-import { useState, useEffect, useCallback } from 'react';
-import toast from 'react-hot-toast';
+import { useState, useEffect, useCallback, useMemo } from "react";
+import toast from "react-hot-toast";
 import {
   Card,
   CardHeader,
   CardBody,
-  Table,
-  TableHeader,
-  TableColumn,
-  TableBody,
-  TableRow,
-  TableCell,
   Spinner,
-} from '@nextui-org/react';
-import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from 'recharts';
-import { getSalesReport } from '../../Service/Mentor.Service';
+} from "@nextui-org/react";
+
+import {
+  BarChart,
+  Bar,
+  XAxis,
+  YAxis,
+  CartesianGrid,
+  Tooltip,
+  Legend,
+  ResponsiveContainer,
+} from "recharts";
+
+import DataTable from "../../Components/ReusableComponents/DataTable";
+import { getSalesReport } from "../../Service/Mentor.Service";
+
+interface MentorBreakdown {
+  id: string;
+  mentorId: string;
+  name: string;
+  email: string;
+  collaborations: number;
+  mentorEarnings: number;
+  platformFees: number;
+}
 
 interface SalesReport {
   period: string;
   totalRevenue: number;
   platformRevenue: number;
   mentorRevenue: number;
-  mentorBreakdown: {
-    mentorId: string;
-    name: string;
-    email: string;
-    collaborations: number;
-    mentorEarnings: number;
-    platformFees: number;
-  }[];
+  mentorBreakdown: MentorBreakdown[];
 }
 
 const SalesReport = () => {
   const [report, setReport] = useState<SalesReport | null>(null);
-  const [period, setPeriod] = useState('1month');
+  const [period, setPeriod] = useState("1month");
   const [loading, setLoading] = useState(false);
 
   const fetchReport = useCallback(async () => {
     setLoading(true);
     try {
       const response = await getSalesReport(period);
-      console.log(response);
-      setReport(response);
+
+      const mapped = response.mentorBreakdown.map((m: MentorBreakdown) => ({
+        ...m,
+        id: m.mentorId,
+      }));
+
+      setReport({
+        ...response,
+        mentorBreakdown: mapped,
+      });
     } catch (error) {
-      toast.error('Failed to fetch sales report');
-      console.error('Error:', error);
+      toast.error("Failed to fetch sales report");
+      console.error("Error:", error);
     } finally {
       setLoading(false);
     }
-  },[period])
+  }, [period]);
 
   useEffect(() => {
     fetchReport();
   }, [fetchReport]);
 
-  // Recharts data format
-  const chartData = report
-    ? [
-        { name: 'Total Revenue', amount: report.totalRevenue, fill: '#3b82f6' },
-        { name: 'Platform Revenue', amount: report.platformRevenue, fill: '#10b981' },
-        { name: 'Mentor Revenue', amount: report.mentorRevenue, fill: '#f59e0b' },
-      ]
-    : [
-        { name: 'Total Revenue', amount: 0, fill: '#3b82f6' },
-        { name: 'Platform Revenue', amount: 0, fill: '#10b981' },
-        { name: 'Mentor Revenue', amount: 0, fill: '#f59e0b' },
+  // Chart Data
+  const chartData = useMemo(() => {
+    if (!report) {
+      return [
+        { name: "Total Revenue", amount: 0, fill: "#3b82f6" },
+        { name: "Platform Revenue", amount: 0, fill: "#10b981" },
+        { name: "Mentor Revenue", amount: 0, fill: "#f59e0b" },
       ];
+    }
+
+    return [
+      { name: "Total Revenue", amount: report.totalRevenue, fill: "#3b82f6" },
+      { name: "Platform Revenue", amount: report.platformRevenue, fill: "#10b981" },
+      { name: "Mentor Revenue", amount: report.mentorRevenue, fill: "#f59e0b" },
+    ];
+  }, [report]);
+
+  // DataTable Columns
+  const columns = useMemo(
+    () => [
+      { key: "name", label: "Name" },
+      { key: "email", label: "Email" },
+      { key: "collaborations", label: "Sessions" },
+      {
+        key: "mentorEarnings",
+        label: "Earnings (₹)",
+        render: (row: MentorBreakdown) => row.mentorEarnings.toFixed(2),
+      },
+      {
+        key: "platformFees",
+        label: "Platform Fees (₹)",
+        render: (row: MentorBreakdown) => row.platformFees.toFixed(2),
+      },
+    ],
+    []
+  );
 
   return (
     <div className="p-8 max-w-6xl mx-auto">
       <Card className="shadow-md">
+        {/* Header */}
         <CardHeader className="flex justify-between items-center">
           <h1 className="text-2xl font-bold">Sales Report</h1>
+
           <select
             value={period}
             onChange={(e) => setPeriod(e.target.value)}
@@ -81,6 +124,7 @@ const SalesReport = () => {
             <option value="5years">Last 5 Years</option>
           </select>
         </CardHeader>
+
         <CardBody>
           {loading ? (
             <div className="flex justify-center">
@@ -90,18 +134,29 @@ const SalesReport = () => {
             <p>No data available.</p>
           ) : (
             <>
-              {/* Chart */}
+              {/* Revenue Chart */}
               <div className="mb-8">
                 <h3 className="text-lg font-semibold mb-4">
-                  Revenue ({period === '1month' ? 'Last 30 Days' : period === '1year' ? 'Last 1 Year' : 'Last 5 Years'})
+                  Revenue Overview (
+                  {period === "1month"
+                    ? "Last 30 Days"
+                    : period === "1year"
+                    ? "Last 1 Year"
+                    : "Last 5 Years"}
+                  )
                 </h3>
+
                 <div className="h-64">
                   <ResponsiveContainer width="100%" height="100%">
                     <BarChart data={chartData}>
                       <CartesianGrid strokeDasharray="3 3" />
                       <XAxis dataKey="name" />
                       <YAxis
-                        label={{ value: 'Amount (₹)', angle: -90, position: 'insideLeft' }}
+                        label={{
+                          value: "Amount (₹)",
+                          angle: -90,
+                          position: "insideLeft",
+                        }}
                       />
                       <Tooltip />
                       <Legend />
@@ -111,7 +166,7 @@ const SalesReport = () => {
                 </div>
               </div>
 
-              {/* Revenue Cards */}
+              {/* Revenue Summary Cards */}
               <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-8">
                 <Card>
                   <CardBody>
@@ -119,12 +174,14 @@ const SalesReport = () => {
                     <p className="text-2xl">₹{report.totalRevenue.toFixed(2)}</p>
                   </CardBody>
                 </Card>
+
                 <Card>
                   <CardBody>
                     <h3 className="text-lg font-semibold">Platform Revenue</h3>
                     <p className="text-2xl">₹{report.platformRevenue.toFixed(2)}</p>
                   </CardBody>
                 </Card>
+
                 <Card>
                   <CardBody>
                     <h3 className="text-lg font-semibold">Mentor Revenue</h3>
@@ -133,27 +190,16 @@ const SalesReport = () => {
                 </Card>
               </div>
 
-              {/* Mentor Breakdown Table */}
-              <Table aria-label="Mentor Earnings Breakdown">
-                <TableHeader>
-                  <TableColumn>Name</TableColumn>
-                  <TableColumn>Email</TableColumn>
-                  <TableColumn>Sessions</TableColumn>
-                  <TableColumn>Earnings (₹)</TableColumn>
-                  <TableColumn>Platform Fees (₹)</TableColumn>
-                </TableHeader>
-                <TableBody>
-                  {report.mentorBreakdown.map((mentor) => (
-                    <TableRow key={mentor.mentorId}>
-                      <TableCell>{mentor.name}</TableCell>
-                      <TableCell>{mentor.email}</TableCell>
-                      <TableCell>{mentor.collaborations}</TableCell>
-                      <TableCell>{mentor.mentorEarnings.toFixed(2)}</TableCell>
-                      <TableCell>{mentor.platformFees.toFixed(2)}</TableCell>
-                    </TableRow>
-                  ))}
-                </TableBody>
-              </Table>
+              <DataTable<MentorBreakdown>
+                data={report.mentorBreakdown}
+                columns={columns}
+                loading={loading}
+                total={report.mentorBreakdown.length}
+                page={1}
+                limit={report.mentorBreakdown.length}
+                onPageChange={() => {}}
+                emptyMessage="No mentor earnings data found"
+              />
             </>
           )}
         </CardBody>
