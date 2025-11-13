@@ -1,8 +1,8 @@
 import { Tabs, Tab, Tooltip, Button } from "@nextui-org/react";
 import { FaCheck, FaStar, FaTimes } from "react-icons/fa";
 import { BsStar } from "react-icons/bs";
-import DataTable from "../ReusableComponents/DataTable";
-import SearchBar from "../ReusableComponents/SearchBar";
+import DataTable from "../../Components/ReusableComponents/DataTable";
+import SearchBar from "../../Components/ReusableComponents/SearchBar";
 import { useReviewManagement } from "../../Hooks/Admin/useReviewManagement";
 import { Review } from "../../Interface/IReview";
 

@@ -1,6 +1,6 @@
 import { NextFunction, Request, Response } from 'express';
 import { inject, injectable } from 'inversify';
-import logger from '../core/Utils/logger';
+import logger from '../core/Utils/Logger';
 import { IContactMessageController } from '../Interfaces/Controller/i-contact-us-controller';
 import { HttpError } from '../core/Utils/error-handler';
 import { StatusCodes } from "../enums/status-code-enums";
@@ -35,22 +35,39 @@ export class ContactMessageController extends BaseController implements IContact
     }
   };
 
-  getAllContactMessages = async (_req: Request, res: Response, next: NextFunction): Promise<void> => {
-    try {
-      logger.debug("Fetching all contact messages");
-      const messages = await this._contactMessageService.getAllContactMessages();
-      if (messages.length === 0) {
-        this.sendSuccess(res, { messages: [] }, CONTACT_MESSAGE_MESSAGES.NO_CONTACT_MESSAGES_FOUND);
-        logger.info("No contact messages found");
-        return;
-      }
-      this.sendSuccess(res, { messages }, CONTACT_MESSAGE_MESSAGES.CONTACT_MESSAGES_FETCHED);
-      logger.info("Fetched all contact messages");
-    } catch (error: any) {
-      logger.error(`Error fetching contact messages: ${error.message}`);
-      next(error);
-    }
-  };
+  getAllContactMessages = async (
+  req: Request,
+  res: Response,
+  next: NextFunction
+): Promise<void> => {
+  try {
+    logger.debug("Controller: Fetching contact messages");
+
+    const {
+      page = "1",
+      limit = "10",
+      search = "",
+      dateFilter = "all",
+    } = req.query;
+
+    const result = await this._contactMessageService.getAllContactMessages({
+      page: Number(page),
+      limit: Number(limit),
+      search: String(search),
+      dateFilter: dateFilter as "today" | "7days" | "30days" | "all",
+    });
+
+    this.sendSuccess(
+      res,
+      result,
+      CONTACT_MESSAGE_MESSAGES.CONTACT_MESSAGES_FETCHED
+    );
+  } catch (error: any) {
+    logger.error(`Error fetching contact messages: ${error.message}`);
+    next(error);
+  }
+};
+
 
   sendReply = async (req: Request, res: Response, next: NextFunction): Promise<void> => {
     try {

@@ -21,13 +21,25 @@ export const sendContactMessage = async (data: ContactMessage) => {
   }
 };
 
-export const getContactMessages = async () => {
+export const getContactMessages = async ({
+  page = 1,
+  limit = 10,
+  search = "",
+  dateFilter = "all",
+}: {
+  page?: number;
+  limit?: number;
+  search?: string;
+  dateFilter?: "today" | "7days" | "30days" | "all";
+}) => {
   try {
-    const response = await axiosInstance.get("/contactUs/messages");
+    const response = await axiosInstance.get("/contactUs/messages", {
+      params: { page, limit, search, dateFilter },
+    });
+
     return response.data.data;
   } catch (error) {
     handleError(error);
-    throw new Error(error.response?.data?.message || "Failed to fetch contact messages");
   }
 };
 

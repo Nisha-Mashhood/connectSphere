@@ -2,8 +2,8 @@ import { inject, injectable } from "inversify";
 import { Types } from "mongoose";
 import config from "../config/env-config";
 import { StatusCodes } from "../enums/status-code-enums";
-import { sendEmail } from "../core/Utils/email";
-import logger from "../core/Utils/logger";
+import { sendEmail } from "../core/Utils/Email";
+import logger from "../core/Utils/Logger";
 import { ServiceError } from "../core/Utils/error-handler";
 import { IContactMessageService } from "../Interfaces/Services/i-contact-message-service";
 import { IContactMessageRepository } from "../Interfaces/Repository/i-contact-message-repositry";
@@ -82,25 +82,55 @@ export class ContactMessageService implements IContactMessageService{
     }
   };
 
-  public getAllContactMessages = async (): Promise<IContactMessageDTO[]> => {
-    try {
-      logger.debug("Fetching all contact messages");
-      const messages = await this.contactMessageRepo.getAllContactMessages();
-      const messagesDTO = toContactMessageDTOs(messages);
-      logger.info(`Fetched ${messagesDTO.length} contact messages`);
-      return messagesDTO;
-    } catch (error: unknown) {
-      const err = error instanceof Error ? error : new Error(String(error));
-      logger.error(`Error fetching contact messages: ${err.message}`);
-      throw error instanceof ServiceError
-        ? error
-        : new ServiceError(
-            "Failed to fetch contact messages",
-            StatusCodes.INTERNAL_SERVER_ERROR,
-            err
-          );
-    }
-  };
+  public getAllContactMessages = async ({
+  page = 1,
+  limit = 10,
+  search = "",
+  dateFilter = "all",
+}: {
+  page?: number;
+  limit?: number;
+  search?: string;
+  dateFilter?: "today" | "7days" | "30days" | "all";
+}): Promise<{
+  messages: IContactMessageDTO[];
+  total: number;
+  page: number;
+  pages: number;
+}> => {
+  try {
+    logger.debug(
+      `Service: Fetching contact messages with pagination/search/filter`
+    );
+
+    const { messages, total, page: currentPage, pages } =
+      await this.contactMessageRepo.getAllContactMessages({
+        page,
+        limit,
+        search,
+        dateFilter,
+      });
+
+    const messagesDTO = toContactMessageDTOs(messages);
+
+    return {
+      messages: messagesDTO,
+      total,
+      page: currentPage,
+      pages,
+    };
+  } catch (error: unknown) {
+    const err = error instanceof Error ? error : new Error(String(error));
+
+    logger.error(`Error fetching contact messages: ${err.message}`);
+
+    throw new ServiceError(
+      "Failed to fetch contact messages",
+      StatusCodes.INTERNAL_SERVER_ERROR,
+      err
+    );
+  }
+};
 
   public sendReply = async (
     contactMessageId: string,

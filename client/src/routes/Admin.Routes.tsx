@@ -17,7 +17,7 @@ import GroupCollab from "../pages/Admin/GroupCollab";
 import UserUserCollabDetails from "../Components/Admin/User-User/UserConnectionDetails/User-UserDeatils";
 import GroupDetails from "../pages/Admin/GroupAndRequsetDetails";
 import CollaborationDetails from "../pages/Admin/CollaborationDetails";
-import ReviewManagement from "../Components/Admin/ReviewManagement";
+import ReviewManagement from "../pages/Admin/ReviewManagement";
 import Messages from "../Components/Admin/ContactMessage";
 import MentorAnalytics from "../Components/Admin/MentorAnalytics";
 import SalesReport from "../Components/Admin/SalesReport";
