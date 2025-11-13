@@ -3,7 +3,7 @@ import Breadcrumb from "../../Components/ReusableComponents/Breadcrumb";
 import SearchBar from "../../Components/ReusableComponents/SearchBar";
 import Pagination from "../../Components/ReusableComponents/Pagination";
 import TableComponent from "../../Components/ReusableComponents/Table";
-import FormModal from "../../Components/Admin/FormModal";
+import FormModal from "../../Components/Admin/SkillManagemnt/FormModal";
 import {
   fetchCategoriesService,
   deleteCategory,

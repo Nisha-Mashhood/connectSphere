@@ -6,14 +6,14 @@ import {
   createCategory,
   createSkill,
   createSubCategory,
-} from "../../Service/Category.Service";
+} from "../../../Service/Category.Service";
 
-import TextField from "../ReusableComponents/TextFiled";
-import TextArea from "../ReusableComponents/TextArea";
-import { ICategory } from "../../Interface/Admin/ICategory";
-import { ISubCategory } from "../../Interface/Admin/ISubCategory";
-import { ISkill } from "../../Interface/Admin/ISkill";
-import { baseSchema, FormValues } from "../../validation/categoryValidation";
+import TextField from "../../ReusableComponents/TextFiled";
+import TextArea from "../../ReusableComponents/TextArea";
+import { ICategory } from "../../../Interface/Admin/ICategory";
+import { ISubCategory } from "../../../Interface/Admin/ISubCategory";
+import { ISkill } from "../../../Interface/Admin/ISkill";
+import { baseSchema, FormValues } from "../../../validation/categoryValidation";
 
 interface FormModalProps {
   isOpen: boolean;
@@ -52,7 +52,6 @@ const FormModal: React.FC<FormModalProps> = ({
     resolver: yupResolver(baseSchema),
   });
 
-  /* ────── Pre-fill when editing ────── */
   useEffect(() => {
     if (isOpen && isEdit && item) {
       reset({
@@ -68,7 +67,6 @@ const FormModal: React.FC<FormModalProps> = ({
     }
   }, [isOpen, isEdit, item, reset]);
 
-  /* ────── Image picker ────── */
   const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0] ?? null;
     if (!file) return;
@@ -86,7 +84,6 @@ const FormModal: React.FC<FormModalProps> = ({
     setPreview(URL.createObjectURL(file));
   };
 
-  //Get Parent Ids
   const getParentIds = () => {
     let parentCategoryId: string | null = null;
     let parentSubcategoryId: string | null = null;

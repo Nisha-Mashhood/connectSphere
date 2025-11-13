@@ -23,7 +23,7 @@ export interface IGroupRepository {
   deleteGroupRequestsByGroupId(groupId: string): Promise<void>;
   updateGroupImage(groupId: string, updateData: { profilePic?: string; coverPic?: string }): Promise<IGroup | null>;
   getGroupDetailsByUserId(userId: string): Promise<IGroup[]>;
-  getAllGroupRequests(): Promise<IGroupRequest[]>;
+  getAllGroupRequests(search: string, page: number, limit: number): Promise<IGroupRequest[]>;
   isUserInGroup(groupId: string, userId: string): Promise<boolean>;
   getGroupMembers(groupId: string): Promise<Types.ObjectId[]>
 }

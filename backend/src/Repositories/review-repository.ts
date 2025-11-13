@@ -1,8 +1,8 @@
 import { injectable } from 'inversify';
-import { Model, Types } from 'mongoose';
+import { Model, PipelineStage, Types } from 'mongoose';
 import { BaseRepository } from '../core/Repositries/base-repositry';
 import { RepositoryError } from '../core/Utils/error-handler';
-import logger from '../core/Utils/logger';
+import logger from '../core/Utils/Logger';
 import Review from '../Models/review-model';
 import { IReview } from '../Interfaces/Models/i-review';
 import { StatusCodes } from '../enums/status-code-enums';
@@ -52,7 +52,7 @@ export class ReviewRepository extends BaseRepository<IReview> implements IReview
       logger.debug(`Fetching review by ID: ${reviewId}`);
       const review = await this.model
         .findById(this.toObjectId(reviewId))
-        .populate('userId', '_id email username')
+        .populate('userId', '_id email name')
         .exec();
       if (!review) {
         logger.warn(`Review not found: ${reviewId}`);
@@ -67,22 +67,96 @@ export class ReviewRepository extends BaseRepository<IReview> implements IReview
     }
   }
 
-  public getAllReviews = async (): Promise<IReview[]> => {
-    try {
-      logger.debug('Fetching all reviews');
-      const reviews = await this.model
-        .find()
-        .populate('userId', '_id email username')
-        .sort({ createdAt: -1 })
-        .exec();
-      logger.info(`Fetched ${reviews.length} reviews`);
-      return reviews;
-    } catch (error: unknown) {
-      const err = error instanceof Error ? error : new Error(String(error));
-      logger.error(`Error fetching all reviews`, err);
-      throw new RepositoryError('Error fetching all reviews', StatusCodes.INTERNAL_SERVER_ERROR, err);
-    }
+ public async getAllReviews({
+  page = 1,
+  limit = 10,
+  search = "",
+}: {
+  page?: number;
+  limit?: number;
+  search?: string;
+}): Promise<{ reviews: IReview[]; total: number; page: number; pages: number }> {
+  try {
+    logger.debug(
+      `Fetching reviews paginated (page=${page}, limit=${limit}, search=${search})`
+    );
+
+    const matchStage =
+      search.trim() !== ""
+        ? {
+            $or: [
+              { comment: { $regex: search, $options: "i" } },
+              { "userId.name": { $regex: search, $options: "i" } },
+              { "userId.email": { $regex: search, $options: "i" } },
+            ],
+          }
+        : {};
+
+    const pipeline: PipelineStage[] = [
+      {
+        $lookup: {
+          from: "users",
+          localField: "userId",
+          foreignField: "_id",
+          as: "userId",
+        },
+      },
+      {
+        $unwind: {
+          path: "$userId",
+          preserveNullAndEmptyArrays: true,
+        },
+      },
+
+      { $match: matchStage },
+
+      { $sort: { createdAt: -1 } },
+
+      {
+        $facet: {
+          reviews: [
+            { $skip: (page - 1) * limit },
+            { $limit: limit },
+            {
+              $project: {
+                _id: 1,
+                reviewId: 1,
+                rating: 1,
+                comment: 1,
+                isApproved: 1,
+                isSelect: 1,
+                createdAt: 1,
+                userId: 1,
+              },
+            },
+          ],
+          total: [{ $count: "count" }],
+        },
+      },
+    ];
+
+    const result = await this.model.aggregate(pipeline).exec();
+
+    const reviews = result[0]?.reviews || [];
+    const total = result[0]?.total[0]?.count || 0;
+
+    return {
+      reviews: reviews as unknown as IReview[],
+      total,
+      page,
+      pages: Math.ceil(total / limit),
+    };
+  } catch (error) {
+    logger.error("Error fetching paginated reviews", error);
+    throw new RepositoryError(
+      "Error fetching paginated reviews",
+      StatusCodes.INTERNAL_SERVER_ERROR,
+      error as Error
+    );
   }
+}
+
+
 
   public updateReview = async (
     reviewId: string,
@@ -92,7 +166,7 @@ export class ReviewRepository extends BaseRepository<IReview> implements IReview
       logger.debug(`Updating review: ${reviewId}`);
       const review = await this.model
         .findByIdAndUpdate(this.toObjectId(reviewId), updates, { new: true })
-        .populate('userId', '_id email username')
+        .populate('userId', '_id email name')
         .exec();
       if (!review) {
         logger.warn(`Review not found: ${reviewId}`);
@@ -112,7 +186,7 @@ export class ReviewRepository extends BaseRepository<IReview> implements IReview
       logger.debug('Fetching selected and approved reviews');
       const reviews = await this.model
         .find({ isSelect: true, isApproved: true })
-        .populate('userId', '_id email username')
+        .populate('userId', '_id email name')
         .exec();
       logger.info(`Fetched ${reviews.length} selected and approved reviews`);
       return reviews;

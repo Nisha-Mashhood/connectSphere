@@ -26,9 +26,20 @@ export const skip_review = async (userId: string) => {
 };
 
 // Get All Reviews (Admin)
-export const get_all_reviews = async () => {
+export const get_all_reviews = async ({
+  page = 1,
+  limit = 10,
+  search = "",
+}: {
+  page?: number;
+  limit?: number;
+  search?: string;
+}) => {
   try {
-    const response = await axiosInstance.get(`/reviews/all`);
+    const response = await axiosInstance.get(`/reviews/all`, {
+      params: { page, limit, search },
+    });
+
     return response.data.data;
   } catch (error) {
     handleError(error);

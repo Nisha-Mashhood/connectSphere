@@ -2,7 +2,7 @@ import { Request, Response, NextFunction } from 'express';
 import { inject, injectable } from 'inversify';
 import { uploadMedia } from '../core/Utils/cloudinary';
 import { HttpError } from '../core/Utils/error-handler';
-import logger from '../core/Utils/logger';
+import logger from '../core/Utils/Logger';
 import { GroupFormData } from '../Utils/Types/group-types';
 import type { Express } from "express";
 import { IGroupController } from '../Interfaces/Controller/i-group-controller';
@@ -275,20 +275,28 @@ export class GroupController extends BaseController implements IGroupController{
     }
   };
 
-  getAllGroupRequests = async (_req: Request, res: Response, next: NextFunction): Promise<void> => {
-    try {
-      logger.debug("Fetching all group requests");
-      const requests = await this._groupService.getAllGroupRequests();
-      this.sendSuccess(
-        res,
-        { requests },
-        requests.length === 0 ? GROUP_MESSAGES.NO_GROUP_REQUESTS_FOUND : GROUP_MESSAGES.GROUP_REQUESTS_FETCHED
-      );
-    } catch (error: any) {
-      logger.error(`Error in getAllGroupRequests: ${error.message}`);
-      next(error);
-    }
-  };
+  getAllGroupRequests = async (req: Request, res: Response, next: NextFunction): Promise<void> => {
+  try {
+    const search = (req.query.search as string) || "";
+    const page = parseInt(req.query.page as string) || 1;
+    const limit = parseInt(req.query.limit as string) || 10;
+
+    logger.debug(`Controller: fetching group requests (page=${page}, search="${search}")`);
+
+    const { requests, total } = await this._groupService.getAllGroupRequests(search, page, limit);
+
+    this.sendSuccess(
+      res,
+      { requests, total, page, limit },
+      requests.length === 0
+        ? GROUP_MESSAGES.NO_GROUP_REQUESTS_FOUND
+        : GROUP_MESSAGES.GROUP_REQUESTS_FETCHED
+    );
+  } catch (error: any) {
+    logger.error(`Error in getAllGroupRequests: ${error.message}`);
+    next(error);
+  }
+};
 
   getGroupRequestById = async (req: Request, res: Response, next: NextFunction): Promise<void> => {
     try {

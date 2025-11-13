@@ -1,6 +1,6 @@
 import { NextFunction, Request, Response } from 'express';
 import { inject, injectable } from 'inversify';
-import logger from '../core/Utils/logger';
+import logger from '../core/Utils/Logger';
 import { IReviewController } from '../Interfaces/Controller/i-review-controller';
 import { HttpError } from '../core/Utils/error-handler';
 import { StatusCodes } from "../enums/status-code-enums";
@@ -50,19 +50,28 @@ export class ReviewController extends BaseController implements IReviewControlle
     }
   };
 
-  getAllReviews = async (_req: Request, res: Response, next: NextFunction): Promise<void> => {
-    try {
-      logger.debug("Fetching all reviews");
-      const reviews = await this._reviewService.getAllReviews();
-      const data = reviews.length === 0 ? [] : reviews;
-      const message = reviews.length === 0 ? REVIEW_MESSAGES.NO_REVIEWS_FOUND : REVIEW_MESSAGES.REVIEWS_FETCHED;
+  getAllReviews = async (req: Request, res: Response, next: NextFunction): Promise<void> => {
+  try {
+    const page = Number(req.query.page) || 1;
+    const limit = Number(req.query.limit) || 10;
+    const search = (req.query.search as string) || "";
 
-      this.sendSuccess(res, data, message);
-    } catch (error: any) {
-      logger.error(`Error fetching all reviews: ${error.message}`);
-      next(error);
-    }
-  };
+    logger.debug(
+      `Controller: fetching reviews (page=${page}, limit=${limit}, search=${search})`
+    );
+
+    const result = await this._reviewService.getAllReviews({
+      page,
+      limit,
+      search,
+    });
+
+    this.sendSuccess(res, result, REVIEW_MESSAGES.REVIEWS_FETCHED);
+  } catch (error: any) {
+    logger.error(`Error fetching paginated reviews: ${error.message}`);
+    next(error);
+  }
+};
 
   approveReview = async (req: Request, res: Response, next: NextFunction): Promise<void> => {
     try {

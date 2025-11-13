@@ -1,6 +1,6 @@
 import { inject, injectable } from "inversify";
 import { ServiceError } from '../core/Utils/error-handler';
-import logger from '../core/Utils/logger';
+import logger from '../core/Utils/Logger';
 import { IReviewService } from '../Interfaces/Services/i-review-service';
 import { StatusCodes } from '../enums/status-code-enums';
 import { IReviewRepository } from "../Interfaces/Repository/i-review-repositry";
@@ -92,25 +92,51 @@ export class ReviewService implements IReviewService{
     }
   };
 
-  public getAllReviews = async (): Promise<IReviewDTO[]> => {
-    try {
-      logger.debug("Fetching all reviews");
-      const reviews = await this._reviewRepository.getAllReviews();
-      const reviewDTOs = toReviewDTOs(reviews);
-      logger.info(`Fetched ${reviewDTOs.length} reviews`);
-      return reviewDTOs;
-    } catch (error: unknown) {
-      const err = error instanceof Error ? error : new Error(String(error));
-      logger.error(`Error fetching all reviews: ${err.message}`);
-      throw error instanceof ServiceError
-        ? error
-        : new ServiceError(
-            "Failed to fetch all reviews",
-            StatusCodes.INTERNAL_SERVER_ERROR,
-            err
-          );
-    }
-  };
+  public getAllReviews = async ({
+  page = 1,
+  limit = 10,
+  search = "",
+}: {
+  page?: number;
+  limit?: number;
+  search?: string;
+}): Promise<{
+  reviews: IReviewDTO[];
+  total: number;
+  page: number;
+  pages: number;
+}> => {
+  try {
+    logger.debug(
+      `Fetching paginated reviews from service (page=${page}, limit=${limit}, search=${search})`
+    );
+
+    const result = await this._reviewRepository.getAllReviews({
+      page,
+      limit,
+      search,
+    });
+
+    const reviewsDTO = toReviewDTOs(result.reviews);
+
+    return {
+      reviews: reviewsDTO,
+      total: result.total,
+      page: result.page,
+      pages: result.pages,
+    };
+  } catch (error: any) {
+    logger.error(`Error fetching paginated reviews: ${error.message}`);
+
+    throw error instanceof ServiceError
+      ? error
+      : new ServiceError(
+          "Failed to fetch paginated reviews",
+          StatusCodes.INTERNAL_SERVER_ERROR,
+          error
+        );
+  }
+};
 
   public approveReview = async (reviewId: string): Promise<IReviewDTO | null> => {
     try {

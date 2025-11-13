@@ -1,230 +1,143 @@
-import { useEffect, useState } from "react";
-import {
-  Tabs,
-  Tab,
-  Table,
-  TableHeader,
-  TableColumn,
-  TableBody,
-  TableRow,
-  TableCell,
-  Button,
-  Tooltip,
-} from "@nextui-org/react";
-import {
-  get_all_reviews,
-  approve_review,
-  select_review,
-  cancel_approval,
-  deselect_review,
-} from "../../Service/Review.Service";
-import toast from "react-hot-toast";
+import { Tabs, Tab, Tooltip, Button } from "@nextui-org/react";
 import { FaCheck, FaStar, FaTimes } from "react-icons/fa";
 import { BsStar } from "react-icons/bs";
-import { Review } from "../../types";
+import DataTable from "../ReusableComponents/DataTable";
+import SearchBar from "../ReusableComponents/SearchBar";
+import { useReviewManagement } from "../../Hooks/Admin/useReviewManagement";
+import { Review } from "../../Interface/IReview";
 
-const ReviewManagement: React.FC = () => {
-  const [reviews, setReviews] = useState<Review[]>([]);
-  const [loading, setLoading] = useState(true);
+const ReviewManagement = () => {
+  const {
+    reviews,
+    loading,
+    page,
+    limit,
+    total,
+    searchQuery,
+    setSearchQuery,
+    setPage,
+    handleApprove,
+    handleCancelApproval,
+    handleSelect,
+    handleDeselect,
+  } = useReviewManagement();
 
-  const fetchReviews = async () => {
-    try {
-      setLoading(true);
-      const response = await get_all_reviews();
-      setReviews(response || []);
-    } catch (error) {
-      console.error("Failed to fetch reviews:", error);
-      toast.error("Failed to load reviews");
-    } finally {
-      setLoading(false);
-    }
-  };
+  const columns = [
+    {
+      key: "user",
+      label: "User",
+      render: (r: Review) => (
+        <span>{r.user.name} ({r.user.email})</span>
+      ),
+    },
+    {
+      key: "rating",
+      label: "Rating",
+      render: (r: Review) => (
+        <div className="flex">
+          {[...Array(r.rating)].map((_, i) => (
+            <FaStar key={i} className="text-yellow-400" />
+          ))}
+        </div>
+      ),
+    },
+    { key: "comment", label: "Comment" },
+    {
+      key: "isApproved",
+      label: "Approved",
+      render: (r: Review) => (r.isApproved ? "Yes" : "No"),
+    },
+    {
+      key: "isSelect",
+      label: "Selected",
+      render: (r: Review) => (r.isSelect ? "Yes" : "No"),
+    },
+    {
+      key: "createdAt",
+      label: "Date",
+      render: (r: Review) =>
+        new Date(r.createdAt).toLocaleDateString(),
+    },
+    {
+      key: "actions",
+      label: "Actions",
+      render: (r: Review) => (
+        <div className="flex space-x-2">
 
-  useEffect(() => {
-    fetchReviews();
-  }, []);
+          {!r.isApproved && (
+            <Tooltip content="Approve">
+              <Button isIconOnly color="success" onPress={() => handleApprove(r.id)}>
+                <FaCheck />
+              </Button>
+            </Tooltip>
+          )}
 
-  const handleApprove = async (reviewId: string) => {
-    try {
-      const response = await approve_review(reviewId);
-      console.log("Approve review :",response);
-      if (response?.isApproved) {
-        setReviews((prev) =>
-          prev.map((review) =>
-            review.reviewId === reviewId
-              ? { ...review, isApproved: true }
-              : review
-          )
-        );
-        toast.success("Review approved");
-      }
-    } catch (error) {
-      console.error("Failed to approve review:", error);
-      toast.error("Failed to approve review");
-    }
-  };
+          {r.isApproved && (
+            <Tooltip content="Cancel Approval">
+              <Button isIconOnly color="danger" onPress={() => handleCancelApproval(r.id)}>
+                <FaTimes />
+              </Button>
+            </Tooltip>
+          )}
 
-  const handleSelect = async (reviewId: string) => {
-    try {
-      const response = await select_review(reviewId);
-      console.log("Select review :",response);
-      if (response?.isSelect) {
-        setReviews((prev) =>
-          prev.map((review) =>
-            review.reviewId === reviewId
-              ? { ...review, isSelect: true }
-              : review
-          )
-        );
-        toast.success("Review selected for display");
-      }
-    } catch (error) {
-      console.error("Failed to select review:", error);
-      toast.error("Failed to select review");
-    }
-  };
+          {r.isApproved && !r.isSelect && (
+            <Tooltip content="Select for Display">
+              <Button isIconOnly color="primary" onPress={() => handleSelect(r.id)}>
+                <FaStar />
+              </Button>
+            </Tooltip>
+          )}
 
-  const handleCancelApproval = async (reviewId: string) => {
-    try {
-      const response = await cancel_approval(reviewId);
-      console.log("Cancel review :",response);
-      if (!response?.isApproved) {
-        setReviews((prev) =>
-          prev.map((review) =>
-            review.reviewId === reviewId
-              ? { ...review, isApproved: false, isSelect: false }
-              : review
-          )
-        );
-        toast.success("Review approval canceled");
-      }
-    } catch (error) {
-      console.error("Failed to cancel approval:", error);
-      toast.error("Failed to cancel approval");
-    }
-  };
-
-  const handleDeselect = async (reviewId: string) => {
-    try {
-      const response = await deselect_review(reviewId);
-      console.log("Deselect review :",response);
-      if (!response?.isSelect) {
-        setReviews((prev) =>
-          prev.map((review) =>
-            review.reviewId === reviewId
-              ? { ...review, isSelect: false }
-              : review
-          )
-        );
-        toast.success("Review deselected");
-      }
-    } catch (error) {
-      console.error("Failed to deselect review:", error);
-      toast.error("Failed to deselect review");
-    }
-  };
+          {r.isSelect && (
+            <Tooltip content="Deselect">
+              <Button isIconOnly color="warning" onPress={() => handleDeselect(r.id)}>
+                <BsStar />
+              </Button>
+            </Tooltip>
+          )}
+        </div>
+      ),
+    },
+  ];
 
   return (
     <div className="p-6">
       <h2 className="text-2xl font-semibold mb-4">Review Management</h2>
+
       <Tabs aria-label="Review Tabs" color="primary" variant="bordered">
         <Tab key="app-reviews" title="App Reviews">
+
           <div className="mt-4">
-            {loading ? (
-              <p>Loading reviews...</p>
-            ) : reviews.length === 0 ? (
-              <p>No reviews available.</p>
-            ) : (
-              <Table aria-label="App Reviews Table">
-                <TableHeader>
-                  <TableColumn>User</TableColumn>
-                  <TableColumn>Rating</TableColumn>
-                  <TableColumn>Comment</TableColumn>
-                  <TableColumn>Approved</TableColumn>
-                  <TableColumn>Selected</TableColumn>
-                  <TableColumn>Created At</TableColumn>
-                  <TableColumn>Actions</TableColumn>
-                </TableHeader>
-                <TableBody>
-                  {reviews.map((review) => (
-                    <TableRow key={review.reviewId}>
-                      <TableCell>
-                        {review.userId.username} ({review.userId.email})
-                      </TableCell>
-                      <TableCell>
-                        <div className="flex">
-                          {[...Array(review.rating)].map((_, i) => (
-                            <FaStar key={i} className="text-yellow-400" />
-                          ))}
-                        </div>
-                      </TableCell>
-                      <TableCell>{review.comment}</TableCell>
-                      <TableCell>{review.isApproved ? "Yes" : "No"}</TableCell>
-                      <TableCell>{review.isSelect ? "Yes" : "No"}</TableCell>
-                      <TableCell>
-                        {new Date(review.createdAt).toLocaleDateString()}
-                      </TableCell>
-                      <TableCell>
-                        <div className="flex space-x-2">
-                          {!review.isApproved && (
-                            <Tooltip content="Approve Review">
-                              <Button
-                                isIconOnly
-                                color="success"
-                                onPress={() => handleApprove(review.reviewId)}
-                              >
-                                <FaCheck />
-                              </Button>
-                            </Tooltip>
-                          )}
-                          {review.isApproved && (
-                            <Tooltip content="Cancel Approval">
-                              <Button
-                                isIconOnly
-                                color="danger"
-                                onPress={() =>
-                                  handleCancelApproval(review.reviewId)
-                                }
-                              >
-                                <FaTimes />
-                              </Button>
-                            </Tooltip>
-                          )}
-                          {review.isApproved && !review.isSelect && (
-                            <Tooltip content="Select for Frontend Display">
-                              <Button
-                                isIconOnly
-                                color="primary"
-                                onPress={() => handleSelect(review.reviewId)}
-                              >
-                                <FaStar />
-                              </Button>
-                            </Tooltip>
-                          )}
-                          {review.isSelect && (
-                            <Tooltip content="Deselect Review">
-                              <Button
-                                isIconOnly
-                                color="warning"
-                                onPress={() => handleDeselect(review.reviewId)}
-                              >
-                                <BsStar />
-                              </Button>
-                            </Tooltip>
-                          )}
-                        </div>
-                      </TableCell>
-                    </TableRow>
-                  ))}
-                </TableBody>
-              </Table>
-            )}
+
+            <div className="mb-4 w-80">
+              <SearchBar
+                activeTab="Reviews"
+                searchQuery={searchQuery}
+                setSearchQuery={setSearchQuery}
+                onSearchChange={(value) => {
+                  setPage(1);
+                  setSearchQuery(value);
+                }}
+              />
+            </div>
+
+            <DataTable<Review>
+              data={reviews}
+              columns={columns}
+              loading={loading}
+              total={total}
+              page={page}
+              limit={limit}
+              onPageChange={setPage}
+              emptyMessage="No reviews found"
+            />
+
           </div>
+
         </Tab>
+
         <Tab key="user-reviews" title="User Reviews">
-          <div className="mt-4">
-            <p>User Reviews management.</p>
-          </div>
+          <p className="mt-4">User Reviews management.</p>
         </Tab>
       </Tabs>
     </div>

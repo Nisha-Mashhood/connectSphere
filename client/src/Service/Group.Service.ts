@@ -23,10 +23,9 @@ export const groupDetailsWithAdminId = async (id) => {
 };
 
 //Get all groups 
-export const groupDetails = async (params) => {
+export const groupDetails = async (params, signal) => {
   try {
-    const response = await axiosInstance.get("/group/group-details", { params });
-    // console.log("Group.Service: Group details from backend:", JSON.stringify(response.data.data, null, 2));
+    const response = await axiosInstance.get("/group/group-details", { params, signal });
     return response.data.data;
   } catch (error) {
     handleError(error);
@@ -48,7 +47,6 @@ export const getGroupRequestsByUser = async (userId: string) => {
     const response = await axiosInstance.get(
       `/group/group-request-details-UI/${userId}`
     );
-    console.log("Response from backend for getGroupRequestsByUser: ",response);
     return response.data.data;
   } catch (error) {
     throw new Error(
@@ -85,13 +83,11 @@ export const getGroupRequestsByGroupId = async (groupId: string) => {
 };
 
 export const updateGroupRequest = async (requestId: string, status: string) => {
-  console.log("Calling backend Update group Requset")
   try {
     const response = await axiosInstance.put("/group/update-groupRequest", {
       requestId,
       status,
     });
-    console.log("Response from backend : ",response);
     return response.data.data;
   } catch (error) {
     throw new Error(
@@ -157,10 +153,13 @@ export const groupDetailsForMembers = async (userid) => {
 };
 
 //get all group requests
-export const getAllGroupRequests = async () => {
+export const getAllGroupRequests = async (params, signal) => {
   try {
     const response = await axiosInstance.get(
-      `/group/group-requests`
+      `/group/group-requests`,{
+        params,
+        signal,
+      }
     );
     return response.data.data;
   } catch (error) {

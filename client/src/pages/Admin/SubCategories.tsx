@@ -1,7 +1,7 @@
 import { useParams } from "react-router-dom";
 import { useState } from "react";
 import TableComponent from "../../Components/ReusableComponents/Table";
-import FormModal from "../../Components/Admin/FormModal";
+import FormModal from "../../Components/Admin/SkillManagemnt/FormModal";
 import SearchBar from "../../Components/ReusableComponents/SearchBar";
 import Pagination from "../../Components/ReusableComponents/Pagination";
 import Breadcrumb from "../../Components/ReusableComponents/Breadcrumb";

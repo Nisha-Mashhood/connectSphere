@@ -1,8 +1,8 @@
 import { inject, injectable } from "inversify";
-import { sendEmail } from "../core/Utils/email";
+import { sendEmail } from "../core/Utils/Email";
 import stripe from "../core/Utils/Stripe";
 import { v4 as uuid } from "uuid";
-import logger from "../core/Utils/logger";
+import logger from "../core/Utils/Logger";
 import { ServiceError } from "../core/Utils/error-handler";
 import { GroupFormData, GroupQuery } from "../Utils/Types/group-types";
 import { Types } from "mongoose";
@@ -892,22 +892,28 @@ export class GroupService implements IGroupService {
     }
   };
 
-  public getAllGroupRequests = async (): Promise<IGroupRequestDTO[]> => {
-    try {
-      logger.debug("Fetching all group requests");
-      const requests = await this._groupRepository.getAllGroupRequests();
-      logger.info(`Fetched ${requests.length} group requests`);
-      return toGroupRequestDTOs(requests);
-    } catch (error: unknown) {
-      const err = error instanceof Error ? error : new Error(String(error));
-      logger.error(`Error fetching all group requests: ${err.message}`);
-      throw error instanceof ServiceError
-        ? error
-        : new ServiceError(
-            "Failed to fetch all group requests",
-            StatusCodes.INTERNAL_SERVER_ERROR,
-            err
-          );
-    }
-  };
+  public getAllGroupRequests = async (
+  search: string = "",
+  page: number = 1,
+  limit: number = 10
+): Promise<{ requests: IGroupRequestDTO[]; total: number }> => {
+  try {
+    logger.debug(`Service: fetching group requests (search="${search}")`);
+    const result = await this._groupRepository.getAllGroupRequests(search, page, limit);
+
+    const requests = toGroupRequestDTOs(result);
+    const total = (result as any).total || requests.length;
+
+    logger.info(`Service: fetched ${requests.length} group requests`);
+    return { requests, total };
+  } catch (error: unknown) {
+    const err = error instanceof Error ? error : new Error(String(error));
+    logger.error(`Service error in getAllGroupRequests: ${err.message}`);
+    throw new ServiceError(
+      "Failed to fetch group requests",
+      StatusCodes.INTERNAL_SERVER_ERROR,
+      err
+    );
+  }
+};
 }

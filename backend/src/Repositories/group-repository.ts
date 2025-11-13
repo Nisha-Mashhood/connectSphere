@@ -2,7 +2,7 @@ import { injectable } from 'inversify';
 import { Model, Types } from 'mongoose';
 import { BaseRepository } from '../core/Repositries/base-repositry';
 import { RepositoryError } from '../core/Utils/error-handler';
-import logger from '../core/Utils/logger';
+import logger from '../core/Utils/Logger';
 import Group from '../Models/group-model';
 import GroupRequest from '../Models/group-request-model';
 import { IGroup } from '../Interfaces/Models/i-group';
@@ -117,25 +117,21 @@ export class GroupRepository extends BaseRepository<IGroup> implements IGroupRep
 
       const pipeline = [
       { $match: matchStage },
-      // Unwind the members array to process each member individually
       { $unwind: { path: '$members', preserveNullAndEmptyArrays: true } },
-      // Lookup to populate members.userId
       {
         $lookup: {
-          from: 'users', // Ensure this matches the actual collection name
+          from: 'users',
           localField: 'members.userId',
           foreignField: '_id',
           as: 'members.userId',
         },
       },
-      // Unwind members.userId to convert the array into a single document
       {
         $unwind: {
           path: '$members.userId',
           preserveNullAndEmptyArrays: true,
         },
       },
-      // Group back to restore the original document structure
       {
         $group: {
           _id: '$_id',
@@ -155,10 +151,10 @@ export class GroupRepository extends BaseRepository<IGroup> implements IGroupRep
           members: {
             $push: {
               $cond: [
-                { $eq: ['$members', {}] }, // If members is empty, push null
+                { $eq: ['$members', {}] },
                 null,
                 {
-                  userId: '$members.userId', // Populated user object
+                  userId: '$members.userId',
                   joinedAt: '$members.joinedAt',
                   _id: '$members._id',
                 },
@@ -167,7 +163,6 @@ export class GroupRepository extends BaseRepository<IGroup> implements IGroupRep
           },
         },
       },
-      // Filter out null members
       {
         $addFields: {
           members: {
@@ -179,23 +174,20 @@ export class GroupRepository extends BaseRepository<IGroup> implements IGroupRep
           },
         },
       },
-      // Lookup to populate adminId
       {
         $lookup: {
-          from: 'users', // Ensure this matches the actual collection name
+          from: 'users',
           localField: 'adminId',
           foreignField: '_id',
           as: 'adminId',
         },
       },
-      // Unwind adminId to convert the array into a single document
       {
         $unwind: {
           path: '$adminId',
           preserveNullAndEmptyArrays: true,
         },
       },
-      // Facet for pagination and total count
       {
         $facet: {
           groups: [
@@ -526,29 +518,66 @@ export class GroupRepository extends BaseRepository<IGroup> implements IGroupRep
     }
   }
 
-  public getAllGroupRequests = async (): Promise<IGroupRequest[]> => {
-    try {
-      logger.debug('Fetching all group requests');
-      const requests = await this._groupRequestModel
-        .find()
-        .populate({
-          path: 'groupId',
-          populate: {
-            path: 'members.userId',
-            model: 'User',
-            select: '_id name email jobTitle profilePic',
-          },
-        })
-        .populate('userId', '_id name email jobTitle profilePic')
-        .exec();
-      logger.info(`Fetched ${requests.length} group requests`);
-      return requests;
-    } catch (error: unknown) {
-      const err = error instanceof Error ? error : new Error(String(error));
-      logger.error(`Error fetching all group requests`, err);
-      throw new RepositoryError('Error fetching all group requests', StatusCodes.INTERNAL_SERVER_ERROR, err);
+
+  public getAllGroupRequests = async (
+  search: string = "",
+  page: number = 1,
+  limit: number = 10
+): Promise<IGroupRequest[]> => {
+  try {
+    const allRequests = await this._groupRequestModel
+      .find()
+      .populate({
+        path: "groupId",
+        model: "Group",
+        populate: {
+          path: "members.userId",
+          model: "User",
+          select: "_id name email jobTitle profilePic",
+        },
+      })
+      .populate({
+        path: "userId",
+        model: "User",
+        select: "_id name email jobTitle profilePic",
+      })
+      .sort({ createdAt: -1 })
+      .exec();
+
+    let filteredRequests = allRequests;
+
+    if (search.trim()) {
+      const regex = new RegExp(search, "i");
+
+      filteredRequests = allRequests.filter((req) => {
+        const groupName = (req as any).groupId?.name || "";
+        const userName = (req as any).userId?.name || "";
+        const userEmail = (req as any).userId?.email || "";
+
+        return (
+          regex.test(groupName) ||
+          regex.test(userName) ||
+          regex.test(userEmail)
+        );
+      });
     }
+
+    const total = filteredRequests.length;
+    const paginated = filteredRequests.slice((page - 1) * limit, page * limit);
+
+    logger.info(`Fetched ${paginated.length} group requests (total=${total})`);
+    return Object.assign(paginated, { total });
+  } catch (error: unknown) {
+    const err = error instanceof Error ? error : new Error(String(error));
+    logger.error("Error fetching group requests", err);
+    throw new RepositoryError(
+      "Error fetching group requests",
+      StatusCodes.INTERNAL_SERVER_ERROR,
+      err
+    );
   }
+};
+
 
   public isUserInGroup = async (groupId: string, userId: string): Promise<boolean> => {
     try {

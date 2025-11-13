@@ -1,7 +1,7 @@
+import React, { useCallback } from "react";
 import { Input, InputProps } from "@nextui-org/react";
 import { FaSearch } from "react-icons/fa";
 import { X } from "lucide-react";
-import { useCallback } from "react";
 
 interface SearchBarProps extends Omit<InputProps, "onChange"> {
   activeTab: string;
@@ -58,4 +58,4 @@ const SearchBar = ({
   );
 };
 
-export default SearchBar;
+export default React.memo(SearchBar);

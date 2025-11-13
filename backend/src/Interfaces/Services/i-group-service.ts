@@ -37,5 +37,5 @@ export interface IGroupService {
     coverPic?: string
   ) => Promise<IGroupDTO | null>;
   getGroupDetailsForMembers: (userId: string) => Promise<IGroupDTO[]>;
-  getAllGroupRequests: () => Promise<IGroupRequestDTO[]>;
+  getAllGroupRequests: (search: string, page: number, limit: number ) => Promise<{ requests: IGroupRequestDTO[]; total: number }>;
 }

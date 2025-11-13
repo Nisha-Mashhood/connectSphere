@@ -1,5 +1,4 @@
 import { Slot } from "../validation/createGroupValidation";
-
 export type UserRole = "user" | "mentor" | "admin";
 
 // User type

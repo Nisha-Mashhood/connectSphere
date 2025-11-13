@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import toast from 'react-hot-toast';
 import {
   Card,
@@ -35,7 +35,7 @@ const SalesReport = () => {
   const [period, setPeriod] = useState('1month');
   const [loading, setLoading] = useState(false);
 
-  const fetchReport = async () => {
+  const fetchReport = useCallback(async () => {
     setLoading(true);
     try {
       const response = await getSalesReport(period);
@@ -47,11 +47,11 @@ const SalesReport = () => {
     } finally {
       setLoading(false);
     }
-  };
+  },[period])
 
   useEffect(() => {
     fetchReport();
-  }, [period]);
+  }, [fetchReport]);
 
   // Recharts data format
   const chartData = report

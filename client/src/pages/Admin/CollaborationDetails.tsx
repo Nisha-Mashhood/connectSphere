@@ -1,9 +1,9 @@
 import { useCollaborationDetails } from "../../Hooks/Admin/useCollaborationDetails";
 import { CollabData, RequestData } from "../../redux/types";
-import { CancelReasonModal } from "./User-Mentor/CollaborationDetails/CancelReasonModal";
-import { CollaborationDetailsView } from "./User-Mentor/CollaborationDetails/CollaborationDetailsView";
-import { RefundConfirmModal } from "./User-Mentor/CollaborationDetails/RefundConfirmModal";
-import { RequestDetailsView } from "./User-Mentor/CollaborationDetails/RequestDetailsView";
+import { CancelReasonModal } from "../../Components/Admin/User-Mentor/CollaborationDetails/CancelReasonModal";
+import { CollaborationDetailsView } from "../../Components/Admin/User-Mentor/CollaborationDetails/CollaborationDetailsView";
+import { RefundConfirmModal } from "../../Components/Admin/User-Mentor/CollaborationDetails/RefundConfirmModal";
+import { RequestDetailsView } from "../../Components/Admin/User-Mentor/CollaborationDetails/RequestDetailsView";
 
 const CollaborationDetails = () => {
   const {
@@ -42,7 +42,6 @@ const CollaborationDetails = () => {
 
   return (
     <div className="max-w-4xl mx-auto py-8 px-4 sm:px-6 lg:px-8">
-      {/* Back button */}
       <button
         onClick={navigateBack}
         className="mb-4 text-blue-600 hover:text-blue-800 flex items-center gap-1"
@@ -61,7 +60,6 @@ const CollaborationDetails = () => {
         )}
       </div>
 
-      {/* Modals – only for collaborations */}
       {isCollab && (
         <>
           <CancelReasonModal

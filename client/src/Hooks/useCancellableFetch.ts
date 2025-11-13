@@ -1,4 +1,3 @@
-// src/Hooks/useCancellableFetch.ts
 import { useEffect, useRef, useCallback, DependencyList } from "react";
 import axios from "axios";
 

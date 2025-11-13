@@ -2,7 +2,7 @@ import { IReview } from '../../Interfaces/Models/i-review';
 import { IReviewDTO } from '../../Interfaces/DTOs/i-review-dto';
 import { toUserDTO } from './user-mapper';
 import { IUser } from '../../Interfaces/Models/i-user';
-import logger from '../../core/Utils/logger';
+import logger from '../../core/Utils/Logger';
 import { Types } from 'mongoose';
 import { IUserDTO } from '../../Interfaces/DTOs/i-user-dto';
 

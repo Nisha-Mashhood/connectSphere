@@ -1,6 +1,5 @@
 import { useState, useEffect } from "react";
 import {
-  // Input,
   Tabs,
   Tab,
   Card,

@@ -1,7 +1,7 @@
 import { Mentor } from "../../redux/types";
 import { Button, Select, SelectItem } from "@nextui-org/react";
 import { FaEye } from "react-icons/fa";
-import MentorDetailModal from "../../Components/Admin/MentorDetailModal";
+import MentorDetailModal from "../../Components/Admin/MentorDetails/MentorDetailModal";
 import { toast } from "react-hot-toast";
 import { useCallback, useEffect, useState } from "react";
 import DataTable from "../../Components/ReusableComponents/DataTable";
