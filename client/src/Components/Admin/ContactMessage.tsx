@@ -9,14 +9,20 @@ import {
   Input,
   Textarea,
 } from "@nextui-org/react";
-
 import SearchBar from "../ReusableComponents/SearchBar";
 import DataTable from "../ReusableComponents/DataTable";
 import BaseModal from "../ReusableComponents/BaseModal";
-
 import { useContactMessages } from "../../Hooks/Admin/useContactMessages";
 import { ContactMessage } from "../../Interface/Admin/IContactMessage";
 import { useState, useMemo } from "react";
+import { useForm } from "react-hook-form";
+import { yupResolver } from "@hookform/resolvers/yup";
+import { contactReplySchema } from "../../validation/contactMessageReplyValidation";
+
+interface ReplyFormValues {
+  email: string;
+  replyMessage: string;
+}
 
 const Messages = () => {
   const {
@@ -35,17 +41,31 @@ const Messages = () => {
 
   const [isReplyModalOpen, setIsReplyModalOpen] = useState(false);
   const [selectedMessage, setSelectedMessage] = useState<ContactMessage | null>(null);
-  const [replyMessage, setReplyMessage] = useState("");
+
+  const {
+    register,
+    handleSubmit,
+    setValue,
+    reset,
+    formState: { errors },
+  } = useForm<ReplyFormValues>({
+    resolver: yupResolver(contactReplySchema),
+    defaultValues: { email: "", replyMessage: "" },
+  });
 
   const openReplyModal = (msg: ContactMessage) => {
     setSelectedMessage(msg);
-    setReplyMessage("");
+    setValue("email", msg.email);
+    setValue("replyMessage", "");
     setIsReplyModalOpen(true);
   };
 
-  const handleSendReply = async () => {
-    if (!selectedMessage || !replyMessage.trim()) return;
-    await sendMessageReply(selectedMessage, replyMessage);
+  const submitReply = async (data: ReplyFormValues) => {
+    if (!selectedMessage) return;
+
+    await sendMessageReply(selectedMessage, data.replyMessage);
+
+    reset();
     setIsReplyModalOpen(false);
   };
 
@@ -61,7 +81,7 @@ const Messages = () => {
 
   const formatDate = (d: string) => new Date(d).toLocaleString();
 
-  // DataTable Columns
+  // Table columns
   const columns = [
     { key: "contactMessageId", label: "ID" },
     { key: "name", label: "Name" },
@@ -91,6 +111,7 @@ const Messages = () => {
     <div className="p-6">
       <Card>
         <CardBody>
+          {/* Search & Filter */}
           <div className="flex items-center justify-between gap-4 mb-6">
             <SearchBar
               activeTab="Messages"
@@ -149,21 +170,31 @@ const Messages = () => {
         </CardBody>
       </Card>
 
+      {/* Reply Modal */}
       <BaseModal
         isOpen={isReplyModalOpen}
-        onClose={() => setIsReplyModalOpen(false)}
+        onClose={() => {
+          reset();
+          setIsReplyModalOpen(false);
+        }}
         title={`Reply to ${selectedMessage?.name}`}
-        onSubmit={handleSendReply}
+        onSubmit={handleSubmit(submitReply)}
         actionText="Send Reply"
       >
-        <Input label="Email" isReadOnly value={selectedMessage?.email || ""} />
+        <Input
+          label="Email"
+          isReadOnly
+          {...register("email")}
+          isInvalid={!!errors.email}
+          errorMessage={errors.email?.message}
+        />
 
         <Textarea
           label="Reply Message"
-          placeholder="Enter your reply"
-          value={replyMessage}
-          onChange={(e) => setReplyMessage(e.target.value)}
           minRows={4}
+          {...register("replyMessage")}
+          isInvalid={!!errors.replyMessage}
+          errorMessage={errors.replyMessage?.message}
         />
       </BaseModal>
     </div>

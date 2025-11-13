@@ -1,4 +1,4 @@
-import { FC, ReactNode } from "react";
+import { FC, ReactNode, useState } from "react";
 import {
   Modal,
   ModalContent,
@@ -31,13 +31,18 @@ const BaseModal: FC<BaseModalProps> = ({
   size = "md",
   scrollBehavior = "outside",
 }) => {
+  const [isSubmitting, setIsSubmitting] = useState(false);
+
   const handleSubmit = async () => {
-    if (onSubmit) {
-      try {
-        await onSubmit();
-      } catch (error) {
-        console.log(error)
-      }
+    if (!onSubmit) return;
+
+    try {
+      setIsSubmitting(true);
+      await onSubmit();
+    } catch (error) {
+      console.log(error);
+    } finally {
+      setIsSubmitting(false);
     }
   };
 
@@ -51,13 +56,26 @@ const BaseModal: FC<BaseModalProps> = ({
     >
       <ModalContent>
         <ModalHeader className="flex flex-col gap-1">{title}</ModalHeader>
+
         <ModalBody>{children}</ModalBody>
+
         <ModalFooter>
-          <Button color="danger" variant="light" onPress={onClose}>
+          <Button
+            color="danger"
+            variant="light"
+            onPress={onClose}
+            isDisabled={isSubmitting}
+          >
             {cancelText}
           </Button>
+
           {onSubmit && (
-            <Button color="primary" onPress={handleSubmit}>
+            <Button
+              color="primary"
+              onPress={handleSubmit}
+              isLoading={isSubmitting}
+              isDisabled={isSubmitting}
+            >
               {actionText}
             </Button>
           )}
