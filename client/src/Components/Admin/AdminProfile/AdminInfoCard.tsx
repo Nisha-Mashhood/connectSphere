@@ -1,33 +1,41 @@
-import { useState } from "react";
+import { useForm } from "react-hook-form";
+import { yupResolver } from "@hookform/resolvers/yup";
 import { Card, CardBody, Input, Button } from "@nextui-org/react";
 import toast from "react-hot-toast";
 import { updateUserPassword } from "../../../Service/User.Service";
+import {
+  AdminProfileFormValues,
+  adminProfileSchema,
+} from "../../../validation/adminProfileValidation";
+import { useState } from "react";
 
 const AdminInfoCard = ({ admin, onSave, saving }) => {
-  const [form, setForm] = useState({
-    name: admin.name,
-    email: admin.email,
-    jobTitle: admin.jobTitle,
-    industry: admin.industry,
-    reasonForJoining: admin.reasonForJoining,
+  const {
+    register,
+    handleSubmit,
+    formState: { errors },
+  } = useForm<AdminProfileFormValues>({
+    resolver: yupResolver(adminProfileSchema),
+    defaultValues: {
+      name: admin.name,
+      email: admin.email,
+      jobTitle: admin.jobTitle || "",
+      industry: admin.industry || "",
+      reasonForJoining: admin.reasonForJoining || "",
+    },
   });
 
+  const onSubmit = (data: AdminProfileFormValues) => {
+    onSave(data);
+  };
   const [passwordData, setPasswordData] = useState({
     oldPassword: "",
     newPassword: "",
     confirmPassword: "",
   });
-
   const [passwordLoading, setPasswordLoading] = useState(false);
 
-  const handleChange = (e) => {
-    setForm({ ...form, [e.target.name]: e.target.value });
-  };
-
-  const handlePasswordChange = (e) => {
-    setPasswordData({ ...passwordData, [e.target.name]: e.target.value });
-  };
-
+  //Password Updation
   const handlePasswordUpdate = async () => {
     if (!passwordData.oldPassword || !passwordData.newPassword) {
       return toast.error("All password fields are required");
@@ -38,22 +46,18 @@ const AdminInfoCard = ({ admin, onSave, saving }) => {
     }
 
     setPasswordLoading(true);
-
     try {
       await updateUserPassword(admin.id, {
         oldPassword: passwordData.oldPassword,
         newPassword: passwordData.newPassword,
       });
-
       toast.success("Password updated successfully");
-
       setPasswordData({
         oldPassword: "",
         newPassword: "",
         confirmPassword: "",
       });
-    } catch (error) {
-        console.log(error);
+    } catch {
       toast.error("Failed to update password");
     } finally {
       setPasswordLoading(false);
@@ -63,60 +67,56 @@ const AdminInfoCard = ({ admin, onSave, saving }) => {
   return (
     <Card className="lg:col-span-2 shadow-lg border border-gray-200">
       <CardBody className="p-8 space-y-10">
+        <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
+          <div className="grid sm:grid-cols-2 gap-6">
+            <Input
+              label="Name"
+              variant="bordered"
+              {...register("name")}
+              isInvalid={!!errors.name}
+              errorMessage={errors.name?.message}
+            />
 
-        {/* === BASIC ADMIN INFO === */}
-        <div className="grid sm:grid-cols-2 gap-6">
+            <Input
+              label="Email"
+              variant="bordered"
+              disabled
+              {...register("email")}
+              isInvalid={!!errors.email}
+              errorMessage={errors.email?.message}
+            />
+
+            <Input
+              label="Job Title"
+              variant="bordered"
+              {...register("jobTitle")}
+              isInvalid={!!errors.jobTitle}
+              errorMessage={errors.jobTitle?.message}
+            />
+
+            <Input
+              label="Industry"
+              variant="bordered"
+              {...register("industry")}
+              isInvalid={!!errors.industry}
+              errorMessage={errors.industry?.message}
+            />
+          </div>
+
           <Input
-            label="Name"
-            name="name"
-            value={form.name}
-            onChange={handleChange}
+            label="Reason for Joining"
             variant="bordered"
+            {...register("reasonForJoining")}
+            isInvalid={!!errors.reasonForJoining}
+            errorMessage={errors.reasonForJoining?.message}
           />
 
-          <Input
-            label="Email"
-            name="email"
-            value={form.email}
-            disabled
-            variant="bordered"
-          />
+          <Button color="primary" className="mt-4" isLoading={saving} type="submit">
+            Save Changes
+          </Button>
+        </form>
 
-          <Input
-            label="Job Title"
-            name="jobTitle"
-            value={form.jobTitle || ""}
-            onChange={handleChange}
-            variant="bordered"
-          />
-
-          <Input
-            label="Industry"
-            name="industry"
-            value={form.industry || ""}
-            onChange={handleChange}
-            variant="bordered"
-          />
-        </div>
-
-        <Input
-          label="Reason for Joining"
-          name="reasonForJoining"
-          value={form.reasonForJoining || ""}
-          onChange={handleChange}
-          variant="bordered"
-        />
-
-        <Button
-          color="primary"
-          className="mt-4"
-          isLoading={saving}
-          onPress={() => onSave(form)}
-        >
-          Save Changes
-        </Button>
-
-        {/* === PASSWORD UPDATE SECTION === */}
+        {/* ===== PASSWORD UPDATE SECTION ===== */}
         <div className="mt-10 border-t pt-8">
           <h2 className="text-xl font-semibold text-gray-800 mb-4">
             Change Password
@@ -125,29 +125,32 @@ const AdminInfoCard = ({ admin, onSave, saving }) => {
           <Input
             type="password"
             label="Old Password"
-            name="oldPassword"
-            value={passwordData.oldPassword}
-            onChange={handlePasswordChange}
             variant="bordered"
+            value={passwordData.oldPassword}
+            onChange={(e) =>
+              setPasswordData({ ...passwordData, oldPassword: e.target.value })
+            }
           />
 
           <div className="grid sm:grid-cols-2 gap-6 mt-6">
             <Input
               type="password"
               label="New Password"
-              name="newPassword"
-              value={passwordData.newPassword}
-              onChange={handlePasswordChange}
               variant="bordered"
+              value={passwordData.newPassword}
+              onChange={(e) =>
+                setPasswordData({ ...passwordData, newPassword: e.target.value })
+              }
             />
 
             <Input
               type="password"
               label="Confirm New Password"
-              name="confirmPassword"
-              value={passwordData.confirmPassword}
-              onChange={handlePasswordChange}
               variant="bordered"
+              value={passwordData.confirmPassword}
+              onChange={(e) =>
+                setPasswordData({ ...passwordData, confirmPassword: e.target.value })
+              }
             />
           </div>
 
@@ -160,7 +163,6 @@ const AdminInfoCard = ({ admin, onSave, saving }) => {
             Update Password
           </Button>
         </div>
-
       </CardBody>
     </Card>
   );
