@@ -34,6 +34,8 @@ const AdminSidebar = ({ children }: AdminSidebarProps) => {
   const location = useLocation();
   const { currentAdmin } = useSelector((state: RootState) => state.user);
 
+  console.log(currentAdmin);
+
   useEffect(() => {
     if (currentAdmin?.id) {
       console.log(`AdminSidebar: Initializing for admin ID: ${currentAdmin.id}`);
@@ -138,6 +140,12 @@ const AdminSidebar = ({ children }: AdminSidebarProps) => {
   navigate("/admin/mentormange");
   };
 
+  const navigateToProfile = () => {
+  if (currentAdmin?.id) {
+    navigate(`/admin/profile/${currentAdmin.id}`);
+  }
+}
+
   const navigationItems = [
     { name: "Dashboard", path: "/admin/dashboard", icon: <FaTachometerAlt /> },
     { 
@@ -186,7 +194,8 @@ const AdminSidebar = ({ children }: AdminSidebarProps) => {
           </div>
 
           {currentAdmin && (
-            <div className={`flex ${collapsed ? 'justify-center' : 'items-center'} p-4 mb-4 ${collapsed ? '' : 'space-x-4'}`}>
+            <div className={`flex ${collapsed ? 'justify-center' : 'items-center'} p-4 mb-4 ${collapsed ? '' : 'space-x-4'}`}
+            onClick={navigateToProfile}>
               <Tooltip content={currentAdmin.name} placement="right" isDisabled={!collapsed}>
                 <Avatar
                   isBordered
@@ -208,7 +217,6 @@ const AdminSidebar = ({ children }: AdminSidebarProps) => {
 
           <div className="flex flex-col space-y-2 px-3">
             {navigationItems.map((item, index) => {
-              console.log(`Rendering navigation item: ${item.name}, badge: ${item.badge}`);
               return (
                 <Tooltip 
                   key={index}

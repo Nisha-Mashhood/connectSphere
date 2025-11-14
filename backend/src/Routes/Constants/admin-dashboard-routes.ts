@@ -9,4 +9,6 @@ export const ADMIN_DASHBOARD_ROUTES = {
   GetPendingMentorRequests: '/pending-mentor-requests',
   GetTopMentors: '/top-mentors',
   GetRecentCollaborations: '/recent-collaborations',
+  GetAdminDetails:'/details/:id',
+  UpdateAdminDetails:'/update-profile/:id'
 } as const;

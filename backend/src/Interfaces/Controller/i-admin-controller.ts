@@ -11,6 +11,8 @@ export interface IAdminController {
   getPendingMentorRequests(req: Request, res: Response, next: NextFunction): Promise<void>;
   getTopMentors(req: Request, res: Response, next: NextFunction): Promise<void>;
   getRecentCollaborations(req: Request, res: Response, next: NextFunction): Promise<void>;
+  getAdminProfileDetails(req: Request, res: Response, next: NextFunction): Promise<void>;
+  updateAdminDetails(req: Request, res: Response, next: NextFunction): Promise<void>;
 }
 
 

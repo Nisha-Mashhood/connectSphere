@@ -4,7 +4,12 @@ import logger from "../core/Utils/Logger";
 import { IAdminController } from "../Interfaces/Controller/i-admin-controller";
 import { BaseController } from "../core/Controller/base-controller";
 import { IAdminService } from "../Interfaces/Services/i-admin-service";
-import { ADMIN_MESSAGES } from "../constants/messages";
+import { ADMIN_MESSAGES, AUTH_MESSAGES } from "../constants/messages";
+import { ERROR_MESSAGES } from "../constants/error-messages";
+import { StatusCodes } from "../enums/status-code-enums";
+import { HttpError } from "../core/Utils/error-handler";
+import { UpdateProfileRequestBody } from "../Utils/Types/auth-types";
+import type { Express } from "express";
 
 @injectable()
 export class AdminController extends BaseController implements IAdminController {
@@ -120,4 +125,50 @@ export class AdminController extends BaseController implements IAdminController 
       next(error);
     }
   };
+
+    // Get Admin profile details
+    getAdminProfileDetails = async (req: Request<{ id: string }>, res: Response, next: NextFunction): Promise<void> => {
+      try {
+        const userId = req.params.id;
+        logger.debug(`Fetching profile details for userId: ${userId}`);
+        if (!userId) {
+          throw new HttpError(ERROR_MESSAGES.REQUIRED_USER_ID, StatusCodes.BAD_REQUEST);
+        }
+        const userDetails = await this._adminService.AdminprofileDetails(userId);
+        if (!userDetails) {
+          this.sendSuccess(res, { userDetails: null }, AUTH_MESSAGES.NO_USER_FOUND);
+          logger.info(`No user found for ID: ${userId}`);
+          return;
+        }
+        this.sendSuccess(res, { userDetails }, AUTH_MESSAGES.PROFILE_FETCHED);
+        logger.info(`Profile details fetched for userId: ${userId}`);
+      } catch (error) {
+        logger.error(`Error fetching profile details for userId ${req.params.id || "unknown"}: ${error}`);
+        next(error);
+      }
+    };
+  
+    // Update Admin profile
+    updateAdminDetails = async (
+      req: Request<{ id: string }, {}, UpdateProfileRequestBody>,
+      res: Response,
+      next: NextFunction
+    ): Promise<void> => {
+      try {
+        const userId = req.params.id;
+        logger.debug(`Updating profile for userId: ${userId}`);
+        if (!userId) {
+          throw new HttpError(ERROR_MESSAGES.REQUIRED_USER_ID, StatusCodes.BAD_REQUEST);
+        }
+        const data: UpdateProfileRequestBody = req.body;
+        const profilePicFile = (req.files as { [fieldname: string]: Express.Multer.File[] })?.["profilePic"]?.[0];
+        if (profilePicFile) data.profilePicFile = profilePicFile;
+        const updatedUser = await this._adminService.updateAdminProfile(userId, data);
+        this.sendSuccess(res, { user: updatedUser }, AUTH_MESSAGES.PROFILE_UPDATED);
+        logger.info(`Profile updated for userId: ${userId}`);
+      } catch (error) {
+        logger.error(`Error updating profile for userId ${req.params.id || "unknown"}: ${error}`);
+        next(error);
+      }
+    };
 }

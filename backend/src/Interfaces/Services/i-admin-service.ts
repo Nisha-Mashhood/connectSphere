@@ -1,6 +1,8 @@
 import { RevenueStats, RevenueTrend, TopMentor, UserGrowth } from "../../Utils/Types/admin-types";
 import { IMentorDTO } from "../DTOs/i-mentor-dto";
 import { ICollaborationDTO } from "../DTOs/i-collaboration-dto";
+import { IUserAdminDTO } from "../DTOs/i-user-dto";
+import { ProfileUpdateData } from "../../Utils/Types/auth-types";
 
 export interface IAdminService {
   getTotalUsersCount: () => Promise<number>;
@@ -13,4 +15,6 @@ export interface IAdminService {
   getPendingMentorRequests: (limit?: number) => Promise<IMentorDTO[]>;
   getTopMentors: (limit: number) => Promise<TopMentor[]>;
   getRecentCollaborations: (limit: number) => Promise<ICollaborationDTO[]>;
+  AdminprofileDetails: (userId: string) => Promise<IUserAdminDTO | null>
+  updateAdminProfile: (userId: string, data: ProfileUpdateData ) => Promise<IUserAdminDTO>
 }

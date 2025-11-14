@@ -2,7 +2,7 @@ import { BaseController } from '../core/Controller/base-controller';
 import { inject, injectable } from 'inversify';
 import { Request, Response, NextFunction } from 'express';
 import type { Express } from "express";
-import logger from '../core/Utils/logger';
+import logger from '../core/Utils/Logger';
 import { ForgotPasswordRequestBody, 
   LoginRequestBody, 
   LogoutRequestBody, 

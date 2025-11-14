@@ -7,8 +7,8 @@ const initialState = {
   error: false,
   isAdmin: false,
   resetEmail: null,
-  currentAdmin:null,
-  isLoggingOutAdmin:false,
+  currentAdmin: null,
+  isLoggingOutAdmin: false,
   selectedContact: null,
   needsReviewPrompt: false,
 };
@@ -51,31 +51,38 @@ const userSlice = createSlice({
       state.currentAdmin = action.payload;
       state.loading = false;
       state.error = false;
-   },
-   unsetIsAdmin: (state) => {
+    },
+    unsetIsAdmin: (state) => {
       state.currentAdmin = null;
       state.isAdmin = false;
-   },
-   AdminLogout: (state) => {
-    state.currentAdmin = null;
-    state.isAdmin = false;
-    state.isLoggingOutAdmin = true; 
-  },
+    },
+    AdminLogout: (state) => {
+      state.currentAdmin = null;
+      state.isAdmin = false;
+      state.isLoggingOutAdmin = true;
+    },
 
-  setSelectedContact(state, action) {
-    state.selectedContact = action.payload;
-  },
+    setSelectedContact(state, action) {
+      state.selectedContact = action.payload;
+    },
 
-  //update the user profile
+    updateUserProfile: (state, action) => {
+      state.currentUser = {
+        ...state.currentUser,
+        ...action.payload,
+      };
+      state.loading = false;
+      state.error = false;
+    },
 
-  updateUserProfile: (state, action) => {
-    state.currentUser = {
-      ...state.currentUser,
-      ...action.payload
-    };
-    state.loading = false;
-    state.error = false;
-  },
+    updateAdminProfile: (state, action) => {
+      state.currentAdmin = {
+        ...state.currentAdmin,
+        ...action.payload,
+      };
+      state.loading = false;
+      state.error = false;
+    },
   },
 });
 
@@ -90,8 +97,7 @@ export const {
   unsetIsAdmin,
   AdminLogout,
   updateUserProfile,
+  updateAdminProfile,
   setSelectedContact,
 } = userSlice.actions;
 export default userSlice.reducer;
-
-

@@ -2,7 +2,7 @@ import { Routes, Route } from "react-router-dom";
 import AdminLogin from "../Components/Forms/AdminLogin";
 import AdminLayout from "../Components/Layouts/AdminLayout";
 import AdminPrivateRoute from "../Components/Admin/AdminPrivateRout";
-import AdminDashboard from "../Components/Admin/AdminDashboard";
+import AdminDashboard from "../pages/Admin/AdminDashboard";
 import AdminProfile from "../Components/Admin/AdminProfile";
 import Categories from "../pages/Admin/Categories";
 import SubCategories from "../pages/Admin/SubCategories";
@@ -28,7 +28,7 @@ const AdminRoutes = () => (
     <Route path="/admin" element={<AdminLayout />}>
       <Route element={<AdminPrivateRoute />}>
         <Route path="dashboard" element={<AdminDashboard />} />
-        <Route path="profile" element={<AdminProfile />} />
+        <Route path="profile/:adminId" element={<AdminProfile />} />
         <Route path="categories" element={<Categories />} />
         <Route path="subcategories/:categoryId" element={<SubCategories />} />
         <Route path="skills/:categoryId/:subcategoryId" element={<Skills />} />

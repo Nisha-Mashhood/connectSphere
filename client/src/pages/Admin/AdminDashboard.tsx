@@ -3,10 +3,10 @@ import { Spinner, Card, CardBody } from "@nextui-org/react";
 import { useSelector } from "react-redux";
 import { RootState } from "../../redux/store";
 import { useAdminDashboardData } from "../../Hooks/Admin/useAdminDashboard";
-import { DashboardStats } from "./AdminDasboard/DashboardStats";
-import { DashboardTimeControls } from "./AdminDasboard/DashboardTimeControls";
-import { DashboardCharts } from "./AdminDasboard/DashboardCharts";
-import { DashboardLists } from "./AdminDasboard/DashboardLists";
+import { DashboardStats } from "../../Components/Admin/AdminDasboard/DashboardStats";
+import { DashboardTimeControls } from "../../Components/Admin/AdminDasboard/DashboardTimeControls";
+import { DashboardCharts } from "../../Components/Admin/AdminDasboard/DashboardCharts";
+import { DashboardLists } from "../../Components/Admin/AdminDasboard/DashboardLists";
 
 
 const AdminDashboard = () => {

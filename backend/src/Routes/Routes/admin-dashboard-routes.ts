@@ -4,6 +4,7 @@ import { ADMIN_DASHBOARD_ROUTES } from "../Constants/admin-dashboard-routes";
 import { apiLimiter } from "../../middlewares/ratelimit-middleware";
 import { IAuthMiddleware } from "../../Interfaces/Middleware/i-auth-middleware";
 import { IAdminController } from "../../Interfaces/Controller/i-admin-controller";
+import { upload } from "../../core/Utils/Multer";
 
 const router = express.Router();
 const authMiddleware = container.get<IAuthMiddleware>('IAuthMiddleware');
@@ -20,5 +21,7 @@ router.get(ADMIN_DASHBOARD_ROUTES.GetUserGrowth, [apiLimiter, authMiddleware.ver
 router.get(ADMIN_DASHBOARD_ROUTES.GetPendingMentorRequests, [apiLimiter, authMiddleware.verifyToken, authMiddleware.authorize('admin')], adminController.getPendingMentorRequests);
 router.get(ADMIN_DASHBOARD_ROUTES.GetTopMentors, [apiLimiter, authMiddleware.verifyToken, authMiddleware.authorize('admin')], adminController.getTopMentors);
 router.get(ADMIN_DASHBOARD_ROUTES.GetRecentCollaborations, [apiLimiter, authMiddleware.verifyToken, authMiddleware.authorize('admin')], adminController.getRecentCollaborations);
+router.get(ADMIN_DASHBOARD_ROUTES.GetAdminDetails, [apiLimiter, authMiddleware.verifyToken, authMiddleware.authorize('admin')], adminController.getAdminProfileDetails);
+router.put(ADMIN_DASHBOARD_ROUTES.UpdateAdminDetails, [apiLimiter, authMiddleware.verifyToken, upload.fields([{ name: 'profilePic', maxCount: 1 }]), authMiddleware.authorize('admin')], adminController.updateAdminDetails);
 
 export default router;

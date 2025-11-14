@@ -119,4 +119,31 @@ export const getRecentCollaborations = async (limit) => {
     handleError(error);
   }
 };
-  
+
+//get Admin Details  
+export const getAdminById = async (adminId: string) => {
+  try {
+    const response = await axiosInstance.get(`/admin/details/${adminId}`);
+    return response.data.data;
+  } catch (error) {
+    handleError(error);
+  }
+};
+
+export const updateAdminProfile = async (
+  adminId: string,
+  formData: FormData
+) => {
+  try {
+    const response = await axiosInstance.put(
+      `/admin/update-profile/${adminId}`,
+      formData,
+      {
+        headers: { "Content-Type": "multipart/form-data" },
+      }
+    );
+    return response.data.data;
+  } catch (error) {
+    handleError(error);
+  }
+};

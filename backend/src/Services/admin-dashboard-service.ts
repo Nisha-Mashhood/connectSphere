@@ -14,13 +14,25 @@ import { toMentorDTOs } from "../Utils/Mappers/mentor-mapper";
 import { IMentorDTO } from "../Interfaces/DTOs/i-mentor-dto";
 import { toCollaborationDTOs } from "../Utils/Mappers/collaboration-mapper";
 import { ICollaborationDTO } from "../Interfaces/DTOs/i-collaboration-dto";
+import { ProfileUpdateData } from "../Utils/Types/auth-types";
+import { IUserRepository } from "../Interfaces/Repository/i-user-repositry";
+import { IUserAdminDTO } from "../Interfaces/DTOs/i-user-dto";
+import { toUserAdminDTO } from "../Utils/Mappers/user-mapper";
+import { uploadMedia } from "../core/Utils/cloudinary";
+import { IUser } from "../Interfaces/Models/i-user";
 
 @injectable()
 export class AdminService implements IAdminService {
   private _adminRepository: IAdminRepository;
+  private _userRepository: IUserRepository;
   
-    constructor(@inject('IAdminRepository') adminRepository : IAdminRepository) {
+    constructor(
+      @inject('IAdminRepository') adminRepository : IAdminRepository,
+      @inject('IUserRepository') userRepository :IUserRepository,
+    ) {
+      this._userRepository =  userRepository;
       this._adminRepository = adminRepository;
+      
 
     }
   getTotalUsersCount = async (): Promise<number> => {
@@ -212,4 +224,76 @@ export class AdminService implements IAdminService {
       );
     }
   };
+
+  public AdminprofileDetails = async (userId: string): Promise<IUserAdminDTO | null> => {
+      try {
+        const user = await this._userRepository.findById(userId);
+        logger.info(`Fetched profile details for user ${userId}`);
+        return toUserAdminDTO(user);
+      } catch (error: unknown) {
+        const err = error instanceof Error ? error : new Error(String(error));
+        logger.error(
+          `Error fetching profile details for user ${userId}: ${err.message}`
+        );
+        throw error instanceof ServiceError
+          ? error
+          : new ServiceError(
+              "Failed to fetch profile details",
+              StatusCodes.INTERNAL_SERVER_ERROR,
+              err
+            );
+      }
+    };
+  
+    updateAdminProfile = async (
+      userId: string,
+      data: ProfileUpdateData
+    ): Promise<IUserAdminDTO> => {
+      try {
+        const user = await this._userRepository.findById(userId);
+        if (!user) {
+          throw new ServiceError("User not found", StatusCodes.NOT_FOUND);
+        }
+        let profilePic = user.profilePic ?? undefined;
+        if (data.profilePicFile) {
+          const { url } = await uploadMedia(
+            data.profilePicFile.path,
+            "profiles",
+            data.profilePicFile.size
+          );
+          profilePic = url;
+        }
+        const updatedData: Partial<IUser> = {
+          name: data.name ?? user.name,
+          email: data.email ?? user.email,
+          phone: data.phone ?? user.phone,
+          dateOfBirth: data.dateOfBirth
+            ? new Date(data.dateOfBirth)
+            : user.dateOfBirth,
+          jobTitle: data.jobTitle ?? user.jobTitle,
+          industry: data.industry ?? user.industry,
+          reasonForJoining: data.reasonForJoining ?? user.reasonForJoining,
+          profilePic,
+        };
+        const updatedUser = await this._userRepository.update(userId, updatedData);
+        if (!updatedUser) {
+          throw new ServiceError(
+            "Failed to update user profile",
+            StatusCodes.INTERNAL_SERVER_ERROR
+          );
+        }
+        logger.info(`Updated profile for user ${userId}`);
+        return toUserAdminDTO(updatedUser)!;
+      } catch (error: unknown) {
+        const err = error instanceof Error ? error : new Error(String(error));
+        logger.error(`Error updating profile for user ${userId}: ${err.message}`);
+        throw error instanceof ServiceError
+          ? error
+          : new ServiceError(
+              "Failed to update user profile",
+              StatusCodes.INTERNAL_SERVER_ERROR,
+              err
+            );
+      }
+    };
 }
