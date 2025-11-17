@@ -4,7 +4,7 @@ import { toUserDTO } from './user-mapper';
 import { toMentorDTO } from './mentor-mapper';
 import { IMentor } from '../../Interfaces/Models/i-mentor';
 import { IUser } from '../../Interfaces/Models/i-user';
-import logger from '../../core/Utils/Logger';
+import logger from '../../core/utils/logger';
 import { Types } from 'mongoose';
 import { IUserDTO } from '../../Interfaces/DTOs/i-user-dto';
 import { IMentorDTO } from '../../Interfaces/DTOs/i-mentor-dto';

@@ -1,5 +1,5 @@
 import { ICallLog } from "../Models/i-call-log";
-import { ICallLogPopulated } from "../../Utils/Types/call-types";
+import { ICallLogPopulated } from "../../Utils/types/call-types";
 
 export interface ICallLogRepository {
   createCallLog(data: Partial<ICallLog>): Promise<ICallLog>;

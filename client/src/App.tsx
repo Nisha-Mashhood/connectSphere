@@ -3,7 +3,7 @@ import { AdminRoutes, UserRoutes } from "./routes/routes";
 import { Toaster } from "react-hot-toast";
 import { setupInterceptors } from "./lib/axios";
 import { useEffect } from "react";
-import NotificationHandler from "./Components/User/Common/NotificationHandler";
+import NotificationHandler from "./Components/User/Home/NotificationHandler";
 import { useReviewModalTimer } from "./Service/useReviewModalTimer";
 import { useSelector } from "react-redux";
 import { RootState } from "./redux/store";

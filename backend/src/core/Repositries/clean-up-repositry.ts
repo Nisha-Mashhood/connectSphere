@@ -1,5 +1,5 @@
-import { RepositoryError } from "../Utils/error-handler";
-import logger from "../Utils/logger";
+import { RepositoryError } from "../utils/error-handler";
+import logger from "../utils/logger";
 import GroupRequest from "../../Models/group-request-model";
 import MentorRequest from "../../Models/mentor-requset-model";
 import { ERROR_MESSAGES } from "../../constants/error-messages";

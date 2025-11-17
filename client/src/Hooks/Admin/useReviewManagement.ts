@@ -8,7 +8,7 @@ import {
 } from "../../Service/Review.Service";
 
 import toast from "react-hot-toast";
-import { Review } from "../../Interface/IReview";
+import { Review } from "../../Interface/Ireview";
 
 export function useReviewManagement() {
   const [reviews, setReviews] = useState<Review[]>([]);

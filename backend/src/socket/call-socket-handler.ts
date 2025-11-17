@@ -1,6 +1,6 @@
 import { Server, Socket } from "socket.io";
-import logger from "../core/Utils/logger";
-import { CallData, CallOffer } from "../Utils/Types/socket-service-types";
+import logger from "../core/utils/logger";
+import { CallData, CallOffer } from "../Utils/types/socket-service-types";
 import { createCallLog, updateCallLog } from "./Utils/call-log-helper";
 import { inject, injectable } from "inversify";
 import { ICallSocketHandler } from "../Interfaces/Services/i-call-socket-handler";

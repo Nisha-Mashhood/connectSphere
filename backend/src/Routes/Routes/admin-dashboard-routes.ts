@@ -4,7 +4,7 @@ import { ADMIN_DASHBOARD_ROUTES } from "../Constants/admin-dashboard-routes";
 import { apiLimiter } from "../../middlewares/ratelimit-middleware";
 import { IAuthMiddleware } from "../../Interfaces/Middleware/i-auth-middleware";
 import { IAdminController } from "../../Interfaces/Controller/i-admin-controller";
-import { upload } from "../../core/Utils/Multer";
+import { upload } from "../../core/utils/multer";
 
 const router = express.Router();
 const authMiddleware = container.get<IAuthMiddleware>('IAuthMiddleware');

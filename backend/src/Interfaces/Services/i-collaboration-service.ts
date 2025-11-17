@@ -1,6 +1,6 @@
 import { Types } from "mongoose";
 import { IMentorRequest } from "../Models/i-mentor-request";
-import { LockedSlot } from "../../Utils/Types/collaboration-types";
+import { LockedSlot } from "../../Utils/types/collaboration-types";
 import { IMentorRequestDTO } from "../DTOs/i-mentor-request-dto";
 import { ICollaborationDTO } from "../DTOs/i-collaboration-dto";
 

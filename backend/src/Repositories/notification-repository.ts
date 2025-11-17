@@ -1,8 +1,8 @@
 import { injectable } from "inversify";
 import { Model, Types } from "mongoose";
-import { BaseRepository } from "../core/Repositries/base-repositry";
-import { RepositoryError } from "../core/Utils/error-handler";
-import logger from "../core/Utils/logger";
+import { BaseRepository } from "../core/repositries/base-repositry";
+import { RepositoryError } from "../core/utils/error-handler";
+import logger from "../core/utils/logger";
 import { AppNotificationModel } from "../Models/notification-model";
 import { IAppNotification } from "../Interfaces/Models/i-app-notification";
 import { ITask } from "../Interfaces/Models/i-task";

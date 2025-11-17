@@ -1,12 +1,12 @@
 import { injectable } from "inversify";
 import { Types, Model } from "mongoose";
-import { BaseRepository } from "../core/Repositries/base-repositry";
-import { RepositoryError } from "../core/Utils/error-handler";
-import logger from "../core/Utils/Logger";
+import { BaseRepository } from "../core/repositries/base-repositry";
+import { RepositoryError } from "../core/utils/error-handler";
+import logger from "../core/utils/logger";
 import Mentor from "../Models/mentor-model";
 import { IMentor } from "../Interfaces/Models/i-mentor";
 import { IUser } from "../Interfaces/Models/i-user";
-import { CompleteMentorDetails, MentorQuery } from "../Utils/Types/mentor-types";
+import { CompleteMentorDetails, MentorQuery } from "../Utils/types/mentor-types";
 import { StatusCodes } from "../enums/status-code-enums";
 import { IMentorRepository } from "../Interfaces/Repository/i-mentor-repositry";
 

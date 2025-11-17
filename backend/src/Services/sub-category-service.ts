@@ -1,14 +1,14 @@
 import { inject, injectable } from "inversify";
 import { ISubcategory } from "../Interfaces/Models/i-sub-category";
-import logger from "../core/Utils/logger";
-import { uploadMedia } from "../core/Utils/cloudinary";
-import { ServiceError } from "../core/Utils/error-handler";
+import logger from "../core/utils/logger";
+import { uploadMedia } from "../core/utils/cloudinary";
+import { ServiceError } from "../core/utils/error-handler";
 import { StatusCodes } from "../enums/status-code-enums";
 import { ISubcategoryRepository } from "../Interfaces/Repository/i-sub-category-repositry";
 import { ISkillsRepository } from "../Interfaces/Repository/i-skills-repositry";
 import { ISubcategoryDTO } from "../Interfaces/DTOs/i-sub-category-dto";
 import { ISubcategoryService } from "../Interfaces/Services/i-sub-category-service";
-import { toSubcategoryDTO, toSubcategoryDTOs } from "../Utils/Mappers/subcategory-mapper";
+import { toSubcategoryDTO, toSubcategoryDTOs } from "../Utils/mappers/subcategory-mapper";
 
 @injectable()
 export class SubcategoryService  implements ISubcategoryService{

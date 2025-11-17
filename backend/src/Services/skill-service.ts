@@ -1,13 +1,13 @@
 import { inject, injectable } from "inversify";
 import { ISkill } from "../Interfaces/Models/i-skill";
-import logger from "../core/Utils/logger";
-import { uploadMedia } from "../core/Utils/cloudinary";
-import { ServiceError } from "../core/Utils/error-handler";
+import logger from "../core/utils/logger";
+import { uploadMedia } from "../core/utils/cloudinary";
+import { ServiceError } from "../core/utils/error-handler";
 import { ISkillsService } from "../Interfaces/Services/i-skills-service";
 import { StatusCodes } from "../enums/status-code-enums";
 import { ISkillsRepository } from "../Interfaces/Repository/i-skills-repositry";
 import { ISkillDTO } from "../Interfaces/DTOs/i-skill-dto";
-import { toSkillDTO, toSkillDTOs } from "../Utils/Mappers/skill-mapper";
+import { toSkillDTO, toSkillDTOs } from "../Utils/mappers/skill-mapper";
 
 @injectable()
 export class SkillsService implements ISkillsService {

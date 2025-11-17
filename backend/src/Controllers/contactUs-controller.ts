@@ -1,10 +1,10 @@
 import { NextFunction, Request, Response } from 'express';
 import { inject, injectable } from 'inversify';
-import logger from '../core/Utils/Logger';
+import logger from '../core/utils/logger';
 import { IContactMessageController } from '../Interfaces/Controller/i-contact-us-controller';
-import { HttpError } from '../core/Utils/error-handler';
+import { HttpError } from '../core/utils/error-handler';
 import { StatusCodes } from "../enums/status-code-enums";
-import { BaseController } from '../core/Controller/base-controller';
+import { BaseController } from '../core/controller/base-controller';
 import { IContactMessageService } from '../Interfaces/Services/i-contact-message-service';
 import { ERROR_MESSAGES } from '../constants/error-messages';
 import { CONTACT_MESSAGE_MESSAGES } from '../constants/messages';

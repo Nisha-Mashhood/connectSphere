@@ -1,4 +1,4 @@
-import { GroupFormData, GroupQuery } from "../../Utils/Types/group-types";
+import { GroupFormData, GroupQuery } from "../../Utils/types/group-types";
 import { IGroupDTO } from "../DTOs/i-group-dto";
 import { IGroupRequestDTO } from "../DTOs/i-group-request-dto";
 

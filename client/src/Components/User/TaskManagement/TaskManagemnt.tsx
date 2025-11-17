@@ -1,6 +1,15 @@
 import { useState, useEffect, useCallback } from "react";
 import { useSelector } from "react-redux";
-import { Button, Modal, ModalContent, ModalHeader, ModalBody, Tabs, Tab, Chip } from "@nextui-org/react";
+import {
+  Button,
+  Modal,
+  ModalContent,
+  ModalHeader,
+  ModalBody,
+  Tabs,
+  Tab,
+  Chip,
+} from "@nextui-org/react";
 import { FaPlus } from "react-icons/fa";
 import toast from "react-hot-toast";
 import { RootState } from "../../../redux/store";
@@ -16,67 +25,55 @@ import { getUser_UserConnections } from "../../../Service/User-User.Service";
 import TaskList from "./TaskList";
 import TaskForm from "../../Forms/TaskForm";
 import TaskViewModal from "./TaskViewModal";
+import { TaskFormValues } from "../../../validation/taskValidation";
+import { CollabData, Group, GroupMembership, User } from "../../../redux/types";
+import { Task } from "../../../Interface/User/Itask";
 
-interface ITaskData {
-  name: string;
-  description: string;
-  priority: "low" | "medium" | "high";
-  startDate: string;
-  dueDate: string;
-  notificationDate: string;
-  notificationTime: string;
-  privacy: "private";
-  status: "pending" | "in-progress" | "completed" | "not-completed";
-  assignedUsers: Set<string>;
-  taskImage: File | null;
-  taskImagePreview: string;
+interface TaskManagementProps {
+  context: "user" | "group" | "collaboration";
+  currentUser: User;
+  contextData?: User | Group | CollabData;
 }
 
-interface ITaskErrors {
-  name?: string;
-  description?: string;
-  priority?: string;
-  startDate?: string;
-  dueDate?: string;
-  notificationDate?: string;
-  notificationTime?: string;
-  taskImage?: string;
-}
-
-const TaskManagement = ({ context, currentUser, contextData }) => {
+const TaskManagement = ({ context, currentUser, contextData }: TaskManagementProps) => {
   const { collabDetails, groupMemberships } = useSelector((state: RootState) => state.profile);
   const { taskNotifications } = useSelector((state: RootState) => state.notification);
+
   const collaborations = collabDetails?.data || [];
-  const groups = groupMemberships || [];
+
+  // Map GroupMembership[] → Group[]
+  const groups: Group[] = (groupMemberships?.groups ?? []).map((gm: GroupMembership): Group => ({
+    id: gm.id,
+    groupId: gm.groupId,
+    name: gm.name,
+    bio: gm.bio,
+    price: gm.price,
+    maxMembers: gm.maxMembers,
+    members: gm.members,
+    membersDetails: gm.membersDetails,
+    admin: gm.admin,
+    adminId: gm.adminId,
+    availableSlots: gm.availableSlots,
+    coverPic: gm.coverPic,
+    profilePic: gm.profilePic,
+    startDate: gm.startDate,
+    isFull: gm.isFull,
+    createdAt: gm.createdAt,
+  }));
 
   const [isOpen, setIsOpen] = useState(false);
   const [isEditOpen, setIsEditOpen] = useState(false);
   const [isViewOpen, setIsViewOpen] = useState(false);
-  const [allTasks, setAllTasks] = useState<any[]>([]);
-  const [showUserSelect, setShowUserSelect] = useState(false);
-  const [selectedTask, setSelectedTask] = useState<any>(null);
+  const [allTasks, setAllTasks] = useState<Task[]>([]);
+  const [selectedTask, setSelectedTask] = useState<Task | null>(null);
   const [isDeleting, setIsDeleting] = useState(false);
-  const [errors, setErrors] = useState<ITaskErrors>({});
   const [connectedUsers, setConnectedUsers] = useState<{ userId: string; name: string }[]>([]);
   const [selectedTab, setSelectedTab] = useState<string>("upcoming");
+  const [showUserSelect, setShowUserSelect] = useState(false);
 
-  const [taskData, setTaskData] = useState<ITaskData>({
-    name: "",
-    description: "",
-    priority: "medium",
-    startDate: "",
-    dueDate: "",
-    notificationDate: "",
-    notificationTime: "",
-    privacy: "private",
-    status: "pending",
-    assignedUsers: new Set([]),
-    taskImage: null,
-    taskImagePreview: "",
-  });
-
-  // Fetch user connections for profile context
+  // Fetch user connections (only for user context)
   const fetchUserConnections = useCallback(async () => {
+    if (context !== "user") return;
     try {
       const connectionsData = await getUser_UserConnections(currentUser.id);
       const users = connectionsData
@@ -88,28 +85,22 @@ const TaskManagement = ({ context, currentUser, contextData }) => {
             name: otherUser.name || "Unnamed User",
           };
         })
-        .filter((user, index, self) => 
-          user.userId && self.findIndex((u) => u.userId === user.userId) === index
-        );
+        .filter((user, index, self) => user.userId && self.findIndex((u) => u.userId === user.userId) === index);
       setConnectedUsers(users);
     } catch (error) {
       console.error("Error fetching user connections:", error);
       toast.error("Failed to fetch user connections");
     }
-  }, [currentUser.id]);
+  }, [currentUser.id, context]);
 
-  // Fetch all tasks
+  // Fetch tasks
   const fetchTasks = useCallback(async () => {
     try {
       const response = await get_tasks_by_context(context, contextData?.id, currentUser.id);
-      console.log(`TASK FOR CONTEXT ${context} is:`, response);
-      if (response) {
-        const sortedTasks = response.sort((a, b) => 
-          new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
-        );
+      if (response && Array.isArray(response)) {
+        const sortedTasks = response.sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
         setAllTasks(sortedTasks);
       } else {
-        console.warn("No tasks data in response");
         setAllTasks([]);
       }
     } catch (error) {
@@ -121,252 +112,181 @@ const TaskManagement = ({ context, currentUser, contextData }) => {
 
   useEffect(() => {
     fetchTasks();
-    if (context === "profile") {
-      fetchUserConnections();
-    }
-  }, [context, currentUser?.id, contextData, fetchTasks, fetchUserConnections]);
+    fetchUserConnections();
+  }, [fetchTasks, fetchUserConnections]);
 
   const formatDate = (dateString: string) => {
     if (!dateString) return "";
-    const date = new Date(dateString);
-    return date.toISOString().split("T")[0];
+    return new Date(dateString).toISOString().split("T")[0];
   };
 
-  const validateForm = (): ITaskErrors => {
-    const newErrors: ITaskErrors = {};
-    if (!taskData.name?.trim()) newErrors.name = "Task name is required";
-    else if (taskData.name.length < 2) newErrors.name = "Task name must be at least 2 characters";
-    else if (taskData.name.length > 100) newErrors.name = "Task name cannot exceed 100 characters";
+  const calculateStatus = (startDate: string, dueDate: string, currentStatus?: string): string => {
+    const today = new Date();
+    const start = new Date(startDate);
+    const due = new Date(dueDate);
 
-    if (!taskData.description?.trim()) newErrors.description = "Task description is required";
-    else if (taskData.description.length < 10) newErrors.description = "Description must be at least 10 characters";
-    else if (taskData.description.length > 500) newErrors.description = "Description cannot exceed 500 characters";
-
-    if (!["low", "medium", "high"].includes(taskData.priority)) newErrors.priority = "Priority must be low, medium, or high";
-    if (!taskData.startDate) newErrors.startDate = "Start date is required";
-    if (!taskData.dueDate) newErrors.dueDate = "Due date is required";
-    else if (taskData.startDate && taskData.dueDate) {
-      const startDate = new Date(taskData.startDate);
-      const dueDate = new Date(taskData.dueDate);
-      if (startDate >= dueDate) newErrors.dueDate = "Due date must be after start date";
-    }
-    if (!taskData.notificationDate) newErrors.notificationDate = "Notification date is required";
-    else if (taskData.startDate && taskData.dueDate && taskData.notificationDate) {
-      const notificationDate = new Date(taskData.notificationDate);
-      const startDate = new Date(taskData.startDate);
-      const dueDate = new Date(taskData.dueDate);
-      if (notificationDate < startDate) newErrors.notificationDate = "Notification date cannot be before start date";
-      else if (notificationDate > dueDate) newErrors.notificationDate = "Notification date cannot be after due date";
-    }
-    if (!taskData.notificationTime) newErrors.notificationTime = "Notification time is required";
-    return newErrors;
+    if (currentStatus === "completed") return "completed";
+    if (start > today) return "pending";
+    if (today <= due) return "in-progress";
+    return "not-completed";
   };
 
-  const handleInputChange = (field: keyof ITaskData, value) => {
-    setTaskData((prev) => ({ ...prev, [field]: value }));
-    const newErrors = validateForm();
-    setErrors((prev) => ({ ...prev, [field]: newErrors[field] }));
-  };
-
-  const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    if (e.target.files && e.target.files[0]) {
-      const file = e.target.files[0];
-      const validImageTypes = ["image/jpeg", "image/png", "image/jpg"];
-      if (!validImageTypes.includes(file.type)) {
-        setErrors((prev) => ({ ...prev, taskImage: "Only JPEG, JPG, and PNG images are allowed" }));
-        return;
-      }
-      const imageUrl = URL.createObjectURL(file);
-      setTaskData({ ...taskData, taskImage: file, taskImagePreview: imageUrl });
-      setErrors((prev) => ({ ...prev, taskImage: undefined }));
-    }
-  };
-
-  const handleTaskCreate = async () => {
-    const validationErrors = validateForm();
-    setErrors(validationErrors);
-    if (Object.keys(validationErrors).length > 0) {
-      toast.error("Please fix the errors before submitting");
-      return;
-    }
-
+  // Handle task creation
+  const handleTaskCreate = async (formData: TaskFormValues, showUserSelect: boolean) => {
     try {
-      const formData = new FormData();
-      const { taskImage, ...filteredTaskData } = taskData;
+      const { taskImage, ...data } = formData;
+    const status = calculateStatus(data.startDate, data.dueDate);
+    const assigned = context === "user" && showUserSelect ? data.assignedUsers || [] : [];
 
-      let autoStatus = filteredTaskData.status;
-      const today = new Date();
-      const startDate = new Date(filteredTaskData.startDate);
-      const dueDate = new Date(filteredTaskData.dueDate);
-      if (startDate > today) autoStatus = "pending";
-      else if (startDate <= today && today <= dueDate) autoStatus = "in-progress";
-      else if (today > dueDate) autoStatus = "not-completed";
+    console.log("CREATE → assignedUsers:", assigned);
 
-      const newTask = {
-        ...filteredTaskData,
-        status: autoStatus,
-        createdBy: currentUser.id,
-        createdAt: new Date(),
-        contextId: context === "profile" ? currentUser.id : contextData?.id,
-        contextType: context,
-        assignedUsers: context === "profile" && showUserSelect ? Array.from(taskData.assignedUsers) : [],
-      };
+    const payload = {
+      ...data,
+      status,
+      createdBy: currentUser.id,
+      contextId: context === "user" ? currentUser.id : contextData?.id,
+      contextType: context,
+      assignedUsers: assigned,
+    };
 
-      formData.append("taskData", JSON.stringify(newTask));
-      if (taskData.taskImage) formData.append("image", taskData.taskImage);
+      const formDataToSend = new FormData();
+      formDataToSend.append("taskData", JSON.stringify(payload));
+      if (taskImage) formDataToSend.append("image", taskImage);
 
-      const response = await create_task(currentUser.id, formData);
-      if (response) {
+      const response = await create_task(currentUser.id, formDataToSend);
+      if (response){
+        console.log(response)
         toast.success("Task created successfully!");
-        setIsOpen(false);
-        resetForm();
-        fetchTasks();
       }
+      setIsOpen(false);
+      setShowUserSelect(false);
+      fetchTasks();
     } catch (error) {
-      toast.error("Failed to create task");
-      console.error("Error creating task:", error);
+      console.log(error);
+      toast.error(error.message || "Failed to create task");
     }
   };
 
-  const handleTaskUpdate = async () => {
-    const validationErrors = validateForm();
-    setErrors(validationErrors);
-    if (Object.keys(validationErrors).length > 0) {
-      toast.error("Please fix the errors before submitting");
-      return;
-    }
+  // Handle task update
+  const handleTaskUpdate = async (formData: TaskFormValues, showUserSelect: boolean) => {
+    if (!selectedTask) return;
 
     try {
-      if (!selectedTask) return;
-      const { taskImage, ...updates } = taskData;
+      const { taskImage, ...updates } = formData;
+    const status = calculateStatus(updates.startDate, updates.dueDate, updates.status);
+    const assigned = context === "user" && showUserSelect ? updates.assignedUsers || [] : [];
 
-      let autoStatus = updates.status;
-      if (autoStatus === selectedTask.status) {
-        const today = new Date();
-        const startDate = new Date(updates.startDate);
-        const dueDate = new Date(updates.dueDate);
-        if (startDate > today) autoStatus = "pending";
-        else if (startDate <= today && today <= dueDate) autoStatus = "in-progress";
-        else if (today > dueDate && autoStatus !== "completed") autoStatus = "not-completed";
-      }
+    console.log("UPDATE → assignedUsers:", assigned);
 
-      const updatedTask = {
-        ...updates,
-        status: autoStatus,
-        assignedUsers: context === "profile" && showUserSelect ? Array.from(taskData.assignedUsers) : [],
-        assignedGroups: [],
-        assignedCollaborations: [],
-      };
+    const payload = { 
+      ...updates, 
+      status,
+      assignedUsers: assigned,
+    };
 
-      const response = await edit_task(selectedTask.id, updatedTask);
-      if (response) {
+      const formDataToSend = new FormData();
+      formDataToSend.append("taskData", JSON.stringify(payload));
+      if (taskImage) formDataToSend.append("image", taskImage);
+
+      const response = await edit_task(selectedTask.id , formDataToSend);
+      if (response){
+        console.log(response);
         toast.success("Task updated successfully!");
-        setIsEditOpen(false);
-        fetchTasks();
       }
+      setIsEditOpen(false);
+      setShowUserSelect(false);
+      fetchTasks();
     } catch (error) {
-      toast.error("Failed to update task");
-      console.error("Error updating task:", error);
+      console.log(error);
+      toast.error(error.message || "Failed to update task");
     }
   };
 
+  // Handle delete
   const handleTaskDelete = async () => {
     try {
       if (!selectedTask) return;
-      const response = await delete_task(selectedTask.id);
-      if (response) {
-        toast.success("Task deleted successfully!");
-        setIsViewOpen(false);
-        setIsDeleting(false);
-        fetchTasks();
-      }
+      await delete_task(selectedTask.id );
+      toast.success("Task deleted successfully!");
+      setIsViewOpen(false);
+      setIsDeleting(false);
+      fetchTasks();
     } catch (error) {
-      toast.error("Failed to delete task");
-      console.error("Error deleting task:", error);
+      console.log(error);
+      toast.error(error.message || "Failed to delete task");
     }
   };
 
+  // Status & Priority updates
   const handleStatusChange = async (taskId: string, newStatus: string) => {
     try {
-      const response = await update_task_status(taskId, newStatus);
-      if (response) {
-        toast.success(`Task marked as ${newStatus}`);
-        fetchTasks();
-      }
+      await update_task_status(taskId, newStatus);
+      toast.success(`Task marked as ${newStatus}`);
+      fetchTasks();
     } catch (error) {
-      toast.error("Failed to update task status");
-      console.error("Error updating task status:", error);
+      console.log(error);
+      toast.error("Failed to update status");
     }
   };
 
   const handlePriorityChange = async (taskId: string, newPriority: string) => {
     try {
-      const response = await update_task_priority(taskId, newPriority);
-      if (response) {
-        toast.success(`Priority updated to ${newPriority}`);
-        fetchTasks();
-      }
+      await update_task_priority(taskId, newPriority);
+      toast.success(`Priority updated to ${newPriority}`);
+      fetchTasks();
     } catch (error) {
-      toast.error("Failed to update task priority");
-      console.error("Error updating task priority:", error);
+      console.log(error);
+      toast.error("Failed to update priority");
     }
   };
 
-  const openEditModal = (task) => {
+  // Open edit modal with prefilled data
+  const openEditModal = (task: Task) => {
     setSelectedTask(task);
-    setErrors({});
-    setTaskData({
-      name: task.name || "",
-      description: task.description || "",
-      priority: task.priority || "medium",
-      startDate: formatDate(task.startDate),
-      dueDate: formatDate(task.dueDate),
-      notificationDate: formatDate(task.notificationDate),
-      notificationTime: task.notificationTime || "",
-      privacy: task.privacy || "private",
-      status: task.status || "pending",
-      assignedUsers: new Set(task.assignedUsers || []),
-      taskImage: null,
-      taskImagePreview: task.image || "",
-    });
-    setShowUserSelect(context === "profile" && task.assignedUsers && task.assignedUsers.length > 0);
+    const hasAssignees =
+      task.assignedUsersDetails && task.assignedUsersDetails.length > 0;
+    const canEditAssign = task.createdBy === currentUser.id;
+    setShowUserSelect(context === "user" && hasAssignees && canEditAssign);
     setIsEditOpen(true);
   };
 
-  const resetForm = () => {
-    setTaskData({
-      name: "",
-      description: "",
-      priority: "medium",
-      startDate: "",
-      dueDate: "",
-      notificationDate: "",
-      notificationTime: "",
-      privacy: "private",
-      status: "pending",
-      assignedUsers: new Set([]),
-      taskImage: null,
-      taskImagePreview: "",
-    });
-    setShowUserSelect(false);
-    setErrors({});
-  };
-
-  // Filter tasks by status, with "Upcoming" based on startDate
+  // Filter tasks
   const today = new Date();
   const upcomingTasks = allTasks.filter(
-    (task) => new Date(task.startDate) > today && (task.status === "pending" || task.status === "in-progress")
+    (task) => new Date(task.startDate) > today && ["pending", "in-progress"].includes(task.status)
   );
-  const pendingTasks = allTasks.filter(
-    (task) => {
-      const startDate = new Date(task.startDate);
-      const dueDate = new Date(task.dueDate);
-      return startDate <= today && today <= dueDate && task.status === "pending";
-    }
-  );
-  const inProgressTasks = allTasks.filter((task) => task.status === "in-progress");
-  const completedTasks = allTasks.filter((task) => task.status === "completed");
-  const notCompletedTasks = allTasks.filter((task) => task.status === "not-completed");
+  const pendingTasks = allTasks.filter((task) => {
+    const start = new Date(task.startDate);
+    const due = new Date(task.dueDate);
+    return start <= today && today <= due && task.status === "pending";
+  });
+  const inProgressTasks = allTasks.filter((t) => t.status === "in-progress");
+  const completedTasks = allTasks.filter((t) => t.status === "completed");
+  const notCompletedTasks = allTasks.filter((t) => t.status === "not-completed");
+
+  // Initial data for edit
+  const getEditInitialData = (): Partial<TaskFormValues & { taskImagePreview?: string }> => {
+    if (!selectedTask) return {};
+
+    const canEditAssign = selectedTask.createdBy === currentUser.id;
+
+    return {
+      name: selectedTask.name || "",
+      description: selectedTask.description || "",
+      priority: selectedTask.priority || "medium",
+      startDate: formatDate(selectedTask.startDate),
+      dueDate: formatDate(selectedTask.dueDate),
+      notificationDate: formatDate(selectedTask.notificationDate),
+      notificationTime: selectedTask.notificationTime || "",
+      status: selectedTask.status || "pending",
+      assignedUsers: canEditAssign
+        ? (selectedTask.assignedUsersDetails || [])
+            .map((u: User) => u.id)
+            .filter(Boolean) as string[]
+        : [],
+      taskImagePreview: selectedTask.image || "",
+    };
+  };
 
   return (
     <div className="space-y-3">
@@ -377,7 +297,7 @@ const TaskManagement = ({ context, currentUser, contextData }) => {
           size="sm"
           startContent={<FaPlus />}
           onPress={() => {
-            resetForm();
+            setShowUserSelect(false);
             setIsOpen(true);
           }}
         >
@@ -436,8 +356,8 @@ const TaskManagement = ({ context, currentUser, contextData }) => {
             notifications={taskNotifications}
             connectedUsers={connectedUsers}
             context={context}
-            onViewTask={(task) => {
-              setSelectedTask(task);
+            onViewTask={(t) => {
+              setSelectedTask(t);
               setIsViewOpen(true);
             }}
             onEditTask={openEditModal}
@@ -460,8 +380,8 @@ const TaskManagement = ({ context, currentUser, contextData }) => {
             notifications={taskNotifications}
             connectedUsers={connectedUsers}
             context={context}
-            onViewTask={(task) => {
-              setSelectedTask(task);
+            onViewTask={(t) => {
+              setSelectedTask(t);
               setIsViewOpen(true);
             }}
             onEditTask={openEditModal}
@@ -484,8 +404,8 @@ const TaskManagement = ({ context, currentUser, contextData }) => {
             notifications={taskNotifications}
             connectedUsers={connectedUsers}
             context={context}
-            onViewTask={(task) => {
-              setSelectedTask(task);
+            onViewTask={(t) => {
+              setSelectedTask(t);
               setIsViewOpen(true);
             }}
             onEditTask={openEditModal}
@@ -508,8 +428,8 @@ const TaskManagement = ({ context, currentUser, contextData }) => {
             notifications={taskNotifications}
             connectedUsers={connectedUsers}
             context={context}
-            onViewTask={(task) => {
-              setSelectedTask(task);
+            onViewTask={(t) => {
+              setSelectedTask(t);
               setIsViewOpen(true);
             }}
             onEditTask={openEditModal}
@@ -520,22 +440,16 @@ const TaskManagement = ({ context, currentUser, contextData }) => {
         </Tab>
       </Tabs>
 
-      {/* Create Task Modal */}
+      {/* Create Modal */}
       <Modal isOpen={isOpen} onClose={() => setIsOpen(false)} size="lg">
         <ModalContent>
-          <ModalHeader className="text-lg">Create New Task</ModalHeader>
+          <ModalHeader>Create New Task</ModalHeader>
           <ModalBody>
             <TaskForm
-              taskData={taskData}
-              errors={errors}
-              groups={groups}
               users={connectedUsers}
-              collaborations={collaborations}
-              showUserSelect={showUserSelect}
               context={context}
               isEditMode={false}
-              onInputChange={handleInputChange}
-              onImageChange={handleImageChange}
+              showUserSelect={showUserSelect}
               setShowUserSelect={setShowUserSelect}
               onSubmit={handleTaskCreate}
               onCancel={() => setIsOpen(false)}
@@ -544,23 +458,19 @@ const TaskManagement = ({ context, currentUser, contextData }) => {
         </ModalContent>
       </Modal>
 
-      {/* Edit Task Modal */}
+      {/* Edit Modal */}
       <Modal isOpen={isEditOpen} onClose={() => setIsEditOpen(false)} size="lg">
         <ModalContent>
-          <ModalHeader className="text-lg">Edit Task</ModalHeader>
+          <ModalHeader>Edit Task</ModalHeader>
           <ModalBody>
             <TaskForm
-              taskData={taskData}
-              errors={errors}
-              groups={groups}
+              initialData={getEditInitialData()}
               users={connectedUsers}
-              collaborations={collaborations}
-              showUserSelect={showUserSelect}
               context={context}
               isEditMode={true}
-              onInputChange={handleInputChange}
-              onImageChange={handleImageChange}
+              showUserSelect={showUserSelect}
               setShowUserSelect={setShowUserSelect}
+              canEditAssignment={selectedTask?.createdBy === currentUser.id}
               onSubmit={handleTaskUpdate}
               onCancel={() => setIsEditOpen(false)}
             />
@@ -568,14 +478,14 @@ const TaskManagement = ({ context, currentUser, contextData }) => {
         </ModalContent>
       </Modal>
 
-      {/* View Task Modal */}
+      {/* View Modal */}
       <TaskViewModal
         isOpen={isViewOpen}
         onClose={() => setIsViewOpen(false)}
         task={selectedTask}
         onEdit={() => {
           setIsViewOpen(false);
-          openEditModal(selectedTask);
+          openEditModal(selectedTask!);
         }}
         onDelete={handleTaskDelete}
         isDeleting={isDeleting}

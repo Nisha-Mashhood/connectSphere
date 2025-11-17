@@ -142,6 +142,7 @@ const ProfileInfoCard: FC<ProfileInfoCardProps> = ({
         {currentUser?.role === "user" ? (
           <Accordion variant="light" className="px-0">
             <AccordionItem
+            textValue="Payment History"
               key="payments"
               title={
                 <div className="flex items-center gap-3">

@@ -1,7 +1,7 @@
-import { UserIds } from "../../Utils/Types/notification-types";
+import { UserIds } from "../../Utils/types/notification-types";
 import { ICollaboration } from "../Models/i-collaboration";
 import { IMentorRequest } from "../Models/i-mentor-request";
-import { LockedSlot } from "../../Utils/Types/collaboration-types";
+import { LockedSlot } from "../../Utils/types/collaboration-types";
 
 export interface ICollaborationRepository {
   findById(id: string): Promise<ICollaboration | null>;

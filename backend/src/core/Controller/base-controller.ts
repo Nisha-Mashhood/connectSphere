@@ -1,6 +1,6 @@
 import { Response } from 'express';
-import { IBaseController } from '../Interfaces/Ibase-controller';
-import logger from '../Utils/logger';
+import { IBaseController } from '../interfaces/Ibase-controller';
+import logger from '../utils/logger';
 import { StatusCodes } from '../../enums/status-code-enums';
 
 export abstract class BaseController<T = unknown> implements IBaseController {

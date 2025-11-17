@@ -1,13 +1,13 @@
 import { Request, Response, NextFunction } from 'express';
 import { inject, injectable } from 'inversify';
-import { uploadMedia } from '../core/Utils/cloudinary';
-import { HttpError } from '../core/Utils/error-handler';
-import logger from '../core/Utils/Logger';
-import { GroupFormData } from '../Utils/Types/group-types';
+import { uploadMedia } from '../core/utils/cloudinary';
+import { HttpError } from '../core/utils/error-handler';
+import logger from '../core/utils/logger';
+import { GroupFormData } from '../Utils/types/group-types';
 import type { Express } from "express";
 import { IGroupController } from '../Interfaces/Controller/i-group-controller';
 import { StatusCodes } from "../enums/status-code-enums";
-import { BaseController } from '../core/Controller/base-controller';
+import { BaseController } from '../core/controller/base-controller';
 import { IGroupService } from '../Interfaces/Services/i-group-service';
 import { GROUP_MESSAGES } from '../constants/messages';
 import { ERROR_MESSAGES } from '../constants/error-messages';

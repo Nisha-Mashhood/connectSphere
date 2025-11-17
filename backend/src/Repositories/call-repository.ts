@@ -1,9 +1,9 @@
-import { RepositoryError } from "../core/Utils/error-handler";
-import { BaseRepository } from "../core/Repositries/base-repositry";
-import logger from "../core/Utils/logger";
+import { RepositoryError } from "../core/utils/error-handler";
+import { BaseRepository } from "../core/repositries/base-repositry";
+import logger from "../core/utils/logger";
 import { ICallLog } from "../Interfaces/Models/i-call-log";
 import callModal from "../Models/call-model";
-import { ICallLogPopulated } from "../Utils/Types/call-types";
+import { ICallLogPopulated } from "../Utils/types/call-types";
 import { ICallLogRepository } from "../Interfaces/Repository/i-call-repositry";
 import { StatusCodes } from "../enums/status-code-enums";
 import { inject, injectable } from "inversify";

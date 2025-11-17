@@ -5,7 +5,7 @@ import { toGroupDTO } from './group-mapper';
 import { IUser } from '../../Interfaces/Models/i-user';
 import { IGroup } from '../../Interfaces/Models/i-group';
 import { ICollaboration } from '../../Interfaces/Models/i-collaboration';
-import logger from '../../core/Utils/logger';
+import logger from '../../core/utils/logger';
 import { Types } from 'mongoose';
 import { IUserDTO } from '../../Interfaces/DTOs/i-user-dto';
 import { IGroupDTO } from '../../Interfaces/DTOs/i-group-dto';

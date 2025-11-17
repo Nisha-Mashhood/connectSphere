@@ -1,8 +1,8 @@
-import { BaseController } from '../core/Controller/base-controller';
+import { BaseController } from '../core/controller/base-controller';
 import { inject, injectable } from 'inversify';
 import { Request, Response, NextFunction } from 'express';
 import type { Express } from "express";
-import logger from '../core/Utils/Logger';
+import logger from '../core/utils/logger';
 import { ForgotPasswordRequestBody, 
   LoginRequestBody, 
   LogoutRequestBody, 
@@ -15,9 +15,9 @@ import { ForgotPasswordRequestBody,
   VerifyPasskeyRequestBody, 
   UpdatePasswordRequestBody, 
   UserQuery
-} from '../Utils/Types/auth-types';
+} from '../Utils/types/auth-types';
 import { IAuthController } from '../Interfaces/Controller/i-auth-controller';
-import { HttpError } from '../core/Utils/error-handler';
+import { HttpError } from '../core/utils/error-handler';
 import { StatusCodes } from '../enums/status-code-enums';
 import { IAuthService } from '../Interfaces/Services/i-user-service';
 import { IJWTService } from '../Interfaces/Services/i-jwt-service';

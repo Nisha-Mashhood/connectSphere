@@ -1,10 +1,10 @@
 import { inject, injectable } from "inversify";
-import { sendEmail } from "../core/Utils/Email";
-import stripe from "../core/Utils/Stripe";
+import { sendEmail } from "../core/utils/email";
+import stripe from "../core/utils/stripe";
 import { v4 as uuid } from "uuid";
-import logger from "../core/Utils/Logger";
-import { ServiceError } from "../core/Utils/error-handler";
-import { GroupFormData, GroupQuery } from "../Utils/Types/group-types";
+import logger from "../core/utils/logger";
+import { ServiceError } from "../core/utils/error-handler";
+import { GroupFormData, GroupQuery } from "../Utils/types/group-types";
 import { Types } from "mongoose";
 import { IGroupService } from "../Interfaces/Services/i-group-service";
 import { StatusCodes } from "../enums/status-code-enums";
@@ -13,8 +13,8 @@ import { IContactRepository } from "../Interfaces/Repository/i-contact-repositry
 import { IUserRepository } from "../Interfaces/Repository/i-user-repositry";
 import { IGroupDTO } from "../Interfaces/DTOs/i-group-dto";
 import { IGroupRequestDTO } from "../Interfaces/DTOs/i-group-request-dto";
-import { toGroupDTO, toGroupDTOs } from "../Utils/Mappers/group-mapper";
-import { toGroupRequestDTO, toGroupRequestDTOs } from "../Utils/Mappers/group-request-mapper";
+import { toGroupDTO, toGroupDTOs } from "../Utils/mappers/group-mapper";
+import { toGroupRequestDTO, toGroupRequestDTOs } from "../Utils/mappers/group-request-mapper";
 
 @injectable()
 export class GroupService implements IGroupService {

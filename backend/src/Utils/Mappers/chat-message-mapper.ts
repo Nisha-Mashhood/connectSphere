@@ -8,7 +8,7 @@ import { IUser } from '../../Interfaces/Models/i-user';
 import { ICollaboration } from '../../Interfaces/Models/i-collaboration';
 import { IUserConnection } from '../../Interfaces/Models/i-user-connection';
 import { IGroup } from '../../Interfaces/Models/i-group';
-import logger from '../../core/Utils/logger';
+import logger from '../../core/utils/logger';
 import { Types } from 'mongoose';
 import { IUserDTO } from '../../Interfaces/DTOs/i-user-dto';
 import { ICollaborationDTO } from '../../Interfaces/DTOs/i-collaboration-dto';

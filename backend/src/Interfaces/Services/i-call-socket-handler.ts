@@ -1,5 +1,5 @@
 import { Server, Socket } from "socket.io";
-import { CallData } from "../../Utils/Types/socket-service-types";
+import { CallData } from "../../Utils/types/socket-service-types";
 
 export interface ICallSocketHandler {
   setIo(io: Server): void;

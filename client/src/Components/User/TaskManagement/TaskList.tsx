@@ -1,16 +1,17 @@
 import React from "react";
-// import { Chip } from "@nextui-org/react";
 import TaskCard from "./TaskCard";
 import { Notification } from "../../../types";
+import { User } from "../../../redux/types";
+import { Task } from "../../../Interface/User/Itask";
 
 interface TaskListProps {
-  tasks: any[];
-  currentUser: any;
+  tasks: Task[];
+  currentUser: User;
   notifications: Notification[];
   connectedUsers: { userId: string; name: string }[];
   context: string;
-  onViewTask: (task: any) => void;
-  onEditTask: (task: any) => void;
+  onViewTask: (task: Task) => void;
+  onEditTask: (task: Task) => void;
   onStatusChange: (taskId: string, newStatus: string) => void;
   onPriorityChange: (taskId: string, newPriority: string) => void;
   formatDate: (dateString: string) => string;
@@ -35,11 +36,11 @@ const TaskList: React.FC<TaskListProps> = ({
       ) : (
         tasks.map((task) => {
           const hasUnreadNotification = notifications.some(
-            (n) => n.relatedId === task._id && n.status === "unread" && n.type === "task_reminder"
+            (n) => n.relatedId === task.id && n.status === "unread" && n.type === "task_reminder"
           );
           return (
             <div
-              key={task._id}
+              key={task.id}
               className={`transition-all duration-200 ${
                 hasUnreadNotification
                   ? "border-2 border-blue-600 rounded-lg p-1 shadow-md"

@@ -1,11 +1,11 @@
 import { Request, Response, NextFunction } from 'express';
 import { inject, injectable } from 'inversify';
-import logger from '../core/Utils/logger';
+import logger from '../core/utils/logger';
 import { IFeedback } from '../Interfaces/Models/i-feedback';
 import { IFeedbackController } from '../Interfaces/Controller/i-feedBack-controller';
-import { HttpError } from '../core/Utils/error-handler';
+import { HttpError } from '../core/utils/error-handler';
 import { StatusCodes } from "../enums/status-code-enums";
-import { BaseController } from '../core/Controller/base-controller';
+import { BaseController } from '../core/controller/base-controller';
 import { IFeedbackService } from '../Interfaces/Services/i-feedback-service';
 import { FEEDBACK_MESSAGES } from '../constants/messages';
 import { ERROR_MESSAGES } from '../constants/error-messages';

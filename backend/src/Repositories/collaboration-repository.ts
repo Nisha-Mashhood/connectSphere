@@ -1,8 +1,8 @@
 import { injectable } from "inversify";
 import { Types, Model, PipelineStage } from "mongoose";
-import { BaseRepository } from "../core/Repositries/base-repositry";
-import { RepositoryError } from "../core/Utils/error-handler";
-import logger from "../core/Utils/Logger";
+import { BaseRepository } from "../core/repositries/base-repositry";
+import { RepositoryError } from "../core/utils/error-handler";
+import logger from "../core/utils/logger";
 import Collaboration from "../Models/collaboration-model";
 import MentorRequest from "../Models/mentor-requset-model";
 import Mentor from "../Models/mentor-model";
@@ -10,10 +10,10 @@ import { ICollaboration } from "../Interfaces/Models/i-collaboration";
 import { IMentorRequest } from "../Interfaces/Models/i-mentor-request";
 import { IMentor } from "../Interfaces/Models/i-mentor";
 import { IUser } from "../Interfaces/Models/i-user";
-import { LockedSlot } from "../Utils/Types/collaboration-types";
+import { LockedSlot } from "../Utils/types/collaboration-types";
 import { StatusCodes } from "../enums/status-code-enums";
 import { ICollaborationRepository } from "../Interfaces/Repository/i-collaboration-repositry";
-import { CollaborationData, UserIds } from "../Utils/Types/notification-types";
+import { CollaborationData, UserIds } from "../Utils/types/notification-types";
 
 @injectable()
 export class CollaborationRepository extends BaseRepository<ICollaboration> implements ICollaborationRepository{

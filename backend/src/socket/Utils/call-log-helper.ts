@@ -1,5 +1,5 @@
 import { Socket, Server } from "socket.io";
-import logger from "../../core/Utils/logger";
+import logger from "../../core/utils/logger";
 import { ICallLog } from "../../Interfaces/Models/i-call-log";
 import { ICallLogRepository } from "../../Interfaces/Repository/i-call-repositry";
 

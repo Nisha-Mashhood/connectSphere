@@ -1,11 +1,11 @@
 import { inject, injectable } from "inversify";
-import { ServiceError } from "../core/Utils/error-handler";
-import logger from "../core/Utils/Logger";
+import { ServiceError } from "../core/utils/error-handler";
+import logger from "../core/utils/logger";
 import { StatusCodes } from "../enums/status-code-enums";
 import { IContact } from "../Interfaces/Models/i-contact";
 import { IUserConnectionRepository } from "../Interfaces/Repository/i-user-collaboration-repositry";
 import { IContactRepository } from "../Interfaces/Repository/i-contact-repositry";
-import { toUserConnectionDTO, toUserConnectionDTOs } from "../Utils/Mappers/user-connection-mapper";
+import { toUserConnectionDTO, toUserConnectionDTOs } from "../Utils/mappers/user-connection-mapper";
 import { IUserConnectionDTO } from "../Interfaces/DTOs/i-user-connection-dto";
 import { IUserConnectionService } from "../Interfaces/Services/i-user-collaboration-service";
 

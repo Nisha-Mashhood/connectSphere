@@ -1,7 +1,7 @@
 import mongoose, { Schema, Model } from "mongoose";
-import { generateCustomId } from "../core/Utils/id-generator";
+import { generateCustomId } from "../core/utils/id-generator";
 import { ISkill } from "../Interfaces/Models/i-skill";
-import logger from "../core/Utils/logger";
+import logger from "../core/utils/logger";
 
 // Skill Schema
 const skillSchema: Schema<ISkill> = new Schema(

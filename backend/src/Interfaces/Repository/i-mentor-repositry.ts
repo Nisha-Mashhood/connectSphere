@@ -1,5 +1,5 @@
 import { IMentor } from "../Models/i-mentor";
-import { CompleteMentorDetails, MentorQuery } from "../../Utils/Types/mentor-types";
+import { CompleteMentorDetails, MentorQuery } from "../../Utils/types/mentor-types";
 
 export interface IMentorRepository {
   submitMentorRequest(data: Partial<IMentor>): Promise<IMentor>;

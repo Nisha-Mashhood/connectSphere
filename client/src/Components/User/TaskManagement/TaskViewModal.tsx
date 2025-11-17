@@ -1,18 +1,20 @@
 import React from "react";
 import { Modal, ModalContent, ModalHeader, ModalBody, ModalFooter, Button, Chip } from "@nextui-org/react";
 import { FaCalendar, FaBell, FaEdit, FaTrash } from "react-icons/fa";
+import { CollabData, Group } from "../../../redux/types";
+import { Task } from "../../../Interface/User/Itask";
 
 interface TaskViewModalProps {
   isOpen: boolean;
   onClose: () => void;
-  task: any;
+  task: Task;
   onEdit: () => void;
   onDelete: () => void;
   isDeleting: boolean;
   setIsDeleting: (value: boolean) => void;
   formatDate: (dateString: string) => string;
-  groups: any[];
-  collaborations: any[];
+  groups: Group[];
+  collaborations: CollabData[];
 }
 
 const TaskViewModal: React.FC<TaskViewModalProps> = ({
@@ -24,8 +26,8 @@ const TaskViewModal: React.FC<TaskViewModalProps> = ({
   isDeleting,
   setIsDeleting,
   formatDate,
-  groups,
-  collaborations,
+  // groups,
+  // collaborations,
 }) => {
   const getPriorityColor = (priority: string) => {
     switch (priority) {
@@ -46,8 +48,8 @@ const TaskViewModal: React.FC<TaskViewModalProps> = ({
     }
   };
 
-  const renderCollaborationName = (collab) =>
-    collab.userId?.name || collab.mentorId?.userId?.name || "Unnamed";
+  // const renderCollaborationName = (collab) =>
+  //   collab.userId?.name || collab.mentorId?.userId?.name || "Unnamed";
 
   return (
     <Modal isOpen={isOpen} onClose={onClose} size="lg">
@@ -88,12 +90,12 @@ const TaskViewModal: React.FC<TaskViewModalProps> = ({
                     <h4 className="font-medium text-sm mb-1">Description</h4>
                     <p className="text-gray-600 text-sm whitespace-pre-line">{task.description || "No description provided."}</p>
                   </div>
-                  {task.assignedGroups?.length > 0 && (
+                  {/* {task.assignedGroups?.length > 0 && (
                     <div>
                       <h4 className="font-medium text-sm mb-1">Assigned Groups</h4>
                       <div className="flex flex-wrap gap-1">
                         {task.assignedGroups.map((groupId: string) => {
-                          const group = groups.find((g) => g._id === groupId);
+                          const group = groups.find((g) => g.id === groupId);
                           return <Chip key={groupId} color="primary" size="sm">{group?.name || "Unknown Group"}</Chip>;
                         })}
                       </div>
@@ -104,12 +106,12 @@ const TaskViewModal: React.FC<TaskViewModalProps> = ({
                       <h4 className="font-medium text-sm mb-1">Assigned Collaborations</h4>
                       <div className="flex flex-wrap gap-1">
                         {task.assignedCollaborations.map((collabId: string) => {
-                          const collab = collaborations.find((c) => c._id === collabId);
+                          const collab = collaborations.find((c) => c.id === collabId);
                           return <Chip key={collabId} color="primary" size="sm">{collab ? renderCollaborationName(collab) : "Unknown Collaboration"}</Chip>;
                         })}
                       </div>
                     </div>
-                  )}
+                  )} */}
                 </div>
               )}
             </ModalBody>

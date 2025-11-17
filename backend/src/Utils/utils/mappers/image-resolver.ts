@@ -1,5 +1,5 @@
-import logger from '../../../core/Utils/logger';
-import { generateCloudinaryUrl } from '../../../core/Utils/cloudinary';
+import logger from '../../../core/utils/logger';
+import { generateCloudinaryUrl } from '../../../core/utils/cloudinary';
 
 export function resolveImage(value: string | null | undefined , folder: string): string | undefined {
   if (!value) return undefined;

@@ -1,11 +1,11 @@
 import { inject, injectable } from 'inversify';
 import { Types, Model } from 'mongoose';
-import { BaseRepository } from '../core/Repositries/base-repositry';
-import { RepositoryError } from '../core/Utils/error-handler';
-import logger from '../core/Utils/logger';
+import { BaseRepository } from '../core/repositries/base-repositry';
+import { RepositoryError } from '../core/utils/error-handler';
+import logger from '../core/utils/logger';
 import Contact from '../Models/contacts-model';
 import { IContact } from '../Interfaces/Models/i-contact';
-import { PopulatedContact } from '../Utils/Types/contact-types';
+import { PopulatedContact } from '../Utils/types/contact-types';
 import { IContactRepository } from '../Interfaces/Repository/i-contact-repositry';
 import { StatusCodes } from '../enums/status-code-enums';
 import { IChatRepository } from '../Interfaces/Repository/i-chat-repositry';

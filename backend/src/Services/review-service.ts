@@ -1,11 +1,11 @@
 import { inject, injectable } from "inversify";
-import { ServiceError } from '../core/Utils/error-handler';
-import logger from '../core/Utils/Logger';
+import { ServiceError } from '../core/utils/error-handler';
+import logger from '../core/utils/logger';
 import { IReviewService } from '../Interfaces/Services/i-review-service';
 import { StatusCodes } from '../enums/status-code-enums';
 import { IReviewRepository } from "../Interfaces/Repository/i-review-repositry";
 import { IUserRepository } from "../Interfaces/Repository/i-user-repositry";
-import { toReviewDTO, toReviewDTOs } from "../Utils/Mappers/review-mapper";
+import { toReviewDTO, toReviewDTOs } from "../Utils/mappers/review-mapper";
 import { IReviewDTO } from "../Interfaces/DTOs/i-review-dto";
 
 @injectable()

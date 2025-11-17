@@ -1,7 +1,7 @@
 import mongoose, { Schema } from "mongoose";
-import { generateCustomId } from "../core/Utils/id-generator";
+import { generateCustomId } from "../core/utils/id-generator";
 import { IChatMessage } from "../Interfaces/Models/i-chat-message";
-import logger from "../core/Utils/logger";
+import logger from "../core/utils/logger";
 
 const chatSchema: Schema<IChatMessage> = new mongoose.Schema(
   {

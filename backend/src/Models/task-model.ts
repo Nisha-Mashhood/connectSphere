@@ -1,7 +1,7 @@
 import mongoose, { Schema, Model } from "mongoose";
-import { generateCustomId } from "../core/Utils/id-generator";
+import { generateCustomId } from "../core/utils/id-generator";
 import { ITask } from "../Interfaces/Models/i-task";
-import logger from "../core/Utils/logger";
+import logger from "../core/utils/logger";
 
 const taskSchema: Schema<ITask> = new mongoose.Schema({
   taskId: {
@@ -43,10 +43,9 @@ const taskSchema: Schema<ITask> = new mongoose.Schema({
   notificationTime: {
     type: String,
   },
-  // Contextual fields
   contextType: {
     type: String,
-    enum: ["profile", "group", "collaboration"],
+    enum: ["user", "group", "collaboration"],
     required: true,
   },
   contextId: {

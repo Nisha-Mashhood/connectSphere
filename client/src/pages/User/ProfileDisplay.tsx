@@ -5,9 +5,9 @@ import toast from "react-hot-toast";
 import { useDispatch } from "react-redux";
 import { SendRequsetToMentor } from "../../Service/collaboration.Service";
 import { useProfileData } from "../../Hooks/User/useProfileData";
-import { ProfileHeader } from "../../Components/User/Common/OthersProfile/ProfileHeader";
-import { CollaborationSection } from "../../Components/User/Common/OthersProfile/CollaborationSection";
-import { FeedbackSection } from "../../Components/User/Common/OthersProfile/FeedbackSection";
+import { ProfileHeader } from "../../Components/User/Profile/OthersProfile/ProfileHeader";
+import { CollaborationSection } from "../../Components/User/Profile/OthersProfile/CollaborationSection";
+import { FeedbackSection } from "../../Components/User/Profile/OthersProfile/FeedbackSection";
 import { Skill } from "../../redux/types";
 import { Slot } from "../../validation/createGroupValidation";
 

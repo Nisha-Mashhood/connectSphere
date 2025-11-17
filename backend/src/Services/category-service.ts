@@ -3,12 +3,12 @@ import { ICategoryRepository } from "../Interfaces/Repository/i-category-reposit
 import { ISubcategoryRepository } from "../Interfaces/Repository/i-sub-category-repositry";
 import { ISkillsRepository } from "../Interfaces/Repository/i-skills-repositry";
 import { ICategory } from "../Interfaces/Models/i-category";
-import logger from "../core/Utils/logger";
-import { uploadMedia } from "../core/Utils/cloudinary";
-import { ServiceError } from "../core/Utils/error-handler";
+import logger from "../core/utils/logger";
+import { uploadMedia } from "../core/utils/cloudinary";
+import { ServiceError } from "../core/utils/error-handler";
 import { ICategoryService } from "../Interfaces/Services/i-category-service";
 import { StatusCodes } from "../enums/status-code-enums";
-import { toCategoryDTO, toCategoryDTOs } from "../Utils/Mappers/category-mapper";
+import { toCategoryDTO, toCategoryDTOs } from "../Utils/mappers/category-mapper";
 import { ICategoryDTO } from "../Interfaces/DTOs/i-category-dto";
 
 @injectable()

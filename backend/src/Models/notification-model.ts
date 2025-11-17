@@ -1,8 +1,8 @@
 import mongoose from "mongoose";
 import { Schema, model } from "mongoose";
-import { generateCustomId } from "../core/Utils/id-generator";
+import { generateCustomId } from "../core/utils/id-generator";
 import { IAppNotification } from "../Interfaces/Models/i-app-notification";
-import logger from "../core/Utils/logger";
+import logger from "../core/utils/logger";
 
 const AppNotificationSchema = new Schema<IAppNotification>({
   AppNotificationId: {

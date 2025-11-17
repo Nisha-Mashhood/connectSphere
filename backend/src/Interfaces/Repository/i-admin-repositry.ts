@@ -1,4 +1,4 @@
-import { RevenueStats, RevenueTrend, TopMentor, UserGrowth } from "../../Utils/Types/admin-types";
+import { RevenueStats, RevenueTrend, TopMentor, UserGrowth } from "../../Utils/types/admin-types";
 import { ICollaboration } from "../Models/i-collaboration";
 import { IMentor } from "../Models/i-mentor";
 

@@ -1,7 +1,7 @@
 import mongoose, { Schema } from "mongoose";
-import { generateCustomId } from "../core/Utils/id-generator";
+import { generateCustomId } from "../core/utils/id-generator";
 import { IUserConnection } from "../Interfaces/Models/i-user-connection";
-import logger from "../core/Utils/Logger";
+import logger from "../core/utils/logger";
 
 const UserConnectionSchema: Schema = new Schema(
   {

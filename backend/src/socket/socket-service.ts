@@ -1,7 +1,7 @@
 import { Server, Socket } from "socket.io";
 import { EventEmitter } from "events";
-import logger from "../core/Utils/logger";
-import { CallData, MarkAsReadData, Message, TypingData } from "../Utils/Types/socket-service-types";
+import logger from "../core/utils/logger";
+import { CallData, MarkAsReadData, Message, TypingData } from "../Utils/types/socket-service-types";
 import { inject, injectable } from "inversify";
 import { ISocketService } from "../Interfaces/Services/i-socket-service";
 import { IChatSocketHandler } from "../Interfaces/Services/i-chat-socket-handler";

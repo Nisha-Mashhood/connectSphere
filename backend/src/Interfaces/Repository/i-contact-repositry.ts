@@ -1,5 +1,5 @@
 import { IContact } from '../Models/i-contact';
-import { PopulatedContact } from '../../Utils/Types/contact-types';
+import { PopulatedContact } from '../../Utils/types/contact-types';
 
 export interface IContactRepository {
   createContact(contactData: Partial<IContact>): Promise<IContact>;

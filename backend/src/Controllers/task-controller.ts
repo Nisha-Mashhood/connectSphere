@@ -1,12 +1,12 @@
 import { NextFunction, Request, Response } from 'express';
 import { inject, injectable } from 'inversify';
-import logger from '../core/Utils/logger';
+import logger from '../core/utils/logger';
 import { ITask } from '../Interfaces/Models/i-task';
 import { Types } from 'mongoose';
 import { ITaskController } from '../Interfaces/Controller/i-task-controller';
-import { HttpError } from '../core/Utils/error-handler';
+import { HttpError } from '../core/utils/error-handler';
 import { StatusCodes } from "../enums/status-code-enums";
-import { BaseController } from '../core/Controller/base-controller';
+import { BaseController } from '../core/controller/base-controller';
 import { ITaskService } from '../Interfaces/Services/i-task-service';
 import { TASK_MESSAGES } from '../constants/messages';
 import { ERROR_MESSAGES } from '../constants/error-messages';
@@ -98,7 +98,8 @@ export class TaskController extends BaseController implements ITaskController{
   editTask = async (req: Request, res: Response, next: NextFunction): Promise<void> => {
     try {
       const { taskId } = req.params;
-      const updates: Partial<ITask> = req.body;
+      const updates: Partial<ITask> =
+      req.body.taskData ? JSON.parse(req.body.taskData) : req.body;
       logger.debug(`Editing task: taskId=${taskId}`);
       const updatedTask = await this._taskService.editTask(taskId, updates);
       if (!updatedTask) {

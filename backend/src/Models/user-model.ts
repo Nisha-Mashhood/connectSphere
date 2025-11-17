@@ -1,8 +1,8 @@
 import mongoose, { Schema, Model } from "mongoose";
 import config from "../config/env-config";
-import { generateCustomId } from "../core/Utils/id-generator";
+import { generateCustomId } from "../core/utils/id-generator";
 import { IUser } from "../Interfaces/Models/i-user";
-import logger from "../core/Utils/Logger";
+import logger from "../core/utils/logger";
 
 const userSchema: Schema<IUser> = new mongoose.Schema(
   {

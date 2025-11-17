@@ -1,7 +1,7 @@
 import mongoose, { Schema, Model } from "mongoose";
-import { generateCustomId } from "../core/Utils/id-generator";
+import { generateCustomId } from "../core/utils/id-generator";
 import { ICategory } from "../Interfaces/Models/i-category";
-import logger from "../core/Utils/logger";
+import logger from "../core/utils/logger";
 
 const categorySchema: Schema<ICategory> = new mongoose.Schema(
   {

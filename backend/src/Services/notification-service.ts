@@ -1,21 +1,21 @@
 import { inject, injectable } from "inversify";
 import { Types } from "mongoose";
-import { ServiceError } from "../core/Utils/error-handler";
-import logger from "../core/Utils/logger";
+import { ServiceError } from "../core/utils/error-handler";
+import logger from "../core/utils/logger";
 import { IAppNotification } from "../Interfaces/Models/i-app-notification";
 import { ITask } from "../Interfaces/Models/i-task";
 import { Server } from "socket.io";
 import { SocketService } from "../socket/socket-service";
 import { convertTo24HourFormat } from "../Utils/utils/notification-utils/helper";
 import { INotificationService } from "../Interfaces/Services/i-notification-service";
-import { TaskNotificationPayload } from "../Utils/Types/notification-types";
+import { TaskNotificationPayload } from "../Utils/types/notification-types";
 import { StatusCodes } from "../enums/status-code-enums";
 import { INotificationRepository } from "../Interfaces/Repository/i-notification-repositry";
 import { IUserRepository } from "../Interfaces/Repository/i-user-repositry";
 import { IGroupRepository } from "../Interfaces/Repository/i-group-repositry";
 import { ICollaborationRepository } from "../Interfaces/Repository/i-collaboration-repositry";
 import { IAppNotificationDTO } from "../Interfaces/DTOs/i-app-notification-dto";
-import { toNotificationDTO, toNotificationDTOs } from "../Utils/Mappers/notification-mapper";
+import { toNotificationDTO, toNotificationDTOs } from "../Utils/mappers/notification-mapper";
 
 let io: Server | null = null;
 

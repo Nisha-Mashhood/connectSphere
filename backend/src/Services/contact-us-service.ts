@@ -2,13 +2,13 @@ import { inject, injectable } from "inversify";
 import { Types } from "mongoose";
 import config from "../config/env-config";
 import { StatusCodes } from "../enums/status-code-enums";
-import { sendEmail } from "../core/Utils/Email";
-import logger from "../core/Utils/Logger";
-import { ServiceError } from "../core/Utils/error-handler";
+import { sendEmail } from "../core/utils/email";
+import logger from "../core/utils/logger";
+import { ServiceError } from "../core/utils/error-handler";
 import { IContactMessageService } from "../Interfaces/Services/i-contact-message-service";
 import { IContactMessageRepository } from "../Interfaces/Repository/i-contact-message-repositry";
 import { IContactMessageDTO } from "../Interfaces/DTOs/i-contact-message-dto";
-import { toContactMessageDTO, toContactMessageDTOs } from "../Utils/Mappers/contact-message-mapper";
+import { toContactMessageDTO, toContactMessageDTOs } from "../Utils/mappers/contact-message-mapper";
 
 @injectable()
 export class ContactMessageService implements IContactMessageService{

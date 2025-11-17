@@ -4,14 +4,14 @@ import collaboration from "../Models/collaboration-model";
 import User from "../Models/user-model";
 import MentorRequest from "../Models/mentor-requset-model";
 import { IAdminRepository } from "../Interfaces/Repository/i-admin-repositry";
-import logger from "../core/Utils/Logger";
-import { RepositoryError } from "../core/Utils/error-handler";
+import logger from "../core/utils/logger";
+import { RepositoryError } from "../core/utils/error-handler";
 import {
   RevenueStats,
   RevenueTrend,
   TopMentor,
   UserGrowth,
-} from "../Utils/Types/admin-types";
+} from "../Utils/types/admin-types";
 import { IMentor } from "../Interfaces/Models/i-mentor";
 import { ICollaboration } from "../Interfaces/Models/i-collaboration";
 import { StatusCodes } from "../enums/status-code-enums";

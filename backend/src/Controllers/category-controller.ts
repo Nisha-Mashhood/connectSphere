@@ -1,10 +1,10 @@
 import { Request, Response, NextFunction } from "express";
 import { inject, injectable } from "inversify";
-import { BaseController } from "../core/Controller/base-controller";
-import logger from "../core/Utils/logger";
-import { CategoryRequest } from "../Utils/Types/category-types";
+import { BaseController } from "../core/controller/base-controller";
+import logger from "../core/utils/logger";
+import { CategoryRequest } from "../Utils/types/category-types";
 import { ICategoryController } from "../Interfaces/Controller/i-category-controller";
-import { HttpError } from "../core/Utils/error-handler";
+import { HttpError } from "../core/utils/error-handler";
 import { StatusCodes } from "../enums/status-code-enums";
 import { ICategoryService } from "../Interfaces/Services/i-category-service";
 import { CATEGORY_MESSAGES } from "../constants/messages";

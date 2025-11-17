@@ -1,11 +1,11 @@
 import { NextFunction, Request, Response } from "express";
 import { inject, injectable } from "inversify";
-import logger from "../core/Utils/logger";
+import logger from "../core/utils/logger";
 import { IAppNotification } from "../Interfaces/Models/i-app-notification";
 import { INotificationController } from "../Interfaces/Controller/i-notification-controller";
 import { StatusCodes } from "../enums/status-code-enums";
-import { BaseController } from "../core/Controller/base-controller";
-import { HttpError } from "../core/Utils/error-handler";
+import { BaseController } from "../core/controller/base-controller";
+import { HttpError } from "../core/utils/error-handler";
 import { INotificationService } from "../Interfaces/Services/i-notification-service";
 import { ERROR_MESSAGES } from "../constants/error-messages";
 import { NOTIFICATION_MESSAGES } from "../constants/messages";

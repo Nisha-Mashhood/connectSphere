@@ -1,5 +1,5 @@
 import { Socket } from "socket.io";
-import { MarkAsReadData, Message, TypingData } from "../../Utils/Types/socket-service-types";
+import { MarkAsReadData, Message, TypingData } from "../../Utils/types/socket-service-types";
 
 export interface IChatSocketHandler {
   handleJoinChats(socket: Socket, userId: string): Promise<void>;

@@ -1,5 +1,5 @@
 import { IMentor } from "../Models/i-mentor";
-import { CompleteMentorDetails, MentorAnalytics, MentorQuery, SalesReport } from "../../Utils/Types/mentor-types";
+import { CompleteMentorDetails, MentorAnalytics, MentorQuery, SalesReport } from "../../Utils/types/mentor-types";
 import { IMentorDTO } from "../DTOs/i-mentor-dto";
 
 export interface IMentorService {

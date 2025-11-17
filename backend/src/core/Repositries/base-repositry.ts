@@ -1,7 +1,7 @@
 import { Model, Document, FilterQuery, UpdateQuery } from 'mongoose';
-import { IBaseRepository } from '../Interfaces/Ibase-repositry';
-import logger from '../Utils/logger';
-import { RepositoryError } from '../Utils/error-handler';
+import { IBaseRepository } from '../interfaces/Ibase-repositry';
+import logger from '../utils/logger';
+import { RepositoryError } from '../utils/error-handler';
 import { ERROR_MESSAGES } from '../../constants/error-messages';
 
 // Base class for Basic DataBase Operations

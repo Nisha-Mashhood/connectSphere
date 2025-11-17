@@ -1,7 +1,7 @@
 import express from 'express';
 import { apiLimiter } from '../../middlewares/ratelimit-middleware';
 import { IAuthMiddleware } from '../../Interfaces/Middleware/i-auth-middleware';
-import { upload } from '../../core/Utils/Multer';
+import { upload } from '../../core/utils/multer';
 import { TASK_ROUTES } from '../Constants/task-routes';
 import container from "../../container";
 import { ITaskController } from '../../Interfaces/Controller/i-task-controller';

@@ -1,7 +1,7 @@
 import { inject, injectable } from "inversify";
-import logger from "../core/Utils/logger";
-import { ServiceError } from "../core/Utils/error-handler";
-import { ICallLogPopulated } from "../Utils/Types/call-types";
+import logger from "../core/utils/logger";
+import { ServiceError } from "../core/utils/error-handler";
+import { ICallLogPopulated } from "../Utils/types/call-types";
 import { ICallService } from "../Interfaces/Services/i-call-service";
 import { ICallLogRepository } from "../Interfaces/Repository/i-call-repositry";
 

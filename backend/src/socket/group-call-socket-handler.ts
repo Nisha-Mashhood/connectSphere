@@ -1,5 +1,5 @@
 import { Server, Socket } from "socket.io";
-import logger from "../core/Utils/logger";
+import logger from "../core/utils/logger";
 import {
   createCallLog,
   updateCallLog,

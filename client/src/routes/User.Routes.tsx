@@ -1,6 +1,6 @@
 import { Routes, Route } from "react-router-dom";
 import Home from "../pages/User/Home";
-import Header from "../Components/User/Common/Header";
+import Header from "../Components/User/Home/Header";
 import Login from "../Components/Forms/Login";
 import Signup from "../Components/Forms/Signup";
 import ForgotPassword from "../Components/Forms/ForgotPassword";
@@ -13,7 +13,7 @@ import ProfileDisplay from "../pages/User/ProfileDisplay";
 import PageNotFound from "../Components/PageNotFound";
 import { ForbiddenPage } from "../Components/ForebiddenPage";
 import GithubCallback from "../Components/User/Auth/GithubCallback";
-import About from "../Components/User/Common/About";
+import About from "../Components/User/Home/About";
 import CreateGroupForm from "../Components/Forms/CreateGroupForm";
 import GroupDashboard from "../Components/User/Profile/GroupSection/GroupDashboard/GroupDashboard";
 import GroupDetail from "../Components/User/Profile/GroupSection/GroupDetails/GroupDetails";

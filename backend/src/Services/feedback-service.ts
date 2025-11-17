@@ -1,13 +1,13 @@
 import { inject, injectable } from "inversify";
-import { ServiceError } from '../core/Utils/error-handler';
-import logger from '../core/Utils/logger';
+import { ServiceError } from '../core/utils/error-handler';
+import logger from '../core/utils/logger';
 import { IFeedback } from '../Interfaces/Models/i-feedback';
 import { StatusCodes } from '../enums/status-code-enums';
 import { IFeedbackService } from '../Interfaces/Services/i-feedback-service';
 import { IFeedbackRepository } from "../Interfaces/Repository/i-feedback-repositry";
 import { ICollaborationRepository } from "../Interfaces/Repository/i-collaboration-repositry";
 import { IFeedbackDTO } from "../Interfaces/DTOs/i-feedback-dto";
-import { toFeedbackDTO, toFeedbackDTOs } from "../Utils/Mappers/feedback-mapper";
+import { toFeedbackDTO, toFeedbackDTOs } from "../Utils/mappers/feedback-mapper";
 
 @injectable()
 export class FeedbackService implements IFeedbackService{

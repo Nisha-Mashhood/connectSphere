@@ -1,8 +1,8 @@
 import { injectable } from "inversify";
 import { Types, Model } from "mongoose";
-import { BaseRepository } from "../core/Repositries/base-repositry";
-import { RepositoryError } from "../core/Utils/error-handler";
-import logger from "../core/Utils/logger";
+import { BaseRepository } from "../core/repositries/base-repositry";
+import { RepositoryError } from "../core/utils/error-handler";
+import logger from "../core/utils/logger";
 import ChatMessage from "../Models/chat-model";
 import { IChatMessage } from "../Interfaces/Models/i-chat-message";
 import { IChatRepository } from "../Interfaces/Repository/i-chat-repositry";

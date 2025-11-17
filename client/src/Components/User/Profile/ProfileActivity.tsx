@@ -48,7 +48,7 @@ const ProfileActivity: FC<ProfileActivityProps> = ({ currentUser, mentorDetails,
             }
           >
             <TaskManagement
-              context="profile"
+              context="user"
               currentUser={currentUser}
               contextData={currentUser}
             />

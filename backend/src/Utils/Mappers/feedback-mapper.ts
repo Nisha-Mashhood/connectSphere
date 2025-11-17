@@ -5,7 +5,7 @@ import { toCollaborationDTO } from './collaboration-mapper';
 import { IUser } from '../../Interfaces/Models/i-user';
 import { IMentor } from '../../Interfaces/Models/i-mentor';
 import { ICollaboration } from '../../Interfaces/Models/i-collaboration';
-import logger from '../../core/Utils/Logger';
+import logger from '../../core/utils/logger';
 import { Types } from 'mongoose';
 import { IUserDTO } from '../../Interfaces/DTOs/i-user-dto';
 import { IMentorDTO } from '../../Interfaces/DTOs/i-mentor-dto';

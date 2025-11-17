@@ -11,7 +11,7 @@ import {
   VerifyPasskeyRequestBody,
   UpdateProfileRequestBody,
   UpdatePasswordRequestBody
-} from "../../Utils/Types/auth-types";
+} from "../../Utils/types/auth-types";
 
 export interface IAuthController {
   signup(req: Request<{}, {}, SignupRequestBody>, res: Response, next: NextFunction): Promise<void>;

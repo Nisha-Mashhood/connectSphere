@@ -1,6 +1,6 @@
 import { ICategory } from '../../Interfaces/Models/i-category';
 import { ICategoryDTO } from '../../Interfaces/DTOs/i-category-dto';
-import logger from '../../core/Utils/Logger';
+import logger from '../../core/utils/logger';
 
 export function toCategoryDTO(category: ICategory | null): ICategoryDTO | null {
   if (!category) {

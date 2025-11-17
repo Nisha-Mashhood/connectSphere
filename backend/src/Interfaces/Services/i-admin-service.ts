@@ -1,8 +1,8 @@
-import { RevenueStats, RevenueTrend, TopMentor, UserGrowth } from "../../Utils/Types/admin-types";
+import { RevenueStats, RevenueTrend, TopMentor, UserGrowth } from "../../Utils/types/admin-types";
 import { IMentorDTO } from "../DTOs/i-mentor-dto";
 import { ICollaborationDTO } from "../DTOs/i-collaboration-dto";
 import { IUserAdminDTO } from "../DTOs/i-user-dto";
-import { ProfileUpdateData } from "../../Utils/Types/auth-types";
+import { ProfileUpdateData } from "../../Utils/types/auth-types";
 
 export interface IAdminService {
   getTotalUsersCount: () => Promise<number>;

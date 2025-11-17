@@ -18,9 +18,12 @@ import { taskSchema, TaskFormValues } from "../../validation/taskValidation";
 interface TaskFormProps {
   initialData?: Partial<TaskFormValues & { taskImagePreview?: string }>;
   users: { userId: string; name: string }[];
-  context: "profile" | "group" | "collaboration";
+  context: "user" | "group" | "collaboration";
   isEditMode: boolean;
-  onSubmit: (data: TaskFormValues) => Promise<void>;
+  showUserSelect?: boolean;
+  setShowUserSelect?: (v: boolean) => void;
+  canEditAssignment?: boolean;
+  onSubmit: (data: TaskFormValues, showUserSelect: boolean) => Promise<void>;
   onCancel: () => void;
 }
 
@@ -29,11 +32,13 @@ const TaskForm: React.FC<TaskFormProps> = ({
   users,
   context,
   isEditMode,
+  showUserSelect,
+  setShowUserSelect,
+  canEditAssignment,
   onSubmit,
   onCancel,
 }) => {
   const [imagePreview, setImagePreview] = useState<string>("");
-  const [showUserSelect, setShowUserSelect] = useState(false);
 
   const {
     register,
@@ -112,7 +117,7 @@ const TaskForm: React.FC<TaskFormProps> = ({
 
   const onFormSubmit: SubmitHandler<TaskFormValues> = async (data) => {
     try {
-      await onSubmit(data);
+      await onSubmit(data, showUserSelect);
       // toast.success(isEditMode ? "Task updated!" : "Task created!");
     } catch (error) {
       console.error("Task submission error:", error);
@@ -256,17 +261,17 @@ const TaskForm: React.FC<TaskFormProps> = ({
                     isInvalid={!!errors.priority}
                     errorMessage={errors.priority?.message}
                   >
-                    <SelectItem key="low">
+                    <SelectItem key="low" textValue="low">
                       <Chip color="success" size="sm">
                         Low
                       </Chip>
                     </SelectItem>
-                    <SelectItem key="medium">
+                    <SelectItem key="medium" textValue="medium">
                       <Chip color="warning" size="sm">
                         Medium
                       </Chip>
                     </SelectItem>
-                    <SelectItem key="high">
+                    <SelectItem key="high" textValue="high">
                       <Chip color="danger" size="sm">
                         High
                       </Chip>
@@ -290,22 +295,22 @@ const TaskForm: React.FC<TaskFormProps> = ({
                       }}
                       size="sm"
                     >
-                      <SelectItem key="pending">
+                      <SelectItem key="pending" textValue="pending">
                         <Chip color="warning" size="sm">
                           Pending
                         </Chip>
                       </SelectItem>
-                      <SelectItem key="in-progress">
+                      <SelectItem key="in-progress" textValue="in-progress">
                         <Chip color="primary" size="sm">
                           In Progress
                         </Chip>
                       </SelectItem>
-                      <SelectItem key="completed">
+                      <SelectItem key="completed" textValue="completed">
                         <Chip color="success" size="sm">
                           Completed
                         </Chip>
                       </SelectItem>
-                      <SelectItem key="not-completed">
+                      <SelectItem key="not-completed" textValue="not-completed">
                         <Chip color="danger" size="sm">
                           Not Completed
                         </Chip>
@@ -315,20 +320,39 @@ const TaskForm: React.FC<TaskFormProps> = ({
                 </div>
               </div>
 
-              {/* Assign Users (Profile Only) */}
-              {context === "profile" && (
+              {/* Assign Users (user context Only) */}
+              {context === "user" && (
                 <div className="border-t pt-4">
-                  <label className="flex items-center gap-2 cursor-pointer text-sm">
+                  <label
+                    className={`flex items-center gap-2 text-sm select-none ${
+                      !canEditAssignment
+                        ? "cursor-not-allowed text-gray-400"
+                        : "cursor-pointer text-gray-700"
+                    }`}
+                  >
                     <input
                       type="checkbox"
-                      checked={showUserSelect}
-                      onChange={(e) => setShowUserSelect(e.target.checked)}
-                      className="rounded"
+                      checked={showUserSelect ?? false}
+                      disabled={!canEditAssignment}
+                      onChange={(e) => {
+                        const checked = e.target.checked;
+                        setShowUserSelect?.(checked);
+                        if (!checked) {
+                          setValue("assignedUsers", [], {
+                            shouldValidate: true,
+                          });
+                        }
+                      }}
+                      className={`rounded transition-colors ${
+                        !canEditAssignment
+                          ? "cursor-not-allowed border-gray-300 bg-gray-100"
+                          : "cursor-pointer border-gray-400"
+                      }`}
                     />
-                    Assign to Network
+                    <span>Assign to Network</span>
                   </label>
 
-                  {showUserSelect && (
+                  {showUserSelect && canEditAssignment && (
                     <div className="mt-3">
                       {users.length > 0 ? (
                         <>
@@ -344,9 +368,9 @@ const TaskForm: React.FC<TaskFormProps> = ({
                             }}
                             size="sm"
                           >
-                            {users.map((user) => (
-                              <SelectItem key={user.userId} value={user.userId}>
-                                {user.name}
+                            {users.map((u) => (
+                              <SelectItem key={u.userId} value={u.userId}>
+                                {u.name}
                               </SelectItem>
                             ))}
                           </Select>

@@ -1,10 +1,10 @@
 import type { Request, Response, Express, NextFunction } from "express";
 import { inject, injectable } from "inversify";
-import { BaseController } from "../core/Controller/base-controller";
-import { uploadMedia } from "../core/Utils/cloudinary";
-import logger from "../core/Utils/Logger";
+import { BaseController } from "../core/controller/base-controller";
+import { uploadMedia } from "../core/utils/cloudinary";
+import logger from "../core/utils/logger";
 import { IMentorController } from "../Interfaces/Controller/i-mentor-controller";
-import { HttpError } from "../core/Utils/error-handler";
+import { HttpError } from "../core/utils/error-handler";
 import { StatusCodes } from "../enums/status-code-enums";
 import { IMentorService } from "../Interfaces/Services/i-mentor-service";
 import { MENTOR_MESSAGES } from "../constants/messages";

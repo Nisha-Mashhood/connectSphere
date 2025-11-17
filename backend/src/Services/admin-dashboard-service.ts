@@ -1,6 +1,6 @@
 import { inject, injectable } from "inversify";
-import logger from "../core/Utils/Logger";
-import { ServiceError } from "../core/Utils/error-handler";
+import logger from "../core/utils/logger";
+import { ServiceError } from "../core/utils/error-handler";
 import { StatusCodes } from "../enums/status-code-enums";
 import { IAdminService } from "../Interfaces/Services/i-admin-service";
 import {
@@ -8,17 +8,17 @@ import {
   RevenueTrend,
   TopMentor,
   UserGrowth,
-} from "../Utils/Types/admin-types";
+} from "../Utils/types/admin-types";
 import { IAdminRepository } from "../Interfaces/Repository/i-admin-repositry";
-import { toMentorDTOs } from "../Utils/Mappers/mentor-mapper";
+import { toMentorDTOs } from "../Utils/mappers/mentor-mapper";
 import { IMentorDTO } from "../Interfaces/DTOs/i-mentor-dto";
-import { toCollaborationDTOs } from "../Utils/Mappers/collaboration-mapper";
+import { toCollaborationDTOs } from "../Utils/mappers/collaboration-mapper";
 import { ICollaborationDTO } from "../Interfaces/DTOs/i-collaboration-dto";
-import { ProfileUpdateData } from "../Utils/Types/auth-types";
+import { ProfileUpdateData } from "../Utils/types/auth-types";
 import { IUserRepository } from "../Interfaces/Repository/i-user-repositry";
 import { IUserAdminDTO } from "../Interfaces/DTOs/i-user-dto";
-import { toUserAdminDTO } from "../Utils/Mappers/user-mapper";
-import { uploadMedia } from "../core/Utils/cloudinary";
+import { toUserAdminDTO } from "../Utils/mappers/user-mapper";
+import { uploadMedia } from "../core/utils/cloudinary";
 import { IUser } from "../Interfaces/Models/i-user";
 
 @injectable()

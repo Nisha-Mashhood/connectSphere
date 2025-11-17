@@ -1,14 +1,14 @@
 import { inject, injectable } from "inversify";
-import { sendEmail } from "../core/Utils/Email";
-import logger from "../core/Utils/Logger";
+import { sendEmail } from "../core/utils/email";
+import logger from "../core/utils/logger";
 import { IMentor } from "../Interfaces/Models/i-mentor";
 import {
   CompleteMentorDetails,
   MentorAnalytics,
   MentorQuery,
   SalesReport,
-} from "../Utils/Types/mentor-types";
-import { ServiceError } from "../core/Utils/error-handler";
+} from "../Utils/types/mentor-types";
+import { ServiceError } from "../core/utils/error-handler";
 import { Types } from "mongoose";
 import { IMentorService } from "../Interfaces/Services/i-mentor-service";
 import { StatusCodes } from "../enums/status-code-enums";
@@ -19,7 +19,7 @@ import { INotificationService } from "../Interfaces/Services/i-notification-serv
 import { ICategoryRepository } from "../Interfaces/Repository/i-category-repositry";
 import { ISkillsRepository } from "../Interfaces/Repository/i-skills-repositry";
 import { IMentorDTO } from "../Interfaces/DTOs/i-mentor-dto";
-import { toMentorDTO, toMentorDTOs } from "../Utils/Mappers/mentor-mapper";
+import { toMentorDTO, toMentorDTOs } from "../Utils/mappers/mentor-mapper";
 
 @injectable()
 export class MentorService implements IMentorService {

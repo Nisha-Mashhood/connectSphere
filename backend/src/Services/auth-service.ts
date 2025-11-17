@@ -1,26 +1,24 @@
 import { inject, injectable } from "inversify";
-import { ServiceError } from "../core/Utils/error-handler";
+import { ServiceError } from "../core/utils/error-handler";
 import { IUser } from "../Interfaces/Models/i-user";
 import bcrypt from "bcryptjs";
 import { generateOTP } from "../Utils/utils/auth-utils/o-t-p";
-import { sendEmail } from "../core/Utils/Email";
+import { sendEmail } from "../core/utils/email";
 import config from "../config/env-config";
 import { OAuth2Client } from "../Utils/utils/auth-utils/google-config";
 import axios from "axios";
-import logger from "../core/Utils/Logger";
-import {
-  ProfileUpdateData,
-  SignupData,
+import logger from "../core/utils/logger";
+import { ProfileUpdateData,  SignupData,
   UserQuery,
-} from "../Utils/Types/auth-types";
+} from "../Utils/types/auth-types";
 import { IAuthService } from "../Interfaces/Services/i-user-service";
 import { StatusCodes } from "../enums/status-code-enums";
 import { IUserAdminDTO, IUserDTO } from "../Interfaces/DTOs/i-user-dto";
-import { toUserAdminDTOs, toUserDTO, toUserDTOs } from "../Utils/Mappers/user-mapper";
+import { toUserAdminDTOs, toUserDTO, toUserDTOs } from "../Utils/mappers/user-mapper";
 import { IUserRepository } from "../Interfaces/Repository/i-user-repositry";
 import { INotificationService } from "../Interfaces/Services/i-notification-service";
 import { IJWTService } from "../Interfaces/Services/i-jwt-service";
-import { uploadMedia } from "../core/Utils/cloudinary";
+import { uploadMedia } from "../core/utils/cloudinary";
 
 // Temporary OTP storage (replace with Redis in production)
 const otpStore: { [email: string]: string } = {};

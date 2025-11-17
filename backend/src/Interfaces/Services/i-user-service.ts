@@ -1,4 +1,4 @@
-import { ProfileUpdateData, SignupData, UserQuery } from "../../Utils/Types/auth-types";
+import { ProfileUpdateData, SignupData, UserQuery } from "../../Utils/types/auth-types";
 import { IUserAdminDTO, IUserDTO } from "../DTOs/i-user-dto";
 
 export interface IAuthService {

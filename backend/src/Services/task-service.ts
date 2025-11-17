@@ -1,14 +1,14 @@
 import { inject, injectable } from "inversify";
-import { ServiceError } from "../core/Utils/error-handler";
-import logger from "../core/Utils/logger";
+import { ServiceError } from "../core/utils/error-handler";
+import logger from "../core/utils/logger";
 import { ITask } from "../Interfaces/Models/i-task";
-import { uploadMedia } from "../core/Utils/cloudinary";
+import { uploadMedia } from "../core/utils/cloudinary";
 import { StatusCodes } from "../enums/status-code-enums";
 import { ITaskRepository } from "../Interfaces/Repository/i-task-repositry";
 import { INotificationRepository } from "../Interfaces/Repository/i-notification-repositry";
 import { ITaskService } from "../Interfaces/Services/i-task-service";
 import { ITaskDTO } from "../Interfaces/DTOs/i-task-dto";
-import { toTaskDTO, toTaskDTOs } from "../Utils/Mappers/task-mapper";
+import { toTaskDTO, toTaskDTOs } from "../Utils/mappers/task-mapper";
 
 @injectable()
 export class TaskService  implements ITaskService{
@@ -75,7 +75,7 @@ export class TaskService  implements ITaskService{
   public getTasksByContext = async (contextType: string, contextId: string, userId: string): Promise<ITaskDTO[]> => {
     try {
       logger.debug(`Fetching tasks for contextType=${contextType}, contextId=${contextId}, userId=${userId}`);
-      const validContextTypes = ["collaboration", "group", "profile"];
+      const validContextTypes = ["collaboration", "group", "user"];
       if (!validContextTypes.includes(contextType)) {
         logger.error(`Invalid contextType: ${contextType}`);
         throw new ServiceError(

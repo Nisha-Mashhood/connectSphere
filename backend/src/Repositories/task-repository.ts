@@ -1,8 +1,8 @@
 import { injectable } from 'inversify';
 import { Model, Types, FilterQuery } from 'mongoose';
-import { BaseRepository } from '../core/Repositries/base-repositry';
-import { RepositoryError } from '../core/Utils/error-handler';
-import logger from '../core/Utils/logger';
+import { BaseRepository } from '../core/repositries/base-repositry';
+import { RepositoryError } from '../core/utils/error-handler';
+import logger from '../core/utils/logger';
 import { ITask } from '../Interfaces/Models/i-task';
 import { Task } from '../Models/task-model';
 import { StatusCodes } from '../enums/status-code-enums';
@@ -72,9 +72,9 @@ import { ITaskRepository } from '../Interfaces/Repository/i-task-repositry';
           ...updates,
           contextId: updates.contextId ? this.toObjectId(updates.contextId) : undefined,
           createdBy: updates.createdBy ? this.toObjectId(updates.createdBy) : undefined,
-          assignedUsers: updates.assignedUsers
-            ? updates.assignedUsers.map((id) => this.toObjectId(id))
-            : undefined,
+          assignedUsers: updates.assignedUsers !== undefined
+          ? updates.assignedUsers.map((id) => this.toObjectId(id))
+          : undefined,
         };
         const task = await this.findByIdAndUpdate(taskId, updateData, { new: true });
         if (!task) {
@@ -116,9 +116,9 @@ import { ITaskRepository } from '../Interfaces/Repository/i-task-repositry';
         let query: FilterQuery<ITask>;
         let populatePaths: any[];
   
-        if (contextType === 'profile' && userId) {
+        if (contextType === 'user' && userId) {
           query = {
-            contextType: 'profile',
+            contextType: 'user',
             $or: [
               { contextId: this.toObjectId(contextId) },
               { assignedUsers: this.toObjectId(userId) },

@@ -1,9 +1,9 @@
 import { Request, Response, NextFunction } from "express";
-import { BaseController } from "../core/Controller/base-controller";
-import logger from "../core/Utils/logger";
+import { BaseController } from "../core/controller/base-controller";
+import logger from "../core/utils/logger";
 import { ICallController } from "../Interfaces/Controller/i-call-controller";
-import { HttpError } from "../core/Utils/error-handler";
-import { ICallLogPopulated } from "../Utils/Types/call-types";
+import { HttpError } from "../core/utils/error-handler";
+import { ICallLogPopulated } from "../Utils/types/call-types";
 import { StatusCodes } from "../enums/status-code-enums";
 import { ICallService } from "../Interfaces/Services/i-call-service";
 import { inject, injectable } from "inversify";

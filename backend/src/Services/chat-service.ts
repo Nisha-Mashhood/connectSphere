@@ -4,14 +4,14 @@ import { IChatMessage } from "../Interfaces/Models/i-chat-message";
 import { IChatRepository } from "../Interfaces/Repository/i-chat-repositry";
 import { IContactRepository } from "../Interfaces/Repository/i-contact-repositry";
 import { IGroupRepository } from "../Interfaces/Repository/i-group-repositry";
-import logger from "../core/Utils/logger";
+import logger from "../core/utils/logger";
 import { IContact } from "../Interfaces/Models/i-contact";
 import { StatusCodes } from "../enums/status-code-enums";
-import { ServiceError } from "../core/Utils/error-handler";
+import { ServiceError } from "../core/utils/error-handler";
 import { IChatService } from "../Interfaces/Services/i-chat-service";
-import { uploadMedia } from "../core/Utils/cloudinary";
+import { uploadMedia } from "../core/utils/cloudinary";
 import { IChatMessageDTO } from "../Interfaces/DTOs/i-chat-message-dto";
-import { toChatMessageDTOs } from "../Utils/Mappers/chat-message-mapper";
+import { toChatMessageDTOs } from "../Utils/mappers/chat-message-mapper";
 
 @injectable()
 export class ChatService implements IChatService {

@@ -1,5 +1,5 @@
 import { IUser } from '../Models/i-user';
-import { UserQuery } from '../../Utils/Types/auth-types';
+import { UserQuery } from '../../Utils/types/auth-types';
 
 export interface IUserRepository {
   createUser(userData: Partial<IUser>): Promise<IUser>;

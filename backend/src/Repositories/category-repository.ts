@@ -1,8 +1,8 @@
 import { injectable } from "inversify";
 import { ICategoryRepository } from "../Interfaces/Repository/i-category-repositry";
-import { BaseRepository } from "../core/Repositries/base-repositry";
-import { RepositoryError } from "../core/Utils/error-handler";
-import logger from "../core/Utils/logger";
+import { BaseRepository } from "../core/repositries/base-repositry";
+import { RepositoryError } from "../core/utils/error-handler";
+import logger from "../core/utils/logger";
 import { ICategory } from "../Interfaces/Models/i-category";
 import { Category } from "../Models/category-model";
 import { StatusCodes } from "../enums/status-code-enums";

@@ -1,8 +1,8 @@
 import { injectable } from 'inversify';
 import { Model, PipelineStage } from 'mongoose';
-import { BaseRepository } from '../core/Repositries/base-repositry';
-import { RepositoryError } from '../core/Utils/error-handler';
-import logger from '../core/Utils/Logger';
+import { BaseRepository } from '../core/repositries/base-repositry';
+import { RepositoryError } from '../core/utils/error-handler';
+import logger from '../core/utils/logger';
 import ContactMessage from '../Models/contact-message-model';
 import { IContactMessage } from '../Interfaces/Models/i-contact-message';
 import { IContactMessageRepository } from '../Interfaces/Repository/i-contact-message-repositry';

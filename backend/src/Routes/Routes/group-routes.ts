@@ -1,7 +1,7 @@
 import express from "express";
 import { apiLimiter } from "../../middlewares/ratelimit-middleware";
 import { IAuthMiddleware } from '../../Interfaces/Middleware/i-auth-middleware';
-import { upload } from "../../core/Utils/Multer";
+import { upload } from "../../core/utils/multer";
 import { GROUP_ROUTES } from "../Constants/group-routes";
 import container from "../../container";
 import { IGroupController } from "../../Interfaces/Controller/i-group-controller";

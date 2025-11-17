@@ -1,6 +1,6 @@
 import { IContactMessage } from '../../Interfaces/Models/i-contact-message';
 import { IContactMessageDTO } from '../../Interfaces/DTOs/i-contact-message-dto';
-import logger from '../../core/Utils/logger';
+import logger from '../../core/utils/logger';
 
 export function toContactMessageDTO(contactMessage: IContactMessage | null): IContactMessageDTO | null {
   if (!contactMessage) {

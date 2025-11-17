@@ -2,7 +2,7 @@ import { Router } from 'express';
 import container from "../../container";
 import { CHAT_ROUTES } from '../Constants/chat-routes';
 import { IChatController } from '../../Interfaces/Controller/i-chat-controller';
-import { upload } from '../../core/Utils/Multer';
+import { upload } from '../../core/utils/multer';
 import { apiLimiter } from '../../middlewares/ratelimit-middleware';
 import { IAuthMiddleware } from '../../Interfaces/Middleware/i-auth-middleware';
 

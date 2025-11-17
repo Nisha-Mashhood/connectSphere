@@ -1,10 +1,10 @@
 import { inject, injectable } from "inversify";
-import logger from "../core/Utils/logger";
+import logger from "../core/utils/logger";
 import {
   FormattedContact,
   PopulatedContact,
-} from "../Utils/Types/contact-types";
-import { ServiceError } from "../core/Utils/error-handler";
+} from "../Utils/types/contact-types";
+import { ServiceError } from "../core/utils/error-handler";
 import { StatusCodes } from "../enums/status-code-enums";
 import { IContactService } from "../Interfaces/Services/i-contact-service";
 import { IContactRepository } from "../Interfaces/Repository/i-contact-repositry";

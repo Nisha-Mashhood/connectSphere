@@ -2,7 +2,7 @@ import { IUserConnection } from '../../Interfaces/Models/i-user-connection';
 import { IUserConnectionDTO } from '../../Interfaces/DTOs/i-user-connection-dto';
 import { toUserDTO } from './user-mapper';
 import { IUser } from '../../Interfaces/Models/i-user';
-import logger from '../../core/Utils/Logger';
+import logger from '../../core/utils/logger';
 import { Types } from 'mongoose';
 import { IUserDTO } from '../../Interfaces/DTOs/i-user-dto';
 

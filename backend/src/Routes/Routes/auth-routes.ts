@@ -3,7 +3,7 @@ import { AUTH_ROUTES } from '../Constants/auth-routes';
 import container from "../../container";
 import { IAuthMiddleware } from '../../Interfaces/Middleware/i-auth-middleware';
 import { apiLimiter, authLimiter } from '../../middlewares/ratelimit-middleware';
-import { upload } from '../../core/Utils/Multer';
+import { upload } from '../../core/utils/multer';
 import { IAuthController } from '../../Interfaces/Controller/i-auth-controller';
 
 const router = express.Router();

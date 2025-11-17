@@ -1,6 +1,6 @@
 import { Router } from 'express';
 import { apiLimiter } from '../../middlewares/ratelimit-middleware';
-import { upload } from '../../core/Utils/Multer';
+import { upload } from '../../core/utils/multer';
 import { IAuthMiddleware } from '../../Interfaces/Middleware/i-auth-middleware';
 import { SKILLS_ROUTES } from '../Constants/skills-routes';
 import container from "../../container";

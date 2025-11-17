@@ -11,10 +11,12 @@ import {
   Badge,
 } from "@nextui-org/react";
 import { FaEye, FaEdit, FaBell } from "react-icons/fa";
+import { User } from "../../../redux/types";
+import { Task } from "../../../Interface/User/Itask";
 
 interface TaskCardProps {
-  task: any;
-  currentUser: any;
+  task: Task;
+  currentUser: User;
   connectedUsers: { userId: string; name: string }[];
   context: string;
   onView: () => void;
@@ -37,7 +39,7 @@ const TaskCard: React.FC<TaskCardProps> = ({
   formatDate,
   hasUnreadNotification,
 }) => {
-  const isCreator = task.createdBy?._id === currentUser?._id;
+  const isCreator = task.createdBy === currentUser?.id;
 
   const getStatusColor = (status: string) => {
     switch (status.toLowerCase()) {
@@ -71,11 +73,11 @@ const TaskCard: React.FC<TaskCardProps> = ({
     if (isCreator) {
       return "Created By: You";
     }
-    return `Created By: ${task.createdBy?.name || "Unknown"}`;
+    return `Created By: ${task.createdByDetails?.name || "Unknown"}`;
   };
 
   const getAssigneeDisplay = () => {
-    if (context !== "profile") {
+    if (context !== "user") {
       return null;
     }
 
@@ -83,8 +85,8 @@ const TaskCard: React.FC<TaskCardProps> = ({
       return "Assigned To: None";
     }
 
-    const assigneeNames = task.assignedUsers
-      .map((user) => user.name || connectedUsers.find((u) => u.userId === user._id)?.name)
+    const assigneeNames = task.assignedUsersDetails
+      .map((user) => user.name || connectedUsers.find((u) => u.userId === user.id)?.name)
       .filter((name: string) => name && name !== "Unknown");
 
     return assigneeNames.length > 0
@@ -123,7 +125,7 @@ const TaskCard: React.FC<TaskCardProps> = ({
             </div>
           </div>
           <p className="text-sm text-gray-500">{getCreatedByDisplay()}</p>
-          {context === "profile" && (
+          {context === "user" && (
             <p className="text-sm text-gray-500">{getAssigneeDisplay()}</p>
           )}
         </div>
@@ -149,7 +151,7 @@ const TaskCard: React.FC<TaskCardProps> = ({
           label="Update Status"
           placeholder="Select status"
           selectedKeys={[task.status]}
-          onChange={(e) => onStatusChange(task._id, e.target.value)}
+          onChange={(e) => onStatusChange(task.id, e.target.value)}
           size="sm"
           className="w-full max-w-[200px]"
         >
@@ -170,7 +172,7 @@ const TaskCard: React.FC<TaskCardProps> = ({
           label="Update Priority"
           placeholder="Select priority"
           selectedKeys={[task.priority]}
-          onChange={(e) => onPriorityChange(task._id, e.target.value)}
+          onChange={(e) => onPriorityChange(task.id, e.target.value)}
           size="sm"
           className="w-full max-w-[200px]"
         >

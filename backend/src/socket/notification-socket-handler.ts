@@ -1,7 +1,7 @@
 import { Server, Socket } from "socket.io";
-import logger from "../core/Utils/logger";
+import logger from "../core/utils/logger";
 import { IAppNotification } from "../Interfaces/Models/i-app-notification";
-import { TaskNotificationPayload } from "../Utils/Types/notification-types";
+import { TaskNotificationPayload } from "../Utils/types/notification-types";
 import { inject, injectable } from "inversify";
 import { INotificationSocketHandler } from "../Interfaces/Services/i-notification-socket-handler";
 import { INotificationService } from "../Interfaces/Services/i-notification-service";

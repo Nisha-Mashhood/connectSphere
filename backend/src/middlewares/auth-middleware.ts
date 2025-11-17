@@ -1,7 +1,7 @@
 import { Request, Response, NextFunction } from 'express';
 import { inject, injectable } from 'inversify';
-import logger from '../core/Utils/logger';
-import { ServiceError } from '../core/Utils/error-handler';
+import logger from '../core/utils/logger';
+import { ServiceError } from '../core/utils/error-handler';
 import { IUser } from '../Interfaces/Models/i-user';
 import { IJWTService } from '../Interfaces/Services/i-jwt-service';
 import { IUserRepository } from '../Interfaces/Repository/i-user-repositry';

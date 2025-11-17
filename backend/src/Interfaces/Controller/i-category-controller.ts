@@ -1,5 +1,5 @@
 import { Request, Response, NextFunction } from "express";
-import { CategoryRequest } from "../../Utils/Types/category-types";
+import { CategoryRequest } from "../../Utils/types/category-types";
 
 
 export interface ICategoryController {

@@ -2,8 +2,8 @@ import jwt from 'jsonwebtoken';
 import { inject, injectable } from 'inversify';
 import { Response } from 'express';
 import config from '../../../config/env-config';
-import logger from '../../../core/Utils/logger';
-import { ServiceError } from '../../../core/Utils/error-handler';
+import logger from '../../../core/utils/logger';
+import { ServiceError } from '../../../core/utils/error-handler';
 import { IUserRepository } from '../../../Interfaces/Repository/i-user-repositry';
 import { IJWTService } from '../../../Interfaces/Services/i-jwt-service';
 

@@ -1,13 +1,13 @@
 import { injectable } from 'inversify';
 import { Model, Types } from 'mongoose';
-import { BaseRepository } from '../core/Repositries/base-repositry';
-import { RepositoryError } from '../core/Utils/error-handler';
-import logger from '../core/Utils/Logger';
+import { BaseRepository } from '../core/repositries/base-repositry';
+import { RepositoryError } from '../core/utils/error-handler';
+import logger from '../core/utils/logger';
 import Group from '../Models/group-model';
 import GroupRequest from '../Models/group-request-model';
 import { IGroup } from '../Interfaces/Models/i-group';
 import { IGroupRequest } from '../Interfaces/Models/i-group-request';
-import { GroupFormData, GroupQuery } from '../Utils/Types/group-types';
+import { GroupFormData, GroupQuery } from '../Utils/types/group-types';
 import { StatusCodes } from '../enums/status-code-enums';
 import { IGroupRepository } from '../Interfaces/Repository/i-group-repositry';
 

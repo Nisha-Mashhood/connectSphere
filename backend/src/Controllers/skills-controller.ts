@@ -1,9 +1,9 @@
 import { NextFunction, Request, Response } from 'express';
 import { inject, injectable } from 'inversify';
-import { BaseController } from '../core/Controller/base-controller';
-import logger from "../core/Utils/logger";
+import { BaseController } from '../core/controller/base-controller';
+import logger from "../core/utils/logger";
 import { ISkillsController } from '../Interfaces/Controller/i-skills-controller';
-import { HttpError } from '../core/Utils/error-handler';
+import { HttpError } from '../core/utils/error-handler';
 import { ISkillsService } from '../Interfaces/Services/i-skills-service';
 import { ISkill } from "../Interfaces/Models/i-skill";
 import { SKILL_MESSAGES } from '../constants/messages';

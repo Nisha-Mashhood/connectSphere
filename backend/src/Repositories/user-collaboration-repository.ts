@@ -1,8 +1,8 @@
 import { injectable } from 'inversify';
 import { Model, PipelineStage, Types } from 'mongoose';
-import { BaseRepository } from '../core/Repositries/base-repositry';
-import { RepositoryError } from '../core/Utils/error-handler';
-import logger from '../core/Utils/Logger';
+import { BaseRepository } from '../core/repositries/base-repositry';
+import { RepositoryError } from '../core/utils/error-handler';
+import logger from '../core/utils/logger';
 import UserConnection from '../Models/user-connection-model';
 import { IUserConnection } from '../Interfaces/Models/i-user-connection';
 import { StatusCodes } from '../enums/status-code-enums';

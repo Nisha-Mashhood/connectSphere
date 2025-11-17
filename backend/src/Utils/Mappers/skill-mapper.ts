@@ -4,7 +4,7 @@ import { ICategory } from '../../Interfaces/Models/i-category';
 import { ISubcategory } from '../../Interfaces/Models/i-sub-category';
 import { toCategoryDTO } from './category-mapper';
 import { toSubcategoryDTO } from './subcategory-mapper';
-import logger from '../../core/Utils/logger';
+import logger from '../../core/utils/logger';
 import { Types } from 'mongoose';
 import { ISubcategoryDTO } from '../../Interfaces/DTOs/i-sub-category-dto';
 import { ICategoryDTO } from '../../Interfaces/DTOs/i-category-dto';

@@ -1,6 +1,6 @@
 import { IGroup } from '../Models/i-group';
 import { IGroupRequest } from '../Models/i-group-request';
-import { GroupFormData, GroupQuery } from '../../Utils/Types/group-types';
+import { GroupFormData, GroupQuery } from '../../Utils/types/group-types';
 import { Types } from 'mongoose';
 
 export interface IGroupRepository {

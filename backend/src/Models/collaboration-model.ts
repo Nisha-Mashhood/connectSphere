@@ -1,7 +1,7 @@
 import mongoose, { Schema } from "mongoose";
-import { generateCustomId } from "../core/Utils/id-generator";
+import { generateCustomId } from "../core/utils/id-generator";
 import { ICollaboration } from "../Interfaces/Models/i-collaboration";
-import logger from "../core/Utils/logger";
+import logger from "../core/utils/logger";
 
 const CollaborationSchema: Schema<ICollaboration> = new Schema(
   {

@@ -1,6 +1,6 @@
 import { Server, Socket } from "socket.io";
 import mongoose from "mongoose";
-import logger from "../core/Utils/logger";
+import logger from "../core/utils/logger";
 import Group from "../Models/group-model";
 import Collaboration from "../Models/collaboration-model";
 import UserConnection from "../Models/user-connection-model";

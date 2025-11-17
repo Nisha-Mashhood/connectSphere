@@ -1,7 +1,7 @@
 import mongoose, { Schema } from "mongoose";
-import { generateCustomId } from "../core/Utils/id-generator";
+import { generateCustomId } from "../core/utils/id-generator";
 import { IGroupRequest } from "../Interfaces/Models/i-group-request";
-import logger from "../core/Utils/Logger";
+import logger from "../core/utils/logger";
 
 const GroupRequestSchema: Schema = new Schema<IGroupRequest>(
   {

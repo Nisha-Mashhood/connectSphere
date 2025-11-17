@@ -1,5 +1,5 @@
 import { Server, Socket } from "socket.io";
-import { TaskNotificationPayload } from "../../Utils/Types/notification-types";
+import { TaskNotificationPayload } from "../../Utils/types/notification-types";
 import { IAppNotification } from "../Models/i-app-notification";
 
 export interface INotificationSocketHandler {
