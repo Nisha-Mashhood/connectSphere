@@ -23,7 +23,7 @@ export const GroupHeader = ({
   const [hover, setHover] = useState(false);
 
   return (
-    <div className="flex flex-col md:flex-row items-start md:items-center justify-between gap-6 -mt-32 relative z-10 px-6 pb-6">
+    <div className="flex flex-col md:flex-row items-start md:items-center justify-between gap-6 px-6 pt-6 pb-6 relative z-10">
       <div className="flex items-start md:items-center gap-6">
         <div
           className="relative"
