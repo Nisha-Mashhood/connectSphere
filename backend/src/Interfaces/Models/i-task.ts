@@ -12,7 +12,7 @@ export interface ITask extends Document {
     dueDate: Date;
     notificationDate?: Date;
     notificationTime?: string;
-    contextType: "profile" | "group" | "collaboration";
+    contextType: "user" | "group" | "collaboration";
     contextId: Types.ObjectId;
     assignedUsers: Types.ObjectId[];
     createdBy: Types.ObjectId;

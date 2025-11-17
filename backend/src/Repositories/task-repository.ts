@@ -67,7 +67,10 @@ import { ITaskRepository } from '../Interfaces/Repository/i-task-repositry';
   
     public updateTask = async (taskId: string, updates: Partial<ITask>): Promise<ITask | null> => {
       try {
-        logger.debug(`Updating task: ${taskId}`);
+        logger.debug("🟠 REPO → Raw incoming updates: " + JSON.stringify({
+          updates,
+          assignedUsers: updates.assignedUsers
+        }));
         const updateData = {
           ...updates,
           contextId: updates.contextId ? this.toObjectId(updates.contextId) : undefined,
@@ -81,6 +84,10 @@ import { ITaskRepository } from '../Interfaces/Repository/i-task-repositry';
           logger.warn(`Task not found: ${taskId}`);
           throw new RepositoryError(`Task not found with ID: ${taskId}`, StatusCodes.NOT_FOUND);
         }
+        logger.debug("🟠 REPO → Raw incoming updates: " + JSON.stringify({
+          updates,
+          assignedUsers: updates.assignedUsers
+        }));
         logger.info(`Task updated: ${taskId} (${task.name})`);
         return task;
       } catch (error: unknown) {

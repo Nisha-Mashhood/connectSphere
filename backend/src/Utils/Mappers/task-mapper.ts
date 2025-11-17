@@ -68,7 +68,7 @@ export function toTaskDTO(task: ITask | null): ITaskDTO | null {
       contextId = task.contextId.toString();
     } else {
       contextId = (task.contextId as any)._id.toString();
-      if (task.contextType === 'profile') {
+      if (task.contextType === 'user') {
         const userDTO = toUserDTO(task.contextId as IUser);
         context = userDTO ?? undefined;
       } else if (task.contextType === 'group') {

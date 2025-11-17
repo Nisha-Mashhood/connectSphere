@@ -14,7 +14,7 @@ export interface ITaskDTO {
   dueDate: Date;
   notificationDate?: Date;
   notificationTime?: string;
-  contextType: 'profile' | 'group' | 'collaboration';
+  contextType: 'user' | 'group' | 'collaboration';
   contextId: string;
   context?: IUserDTO | IGroupDTO | ICollaborationDTO; // Populated context (User, Group, or Collaboration)
   assignedUsers: string[]; // Array of user IDs

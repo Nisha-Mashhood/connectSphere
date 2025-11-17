@@ -46,9 +46,12 @@ export const update_task_status = async (taskId, status) => {
 };
 
 // Edit Task
-export const edit_task = async (taskId, updates) => {
+export const edit_task = async (taskId, formData) => {
   try {
-    const response = await axiosInstance.put(`/task/editTask/${taskId}`, updates);
+    const response = await axiosInstance.put(
+      `/task/editTask/${taskId}`,
+      formData
+    );
     return response.data.data;
   } catch (error) {
     handleError(error);

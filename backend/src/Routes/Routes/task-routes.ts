@@ -37,7 +37,7 @@ router.patch(
 
 router.put(
  TASK_ROUTES.EditTask,
-  [apiLimiter, authMiddleware.verifyToken, authMiddleware.checkBlockedStatus],
+  [apiLimiter, authMiddleware.verifyToken, authMiddleware.checkBlockedStatus, upload.single("image")],
   taskController.editTask.bind(taskController)
 );
 

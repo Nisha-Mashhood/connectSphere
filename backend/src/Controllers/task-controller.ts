@@ -100,6 +100,12 @@ export class TaskController extends BaseController implements ITaskController{
       const { taskId } = req.params;
       const updates: Partial<ITask> =
       req.body.taskData ? JSON.parse(req.body.taskData) : req.body;
+
+      logger.debug("🔵 CONTROLLER → Received task update: " + JSON.stringify({
+        taskId,
+        updates,
+        assignedUsers: updates?.assignedUsers
+      }));
       logger.debug(`Editing task: taskId=${taskId}`);
       const updatedTask = await this._taskService.editTask(taskId, updates);
       if (!updatedTask) {

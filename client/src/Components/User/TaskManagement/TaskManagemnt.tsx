@@ -188,6 +188,8 @@ const TaskManagement = ({ context, currentUser, contextData }: TaskManagementPro
       formDataToSend.append("taskData", JSON.stringify(payload));
       if (taskImage) formDataToSend.append("image", taskImage);
 
+      console.log("📤 SENDING TO BACKEND:", payload);
+
       const response = await edit_task(selectedTask.id , formDataToSend);
       if (response){
         console.log(response);
@@ -243,10 +245,8 @@ const TaskManagement = ({ context, currentUser, contextData }: TaskManagementPro
   // Open edit modal with prefilled data
   const openEditModal = (task: Task) => {
     setSelectedTask(task);
-    const hasAssignees =
-      task.assignedUsersDetails && task.assignedUsersDetails.length > 0;
     const canEditAssign = task.createdBy === currentUser.id;
-    setShowUserSelect(context === "user" && hasAssignees && canEditAssign);
+    setShowUserSelect(context === "user" && canEditAssign);
     setIsEditOpen(true);
   };
 
