@@ -1,5 +1,5 @@
 import React from "react";
-import TaskCard from "./TaskCard";
+import TaskCard from "./TaskCard/TaskCard";
 import { Notification } from "../../../types";
 import { User } from "../../../redux/types";
 import { Task } from "../../../Interface/User/Itask";
@@ -21,7 +21,6 @@ const TaskList: React.FC<TaskListProps> = ({
   tasks,
   currentUser,
   notifications,
-  connectedUsers,
   context,
   onViewTask,
   onEditTask,
@@ -50,7 +49,6 @@ const TaskList: React.FC<TaskListProps> = ({
               <TaskCard
                 task={task}
                 currentUser={currentUser}
-                connectedUsers={connectedUsers}
                 context={context}
                 onView={() => onViewTask(task)}
                 onEdit={() => onEditTask(task)}
