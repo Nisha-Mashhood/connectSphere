@@ -1,13 +1,13 @@
-import React, { useEffect, useRef, useCallback, useState, useMemo } from "react";
+import React, { useEffect, useRef, useCallback, useState } from "react";
 import { debounce } from "lodash";
-import { Contact, IChatMessage } from "../../../../../types";
-import { fetchChatMessages } from "../../../../../Service/Chat.Service";
 import { Avatar, Spinner } from "@nextui-org/react";
 import { useSelector } from "react-redux";
 import { RootState } from "../../../../../redux/store";
 import { MessageSquare, FileText, Video, ChevronDown, Download } from "lucide-react";
 import "./ChatMessages.css";
 import { socketService } from "../../../../../Service/SocketService";
+import { Contact } from "../../../../../Interface/User/Icontact";
+import { IChatMessage } from "../../../../../Interface/User/IchatMessage";
 
 interface ChatMessagesProps {
   selectedContact: Contact | null;
@@ -17,6 +17,11 @@ interface ChatMessagesProps {
   currentUserId?: string;
   onNotificationClick: (contact: Contact) => void;
   messagesEndRef: React.RefObject<HTMLDivElement>;
+  fetchMessages: (
+  contact: Contact,
+  page: number,
+  signal?: AbortSignal
+) => Promise<{ messages: IChatMessage[]; total: number }>;
 }
 
 const ChatMessages: React.FC<ChatMessagesProps> = ({
@@ -26,6 +31,7 @@ const ChatMessages: React.FC<ChatMessagesProps> = ({
   getChatKey,
   currentUserId,
   messagesEndRef,
+  fetchMessages,
 }) => {
   const { currentUser } = useSelector((state: RootState) => state.user);
   const messagesContainerRef = useRef<HTMLDivElement>(null);
@@ -37,94 +43,84 @@ const ChatMessages: React.FC<ChatMessagesProps> = ({
   const [isContainerScrollable, setIsContainerScrollable] = useState(false);
   const isUserScrolling = useRef(false);
   const fetchAbortControllerRef = useRef<AbortController | null>(null);
+  const blockResetRef = useRef(false);
 
-  const fetchMessages = useMemo(
-    () => async (
-      contact: Contact,
-      page: number,
-      signal: AbortSignal
-    ): Promise<{ messages: IChatMessage[]; total: number }> => {
-      try {
-        const response = await fetchChatMessages(
-          contact.type !== "group" ? contact.contactId : undefined,
-          contact.type === "group" ? contact.groupId : undefined,
-          page,
-          10,
-          signal
-        );
-        console.log("Messages fetched:", response.messages);
-        return response;
-      } catch (error) {
-        if (error.name !== "CanceledError") {
-          console.warn("Fetching Messages Cancelled Error:", error);
-        } else {
-          throw error;
-        }
-      }
-    },
-    []
-  );
 
   const loadMessages = useCallback(
-    async (resetPage = false) => {
-      if (!selectedContact || isFetching || (!hasMore && !resetPage)) return;
+  async (resetPage = false) => {
+    if (!selectedContact || isFetching || (!hasMore && !resetPage)) return;
 
-      const chatKey = getChatKey(selectedContact);
-      const container = messagesContainerRef.current;
-      const previousScrollHeight = container?.scrollHeight || 0;
-      const currentPage = resetPage ? 1 : page;
+    const chatKey = getChatKey(selectedContact);
+    const container = messagesContainerRef.current;
+    const previousScrollHeight = container?.scrollHeight || 0;
+    const currentPage = resetPage ? 1 : page;
 
-      // Abort any previous fetch
-      if (fetchAbortControllerRef.current) {
-        fetchAbortControllerRef.current.abort();
-      }
+    // Abort any previous fetch
+    if (fetchAbortControllerRef.current) {
+      fetchAbortControllerRef.current.abort();
+    }
 
-      // Create new AbortController
-      const controller = new AbortController();
-      fetchAbortControllerRef.current = controller;
+    const controller = new AbortController();
+    fetchAbortControllerRef.current = controller;
 
-      setIsFetching(true);
-      try {
-        const { messages: newMessages, total } = await fetchMessages(
-          selectedContact,
-          currentPage,
-          controller.signal
+    setIsFetching(true);
+    try {
+      const { messages: newMessages, total } = await fetchMessages(
+        selectedContact,
+        currentPage,
+        controller.signal
+      );
+
+      setAllMessages(prev => {
+        const currentMessages = prev.get(chatKey) || [];
+        const updatedMessages = resetPage
+        ? newMessages
+        : [...newMessages, ...currentMessages];
+
+        updatedMessages.sort(
+        (a, b) => new Date(a.timestamp).getTime() - new Date(b.timestamp).getTime()
         );
 
-        setAllMessages((prev) => {
-          const currentMessages = prev.get(chatKey) || [];
-          const updatedMessages = resetPage
-            ? newMessages
-            : [...newMessages, ...currentMessages];
-          return new Map(prev).set(chatKey, updatedMessages);
+        return new Map(prev).set(chatKey, updatedMessages);
         });
 
-        setHasMore(currentPage * 10 < total && newMessages.length > 0);
-        setPage(currentPage + 1);
-        if (resetPage) setInitialLoadDone(true);
+      setHasMore(currentPage * 10 < total && newMessages.length > 0);
+      setPage(currentPage + 1);
 
-        // Mark messages as read
-        if (newMessages.length > 0 && currentUser?._id) {
-          socketService.markAsRead(chatKey, currentUser._id, selectedContact.type);
-        }
+      if (resetPage) setInitialLoadDone(true);
 
-        if (!resetPage && container && isContainerScrollable) {
-          requestAnimationFrame(() => {
-            const newScrollHeight = container.scrollHeight;
-            container.scrollTop = newScrollHeight - previousScrollHeight;
-          });
-        }
-      } catch (error) {
-        if (error.name !== "CanceledError") {
-          console.warn("Fetching Messages Cancelled Error:", error);
-        }
-      } finally {
-        setIsFetching(false);
-        fetchAbortControllerRef.current = null;
+      // mark as read
+      if (newMessages.length > 0 && currentUser?.id) {
+        socketService.markAsRead(chatKey, currentUser.id, selectedContact.type);
       }
-    },
-    [selectedContact, page, isFetching, hasMore, getChatKey, setAllMessages, isContainerScrollable, currentUser?._id, fetchMessages]
-  );
+
+      if (!resetPage && container && isContainerScrollable) {
+        requestAnimationFrame(() => {
+          const newScrollHeight = container.scrollHeight;
+          container.scrollTop = newScrollHeight - previousScrollHeight;
+        });
+      }
+    } catch (error) {
+      if (error.name !== "CanceledError") {
+        console.warn("Fetching messages error:", error);
+      }
+    } finally {
+      setIsFetching(false);
+      fetchAbortControllerRef.current = null;
+    }
+  },
+  [
+    selectedContact,
+    page,
+    isFetching,
+    hasMore,
+    getChatKey,
+    setAllMessages,
+    isContainerScrollable,
+    currentUser?.id,
+    fetchMessages,
+  ]
+);
 
   const scrollToBottom = useCallback(
     debounce(() => {
@@ -140,19 +136,22 @@ const ChatMessages: React.FC<ChatMessagesProps> = ({
     []
   );
 
-  useEffect(() => {
-    if (selectedContact) {
-      setInitialLoadDone(false);
-      setPage(1);
-      setHasMore(true);
-    }
-  }, [selectedContact]);
 
-  useEffect(() => {
-    if (selectedContact && !initialLoadDone) {
-      loadMessages(true);
-    }
-  }, [selectedContact, initialLoadDone, loadMessages]);
+ useEffect(() => {
+  if (!selectedContact) return;
+
+  if (!blockResetRef.current) {
+    console.log("RESET: New contact selected → loading messages");
+    setInitialLoadDone(false);
+    setPage(1);
+    setHasMore(true);
+    loadMessages(true);  // <<-- fetch page 1
+  } else {
+    console.log("SKIP RESET: This was an incoming message event");
+  }
+
+  blockResetRef.current = false;
+}, [selectedContact]);
 
   useEffect(() => {
     if (
@@ -180,147 +179,87 @@ const ChatMessages: React.FC<ChatMessagesProps> = ({
     return () => window.removeEventListener("resize", checkScrollable);
   }, [allMessages]);
 
+
+
   useEffect(() => {
-    if (!selectedContact) return;
+  if (!selectedContact) return;
 
-    const chatKey = getChatKey(selectedContact);
+  const chatKey = getChatKey(selectedContact);
 
-    const handleReceiveMessage = (message: IChatMessage) => {
-      console.log("Received receiveMessage:", JSON.stringify(message, null, 2));
-      if (!message._id || !message.senderId || !message.contentType || !message.timestamp) {
-        console.warn("Invalid message in receiveMessage:", message);
-        return;
-      }
-      if (message.groupId && !selectedContact.groupId) {
-        console.warn("Group message received but no groupId in selectedContact:", message);
-        return;
-      }
+  const handleReceive = (message: IChatMessage) => {
+    blockResetRef.current = true;
+    // Infer chat type from message
+    const isSameChat =
+      (selectedContact.type === "group" && message.groupId === selectedContact.groupId) ||
+      (selectedContact.type === "user-mentor" && message.collaborationId === selectedContact.collaborationId) ||
+      (selectedContact.type === "user-user" && message.userConnectionId === selectedContact.userConnectionId);
 
-      let inferredChatType: "group" | "user-mentor" | "user-user" | null = null;
-      if (message.groupId) {
-        inferredChatType = "group";
-      } else if (message.collaborationId) {
-        inferredChatType = "user-mentor";
-      } else if (message.userConnectionId) {
-        inferredChatType = "user-user";
-      }
+    if (!isSameChat) return;
 
-      const isMatchingChat =
-        inferredChatType === selectedContact.type &&
-        ((inferredChatType === "group" && message.groupId === selectedContact.groupId) ||
-         (inferredChatType === "user-mentor" && message.collaborationId === selectedContact.collaborationId) ||
-         (inferredChatType === "user-user" && message.userConnectionId === selectedContact.userConnectionId));
+    // Add message to state using handleIncomingMessage (from parent)
+    setAllMessages(prev => {
+      const current = prev.get(chatKey) || [];
+      const exists = current.some(m => m._id === message._id);
+      const updated = exists 
+        ? current.map(m => (m._id === message._id ? { ...m, ...message } : m))
+        : [...current, message];
 
-      if (isMatchingChat && message._id) {
-        setAllMessages((prev) => {
-          const currentMessages = prev.get(chatKey) || [];
-          const messageExists = currentMessages.some((m) => m._id === message._id);
-          if (!messageExists) {
-            console.log("Adding new message to allMessages (receiveMessage):", message._id);
-            return new Map(prev).set(chatKey, [...currentMessages, message]);
-          }
-          console.log("Updating existing message status (receiveMessage):", message._id);
-          return new Map(prev).set(
-            chatKey,
-            currentMessages.map((m) => (m._id === message._id ? { ...m, status: message.status, isRead: message.isRead || false } : m))
-          );
-        });
-        scrollToBottom();
-      } else {
-        console.warn("Message does not match selected chat (receiveMessage):", {
-          message,
-          selectedContact,
-        });
-      }
-    };
+      return new Map(prev).set(chatKey, updated);
+    });
 
-    const handleMessageSaved = (message: IChatMessage) => {
-      console.log("Received messageSaved:", JSON.stringify(message, null, 2));
-      if (!message._id || !message.senderId || !message.contentType || !message.timestamp) {
-        console.warn("Invalid message in messageSaved:", message);
-        return;
-      }
-      if (message.groupId && !selectedContact.groupId) {
-        console.warn("Group message received but no groupId in selectedContact:", message);
-        return;
-      }
+    // Scroll automatically
+    scrollToBottom();
+  };
 
-      let inferredChatType: "group" | "user-mentor" | "user-user" | null = null;
-      if (message.groupId) {
-        inferredChatType = "group";
-      } else if (message.collaborationId) {
-        inferredChatType = "user-mentor";
-      } else if (message.userConnectionId) {
-        inferredChatType = "user-user";
-      }
+  socketService.onReceiveMessage(handleReceive);
 
-      const isMatchingChat =
-        inferredChatType === selectedContact.type &&
-        ((inferredChatType === "group" && message.groupId === selectedContact.groupId) ||
-         (inferredChatType === "user-mentor" && message.collaborationId === selectedContact.collaborationId) ||
-         (inferredChatType === "user-user" && message.userConnectionId === selectedContact.userConnectionId));
+  return () => {
+    socketService.socket?.off("receiveMessage", handleReceive);
+  };
 
-      if (isMatchingChat && message._id) {
-        setAllMessages((prev) => {
-          const currentMessages = prev.get(chatKey) || [];
-          const messageExists = currentMessages.some((m) => m._id === message._id);
-          if (!messageExists) {
-            console.log("Adding new message to allMessages (messageSaved):", message._id);
-            return new Map(prev).set(chatKey, [...currentMessages, message]);
-          }
-          console.log("Updating existing message status (messageSaved):", message._id);
-          return new Map(prev).set(
-            chatKey,
-            currentMessages.map((m) => (m._id === message._id ? { ...m, status: message.status, isRead: message.isRead || false } : m))
-          );
-        });
-        scrollToBottom();
-      } else {
-        console.warn("Message does not match selected chat (messageSaved):", {
-          message,
-          selectedContact,
-        });
-      }
-    };
+}, [selectedContact, getChatKey, setAllMessages, scrollToBottom]);
 
-    const debouncedHandleMessagesRead = debounce((data: { chatKey: string; userId: string; messageIds: string[] }) => {
-      console.log("Received messagesRead event:", JSON.stringify(data, null, 2));
-      if (data.chatKey === chatKey) {
-        if (!Array.isArray(data.messageIds) || !data.messageIds.length) {
-          console.warn("Invalid or missing messageIds in messagesRead event:", data.messageIds);
-          return;
-        }
-        setAllMessages((prev) => {
-          const currentMessages = prev.get(chatKey) || [];
-          if (!currentMessages.length) {
-            console.log("No messages yet for chatKey, skipping messagesRead:", chatKey);
-            return prev;
-          }
-          return new Map(prev).set(
-            chatKey,
-            currentMessages.map((msg) =>
-              data.messageIds.includes(msg._id) ? { ...msg, status: "read", isRead: true } : msg
-            )
-          );
-        });
-      }
-    }, 200); // Reduced debounce delay for faster status updates
 
-    socketService.onReceiveMessage(handleReceiveMessage);
-    socketService.onMessageSaved(handleMessageSaved);
-    socketService.onMessagesRead(debouncedHandleMessagesRead);
 
-    return () => {
-      socketService.socket?.off("receiveMessage", handleReceiveMessage);
-      socketService.socket?.off("messageSaved", handleMessageSaved);
-      socketService.socket?.off("messagesRead", debouncedHandleMessagesRead);
 
-      if (fetchAbortControllerRef.current) {
-        fetchAbortControllerRef.current.abort();
-        fetchAbortControllerRef.current = null;
-      }
-    };
-  }, [selectedContact, getChatKey, setAllMessages, scrollToBottom]);
+  useEffect(() => {
+  if (!selectedContact) return;
+
+  const chatKey = getChatKey(selectedContact);
+
+  const handleSaved = (message: IChatMessage) => {
+    blockResetRef.current = true;
+    // Match correct chat
+    const isSameChat =
+      (selectedContact.type === "group" && message.groupId === selectedContact.groupId) ||
+      (selectedContact.type === "user-mentor" && message.collaborationId === selectedContact.collaborationId) ||
+      (selectedContact.type === "user-user" && message.userConnectionId === selectedContact.userConnectionId);
+
+    if (!isSameChat) return;
+
+    // Update message (replace optimistic message)
+    setAllMessages(prev => {
+      const current = prev.get(chatKey) || [];
+      const exists = current.some(m => m._id === message._id);
+
+      const updated = exists
+        ? current.map(m => (m._id === message._id ? { ...m, ...message } : m))
+        : [...current, message]; // fallback
+
+      return new Map(prev).set(chatKey, updated);
+    });
+
+    scrollToBottom();
+  };
+
+  socketService.onMessageSaved(handleSaved);
+
+  return () => {
+    socketService.socket?.off("messageSaved", handleSaved);
+  };
+
+}, [selectedContact, getChatKey, setAllMessages, scrollToBottom]);
+
 
   const handleScroll = useCallback(
     debounce(() => {

@@ -1,4 +1,5 @@
-import { Contact, IChatMessage } from "../../../../../types";
+import { IChatMessage } from "../../../../../Interface/User/IchatMessage";
+import { Contact } from "../../../../../Interface/User/Icontact";
 
 // Formats raw contact data from the server into a Contact type
 export const formatContact = (contact): Contact => ({

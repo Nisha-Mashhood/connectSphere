@@ -1,854 +1,211 @@
-import React, {
-  useState,
-  useEffect,
-  useRef,
-  useCallback,
-  useMemo,
-} from "react";
-import { useSelector } from "react-redux";
+import "./Chat.css";
+import React, { useEffect, useRef, useState } from "react";
+import { useSelector, useDispatch } from "react-redux";
+import { Card } from "@nextui-org/react";
 import { RootState } from "../../../../redux/store";
-import { useNavigate, useParams } from "react-router-dom";
 import { socketService } from "../../../../Service/SocketService";
-import { getUserContacts } from "../../../../Service/Contact.Service";
-import ChatSidebar from "./ChatSidebar";
+import ChatSidebar from "./ChatSidebar/ChatSidebar";
 import ChatHeader from "./ChatHeader";
 import ChatDetailsSidebar from "./ChatDetailsSideBar/ChatDetailsSidebar";
 import ChatMessages from "./ChatMessages/ChatMessages";
 import ChatInput from "./ChatInput/ChatInput";
-import { Card } from "@nextui-org/react";
-import { Contact, ICallLog, IChatMessage } from "../../../../types";
+import { useChatContacts } from "../../../../Hooks/User/Chat/useChatContacts";
+import { useChatMessages } from "../../../../Hooks/User/Chat/useChatMessages";
+import { useChatNotifications } from "../../../../Hooks/User/Chat/useChatNotifications";
+import { useChatCall } from "../../../../Hooks/User/Chat/useChatCall";
 import {
-  deduplicateMessages,
-  formatContact,
-  getChatKeyFromMessage,
-} from "./utils/contactUtils";
-import {
-  fetchChatMessages,
-  getUnreadMessages,
-} from "../../../../Service/Chat.Service";
-import toast from "react-hot-toast";
-import { debounce } from "lodash";
-import { markNotificationAsRead as markNotificationService } from "../../../../Service/Notification.Service";
-import {
-  markNotificationAsRead,
-  setActiveChatKey,
   setIsInChatComponent,
+  setActiveChatKey,
 } from "../../../../redux/Slice/notificationSlice";
-import { setSelectedContact as setSelectedContactRedux } from "../../../../redux/Slice/userSlice";
-import { useDispatch } from "react-redux";
-import { fetchUserDetails } from "../../../../Service/Auth.service";
-import ringTone from "../../../../assets/ringTone.mp3";
-import { getCallLogs } from "../../../../Service/Call.Service";
+import { getChatKey } from "./utils/contactUtils";
+
+
+
 const Chat: React.FC = () => {
-  const { type, id } = useParams<{ type?: string; id?: string }>();
-  const navigate = useNavigate();
   const dispatch = useDispatch();
   const { currentUser } = useSelector((state: RootState) => state.user);
-  const { chatNotifications, isInChatComponent } = useSelector(
-    (state: RootState) => state.notification
-  );
-  const [contacts, setContacts] = useState<Contact[]>([]);
-  const [selectedContact, setSelectedContact] = useState<Contact | null>(null);
-  const [allMessages, setAllMessages] = useState<Map<string, IChatMessage[]>>(
-    new Map()
-  );
-  const [unreadCounts, setUnreadCounts] = useState<{ [key: string]: number }>(
-    {}
-  );
-  const [typingUsers, setTypingUsers] = useState<{ [key: string]: string[] }>(
-    {}
-  );
-  const [lastMessages, setLastMessages] = useState<{
-    [key: string]: IChatMessage | null;
-  }>({});
-  const [callLogs, setCallLogs] = useState<ICallLog[]>([]);
+
+  // ---------------- Contacts ----------------
+  const {
+    sortedContacts,
+    selectedContact,
+    setInitialContact,
+    handleContactSelect,
+    unreadCounts,
+    refetchUnreadCounts,
+  } = useChatContacts(currentUser?.id, getChatKey);
+
+  // ---------------- Notifications ----------------
+  const { autoMarkMessageNotificationAsRead } =
+    useChatNotifications(currentUser?.id);
+
+  // ---------------- Messages ----------------
+  const {
+    allMessages,
+    setAllMessages,
+    lastMessages,
+    typingUsers,
+    fetchMessages,
+    fetchLastMessagesForContacts,
+  } = useChatMessages((chatKey) => {
+    autoMarkMessageNotificationAsRead(chatKey);
+    refetchUnreadCounts();
+  });
+
+  // ---------------- Calls ----------------
+  const call = useChatCall(currentUser?.id);
+
+  // UI state
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
   const [isDetailsSidebarOpen, setIsDetailsSidebarOpen] = useState(false);
-  const [isVideoCallActive, setIsVideoCallActive] = useState(false);
+
   const messagesEndRef = useRef<HTMLDivElement>(null);
-  const [incomingCall, setIncomingCall] = useState<{
-    userId: string;
-    chatKey: string;
-    callType: "audio" | "video";
-    callerName: string;
-  } | null>(null);
-  const ringtone = useRef<HTMLAudioElement | null>(null);
-  const isRingtonePlaying = useRef(false);
-  const fetchAbortControllerRef = useRef<AbortController | null>(null);
 
-  const getChatKey = (contact: Contact): string => {
-    if (contact.type === "group") {
-      return `group_${contact.groupId}`;
-    } else if (contact.type === "user-mentor") {
-      return `user-mentor_${contact.collaborationId}`;
-    } else {
-      return `user-user_${contact.userConnectionId}`;
-    }
-  };
-
-  const sortedContacts = useMemo(() => {
-    return [...contacts].sort((a, b) => {
-      const chatKeyA = getChatKey(a);
-      const chatKeyB = getChatKey(b);
-      const lastMessageA = lastMessages[chatKeyA];
-      const lastMessageB = lastMessages[chatKeyB];
-
-      const timeA = lastMessageA?.timestamp
-        ? new Date(lastMessageA.timestamp).getTime()
-        : a.lastMessageTimestamp
-        ? new Date(a.lastMessageTimestamp).getTime()
-        : 0;
-      const timeB = lastMessageB?.timestamp
-        ? new Date(lastMessageB.timestamp).getTime()
-        : b.lastMessageTimestamp
-        ? new Date(b.lastMessageTimestamp).getTime()
-        : 0;
-
-      return timeB - timeA;
-    });
-  }, [contacts, lastMessages]);
-
-  const fetchUnreadCounts = useCallback(
-    debounce(async () => {
-      if (!currentUser?._id) {
-        console.warn("No current user ID, skipping unread counts fetch");
-        return;
-      }
-      try {
-        console.log("Fetching unread counts for user:", currentUser._id);
-        const data = await getUnreadMessages(currentUser._id);
-        console.log("Unread Messages:", data);
-        setUnreadCounts(data);
-      } catch (error) {
-        console.error("Error fetching unread counts:", {
-          message: error.message,
-          error,
-        });
-        if (
-          !error.message.includes("No unread messages") &&
-          !error.message.includes("HTTP 404") &&
-          !error.message.includes("No messages")
-        ) {
-          console.log(error);
-        } else {
-          console.log("Non-critical error, setting empty unread counts");
-          setUnreadCounts({});
-        }
-      }
-    }, 500),
-    [currentUser?._id]
-  );
-
-  const updateMessages = useCallback(
-    debounce((chatKey: string, newMessages: IChatMessage[]) => {
-      setAllMessages((prev) => {
-        const messages = prev.get(chatKey) || [];
-        const uniqueMessages = deduplicateMessages([
-          ...messages,
-          ...newMessages,
-        ]);
-        return new Map(prev).set(chatKey, uniqueMessages);
-      });
-    }, 200),
-    []
-  );
-
-  const debouncedFetchMessages = useMemo(
-    () =>
-      debounce(async (contact: Contact) => {
-        const chatKey = getChatKey(contact);
-
-        // Abort any previous fetch
-        if (fetchAbortControllerRef.current) {
-          fetchAbortControllerRef.current.abort();
-        }
-
-        // Create new controller for new request
-        const controller = new AbortController();
-        fetchAbortControllerRef.current = controller;
-
-        try {
-          const { messages } = await fetchChatMessages(
-            contact.type !== "group" ? contact.contactId : undefined,
-            contact.type === "group" ? contact.groupId : undefined,
-            1,
-            10,
-            controller.signal
-          );
-          console.log("Messages fetched:", messages);
-          setAllMessages((prev: Map<string, IChatMessage[]>) => {
-            const currentMessages = prev.get(chatKey) || [];
-            const updatedMessages = [...messages, ...currentMessages];
-            return new Map(prev).set(
-              chatKey,
-              deduplicateMessages(updatedMessages)
-            );
-          });
-
-          if (messages.length > 0 && currentUser?._id) {
-            socketService.markAsRead(chatKey, currentUser._id, contact.type);
-          }
-        } catch (error) {
-          if (error.name !== "CanceledError") {
-            console.error("Error preloading messages:", error);
-          }
-        }
-      }, 300),
-    [currentUser?._id]
-  );
-
+  // ---------------- Set initial contact ----------------
   useEffect(() => {
-    if (ringtone.current) {
-      console.log("Preloading audio element");
-      ringtone.current.src = ringTone; // Set src to imported file
-      ringtone.current.load(); // Force preload
-
-      ringtone.current.onloadeddata = () => {
-        console.log(
-          "Audio element loaded, readyState:",
-          ringtone.current!.readyState
-        );
-        console.log("Audio element src after load:", ringtone.current!.src);
-      };
-      ringtone.current.onerror = (e) => {
-        console.error("Audio element error:", e);
-      };
+    if (sortedContacts.length > 0) {
+      setInitialContact(sortedContacts);
     }
-  }, []);
+  }, [sortedContacts, setInitialContact]);
 
-  // Callback to play ringtone
-  const playRingtone = useCallback(async () => {
-    console.log("playRingtone: Starting execution");
-    if (ringtone.current && !isRingtonePlaying.current) {
-      console.log(
-        "playRingtone: Audio element exists, readyState:",
-        ringtone.current.readyState
-      );
-      console.log("playRingtone: Current src:", ringtone.current.src);
-      isRingtonePlaying.current = true;
-      try {
-        // Check audio support
-        const canPlayMp3 = ringtone.current.canPlayType("audio/mpeg");
-        console.log("playRingtone: Audio support:", { canPlayMp3 });
-
-        // Wait for audio to be ready
-        if (ringtone.current.readyState < 4) {
-          console.log("playRingtone: Audio not ready, waiting for load");
-          await new Promise<void>((resolve, reject) => {
-            ringtone.current!.onloadeddata = () => {
-              console.log(
-                "playRingtone: Audio loaded, readyState:",
-                ringtone.current!.readyState
-              );
-              resolve();
-            };
-            ringtone.current!.onerror = (e) => {
-              console.error("playRingtone: Error loading audio:", e);
-              reject(new Error("Failed to load audio"));
-            };
-            ringtone.current!.load();
-          });
-        }
-
-        // Resume AudioContext if suspended
-        const audioContext = new window.AudioContext();
-        if (audioContext.state === "suspended") {
-          console.log("playRingtone: AudioContext suspended, resuming");
-          await audioContext.resume();
-          console.log("playRingtone: AudioContext state:", audioContext.state);
-        }
-
-        // Play audio
-        ringtone.current.currentTime = 0;
-        ringtone.current.muted = false;
-        console.log("playRingtone: Attempting to play audio");
-        await ringtone.current.play();
-        console.log("playRingtone: Ringtone playing successfully");
-      } catch (error) {
-        isRingtonePlaying.current = false;
-        console.error("playRingtone: Ringtone playback error:", error);
-        if (error.name === "NotAllowedError") {
-          console.log("playRingtone: Blocked by autoplay policy:", error);
-          toast.error(
-            "Please click the 'Enable Audio' button to hear the ringtone.",
-            { duration: 5000 }
-          );
-        } else if (error.name === "AbortError") {
-          console.log("playRingtone: Play interrupted by pause, ignoring");
-        } else {
-          console.error(
-            "playRingtone: Unexpected error playing ringtone:",
-            error
-          );
-          toast.error(
-            "Failed to play ringtone. Please check if the audio file exists."
-          );
-        }
-      }
-    } else if (!ringtone.current) {
-      console.error("playRingtone: Ringtone audio element not initialized");
-      toast.error("Ringtone not available. Audio element not initialized.");
-    } else {
-      console.log("playRingtone: Ringtone already playing, skipping");
-    }
-  }, []);
-
-  const fetchCallLogs = useCallback(async () => {
-    try {
-      const data = await getCallLogs();
-      console.log("Raw Call Logs Data:", JSON.stringify(data, null, 2));
-      setCallLogs(data);
-    } catch (error) {
-      console.error("Error fetching call logs:", error.message);
-    }
-  }, []);
-
+  // ---------------- Socket connection ----------------
   useEffect(() => {
-    if (!currentUser?._id) return;
+    if (!currentUser?.id) return;
 
-    // Set session flag
     sessionStorage.setItem("isInChatComponent", "true");
     dispatch(setIsInChatComponent(true));
 
-    const token = localStorage.getItem("authToken") || "";
-    socketService.connect(currentUser._id, token);
+    socketService.connect(currentUser.id, localStorage.getItem("authToken")!);
+    refetchUnreadCounts();
 
-    const handleReceiveMessage = async (message: IChatMessage) => {
-      const chatKey = getChatKeyFromMessage(message);
-      updateMessages(chatKey, [message]);
-      setLastMessages((prev) => ({ ...prev, [chatKey]: message }));
-      fetchUnreadCounts();
-
-      if (isInChatComponent) {
-        const relevantNotification = chatNotifications.find(
-          (n) =>
-            n.relatedId === chatKey &&
-            n.type === "message" &&
-            n.status === "unread"
-        );
-        if (relevantNotification) {
-          try {
-            await markNotificationService(
-              relevantNotification._id,
-              currentUser._id
-            );
-            dispatch(markNotificationAsRead(relevantNotification._id));
-            socketService.markNotificationAsRead(
-              relevantNotification._id,
-              currentUser._id
-            );
-          } catch (error) {
-            console.error("Error marking message notification as read:", error);
-          }
-        }
-      }
-    };
-
-    const handleMessageSaved = (message: IChatMessage) => {
-      const chatKey = getChatKeyFromMessage(message);
-      setAllMessages((prev) => {
-        const messages = prev.get(chatKey) || [];
-        const updatedMessages = messages.map((m) =>
-          m._id === message._id ? { ...m, ...message } : m
-        );
-        if (!updatedMessages.some((m) => m._id === message._id)) {
-          updatedMessages.push(message);
-        }
-        return new Map(prev).set(chatKey, deduplicateMessages(updatedMessages));
-      });
-      setLastMessages((prev) => ({ ...prev, [chatKey]: message }));
-    };
-
-    const handleTyping = ({
-      userId,
-      chatKey,
-    }: {
-      userId: string;
-      chatKey: string;
-    }) => {
-      setTypingUsers((prev) => ({
-        ...prev,
-        [chatKey]: [
-          ...(prev[chatKey] || []).filter((id) => id !== userId),
-          userId,
-        ],
-      }));
-    };
-
-    const handleStopTyping = ({
-      userId,
-      chatKey,
-    }: {
-      userId: string;
-      chatKey: string;
-    }) => {
-      console.log("Received stopTyping event:", { userId, chatKey });
-      setTypingUsers((prev) => ({
-        ...prev,
-        [chatKey]: (prev[chatKey] || []).filter((id) => id !== userId),
-      }));
-    };
-
-    const handleMessagesRead = ({ chatKey }: { chatKey: string }) => {
-      setAllMessages((prev) => {
-        const messages = prev.get(chatKey) || [];
-        const updatedMessages = messages.map((m) =>
-          !m.isRead ? { ...m, isRead: true, status: "read" as const } : m
-        );
-        return new Map(prev).set(chatKey, updatedMessages);
-      });
-      setUnreadCounts((prev) => ({ ...prev, [chatKey]: 0 }));
-      fetchUnreadCounts();
-    };
-
-    const handleOffer = async (data: {
-      userId: string;
-      targetId: string;
-      type: string;
-      chatKey: string;
-      offer: RTCSessionDescriptionInit;
-      callType: "audio" | "video";
-    }) => {
-      console.log("Received offer:", data);
-      try {
-        let callerName = "Unknown Caller";
-        if (data.type === "group") {
-          // For group calls, use the group name from contacts
-          const groupContact = contacts.find(
-            (c) => c.type === "group" && c.groupId === data.targetId
-          );
-          callerName = groupContact?.groupDetails?.groupName || "Group Call";
-        } else {
-          // For user or mentor calls, fetch user details
-          const caller = await fetchUserDetails(data.userId);
-          callerName = caller?.userDetails?.name || "Unknown Caller";
-        }
-
-        setIncomingCall({
-          userId: data.userId,
-          chatKey: data.chatKey,
-          callType: data.callType,
-          callerName,
-        });
-        if (isInChatComponent) {
-          const relevantNotification = chatNotifications.find(
-            (n) =>
-              n.relatedId === data.chatKey &&
-              n.type === "incoming_call" &&
-              n.status === "unread"
-          );
-          if (relevantNotification) {
-            try {
-              await markNotificationService(
-                relevantNotification._id,
-                currentUser._id
-              );
-              dispatch(markNotificationAsRead(relevantNotification._id));
-              socketService.markNotificationAsRead(
-                relevantNotification._id,
-                currentUser._id
-              );
-            } catch (error) {
-              console.error(
-                "Error marking incoming_call notification as read:",
-                error
-              );
-            }
-          }
-        }
-      } catch (error) {
-        console.error("Error handling offer:", error);
-      }
-    };
-
-    const handleAnswer = () => {
-      // Stop ringtone when call is answered
-      if (ringtone.current && isRingtonePlaying.current) {
-        ringtone.current.pause();
-        ringtone.current.currentTime = 0;
-        isRingtonePlaying.current = false;
-      }
-      setIsVideoCallActive(true);
-      setIncomingCall(null);
-    };
-
-    const handleCallEnded = ({
-      chatKey,
-      callType,
-    }: {
-      chatKey: string;
-      callType: "audio" | "video";
-    }) => {
-      console.log("Handling callEnded:", { chatKey, callType });
-      if (selectedContact && getChatKey(selectedContact) === chatKey) {
-        setIsVideoCallActive(false);
-        setIncomingCall(null);
-        // Stop ringtone when call ends
-        if (ringtone.current && isRingtonePlaying.current) {
-          ringtone.current.pause();
-          ringtone.current.currentTime = 0;
-          isRingtonePlaying.current = false;
-        }
-        // toast.success(
-        //   `${callType.charAt(0).toUpperCase() + callType.slice(1)} call ended`,
-        //   { duration: 3000 }
-        // );
-      }
-    }
-
-    const handleCallLogCreated = (callLog: ICallLog) => {
-    setCallLogs((prev) => {
-      if (prev.some((log) => log._id === callLog._id)) {
-        return prev; 
-      }
-      return [callLog, ...prev];
-    });
-    if (callLog.senderId._id !== currentUser._id) {
-      playRingtone();
-      // toast.success(
-      //   `Incoming ${callLog.callType} call from ${callLog.callerName || "Unknown"}`,
-      //   { duration: 3000 }
-      // );
-    } else {
-      toast.success(`Outgoing ${callLog.callType} call started`, {
-        duration: 3000,
-      });
-    }
-  };
-
-  const handleCallLogUpdated = (callLog: ICallLog) => {
-  setCallLogs((prev) =>
-    prev.map((log) => (log._id === callLog._id ? callLog : log))
-  );
-  if (
-    (callLog.status === "missed" || callLog.status === "completed") &&
-    ringtone.current &&
-    isRingtonePlaying.current
-  ) {
-    ringtone.current.pause();
-    ringtone.current.currentTime = 0;
-    isRingtonePlaying.current = false;
-    console.log("Stopped ringtone for callLog:", callLog._id);
-  }
-  setIncomingCall(null);
-
-  const isSender = typeof callLog.senderId === "string"
-    ? callLog.senderId === currentUser._id
-    : callLog.senderId._id === currentUser._id;
-  const callerName = typeof callLog.senderId === "string"
-    ? callLog.callerName || "Unknown"
-    : callLog.senderId.name || callLog.callerName || "Unknown";
-
-  if (callLog.status === "missed" && !isSender) {
-    console.log("Showing missed call toast for:", callerName);
-    // toast.error(`Missed ${callLog.callType} call from ${callerName}`, {
-    //   duration: 3000,
-    // });
-  } else if (callLog.status === "completed") {
-    console.log("Showing completed call toast for:", callerName);
-    // toast.success(
-    //   `${callLog.callType.charAt(0).toUpperCase() + callLog.callType.slice(1)} call completed (Duration: ${callLog.duration || 0}s)`,
-    //   { duration: 3000 }
-    // );
-  }
-}
-    socketService.onReceiveMessage(handleReceiveMessage);
-    socketService.onMessageSaved(handleMessageSaved);
-    socketService.onTyping(handleTyping);
-    socketService.onStopTyping(handleStopTyping);
-    socketService.onMessagesRead(handleMessagesRead);
-    socketService.onOffer(handleOffer);
-    socketService.onAnswer(handleAnswer);
-    socketService.onCallEnded(handleCallEnded);
-    socketService.onCallLogCreated(handleCallLogCreated);
-    socketService.onCallLogUpdated(handleCallLogUpdated);
-    socketService.socket?.on("contactsUpdated", handleContactsUpdated);
-
-    fetchContacts();
-    fetchUnreadCounts();
-    fetchCallLogs();
-
-    const currentRingTone = ringtone.current;
     return () => {
-      console.log("Cleaning up socket listeners in Chat.tsx");
       sessionStorage.removeItem("isInChatComponent");
       dispatch(setIsInChatComponent(false));
       dispatch(setActiveChatKey(null));
-      socketService.leaveChat(currentUser._id);
-      socketService.socket?.off("receiveMessage", handleReceiveMessage);
-      socketService.socket?.off("messageSaved", handleMessageSaved);
-      socketService.socket?.off("typing", handleTyping);
-      socketService.socket?.off("stopTyping", handleStopTyping);
-      socketService.socket?.off("messagesRead", handleMessagesRead);
-      socketService.socket?.off("offer", handleOffer);
-      socketService.socket?.off("answer", handleAnswer);
-      socketService.socket?.off("callEnded", handleCallEnded);
-      socketService.socket?.off("contactsUpdated", handleContactsUpdated);
-      socketService.offCallLogCreated(handleCallLogCreated);
-      socketService.offCallLogUpdated(handleCallLogUpdated);
-      // socketService.disconnect();
-
-      debouncedFetchMessages.cancel();
-      if (fetchAbortControllerRef.current) {
-        fetchAbortControllerRef.current.abort();
-      }
-
-      if (currentRingTone && isRingtonePlaying.current) {
-        currentRingTone.pause();
-        currentRingTone.currentTime = 0;
-        isRingtonePlaying.current = false;
-      }
+      socketService.leaveChat(currentUser.id);
     };
-  }, [currentUser?._id, fetchUnreadCounts, updateMessages]);
+  }, [currentUser?.id, dispatch, refetchUnreadCounts]);
 
-  const fetchContacts = async () => {
-    try {
-      const contactData = await getUserContacts();
-      console.log("Fetched Contacts : ", contactData);
-      const formattedContacts = contactData.map(formatContact);
-      console.log(
-        "Received contacts: ",
-        JSON.stringify(
-          formattedContacts.map((c) => ({
-            _id: c._id,
-            contactId: c.contactId,
-            type: c.type,
-            name: c.name,
-            targetId: c.targetId,
-            lastMessageTimestamp: c.lastMessageTimestamp,
-          })),
-          null,
-          2
-        )
-      );
-      setContacts(formattedContacts);
-      setInitialContact(formattedContacts);
-    } catch (error) {
-      console.error("Error fetching contacts:", error);
-    }
-  };
-
+  // ---------------- Fetch last messages ----------------
   useEffect(() => {
-    if (contacts.length > 0 && currentUser?._id) {
-      const fetchLastMessages = async () => {
-        // setIsLastMessagesLoading(true);
-        const promises = contacts.map(async (contact) => {
-          const chatKey = getChatKey(contact);
-          try {
-            const { messages } = await fetchChatMessages(
-              contact.type !== "group" ? contact.contactId : undefined,
-              contact.type === "group" ? contact.groupId : undefined,
-              1,
-              1
-            );
-            return { chatKey, lastMessage: messages[0] || null };
-          } catch (error) {
-            console.error(`Error fetching last message for ${chatKey}:`, error);
-            return { chatKey, lastMessage: null };
-          }
-        });
-
-        const results = await Promise.all(promises);
-        const lastMsgs = results.reduce((acc, { chatKey, lastMessage }) => {
-          acc[chatKey] = lastMessage;
-          return acc;
-        }, {} as { [key: string]: IChatMessage | null });
-
-        setLastMessages(lastMsgs);
-        // setIsLastMessagesLoading(false);
-      };
-
-      fetchLastMessages();
+    if (sortedContacts.length > 0) {
+      fetchLastMessagesForContacts(sortedContacts);
     }
-  }, [contacts, currentUser?._id]);
+  }, [sortedContacts, fetchLastMessagesForContacts]);
 
-  const debouncedFetchContacts = useCallback(debounce(fetchContacts, 300), [
-    currentUser?._id,
-  ]);
-
-  const handleContactsUpdated = () => {
-    console.log("Chat: Received contactsUpdated event, refetching contacts");
-    debouncedFetchContacts();
-  };
-
-  const setInitialContact = (contacts: Contact[]) => {
-    if (type && id) {
-      const contact = contacts.find((c) => c.id === id && c.type === type);
-      if (contact) {
-        setSelectedContact(contact);
-        const chatKey = getChatKey(contact);
-        dispatch(setActiveChatKey(chatKey));
-        socketService.emitActiveChat(currentUser._id, chatKey);
-      }
-    } else if (contacts.length > 0 && !selectedContact) {
-      setSelectedContact(contacts[0]);
-      const chatKey = getChatKey(contacts[0]);
-      dispatch(setActiveChatKey(chatKey));
-      socketService.emitActiveChat(currentUser._id, chatKey);
-    }
-  };
-
-  const handleContactSelect = useCallback(
-    async (contact: Contact) => {
-      console.log("Contact is selected:", contact);
-      if (!contact.contactId && !contact.groupId) {
-        console.warn("Invalid contact: missing contactId or groupId", {
-          contact,
-        });
-        return;
-      }
-      if (contact.type === "user-user" && !contact.userConnectionId) {
-        console.warn("Invalid user-user contact: missing userConnectionId", {
-          contact,
-        });
-        return;
-      }
-      if (contact.type === "user-mentor" && !contact.collaborationId) {
-        console.warn("Invalid user-mentor contact: missing collaborationId", {
-          contact,
-        });
-        return;
-      }
-      setSelectedContact(contact);
-      const chatKey = getChatKey(contact);
-      console.log("Token:", localStorage.getItem("authToken"), document.cookie);
-      // try {
-      // const { messages } = await fetchChatMessages(
-      //   contact.type !== "group" ? contact.contactId : undefined,
-      //   contact.type === "group" ? contact.groupId : undefined,
-      //   1
-      // );
-      debouncedFetchMessages(contact);
-      // console.log("Messages fetched:", messages);
-      // setAllMessages((prev: Map<string, IChatMessage[]>) => {
-      //   const currentMessages = prev.get(chatKey) || [];
-      //   const updatedMessages = [...messages, ...currentMessages];
-      //   return new Map(prev).set(chatKey, deduplicateMessages(updatedMessages));
-      // });
-      // if (messages.length > 0 && currentUser?._id) {
-      //   socketService.markAsRead(chatKey, currentUser._id, contact.type);
-      // }
-      // } catch (error) {
-      //   console.error("Error preloading messages:", {
-      //     message: error.message,
-      //     status: error.response?.status,
-      //     data: error.response?.data,
-      //     contact,
-      //   });
-      // }
-      dispatch(setActiveChatKey(chatKey));
-      socketService.emitActiveChat(currentUser._id, chatKey);
-      dispatch(setSelectedContactRedux(contact));
-      try {
-        const relevantNotifications = chatNotifications.filter(
-          (n) =>
-            n.relatedId === chatKey &&
-            n.status === "unread" &&
-            ["message", "missed_call", "incoming_call"].includes(n.type)
-        );
-        for (const notification of relevantNotifications) {
-          await markNotificationService(
-            notification._id,
-            currentUser?._id || ""
-          );
-          dispatch(markNotificationAsRead(notification._id));
-          socketService.markNotificationAsRead(
-            notification._id,
-            currentUser?._id || ""
-          );
-        }
-        navigate(`/chat/${contact.type}/${contact.id}`);
-      } catch (error) {
-        console.error("Error marking notifications as read:", error);
-      }
-      fetchUnreadCounts();
-      setIsSidebarOpen(false);
-    },
-    [currentUser?._id, chatNotifications, dispatch, navigate, fetchUnreadCounts]
-  );
-
-  const toggleSidebar = () => setIsSidebarOpen((prev) => !prev);
-  const toggleDetailsSidebar = () => setIsDetailsSidebarOpen((prev) => !prev);
+  const closeSidebar = () => setIsSidebarOpen(false);
+  const closeDetailsSidebar = () => setIsDetailsSidebarOpen(false);
 
   return (
-    <div className="flex flex-col md:flex-row h-screen bg-gradient-to-br from-gray-100 to-blue-50 dark:from-gray-900 dark:to-gray-800 pt-16">
-      <div
-        className={`fixed inset-y-0 left-0 z-[100] w-80 md:w-1/4 md:static transform transition-transform duration-300 ease-in-out bg-white dark:bg-gray-900 md:bg-transparent ${
-          isSidebarOpen ? "translate-x-0" : "-translate-x-full md:translate-x-0"
-        }`}
-      >
+    <div className="relative flex h-screen bg-gradient-to-br from-gray-100 to-blue-50 dark:from-gray-900 dark:to-gray-800 overflow-hidden">
+      {/* LEFT SIDEBAR*/}
+      <div className="hidden md:block w-80 max-w-xs h-full">
         <ChatSidebar
           contacts={sortedContacts}
           selectedContact={selectedContact}
           onContactSelect={handleContactSelect}
-          chatNotifications={chatNotifications}
           unreadCounts={unreadCounts}
           lastMessages={lastMessages}
-          currentUserId={currentUser?._id || ""}
-          callLogs={callLogs}
+          // chatNotifications={[]}
+          currentUserId={currentUser?.id || ""}
+          callLogs={call.callLogs}
         />
       </div>
+
+      {/* MAIN CHAT PANEL */}
       <div className="flex-1 flex flex-col min-w-0">
-        <Card className="flex-1 flex flex-col shadow-lg rounded-xl md:rounded-none bg-white dark:bg-gray-900 m-2 md:m-0">
+        <Card className="flex-1 flex flex-col shadow-lg rounded-none bg-white dark:bg-gray-900">
           <ChatHeader
-            type={type}
             selectedContact={selectedContact}
-            navigate={navigate}
-            toggleSidebar={toggleSidebar}
-            toggleDetailsSidebar={toggleDetailsSidebar}
-            isMobileView={window.innerWidth < 768}
             typingUsers={typingUsers}
             getChatKey={getChatKey}
-            isVideoCallActive={isVideoCallActive}
-            setIsVideoCallActive={setIsVideoCallActive}
-            incomingCallDetails={incomingCall}
-            ringtone={ringtone}
-            playRingtone={playRingtone}
-            isRingtonePlaying={isRingtonePlaying}
+            toggleSidebar={() => setIsSidebarOpen(true)}
+            toggleDetailsSidebar={() => setIsDetailsSidebarOpen(true)}
+            incomingCallDetails={call.incomingCall}
+            ringtone={call.ringtone}
+            playRingtone={call.playRingtone}
+            isRingtonePlaying={call.isRingtonePlaying}
+            isVideoCallActive={call.isVideoCallActive}
+            setIsVideoCallActive={call.setIsVideoCallActive}
           />
+
           <ChatMessages
             selectedContact={selectedContact}
             allMessages={allMessages}
             setAllMessages={setAllMessages}
             getChatKey={getChatKey}
-            currentUserId={currentUser?._id}
-            onNotificationClick={handleContactSelect}
+            fetchMessages={fetchMessages}
             messagesEndRef={messagesEndRef}
+            currentUserId={currentUser?.id}
+            onNotificationClick={handleContactSelect}
           />
+
           <ChatInput
             selectedContact={selectedContact}
-            currentUserId={currentUser?._id}
-            onSendMessage={(message) => socketService.sendMessage(message)}
+            currentUserId={currentUser?.id}
             getChatKey={getChatKey}
+            onSendMessage={(msg) => socketService.sendMessage(msg)}
           />
         </Card>
       </div>
 
-      {!isVideoCallActive && (
-        <div
-          className={`fixed inset-y-0 right-0 z-[100] w-80 md:w-1/4 md:static transform transition-transform duration-300 ease-in-out bg-white dark:bg-gray-900 md:bg-transparent ${
-            isDetailsSidebarOpen
-              ? "translate-x-0"
-              : "translate-x-full md:translate-x-0"
-          }`}
-        >
+      {/* RIGHT DETAILS SIDEBAR */}
+      {!call.isVideoCallActive && (
+        <div className="hidden lg:block w-80 max-w-xs h-full">
           <ChatDetailsSidebar
             selectedContact={selectedContact}
-            currentUserId={currentUser?._id}
+            currentUserId={currentUser?.id}
           />
         </div>
       )}
-      {(isSidebarOpen || isDetailsSidebarOpen) && (
-        <div
-          className="fixed inset-0 bg-black/50 z-[90] md:hidden"
-          onClick={() => {
-            setIsSidebarOpen(false);
-            setIsDetailsSidebarOpen(false);
-          }}
-        />
+
+      {/* LEFT SIDEBAR */}
+      {isSidebarOpen && (
+        <div className="md:hidden">
+          <div
+            className="fixed inset-0 bg-black/40 z-40"
+            onClick={closeSidebar}
+          />
+          {/* Panel */}
+          <div className="fixed inset-y-0 left-0 z-50 w-4/5 max-w-xs bg-white dark:bg-gray-900 shadow-2xl animate-slide-in-left flex flex-col">
+            <ChatSidebar
+              contacts={sortedContacts}
+              selectedContact={selectedContact}
+              onContactSelect={(c) => {
+                handleContactSelect(c);
+                closeSidebar();
+              }}
+              unreadCounts={unreadCounts}
+              lastMessages={lastMessages}
+              chatNotifications={[]}
+              currentUserId={currentUser?.id || ""}
+              callLogs={call.callLogs}
+              isOverlay
+              onClose={closeSidebar}
+            />
+          </div>
+        </div>
       )}
 
-      <audio ref={ringtone} loop preload="auto" hidden />
+      {/* RIGHT DETAILS SIDEBAR*/}
+      {isDetailsSidebarOpen && !call.isVideoCallActive && (
+        <div className="lg:hidden">
+          <div
+            className="fixed inset-0 bg-black/40 z-40"
+            onClick={closeDetailsSidebar}
+          />
+          <div className="fixed inset-y-0 right-0 z-50 w-4/5 max-w-xs bg-white dark:bg-gray-900 shadow-2xl animate-slide-in-right flex flex-col">
+            <ChatDetailsSidebar
+              selectedContact={selectedContact}
+              currentUserId={currentUser?.id}
+              isOverlay
+              onClose={closeDetailsSidebar}
+            />
+          </div>
+        </div>
+      )}
+
+      <audio ref={call.ringtone} hidden loop preload="auto" />
     </div>
   );
 };

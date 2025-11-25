@@ -61,7 +61,7 @@ export const getUnreadMessages = async (userId: string) => {
     const response = await axiosInstance.get("/chat/unread", {
       params: { userId },
     });
-    console.log("getUnreadMessages response:", response.data); 
+    // console.log("getUnreadMessages response:", response.data); 
     return response.data.data; 
   } catch (error) {
     const errorMessage = error.response

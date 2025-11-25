@@ -14,14 +14,14 @@ const GroupDetails: React.FC<GroupDetailsProps> = ({ selectedContact, colors }) 
   if (!groupDetails) {
     return <div className="text-center py-4 text-gray-500 dark:text-gray-400">No group details available</div>;
   }
-  // console.log(`group details : ${selectedContact.groupDetails.bio}`);
+  console.log(`group details : ${selectedContact.groupDetails.bio}`);
 
   const startDate = groupDetails.startDate
     ? new Date(groupDetails.startDate).toLocaleDateString()
     : "N/A";
   const adminName = groupDetails.adminName || "N/A";
   const memberCount = groupDetails.members?.length || 0;
-  const maxMembers = groupDetails.maxMembers || 4; // Default to 4 per backend
+  const maxMembers = groupDetails.maxMembers || 4; 
   const memberPercentage = Math.min(Math.round((memberCount / maxMembers) * 100), 100);
   const bio = groupDetails.bio || "No description available";
   const price = groupDetails.price !== undefined ? groupDetails.price : 0;

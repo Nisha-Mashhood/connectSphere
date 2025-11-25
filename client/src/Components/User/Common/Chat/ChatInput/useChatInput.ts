@@ -1,7 +1,8 @@
 import { useState, useEffect, useRef, useCallback } from "react";
 import { uploadMedia } from "../../../../../Service/Chat.Service";
-import { Contact, IChatMessage } from "../../../../../types";
 import { UseChatInputReturn } from "./types";
+import { Contact } from "../../../../../Interface/User/Icontact";
+import { IChatMessage } from "../../../../../Interface/User/IchatMessage";
 
 interface UseChatInputProps {
   selectedContact: Contact | null;

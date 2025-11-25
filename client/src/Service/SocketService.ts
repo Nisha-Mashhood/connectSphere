@@ -6,9 +6,9 @@ import {
   GroupIceCandidateData,
   GroupOfferData,
   ICallLog,
-  IChatMessage,
-  Notification,
 } from "../types";
+import { IChatMessage } from "../Interface/User/IchatMessage";
+import { Notification } from "../Interface/User/Inotification";
 
 // Base interface for call data
 interface CallData {
@@ -659,16 +659,16 @@ public offUserRoomLeft(callback: (data: { userId: string }) => void): void {
 
   public onNotificationNew(callback: (notification: Notification) => void) {
     this.socket?.on("notification.new", (notification: Notification) => {
-      if (this.processedNotifications.has(notification._id)) {
-        console.log(`Skipping duplicate notification: ${notification._id}`);
+      console.log("Incoming Notification From Backend:", notification);
+      if (this.processedNotifications.has(notification.id)) {
+        console.log(`Skipping duplicate notification: ${notification.id}`);
         return;
       }
-      this.processedNotifications.add(notification._id);
+      this.processedNotifications.add(notification.id);
       console.log("Received notification:", notification);
       callback(notification);
-      // Clean up processed notifications after 1 minute to prevent memory leaks
       setTimeout(
-        () => this.processedNotifications.delete(notification._id),
+        () => this.processedNotifications.delete(notification.id),
         60000
       );
     });

@@ -1,0 +1,81 @@
+/* Fade + slight slide from left */
+@keyframes slideInLeftFade {
+  from {
+    opacity: 0;
+    transform: translateX(-12px);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(0);
+  }
+}
+
+/* Fade + slight slide from right */
+@keyframes slideInRightFade {
+  from {
+    opacity: 0;
+    transform: translateX(12px);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(0);
+  }
+}
+
+.animate-slide-in-left {
+  animation: slideInLeftFade 0.22s ease-out;
+}
+
+.animate-slide-in-right {
+  animation: slideInRightFade 0.22s ease-out;
+}
+
+/* Vertical scroll shadow hint for sidebar lists */
+.scroll-shadow-y {
+  position: relative;
+}
+
+.scroll-shadow-y::before,
+.scroll-shadow-y::after {
+  content: "";
+  position: absolute;
+  left: 0;
+  right: 0;
+  height: 12px;
+  pointer-events: none;
+  z-index: 5;
+}
+
+.scroll-shadow-y::before {
+  top: 0;
+  background: linear-gradient(
+    to bottom,
+    rgba(15, 23, 42, 0.08),
+    transparent
+  );
+}
+
+.scroll-shadow-y::after {
+  bottom: 0;
+  background: linear-gradient(
+    to top,
+    rgba(15, 23, 42, 0.08),
+    transparent
+  );
+}
+
+.dark .scroll-shadow-y::before {
+  background: linear-gradient(
+    to bottom,
+    rgba(148, 163, 184, 0.18),
+    transparent
+  );
+}
+
+.dark .scroll-shadow-y::after {
+  background: linear-gradient(
+    to top,
+    rgba(148, 163, 184, 0.18),
+    transparent
+  );
+}

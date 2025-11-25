@@ -1,21 +1,21 @@
 import React, { useState, useRef, useEffect, useCallback, lazy, Suspense } from "react";
 import { Button, Tooltip, Avatar, Dropdown, DropdownTrigger, DropdownMenu, DropdownItem, Modal, ModalContent, ModalHeader, ModalBody, ModalFooter, Spinner } from "@nextui-org/react";
-import { FaArrowLeft, FaPhone, FaVideo, FaBars, FaEllipsisV, FaUserFriends, FaInfoCircle, FaMicrophone, FaMicrophoneSlash, FaVideoSlash, FaDesktop } from "react-icons/fa";
-import { Contact } from "../../../../types";
+import { FaPhone, FaVideo, FaBars, FaEllipsisV, FaUserFriends, FaInfoCircle, FaMicrophone, FaMicrophoneSlash, FaVideoSlash, FaDesktop } from "react-icons/fa";
 import { WebRTCService } from "../../../../Service/WebRTCService";
 import { socketService } from "../../../../Service/SocketService";
 import toast from "react-hot-toast";
+import { Contact } from "../../../../Interface/User/Icontact";
 const GroupCall = lazy(() => import("./Groups/GroupCall"));
 
 const webrtcService = new WebRTCService();
 
 interface ChatHeaderProps {
-  type?: string;
+  // type?: string;
   selectedContact: Contact | null;
-  navigate: (path: string) => void;
+  // navigate: (path: string) => void;
   toggleSidebar?: () => void;
   toggleDetailsSidebar?: () => void;
-  isMobileView?: boolean;
+  // isMobileView?: boolean;
   typingUsers: { [key: string]: string[] };
   getChatKey: (contact: Contact) => string;
   isVideoCallActive: boolean;
@@ -78,12 +78,12 @@ interface ChatHeaderProps {
 // };
 
 const ChatHeader: React.FC<ChatHeaderProps> = ({
-  type,
+  // type,
   selectedContact,
-  navigate,
+  // navigate,
   toggleSidebar,
   toggleDetailsSidebar,
-  isMobileView,
+  // isMobileView,
   typingUsers,
   getChatKey,
   isVideoCallActive,
@@ -375,7 +375,7 @@ const ChatHeader: React.FC<ChatHeaderProps> = ({
     };
 
     const handleNotificationNew = (notification: {
-      _id: string;
+      id: string;
       userId: string;
       type: "message" | "incoming_call" | "missed_call";
       content: string;
@@ -805,17 +805,14 @@ const ChatHeader: React.FC<ChatHeaderProps> = ({
       className={`flex items-center justify-between px-3 sm:px-4 py-2 sm:py-3 bg-gradient-to-r ${getGradient()} text-white rounded-t-xl shadow-md z-[40]`}
     >
       <div className="flex items-center gap-2 sm:gap-3">
-        {(isMobileView || type) && (
-          <Button
-            isIconOnly
-            variant="light"
-            onPress={type ? () => navigate("/chat") : toggleSidebar}
-            className="text-white hover:bg-white/20 w-8 h-8 sm:w-10 sm:h-10"
-            aria-label={type ? "Go back" : "Toggle sidebar"}
-          >
-            {type ? <FaArrowLeft size={16} /> : <FaBars size={16} />}
-          </Button>
-        )}
+        <Button
+  isIconOnly
+  variant="light"
+  onPress={toggleSidebar}
+  className="md:hidden text-white hover:bg-white/20 w-8 h-8 sm:w-10 sm:h-10"
+>
+  <FaBars size={16} />
+</Button>
         {selectedContact && (
           <div className="flex items-center gap-2 sm:gap-3">
             <Avatar
@@ -938,8 +935,9 @@ const ChatHeader: React.FC<ChatHeaderProps> = ({
                 key="info"
                 startContent={<FaInfoCircle />}
                 onPress={toggleDetailsSidebar}
+                className="lg:hidden"
               >
-                {isMobileView ? "Contact Info" : "Toggle Info Panel"}
+                Toggle Info Panel
               </DropdownItem>
               {selectedContact.type === "group" && (
                 <DropdownItem key="members" startContent={<FaUserFriends />}>

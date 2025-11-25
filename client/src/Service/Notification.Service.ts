@@ -1,27 +1,28 @@
 import toast from "react-hot-toast";
 import { axiosInstance } from "../lib/axios";
 import { handleError } from "./ErrorHandler";
+import { Notification } from "../Interface/User/Inotification";
 
-export interface Notification {
-  _id: string;
-  userId: string;
-  type:
-    | "message"
-    | "incoming_call"
-    | "missed_call"
-    | "task_reminder"
-    | "new_mentor"
-    | "mentor_approved"
-    | "collaboration_status";
-  content: string;
-  relatedId: string;
-  status: "unread" | "read";
-  senderId: string;
-  notificationDate?: string;
-  notificationTime?: string;
-  createdAt: string;
-  updatedAt: string;
-}
+// export interface Notification {
+//   _id: string;
+//   userId: string;
+//   type:
+//     | "message"
+//     | "incoming_call"
+//     | "missed_call"
+//     | "task_reminder"
+//     | "new_mentor"
+//     | "mentor_approved"
+//     | "collaboration_status";
+//   content: string;
+//   relatedId: string;
+//   status: "unread" | "read";
+//   senderId: string;
+//   notificationDate?: string;
+//   notificationTime?: string;
+//   createdAt: string;
+//   updatedAt: string;
+// }
 
 export const fetchNotificationService = async (
   userId: string

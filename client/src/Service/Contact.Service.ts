@@ -5,7 +5,7 @@ import { handleError } from "./ErrorHandler";
 export const getUserContacts = async () => {
   try {
     const token = localStorage.getItem("authToken");
-    console.log("Fetching contacts from /contacts/user with token:", token);
+    // console.log("Fetching contacts from /contacts/user with token:", token);
     const response = await axiosInstance.get(`/contacts/user`, {
       headers: { Authorization: `Bearer ${token}` },
     });
@@ -15,7 +15,7 @@ export const getUserContacts = async () => {
     }
 
     const contacts = response.data.data || response.data;
-    console.log("Extracted contacts:", contacts);
+    // console.log("Extracted contacts:", contacts);
     return contacts;
   } catch (error) {
     console.error("Error fetching contacts:", {

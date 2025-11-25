@@ -18,7 +18,7 @@ export interface IAppNotificationDTO {
   createdAt: Date;
   updatedAt: Date;
   taskContext?: {
-    contextType: 'profile' | 'group' | 'collaboration' | 'userconnection';
+    contextType: 'user' | 'group' | 'collaboration' | 'userconnection';
     contextId: string;
   };
 }

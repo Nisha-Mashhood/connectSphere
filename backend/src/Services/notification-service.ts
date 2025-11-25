@@ -147,7 +147,7 @@ export class NotificationService  implements INotificationService{
           task.contextId.toString()
         );
         recipients = groupMembers.map((member) => member.toString());
-      } else if (task.contextType === "profile") {
+      } else if (task.contextType === "user") {
         recipients = [
           task.createdBy.toString(),
           ...task.assignedUsers.map((id) => id.toString()),
@@ -433,7 +433,7 @@ export class NotificationService  implements INotificationService{
         taskContext: contentType
           ? {
               contextType: contentType as
-                | "profile"
+                | "user"
                 | "group"
                 | "collaboration"
                 | "userconnection",
