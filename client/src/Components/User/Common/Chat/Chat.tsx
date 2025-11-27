@@ -1,5 +1,5 @@
 import "./Chat.css";
-import React, { useEffect, useRef, useState } from "react";
+import React, { useEffect, useState } from "react";
 import { useSelector, useDispatch } from "react-redux";
 import { Card } from "@nextui-org/react";
 import { RootState } from "../../../../redux/store";
@@ -41,11 +41,8 @@ const Chat: React.FC = () => {
 
   // ---------------- Messages ----------------
   const {
-    allMessages,
-    setAllMessages,
     lastMessages,
     typingUsers,
-    fetchMessages,
     fetchLastMessagesForContacts,
   } = useChatMessages((chatKey) => {
     autoMarkMessageNotificationAsRead(chatKey);
@@ -59,7 +56,6 @@ const Chat: React.FC = () => {
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
   const [isDetailsSidebarOpen, setIsDetailsSidebarOpen] = useState(false);
 
-  const messagesEndRef = useRef<HTMLDivElement>(null);
 
   // ---------------- Set initial contact ----------------
   useEffect(() => {
@@ -67,6 +63,7 @@ const Chat: React.FC = () => {
       setInitialContact(sortedContacts);
     }
   }, [sortedContacts, setInitialContact]);
+
 
   // ---------------- Socket connection ----------------
   useEffect(() => {
@@ -83,6 +80,7 @@ const Chat: React.FC = () => {
       dispatch(setIsInChatComponent(false));
       dispatch(setActiveChatKey(null));
       socketService.leaveChat(currentUser.id);
+      sessionStorage.removeItem("activeChatKey");
     };
   }, [currentUser?.id, dispatch, refetchUnreadCounts]);
 
@@ -106,7 +104,6 @@ const Chat: React.FC = () => {
           onContactSelect={handleContactSelect}
           unreadCounts={unreadCounts}
           lastMessages={lastMessages}
-          // chatNotifications={[]}
           currentUserId={currentUser?.id || ""}
           callLogs={call.callLogs}
         />
@@ -131,13 +128,7 @@ const Chat: React.FC = () => {
 
           <ChatMessages
             selectedContact={selectedContact}
-            allMessages={allMessages}
-            setAllMessages={setAllMessages}
-            getChatKey={getChatKey}
-            fetchMessages={fetchMessages}
-            messagesEndRef={messagesEndRef}
             currentUserId={currentUser?.id}
-            onNotificationClick={handleContactSelect}
           />
 
           <ChatInput

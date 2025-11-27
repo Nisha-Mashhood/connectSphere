@@ -23,9 +23,7 @@ export const useChatContacts = (currentUserId?: string, getChatKey?: (c: Contact
   const [selectedContact, setSelectedContact] = useState<Contact | null>(null);
   const [unreadCounts, setUnreadCounts] = useState<Record<string, number>>({});
 
-  // ----------------------------------------
   // FETCH CONTACTS
-  // ----------------------------------------
   const fetchContacts = useCallback(async () => {
     try {
       const data = await getUserContacts();
@@ -36,9 +34,8 @@ export const useChatContacts = (currentUserId?: string, getChatKey?: (c: Contact
     }
   }, []);
 
-  // ----------------------------------------
   // FETCH UNREAD COUNTS (DEBOUNCED)
-  // ----------------------------------------
+
   const refetchUnreadCounts = useMemo(() => {
     return debounce(async () => {
       if (!currentUserId) return;
@@ -51,9 +48,8 @@ export const useChatContacts = (currentUserId?: string, getChatKey?: (c: Contact
     }, 400);
   }, [currentUserId]);
 
-  // ----------------------------------------
   // SORT CONTACTS
-  // ----------------------------------------
+
   const sortedContacts = useMemo(() => {
     return [...contacts].sort((a, b) => {
       const tA = a.lastMessageTimestamp
@@ -67,14 +63,12 @@ export const useChatContacts = (currentUserId?: string, getChatKey?: (c: Contact
     });
   }, [contacts]);
 
-  // ----------------------------------------
   // SET INITIAL CONTACT
-  // ----------------------------------------
   const setInitialContact = useCallback(
     (list: Contact[]) => {
       if (!list.length || !getChatKey) return;
 
-      // CASE 1: URL contact
+      // URL contact
       if (type && id) {
         const contact = list.find(
           (c) => c.type === type && c.id === id
@@ -86,46 +80,49 @@ export const useChatContacts = (currentUserId?: string, getChatKey?: (c: Contact
           dispatch(setActiveChatKey(chatKey));
           dispatch(setSelectedContactRedux(contact));
           socketService.emitActiveChat(currentUserId!, chatKey);
+          socketService.markAsRead(chatKey, currentUserId!, contact.type );
           return;
         }
       }
 
-      // CASE 2: Default first contact
+      //Default first contact
       const first = list[0];
       setSelectedContact(first);
 
-      const chatKey = getChatKey(first); // ⬅ FIX HERE
+      const chatKey = getChatKey(first);
       dispatch(setActiveChatKey(chatKey));
       dispatch(setSelectedContactRedux(first));
       socketService.emitActiveChat(currentUserId!, chatKey);
+      socketService.markAsRead(chatKey, currentUserId!, first.type );
     },
-    [type, id, getChatKey, currentUserId, dispatch]
+    [type, id, getChatKey, currentUserId, dispatch ]
   );
 
-  // ----------------------------------------
+
   // HANDLE CONTACT SELECT
-  // ----------------------------------------
   const handleContactSelect = useCallback(
-    (contact: Contact) => {
-      if (!getChatKey) return;
+  (contact: Contact) => {
+    if (!getChatKey) return;
+    setSelectedContact(contact);
+    const chatKey = getChatKey(contact);
+    dispatch(setActiveChatKey(chatKey));
+    dispatch(setSelectedContactRedux(contact));
+    socketService.emitActiveChat(currentUserId!, chatKey);
+    socketService.markAsRead(chatKey, currentUserId!, contact.type);
 
-      setSelectedContact(contact);
+    setUnreadCounts((prev) => ({
+      ...prev,
+      [chatKey]: 0,
+    }));
 
-      const chatKey = getChatKey(contact);
-      dispatch(setActiveChatKey(chatKey));
-      dispatch(setSelectedContactRedux(contact));
-      socketService.emitActiveChat(currentUserId!, chatKey);
+    refetchUnreadCounts();
+    navigate(`/chat/${contact.type}/${contact.id}`);
+  },
+  [getChatKey, currentUserId, dispatch, navigate, refetchUnreadCounts]);
 
-      refetchUnreadCounts();
 
-      navigate(`/chat/${contact.type}/${contact.id}`);
-    },
-    [getChatKey, currentUserId, dispatch, navigate, refetchUnreadCounts]
-  );
+  // SOCKET
 
-  // ----------------------------------------
-  // SOCKET: CONTACTS UPDATED
-  // ----------------------------------------
   useEffect(() => {
     if (!currentUserId) return;
 
@@ -147,11 +144,9 @@ export const useChatContacts = (currentUserId?: string, getChatKey?: (c: Contact
   return {
     contacts,
     sortedContacts,
-
     selectedContact,
     setInitialContact,
     handleContactSelect,
-
     unreadCounts,
     refetchUnreadCounts,
   };

@@ -1,17 +1,14 @@
-import { useCallback, useEffect } from "react";
+import { useCallback } from "react";
 import { socketService } from "../../../Service/SocketService";
 import { fetchNotificationService, markNotificationAsRead as markNotificationService } from "../../../Service/Notification.Service";
 import { useDispatch, useSelector } from "react-redux";
 import {
-  addNotification,
-  // updateNotification,
+  // addNotification,
   markNotificationAsRead,
   setNotifications,
-  // setIsInChatComponent,
-  // setActiveChatKey,
 } from "../../../redux/Slice/notificationSlice";
 import { RootState } from "../../../redux/store";
-import { Notification } from "../../../Interface/User/Inotification";
+// import { Notification } from "../../../Interface/User/Inotification";
 
 export const useChatNotifications = (currentUserId?: string) => {
   const dispatch = useDispatch();
@@ -25,9 +22,7 @@ export const useChatNotifications = (currentUserId?: string) => {
     isInChatComponent,
   } = useSelector((state: RootState) => state.notification);
 
-  // -------------------------------------------------------------
   // Load all notifications on mount
-  // -------------------------------------------------------------
   const loadNotifications = useCallback(async () => {
     if (!currentUserId) return;
 
@@ -39,9 +34,7 @@ export const useChatNotifications = (currentUserId?: string) => {
     }
   }, [currentUserId, dispatch]);
 
-  // -------------------------------------------------------------
-  // Helper — Mark a single notification as read (backend + redux + socket)
-  // -------------------------------------------------------------
+  // Helper — Mark a single notification as read
   const markSingleNotificationAsRead = useCallback(
     async (notificationId: string, userId: string) => {
       try {
@@ -55,11 +48,6 @@ export const useChatNotifications = (currentUserId?: string) => {
     [dispatch]
   );
 
-  // -------------------------------------------------------------
-  // Auto mark message notifications as read when:
-  // - user is inside Chat
-  // - AND activeChatKey matches the message’s chatKey
-  // -------------------------------------------------------------
   const autoMarkMessageNotificationAsRead = useCallback(
     async (chatKey: string) => {
       if (!isInChatComponent || !currentUserId) return;
@@ -83,21 +71,19 @@ export const useChatNotifications = (currentUserId?: string) => {
     ]
   );
 
-  // -------------------------------------------------------------
-  // SOCKET — Listen for new notifications from backend
-  // -------------------------------------------------------------
-  useEffect(() => {
-    const handleNewNotification = (payload: Notification) => {
-      console.log("🔔 Incoming Notification:", payload);
-      dispatch(addNotification(payload));
-    };
+  // // SOCKET — Listen for new notifications from backend
+  // useEffect(() => {
+  //   const handleNewNotification = (payload: Notification) => {
+  //     console.log("Incoming Notification:", payload);
+  //     dispatch(addNotification(payload));
+  //   };
 
-    socketService.onNotificationNew(handleNewNotification);
+  //   socketService.onNotificationNew(handleNewNotification);
 
-    return () => {
-      socketService.offNotificationNew(handleNewNotification);
-    };
-  }, [dispatch]);
+  //   return () => {
+  //     socketService.offNotificationNew(handleNewNotification);
+  //   };
+  // }, [dispatch]);
 
   return {
     chatNotifications,
@@ -107,8 +93,6 @@ export const useChatNotifications = (currentUserId?: string) => {
     activeChatKey,
     isInChatComponent,
     loadNotifications,
-
-    // exposed helper functions
     autoMarkMessageNotificationAsRead,
     markSingleNotificationAsRead,
   };

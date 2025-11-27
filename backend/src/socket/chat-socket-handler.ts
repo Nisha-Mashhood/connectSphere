@@ -13,7 +13,7 @@ import { INotificationService } from "../Interfaces/Services/i-notification-serv
 
 @injectable()
 export class ChatSocketHandler {
-  private _activeChats: Map<string, string> = new Map(); // userId -> chatKey
+  private _activeChats: Map<string, string> = new Map();
   private _contactsRepo: IContactRepository;
   private _groupRepo: IGroupRepository;
   private _chatRepo: IChatRepository;
@@ -282,6 +282,13 @@ export class ChatSocketHandler {
         }
 
         for (const recipientId of recipientIds) {
+          const activeChatOfRecipient = this._activeChats.get(recipientId);
+          if (activeChatOfRecipient === chatKey) {
+            logger.info(
+              `Skipping notification: user ${recipientId} is active in chat ${chatKey}`
+              );
+            continue;
+          }
           try {
             const notification =
               await this._notificationService.sendNotification(
@@ -438,7 +445,11 @@ export class ChatSocketHandler {
     }
   }
   public handleLeaveChat(userId: string): void {
+    try {
     this._activeChats.delete(userId);
-    logger.info(`User ${userId} left active chat`);
+    logger.info(`User ${userId} left all chats — activeChat cleared`);
+  } catch (err: any) {
+    logger.error(`Failed to handle leaveChat for ${userId}: ${err.message}`);
+  }
   }
 }

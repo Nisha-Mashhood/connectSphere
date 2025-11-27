@@ -3,41 +3,31 @@ import { useSelector, useDispatch } from "react-redux";
 import { toast } from "react-hot-toast";
 import { RootState } from "../../../redux/store";
 import { socketService } from "../../../Service/SocketService";
-import { Notification } from "../../../types";
 import { setNotifications, addNotification, updateNotification, markNotificationAsRead } from "../../../redux/Slice/notificationSlice";
 import { fetchNotificationService } from "../../../Service/Notification.Service";
+import { Notification } from "../../../Interface/User/Inotification";
 
 const NotificationHandler: React.FC = () => {
   const dispatch = useDispatch();
   const { currentUser } = useSelector((state: RootState) => state.user);
+  const { isInChatComponent } = useSelector(
+    (state: RootState) => state.notification
+  );
 
   useEffect(() => {
-    if (!currentUser?._id) {
-      socketService.disconnect();
-      console.log("[NotificationHandler] No user, disconnected socket");
+    if (!currentUser?.id) {
       return;
     }
 
-    console.log(`[NotificationHandler] Connecting socket for user: ${currentUser._id}`);
     const token = localStorage.getItem("authToken") || "";
-    socketService.connect(currentUser._id, token);
+    if (!socketService.isConnected()) {
+      socketService.connect(currentUser.id, token);
+    }
 
     const fetchNotifications = async () => {
       try {
-        const notifications = await fetchNotificationService(currentUser._id);
-        console.log("[NotificationHandler] Fetched notifications:", notifications);
-
-        dispatch(setNotifications([]));
-
-        notifications.forEach((notification: Notification) => {
-          dispatch(addNotification(notification));
-          if (notification.status === "unread" && notification.type === "task_reminder") {
-            toast.success(notification.content, {
-              duration: 5000,
-              id: notification._id, 
-            });
-          }
-        });
+        const notifications = await fetchNotificationService(currentUser.id);
+        dispatch(setNotifications(notifications));
       } catch (error) {
         console.error("[NotificationHandler] Error fetching notifications:", error);
       }
@@ -45,23 +35,17 @@ const NotificationHandler: React.FC = () => {
     fetchNotifications();
 
     const handleNotificationNew = (notification: Notification) => {
-      console.log("[NotificationHandler] Received new notification:", notification);
       dispatch(addNotification(notification));
-      // if (notification.type === "task_reminder") {
-      //   toast.success(notification.content, {
-      //     duration: 5000,
-      //     id: notification._id,
-      //   });
-      // }
+      if ( notification.type === "task_reminder" &&  notification.status === "unread" && !isInChatComponent ) {
+        toast.success(notification.content, { id: notification.id, duration: 5000, });
+      }
     };
 
     const handleNotificationRead = ({ notificationId }: { notificationId: string }) => {
-      console.log("[NotificationHandler] Notification read:", notificationId);
       dispatch(markNotificationAsRead(notificationId));
     };
 
     const handleNotificationUpdated = (notification: Notification) => {
-      console.log("[NotificationHandler] Notification updated:", notification);
       dispatch(updateNotification(notification));
     };
 
@@ -74,9 +58,8 @@ const NotificationHandler: React.FC = () => {
       socketService.socket?.off("notification.new", handleNotificationNew);
       socketService.socket?.off("notification.read", handleNotificationRead);
       socketService.socket?.off("notification.updated", handleNotificationUpdated);
-      socketService.disconnect();
     };
-  }, [currentUser?._id, dispatch]);
+  }, [currentUser?.id, dispatch, isInChatComponent]);
 
   return null;
 };

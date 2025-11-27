@@ -11,34 +11,20 @@ import {
 import { socketService } from "../../../Service/SocketService";
 
 export const useChatMessages = (
-  onMessageActivity?: (chatKey: string) => void   // ⬅ NEW CALLBACK
+  onMessageActivity?: (chatKey: string) => void
 ) => {
-
-  // 🔹 All messages grouped by chatKey
   const [allMessages, setAllMessages] = useState<Map<string, IChatMessage[]>>(
     new Map()
   );
-
-  // 🔹 Last message for each chatKey
   const [lastMessages, setLastMessages] = useState<
     Record<string, IChatMessage | null>
   >({});
-
-  // 🔹 Typing users → { chatKey: ["user1", "user2"] }
   const [typingUsers, setTypingUsers] = useState<Record<string, string[]>>({});
+  const typingTimeoutsRef = useRef<
+    Record<string, ReturnType<typeof setTimeout>>
+  >({});
 
-  // 🔹 Timeout map to auto-stop typing
-  const typingTimeoutsRef = useRef<Record<string, number>>({});
-
-  // ---------------------------------------------------------------------------
-  // 1️⃣ CHAT KEY BUILDER
-  // ---------------------------------------------------------------------------
-
-
-  // ---------------------------------------------------------------------------
-  // 2️⃣ FETCH MESSAGES (PAGINATION)
-  // ---------------------------------------------------------------------------
-
+  // FETCH MESSAGES (PAGINATION)
   const fetchMessages = useCallback(
     async (
       contact: Contact,
@@ -46,27 +32,40 @@ export const useChatMessages = (
       signal?: AbortSignal
     ): Promise<{ messages: IChatMessage[]; total: number }> => {
       try {
-        return await fetchChatMessages(
+        const res = await fetchChatMessages(
           contact.type !== "group" ? contact.contactId : undefined,
           contact.type === "group" ? contact.groupId : undefined,
           page,
           10,
           signal
         );
+
+        console.log(
+          "[useChatMessages] Fetched messages:",
+          { page, contactId: contact.contactId, groupId: contact.groupId },
+          res
+        );
+
+        return {
+          messages: res?.messages ?? [],
+          total: res?.total ?? 0,
+        };
       } catch (error) {
-        if (error?.name !== "CanceledError") {
-          console.error("Error fetching messages:", error);
+        if (
+          error?.name === "AbortError" ||
+          error?.name === "CanceledError"
+        ) {
+          throw error;
         }
-        throw error;
+
+        console.error("Error fetching chat messages:", error);
+        return { messages: [], total: 0 };
       }
     },
     []
   );
 
-  // ---------------------------------------------------------------------------
-  // 3️⃣ FETCH LAST MESSAGE FOR ALL CONTACTS
-  // ---------------------------------------------------------------------------
-
+  // FETCH LAST MESSAGE FOR ALL CONTACTS
   const fetchLastMessagesForContacts = useCallback(
     async (contacts: Contact[]) => {
       try {
@@ -82,7 +81,7 @@ export const useChatMessages = (
             1
           );
 
-          results[chatKey] = response.messages[0] || null;
+          results[chatKey] = response?.messages?.[0] || null;
         }
 
         setLastMessages(results);
@@ -93,10 +92,7 @@ export const useChatMessages = (
     []
   );
 
-  // ---------------------------------------------------------------------------
-  // 4️⃣ HANDLE INCOMING MESSAGE
-  // ---------------------------------------------------------------------------
-
+  // HANDLE INCOMING MESSAGE
   const handleIncomingMessage = useCallback(
     (message: IChatMessage) => {
       const chatKey = getChatKeyFromMessage(message);
@@ -108,13 +104,12 @@ export const useChatMessages = (
         return new Map(prev).set(chatKey, updated);
       });
 
-      // update last message
       setLastMessages((prev) => ({
         ...prev,
         [chatKey]: message,
       }));
 
-      // 🔔 Notify notification hook
+      // Notify notification hook
       if (onMessageActivity) onMessageActivity(chatKey);
 
       return chatKey;
@@ -122,10 +117,7 @@ export const useChatMessages = (
     [onMessageActivity]
   );
 
-  // ---------------------------------------------------------------------------
-  // 5️⃣ HANDLE MESSAGE SAVED (NO NOTIFICATION HERE)
-  // ---------------------------------------------------------------------------
-
+  //HANDLE MESSAGE SAVED (NO NOTIFICATION HERE)
   const handleMessageSaved = useCallback((message: IChatMessage) => {
     const chatKey = getChatKeyFromMessage(message);
 
@@ -151,10 +143,7 @@ export const useChatMessages = (
     return chatKey;
   }, []);
 
-  // ---------------------------------------------------------------------------
-  // 6️⃣ HANDLE MESSAGES READ (SHOULD MARK NOTIFICATION AS READ)
-  // ---------------------------------------------------------------------------
-
+  // HANDLE MESSAGES READ (SHOULD MARK NOTIFICATION AS READ)
   const handleMessagesRead = useCallback(
     (chatKey: string) => {
       setAllMessages((prev) => {
@@ -173,26 +162,25 @@ export const useChatMessages = (
         return new Map(prev).set(chatKey, updated);
       });
 
-      // 🔔 Notify notification hook
+      // Notify notification hook
       if (onMessageActivity) onMessageActivity(chatKey);
     },
     [onMessageActivity]
   );
 
-  // ---------------------------------------------------------------------------
-  // 7️⃣ TYPING EVENTS — DEBOUNCED
-  // ---------------------------------------------------------------------------
-
+  // TYPING EVENTS — DEBOUNCED
   const sendTyping = useMemo(
     () =>
       debounce((chatKey: string, userId: string) => {
         socketService.socket?.emit("typing", { chatKey, userId });
 
-        if (typingTimeoutsRef.current[chatKey]) {
-          clearTimeout(typingTimeoutsRef.current[chatKey]);
+        const key = `${chatKey}_${userId}`;
+
+        if (typingTimeoutsRef.current[key]) {
+          clearTimeout(typingTimeoutsRef.current[key]);
         }
 
-        typingTimeoutsRef.current[chatKey] = setTimeout(() => {
+        typingTimeoutsRef.current[key] = setTimeout(() => {
           socketService.socket?.emit("stopTyping", { chatKey, userId });
         }, 1200);
       }, 300),
@@ -203,10 +191,16 @@ export const useChatMessages = (
     socketService.socket?.emit("stopTyping", { chatKey, userId });
   }, []);
 
-  // ---------------------------------------------------------------------------
-  // 8️⃣ SOCKET LISTENERS — ALL MOVED HERE
-  // ---------------------------------------------------------------------------
+  useEffect(() => {
+  const timeoutsMap = typingTimeoutsRef.current;
 
+  return () => {
+    Object.values(timeoutsMap).forEach((t) => clearTimeout(t));
+    sendTyping.cancel();
+  };
+}, [sendTyping]);
+
+  // SOCKET LISTENERS — ALL MOVED HERE
   useEffect(() => {
     const onReceive = (msg: IChatMessage) => handleIncomingMessage(msg);
     const onSaved = (msg: IChatMessage) => handleMessageSaved(msg);
@@ -255,16 +249,9 @@ export const useChatMessages = (
       socketService.socket?.off("typing", onTyping);
       socketService.socket?.off("stopTyping", onStopTyping);
     };
-  }, [
-    handleIncomingMessage,
-    handleMessageSaved,
-    handleMessagesRead,
-  ]);
+  }, [handleIncomingMessage, handleMessageSaved, handleMessagesRead]);
 
-  // ---------------------------------------------------------------------------
   // RETURN HOOK API
-  // ---------------------------------------------------------------------------
-
   return {
     allMessages,
     setAllMessages,

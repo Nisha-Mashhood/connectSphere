@@ -23,101 +23,164 @@ const notificationSlice = createSlice({
   name: "notification",
   initialState,
   reducers: {
+    // Set All Notifications (from backend fetch)
     setNotifications: (state, action: PayloadAction<Notification[]>) => {
-      state.chatNotifications = action.payload.filter(
-        (n) => ["message", "incoming_call", "client_call", "missed_call"].includes(n.type)
+      // Split chat vs task notifications
+      state.chatNotifications = action.payload.filter((n) =>
+        ["message", "incoming_call", "client_call", "missed_call"].includes(
+          n.type
+        )
       );
-      state.taskNotifications = action.payload.filter(
-        (n) => n.type === "task_reminder" || n.type === "mentor_approved" || n.type === "collaboration_status"
+
+      state.taskNotifications = action.payload.filter((n) =>
+        ["task_reminder", "mentor_approved", "collaboration_status"].includes(
+          n.type
+        )
       );
-      state.chatUnreadCount = state.chatNotifications.filter((n) => n.status === "unread").length;
-      state.taskUnreadCount = state.taskNotifications.filter((n) => n.status === "unread").length;
-      console.log("setNotifications: chatNotifications:", state.chatNotifications);
-      console.log("setNotifications: taskNotifications:", state.taskNotifications);
+
+      // Central unread update (NO DUPLICATION ANYWHERE)
+      state.chatUnreadCount = state.chatNotifications.filter(
+        (n) => n.status === "unread"
+      ).length;
+
+      state.taskUnreadCount = state.taskNotifications.filter(
+        (n) => n.status === "unread"
+      ).length;
     },
+
+    // ADD New Notification (real-time from socket)
     addNotification: (state, action: PayloadAction<Notification>) => {
-      const { id, type, status, relatedId } = action.payload;
-      console.log("addNotification:", action.payload);
-      if (["message", "incoming_call", "client_call", "missed_call"].includes(type)) {
-        const isActiveChat = state.isInChatComponent && state.activeChatKey === relatedId;
-        if (["message", "client_call"].includes(type) && isActiveChat) {
-          state.chatNotifications = [{ ...action.payload, status: "read" }, ...state.chatNotifications];
-          console.log("addNotification: Added read chat notification:", id);
-        } else {
-          state.chatNotifications = [action.payload, ...state.chatNotifications];
-          if (status === "unread") {
-            state.chatUnreadCount += 1;
-          }
-          console.log("addNotification: Added chat notification:", id);
-        }
-      } else if (type === "task_reminder" || type === "mentor_approved" || type === "collaboration_status") {
-        state.taskNotifications = [action.payload, ...state.taskNotifications];
-        if (status === "unread") {
-          state.taskUnreadCount += 1;
-        }
-        console.log("addNotification: Added task/collaboration notification:", id);
+      const n = action.payload;
+
+      // CHAT NOTIFICATIONS
+      if (
+        ["message", "incoming_call", "client_call", "missed_call"].includes(
+          n.type
+        )
+      ) {
+        // If user is actively in chat panel AND inside same chat → auto-read
+        const isActiveChat =
+          state.isInChatComponent && state.activeChatKey === n.relatedId;
+
+        const finalNotification : Notification = isActiveChat
+          ? { ...n, status: "read" }
+          : n;
+
+        state.chatNotifications = [
+          finalNotification,
+          ...state.chatNotifications,
+        ];
       }
-      state.chatUnreadCount = state.chatNotifications.filter((n) => n.status === "unread").length;
-      state.taskUnreadCount = state.taskNotifications.filter((n) => n.status === "unread").length;
-      console.log("addNotification: chatUnreadCount:", state.chatUnreadCount);
-      console.log("taskUnreadCount:", state.taskUnreadCount);
+
+      // TASK / COLLAB NOTIFICATIONS
+      else {
+        state.taskNotifications = [
+          action.payload,
+          ...state.taskNotifications,
+        ];
+      }
+
+      // Central unread update
+      state.chatUnreadCount = state.chatNotifications.filter(
+        (n) => n.status === "unread"
+      ).length;
+
+      state.taskUnreadCount = state.taskNotifications.filter(
+        (n) => n.status === "unread"
+      ).length;
     },
+
+    // Update Notification (task/missed call update)
     updateNotification: (state, action: PayloadAction<Notification>) => {
-      const { id, type } = action.payload;
-      console.log("updateNotification:", action.payload);
-      if (["message", "incoming_call", "client_call", "missed_call"].includes(type)) {
+      const updated = action.payload;
+
+      if (
+        ["message", "incoming_call", "client_call", "missed_call"].includes(
+          updated.type
+        )
+      ) {
         state.chatNotifications = state.chatNotifications.map((n) =>
-          n.id === id ? action.payload : n
+          n.id === updated.id ? updated : n
         );
-        console.log("updateNotification: Updated chat notification:", id);
-      } else if (type === "task_reminder" || type === "mentor_approved" || type === "collaboration_status") {
+      } else {
         state.taskNotifications = state.taskNotifications.map((n) =>
-          n.id === id ? action.payload : n
+          n.id === updated.id ? updated : n
         );
-        console.log("updateNotification: Updated task/collaboration notification:", id);
       }
-      state.chatUnreadCount = state.chatNotifications.filter((n) => n.status === "unread").length;
-      state.taskUnreadCount = state.taskNotifications.filter((n) => n.status === "unread").length;
+
+      // Central unread update
+      state.chatUnreadCount = state.chatNotifications.filter(
+        (n) => n.status === "unread"
+      ).length;
+
+      state.taskUnreadCount = state.taskNotifications.filter(
+        (n) => n.status === "unread"
+      ).length;
     },
+
+    // Mark a single notification as read
     markNotificationAsRead: (state, action: PayloadAction<string>) => {
-      const notificationId = action.payload;
-      console.log("markNotificationAsRead: notificationId:", notificationId);
+      const id = action.payload;
+
       state.chatNotifications = state.chatNotifications.map((n) =>
-        n.id === notificationId ? { ...n, status: "read" } : n
+        n.id === id ? { ...n, status: "read" } : n
       );
+
       state.taskNotifications = state.taskNotifications.map((n) =>
-        n.id === notificationId ? { ...n, status: "read" } : n
+        n.id === id ? { ...n, status: "read" } : n
       );
-      state.chatUnreadCount = state.chatNotifications.filter((n) => n.status === "unread").length;
-      state.taskUnreadCount = state.taskNotifications.filter((n) => n.status === "unread").length;
-      console.log("markNotificationAsRead: chatUnreadCount:", state.chatUnreadCount);
-      console.log("taskUnreadCount:", state.taskUnreadCount);
+
+      // Central unread update
+      state.chatUnreadCount = state.chatNotifications.filter(
+        (n) => n.status === "unread"
+      ).length;
+
+      state.taskUnreadCount = state.taskNotifications.filter(
+        (n) => n.status === "unread"
+      ).length;
     },
+
+    // Clear All Notifications
     clearNotifications: (state) => {
       state.chatNotifications = [];
       state.taskNotifications = [];
       state.chatUnreadCount = 0;
       state.taskUnreadCount = 0;
-      console.log("clearNotifications: Cleared all notifications");
     },
+
+    // User Entered or Left Chat Component
     setIsInChatComponent: (state, action: PayloadAction<boolean>) => {
       state.isInChatComponent = action.payload;
-      console.log("setIsInChatComponent:", action.payload);
+
+      // If user enters chat → mark notifications of active chat as read
       if (action.payload && state.activeChatKey) {
         state.chatNotifications = state.chatNotifications.map((n) =>
           ["message", "incoming_call"].includes(n.type) &&
-          n.status === "unread" &&
-          n.relatedId === state.activeChatKey
+          n.relatedId === state.activeChatKey &&
+          n.status === "unread"
             ? { ...n, status: "read" }
             : n
         );
-        state.chatUnreadCount = state.chatNotifications.filter((n) => n.status === "unread").length;
-        console.log("setIsInChatComponent: Marked message/incoming_call as read for active chat");
+
+        // Central unread update
+        state.chatUnreadCount = state.chatNotifications.filter(
+          (n) => n.status === "unread"
+        ).length;
       }
     },
+
+    // Update Active Chat Key
     setActiveChatKey: (state, action: PayloadAction<string | null>) => {
       state.activeChatKey = action.payload;
-      console.log("setActiveChatKey:", action.payload);
+    },
+
+    //Allow external unread updates
+    setUnreadCounts: (
+      state,
+      action: PayloadAction<{ chatUnreadCount: number; taskUnreadCount: number }>
+    ) => {
+      state.chatUnreadCount = action.payload.chatUnreadCount;
+      state.taskUnreadCount = action.payload.taskUnreadCount;
     },
   },
 });
@@ -130,6 +193,7 @@ export const {
   clearNotifications,
   setIsInChatComponent,
   setActiveChatKey,
+  setUnreadCounts,
 } = notificationSlice.actions;
 
 export default notificationSlice.reducer;

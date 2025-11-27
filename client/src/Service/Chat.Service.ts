@@ -1,6 +1,7 @@
+import { IChatMessage } from "../Interface/User/IchatMessage";
 import { axiosInstance } from "../lib/axios";
 import  { AxiosProgressEvent } from "axios";
-import { IChatMessage } from "../types";
+import { handleError } from "./ErrorHandler";
 
 
 export const fetchChatMessages = async (
@@ -17,12 +18,13 @@ export const fetchChatMessages = async (
     });
     return response.data.data;
   } catch (error) {
-    if (error.name === "CanceledError") {
-      return { messages: [], total: 0 };
-    }else{
-    console.error("Error fetching chat messages:", error);
-    throw error;
-    }
+    // if (error.name === "CanceledError") {
+    //   return { messages: [], total: 0 };
+    // }else{
+    // console.error("Error fetching chat messages:", error);
+    // throw error;
+    // }
+    handleError(error);
   }
 };
 

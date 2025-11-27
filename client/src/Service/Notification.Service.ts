@@ -3,27 +3,6 @@ import { axiosInstance } from "../lib/axios";
 import { handleError } from "./ErrorHandler";
 import { Notification } from "../Interface/User/Inotification";
 
-// export interface Notification {
-//   _id: string;
-//   userId: string;
-//   type:
-//     | "message"
-//     | "incoming_call"
-//     | "missed_call"
-//     | "task_reminder"
-//     | "new_mentor"
-//     | "mentor_approved"
-//     | "collaboration_status";
-//   content: string;
-//   relatedId: string;
-//   status: "unread" | "read";
-//   senderId: string;
-//   notificationDate?: string;
-//   notificationTime?: string;
-//   createdAt: string;
-//   updatedAt: string;
-// }
-
 export const fetchNotificationService = async (
   userId: string
 ): Promise<Notification[]> => {
@@ -42,8 +21,8 @@ export const fetchNotificationService = async (
 };
 
 export const markNotificationAsRead = async (
+  notificationId: string,
   userId: string,
-  notificationId?: string,
   type?: string
 ): Promise<Notification> => {
   try {
