@@ -38,7 +38,7 @@ const notificationSlice = createSlice({
         )
       );
 
-      // Central unread update (NO DUPLICATION ANYWHERE)
+      //unread update
       state.chatUnreadCount = state.chatNotifications.filter(
         (n) => n.status === "unread"
       ).length;
@@ -48,7 +48,7 @@ const notificationSlice = createSlice({
       ).length;
     },
 
-    // ADD New Notification (real-time from socket)
+    // ADD New Notification
     addNotification: (state, action: PayloadAction<Notification>) => {
       const n = action.payload;
 

@@ -113,7 +113,7 @@ const AdminSidebar = ({ children }: AdminSidebarProps) => {
     if (currentAdmin?.id && newUserCount > 0) {
       console.log(`newUserCount ${newUserCount} and it is making the newuser count -1`);
       try {
-        const response = await markNotificationAsRead(currentAdmin.id, undefined, 'new_user');
+        const response = await markNotificationAsRead( undefined, currentAdmin.id, 'new_user');
         setNewUserCount(0);
         if(response){
           console.log(`AdminSidebar: Marked all new_user notifications as read for admin ${currentAdmin.id}`);
@@ -129,7 +129,7 @@ const AdminSidebar = ({ children }: AdminSidebarProps) => {
   const handleMentorManagementClick = async () => {
     if (currentAdmin?.id && newMentorCount > 0) {
     try {
-      await markNotificationAsRead(currentAdmin.id, undefined, "new_mentor");
+      await markNotificationAsRead( undefined, currentAdmin.id, "new_mentor");
       setNewMentorCount(0);
       console.log(`AdminSidebar: Marked all new_mentor notifications as read for admin ${currentAdmin.id}`);
     } catch (error) {

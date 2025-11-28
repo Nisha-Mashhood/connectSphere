@@ -1,5 +1,6 @@
 export interface Notification {
   id: string;
+  _id?: string
   userId: string;
   type:
     | "message"

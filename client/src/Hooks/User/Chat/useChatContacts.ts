@@ -41,6 +41,7 @@ export const useChatContacts = (currentUserId?: string, getChatKey?: (c: Contact
       if (!currentUserId) return;
       try {
         const data = await getUnreadMessages(currentUserId);
+        console.log("unread Messages : ",data);
         setUnreadCounts(data);
       } catch (err) {
         console.error("Error fetching unread counts:", err);
@@ -75,7 +76,7 @@ export const useChatContacts = (currentUserId?: string, getChatKey?: (c: Contact
         );
         if (contact) {
           setSelectedContact(contact);
-
+          console.log("Contact selected →", selectedContact);
           const chatKey = getChatKey(contact); 
           dispatch(setActiveChatKey(chatKey));
           dispatch(setSelectedContactRedux(contact));
@@ -88,14 +89,14 @@ export const useChatContacts = (currentUserId?: string, getChatKey?: (c: Contact
       //Default first contact
       const first = list[0];
       setSelectedContact(first);
-
+      console.log("Contact selected →", selectedContact);
       const chatKey = getChatKey(first);
       dispatch(setActiveChatKey(chatKey));
       dispatch(setSelectedContactRedux(first));
       socketService.emitActiveChat(currentUserId!, chatKey);
       socketService.markAsRead(chatKey, currentUserId!, first.type );
     },
-    [type, id, getChatKey, currentUserId, dispatch ]
+    [type, id, getChatKey, currentUserId, dispatch, selectedContact ]
   );
 
 
@@ -103,6 +104,7 @@ export const useChatContacts = (currentUserId?: string, getChatKey?: (c: Contact
   const handleContactSelect = useCallback(
   (contact: Contact) => {
     if (!getChatKey) return;
+    console.log("Contact selected →", contact);
     setSelectedContact(contact);
     const chatKey = getChatKey(contact);
     dispatch(setActiveChatKey(chatKey));
@@ -131,6 +133,7 @@ export const useChatContacts = (currentUserId?: string, getChatKey?: (c: Contact
 
     const handleContactsUpdated = () => {
       fetchContacts();
+      refetchUnreadCounts();
     };
 
     socketService.onContactsUpdated(handleContactsUpdated);

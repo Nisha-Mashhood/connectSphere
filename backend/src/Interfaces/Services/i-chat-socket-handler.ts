@@ -1,7 +1,8 @@
-import { Socket } from "socket.io";
+import { Server, Socket } from "socket.io";
 import { MarkAsReadData, Message, TypingData } from "../../Utils/types/socket-service-types";
 
 export interface IChatSocketHandler {
+  setIo(io: Server): void;
   handleJoinChats(socket: Socket, userId: string): Promise<void>;
   handleJoinUserRoom(socket: Socket, userId: string): void;
   handleEnsureUserRoom(socket: Socket, data: { userId: string }): void;

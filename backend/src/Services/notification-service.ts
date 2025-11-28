@@ -350,7 +350,7 @@ export class NotificationService  implements INotificationService{
       }
 
       if (contentType) {
-        const validContextTypes = ["profile", "group", "collaboration", "userconnection"];
+        const validContextTypes = ["user", "group", "collaboration", "userconnection"];
         if (!validContextTypes.includes(contentType)) {
           logger.error(`Invalid content type: ${contentType}`);
           throw new ServiceError(

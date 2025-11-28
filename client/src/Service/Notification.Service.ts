@@ -22,7 +22,7 @@ export const fetchNotificationService = async (
 
 export const markNotificationAsRead = async (
   notificationId: string,
-  userId: string,
+  userId?: string,
   type?: string
 ): Promise<Notification> => {
   try {

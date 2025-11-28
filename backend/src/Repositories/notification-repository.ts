@@ -164,7 +164,7 @@ export class NotificationRepository extends BaseRepository<IAppNotification> imp
     try {
       logger.debug(`Fetching notifications for user: ${userId}`);
       const notifications = await this.model
-        .find({ userId: this.toObjectId(userId), status: "unread" })
+        .find({ userId: this.toObjectId(userId) })
         .sort({ createdAt: -1 })
         .limit(50)
         .exec();

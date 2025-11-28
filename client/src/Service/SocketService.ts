@@ -112,7 +112,7 @@ export class SocketService {
     message: IChatMessage & { targetId: string; type: string }
   ) {
     console.log("Sending message:", message);
-    this.socket?.emit("sendMessage", message);
+    this.socket?.emit("sendMessage", { ...message });
   }
 
   public sendTyping(
@@ -660,8 +660,8 @@ public offUserRoomLeft(callback: (data: { userId: string }) => void): void {
   public onNotificationNew(callback: (notification: Notification) => void) {
     this.socket?.on("notification.new", (notification: Notification) => {
       console.log("Incoming Notification From Backend:", notification);
-      if (this.processedNotifications.has(notification.id)) {
-        console.log(`Skipping duplicate notification: ${notification.id}`);
+      if (this.processedNotifications.has(notification._id)) {
+        console.log(`Skipping duplicate notification: ${notification._id}`);
         return;
       }
       this.processedNotifications.add(notification.id);
@@ -764,7 +764,6 @@ public offCallLogUpdated(callback: (callLog: ICallLog) => void) {
     console.log("[SocketService] Unregistered callLog.updated listener");
   }
 }
-  
 }
 
 export const socketService = new SocketService();

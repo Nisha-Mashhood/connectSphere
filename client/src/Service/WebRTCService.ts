@@ -48,7 +48,8 @@ export class WebRTCService {
       console.log("Initializing single peer connection with config:", config);
       try {
         this.singlePeerConnection = new RTCPeerConnection(config);
-        this.isOffererMap.set("single", isOfferer);
+        console.log(`Setting isOfferer for ${targetId || "single"} =`, isOfferer);
+        this.isOffererMap.set(targetId || "single", isOfferer);
         this.setupPeerConnectionEvents(this.singlePeerConnection, "single");
         console.log("Single peer connection initialized successfully");
         return this.singlePeerConnection;
@@ -238,6 +239,7 @@ export class WebRTCService {
     return hasRemoteDesc;
   }
 
+
   async getLocalStream(): Promise<MediaStream> {
     console.log("Requesting user media (video and audio)");
     try {
@@ -247,30 +249,9 @@ export class WebRTCService {
           audio: true,
         });
       }
-      const tracks = this.localStream.getTracks();
-      console.log("Local stream acquired, track details:");
-      tracks.forEach((track, index) => {
-        console.log(
-          `Track ${index}: kind=${track.kind}, id=${track.id}, enabled=${track.enabled}, readyState=${track.readyState}`
-        );
-      });
-      if (tracks.length === 0) {
-        console.error("No tracks found in local stream");
-        throw new Error("No tracks found in local stream");
-      }
 
-      // Add tracks
-      if (this.singlePeerConnection) {
-        tracks.forEach((track) => {
-          if (!this.addedTrackIds.has(`single:${track.id}`)) {
-            console.log(`Adding local track to single peer connection:`, track);
-            this.singlePeerConnection.addTrack(track, this.localStream!);
-            this.addedTrackIds.add(`single:${track.id}`);
-          } else {
-            console.log(`Skipping already added track for single:`, track.id);
-          }
-        });
-      }
+      const tracks = this.localStream.getTracks();
+      console.log("Local stream acquired, track details:", tracks);
 
       return this.localStream;
     } catch (error) {
@@ -286,36 +267,9 @@ export class WebRTCService {
         audio: true,
         video: false,
       });
-      const tracks = stream.getTracks();
-      console.log("Local audio stream acquired, track details:");
-      tracks.forEach((track, index) => {
-        console.log(
-          `Track ${index}: kind=${track.kind}, id=${track.id}, enabled=${track.enabled}, readyState=${track.readyState}`
-        );
-      });
-      if (tracks.length === 0) {
-        console.error("No tracks found in local audio stream");
-        throw new Error("No tracks found in local audio stream");
-      }
 
-      // Add tracks
-      if (this.singlePeerConnection) {
-        tracks.forEach((track) => {
-          if (!this.addedTrackIds.has(`single:${track.id}`)) {
-            console.log(
-              `Adding local audio track to single peer connection:`,
-              track
-            );
-            this.singlePeerConnection.addTrack(track, stream);
-            this.addedTrackIds.add(`single:${track.id}`);
-          } else {
-            console.log(
-              `Skipping already added audio track for single:`,
-              track.id
-            );
-          }
-        });
-      }
+      const tracks = stream.getTracks();
+      console.log("Local audio stream acquired:", tracks);
 
       return stream;
     } catch (error) {
@@ -324,57 +278,25 @@ export class WebRTCService {
     }
   }
 
-  addTrack(
-    targetId: string,
-    track: MediaStreamTrack,
-    stream: MediaStream
-  ): void {
-    const peerConnection = this.peerConnections.get(targetId);
+  addTrack(targetId: string, track: MediaStreamTrack, stream: MediaStream) {
+    const peerConnection =
+      targetId === "single"
+        ? this.singlePeerConnection
+        : this.peerConnections.get(targetId);
+
     if (!peerConnection) {
       console.error(`No peer connection for ${targetId}`);
       return;
     }
-    console.log(
-      `Adding track ${track.kind}:${track.id} for ${targetId} with stream:`,
-      {
-        streamId: stream?.id,
-        streamTracks: stream?.getTracks().map((t) => ({
-          kind: t.kind,
-          id: t.id,
-          enabled: t.enabled,
-          readyState: t.readyState,
-        })),
-      }
-    );
-    try {
-      const existingSender = peerConnection
-        .getSenders()
-        .find((s) => s.track?.id === track.id);
-      if (existingSender) {
-        console.log(
-          `Track ${track.kind}:${track.id} already added for ${targetId}`
-        );
-        if (existingSender.track !== track) {
-          console.log(`Replacing ${track.kind} `);
-          existingSender.replaceTrack(track);
-        }
-      } else {
-        peerConnection.addTrack(track, stream);
-      }
-      console.log(
-        `Added track ${track.kind}:${track.id} to peer connection for ${targetId}`
-      );
-      console.log(
-        `Senders after addTrack for ${targetId}:`,
-        peerConnection.getSenders().map((s) => ({
-          track: s.track ? { kind: s.track.kind, id: s.track.id } : null,
-        }))
-      );
-    } catch (error) {
-      console.error(
-        `Failed to add track ${track.kind}:${track.id} for ${targetId}:`,
-        error
-      );
+
+    const existingSender = peerConnection
+      .getSenders()
+      .find((s) => s.track?.id === track.id);
+
+    if (existingSender) {
+      existingSender.replaceTrack(track);
+    } else {
+      peerConnection.addTrack(track, stream);
     }
   }
 
@@ -465,27 +387,6 @@ export class WebRTCService {
         }
       });
       const answer = await peerConnection.createAnswer();
-      // await peerConnection.setLocalDescription(answer);
-      // console.log(
-      //   `Answer created and set as local description for ${
-      //     targetId || "single"
-      //   }:`,
-      //   answer.sdp
-      // );
-      // console.log(
-      //   `[DEBUG] Transceivers after creating answer for ${
-      //     targetId || "single"
-      //   }:`,
-      //   transceivers.map((t) => ({
-      //     mid: t.mid,
-      //     direction: t.direction,
-      //     currentDirection: t.currentDirection,
-      //     senderTrack: t.sender.track
-      //       ? { kind: t.sender.track.kind, id: t.sender.track.id }
-      //       : null,
-      //   }))
-      // );
-      // return answer;
       const modifiedSdp = answer.sdp
         .replace(/a=recvonly/g, "a=sendrecv")
         .replace(/a=sendonly/g, "a=sendrecv");

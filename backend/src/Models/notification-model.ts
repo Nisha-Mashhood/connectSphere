@@ -66,7 +66,7 @@ const AppNotificationSchema = new Schema<IAppNotification>({
   taskContext: {
     contextType: {
       type: String,
-      enum: ["profile", "group", "collaboration", "userconnection"],
+      enum: ["user", "group", "collaboration", "userconnection"],
       required: false,
     },
     contextId: {

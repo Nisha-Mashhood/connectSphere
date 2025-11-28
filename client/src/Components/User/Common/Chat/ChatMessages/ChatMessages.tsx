@@ -1,11 +1,8 @@
 import React, { useMemo } from "react";
 import { Spinner } from "@nextui-org/react";
 import { MessageSquare } from "lucide-react";
-
 import { Contact } from "../../../../../Interface/User/Icontact";
 import { IChatMessage } from "../../../../../Interface/User/IchatMessage";
-
-import { useChatMessages } from "../../../../../Hooks/User/Chat/useChatMessages";
 import { useChatScroll } from "../../../../../Hooks/User/Chat/useChatScroll";
 
 import MessageList from "./MessageList";
@@ -17,32 +14,29 @@ import { getChatKey as buildChatKey } from "../utils/contactUtils";
 interface ChatMessagesProps {
   selectedContact: Contact | null;
   currentUserId?: string;
+  allMessages: Map<string, IChatMessage[]>;
+  setAllMessages: React.Dispatch<
+    React.SetStateAction<Map<string, IChatMessage[]>>
+  >;
+  fetchMessages: (
+    contact: Contact,
+    page: number,
+    signal?: AbortSignal
+  ) => Promise<{ messages: IChatMessage[]; total: number }>;
 }
 
 const ChatMessages: React.FC<ChatMessagesProps> = ({
   selectedContact,
   currentUserId,
+  allMessages,
+  setAllMessages,
+  fetchMessages,
 }) => {
-  // -----------------------------
-  // 1️⃣ CHAT MESSAGE STATE & SOCKET HANDLING
-  // -----------------------------
-  const {
-    allMessages,
-    setAllMessages,
-    fetchMessages,
-  } = useChatMessages();
 
-  // -----------------------------
-  // 2️⃣ STABLE GET CHAT KEY (reuse utility)
-  // -----------------------------
   const getChatKey = useMemo(
     () => (c: Contact) => buildChatKey(c),
     []
   );
-
-  // -----------------------------
-  // 3️⃣ SCROLL HOOK (pagination + scrollToBottom)
-  // -----------------------------
   const messagesEndRef = React.useRef<HTMLDivElement>(null);
 
   const {
@@ -60,9 +54,8 @@ const ChatMessages: React.FC<ChatMessagesProps> = ({
     messagesEndRef,
   });
 
-  // -----------------------------
-  // 4️⃣ GROUP MESSAGES BY DATE
-  // -----------------------------
+  // GROUP MESSAGES BY DATE
+
   const groupMessagesByDate = (messages?: IChatMessage[]) => {
     if (!messages) return [];
 
@@ -85,9 +78,8 @@ const ChatMessages: React.FC<ChatMessagesProps> = ({
     return groups;
   };
 
-  // -----------------------------
-  // 5️⃣ GET SENDER INFO
-  // -----------------------------
+  // GET SENDER INFO
+
   const getMessageSender = (msg: IChatMessage) => {
     if (msg.senderId === currentUserId) {
       return {
@@ -117,9 +109,8 @@ const ChatMessages: React.FC<ChatMessagesProps> = ({
     };
   };
 
-  // -----------------------------
-  // 6️⃣ TIME + DATE FORMATTERS
-  // -----------------------------
+  //TIME + DATE FORMATTERS
+
   const formatTime = (ts: string | Date) => {
     const d = new Date(ts);
     return d.toLocaleTimeString([], {
@@ -144,9 +135,9 @@ const ChatMessages: React.FC<ChatMessagesProps> = ({
     });
   };
 
-  // -----------------------------
-  // 7️⃣ RENDER
-  // -----------------------------
+
+  // RENDER
+
   const groupedMessages = useMemo(() => {
     if (!selectedContact) return [];
     const chatKey = getChatKey(selectedContact);

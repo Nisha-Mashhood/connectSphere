@@ -69,6 +69,8 @@ export const useChatInput = ({
       return;
     }
 
+    console.log("selectedContact when sending:", selectedContact);
+    
     const isSenderUser = selectedContact.userId === currentUserId;
     const targetId =
       selectedContact.type === "group"

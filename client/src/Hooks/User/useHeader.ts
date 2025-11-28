@@ -12,8 +12,6 @@ import { socketService } from "../../Service/SocketService";
 import { Notification } from "../../Interface/User/Inotification";
 import { useChatNotifications } from "./Chat/useChatNotifications";
 
-
-
 export const useHeader = () => {
   const navigate = useNavigate();
   const dispatch = useDispatch();
@@ -77,7 +75,9 @@ export const useHeader = () => {
         if (contextType === "user") {
           navigate(`/profile?taskId=${notification.relatedId}`);
         } else if (contextType === "collaboration") {
-          navigate(`/collaboration/${contextId}?taskId=${notification.relatedId}`);
+          navigate(
+            `/collaboration/${contextId}?taskId=${notification.relatedId}`
+          );
         } else if (contextType === "group") {
           navigate(`/group/${contextId}?taskId=${notification.relatedId}`);
         } else if (contextType === "userconnection") {
@@ -132,20 +132,33 @@ export const useHeader = () => {
       return;
     }
     try {
+      const chatTypes = [
+        "message",
+        "incoming_call",
+        "client_call",
+        "missed_call",
+      ];
       const unreadChatNotifications = chatNotifications.filter(
-        (n) => n.status === "unread"
+        (n) => n.status === "unread" && chatTypes.includes(n.type)
       );
 
-      for (const n of unreadChatNotifications) {
-        await markNotificationService(n.id, currentUser.id);
-        dispatch(markNotificationAsRead(n.id));
-        socketService.markNotificationAsRead(n.id, currentUser.id);
+      if (unreadChatNotifications.length > 0) {
+        await Promise.all(
+          unreadChatNotifications.map(async (n) => {
+            await markNotificationService(n.id, currentUser.id);
+            dispatch(markNotificationAsRead(n.id));
+            socketService.markNotificationAsRead(n.id, currentUser.id);
+          })
+        );
+
+        toast.success("All chat notifications marked as read");
       }
 
       navigate("/chat");
     } catch (error) {
-      console.error("Error marking chat notifications:", error);
-      toast.error("Failed to mark chat notifications as read.");
+      console.error("Error in handleChatClick:", error);
+      toast.error("Failed to update notifications");
+      navigate("/chat");
     }
   };
 

@@ -1,4 +1,4 @@
-import { combineReducers, configureStore } from '@reduxjs/toolkit';
+import { AnyAction, combineReducers, configureStore } from '@reduxjs/toolkit';
 import userReducer, { signOut } from '../redux/Slice/userSlice';
 import profileReducer from '../redux/Slice/profileSlice';
 import  notificationReducer from '../redux/Slice/notificationSlice';
@@ -13,23 +13,25 @@ const appReducer = combineReducers({
     review: reviewReducer,
 });
 
-const initialNotificationState = {
-    chatNotifications: [],
-    taskNotifications: [],
-    chatUnreadCount: 0,
-    taskUnreadCount: 0,
-    isInChatComponent: false,
-};
+// const initialNotificationState = {
+//     chatNotifications: [],
+//     taskNotifications: [],
+//     chatUnreadCount: 0,
+//     taskUnreadCount: 0,
+//     isInChatComponent: false,
+//     activeChatKey: null,
+// };
 
-const rootReducer = (state: ReturnType<typeof appReducer>, action: any) => {
+const rootReducer = (state: ReturnType<typeof appReducer>, action: AnyAction) => {
     if (action.type === signOut.type) {
         // Clear slices state on logout
-        state = {
-            user: undefined, // Clears the user slice
-            profile: undefined, // Clears the profile slice
-            notification: initialNotificationState,
-            review:undefined,
-        };
+        // state = {
+        //     user: undefined, // Clears the user slice
+        //     profile: undefined, // Clears the profile slice
+        //     notification: initialNotificationState,
+        //     review:undefined,
+        // };
+        state = undefined;
     }
     return appReducer(state || undefined, action);
 };

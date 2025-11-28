@@ -77,9 +77,7 @@ export const useChatScroll = ({
     };
   }, [scrollToBottom]);
 
-  // ---------------------------------------------------------------------------
-  // 1️⃣ LOAD MESSAGES (internal, safe, guarded)
-  // ---------------------------------------------------------------------------
+  // LOAD MESSAGES (internal, safe, guarded)
   const loadMessages = useCallback(
     async (reset = false) => {
       if (!selectedContact) return;
@@ -154,9 +152,7 @@ export const useChatScroll = ({
     [selectedContact, getChatKey, fetchMessages, setAllMessages]
   );
 
-  // ---------------------------------------------------------------------------
-  // 2️⃣ On Contact Change → Reset & Load First Page
-  // ---------------------------------------------------------------------------
+  // On Contact Change → Reset & Load First Page
   useEffect(() => {
     if (!selectedContact) return;
 
@@ -172,9 +168,7 @@ export const useChatScroll = ({
     blockResetRef.current = false;
   }, [selectedContact, loadMessages]);
 
-  // ---------------------------------------------------------------------------
-  // 3️⃣ Auto Scroll after initial load / new messages
-  // ---------------------------------------------------------------------------
+  // Auto Scroll after initial load / new messages
   useEffect(() => {
     if (!selectedContact) return;
     if (!initialLoadDone) return;
@@ -195,9 +189,7 @@ export const useChatScroll = ({
     scrollToBottom,
   ]);
 
-  // ---------------------------------------------------------------------------
-  // 4️⃣ Scroll listener (infinite scroll at top)
-  // ---------------------------------------------------------------------------
+  // Scroll listener (infinite scroll at top)
   const handleScroll = useMemo(
     () =>
       debounce(() => {
