@@ -123,3 +123,10 @@ export interface FormattedContact {
   };
   lastMessageTimestamp?: string;
 }
+
+export interface LastMessageSummary{
+  content: string;
+  senderId: string;
+  timestamp: Date;
+  contentType: "text" | "image" | "video" | "file";
+}

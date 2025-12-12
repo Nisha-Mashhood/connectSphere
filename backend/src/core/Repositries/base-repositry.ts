@@ -1,4 +1,4 @@
-import { Model, Document, FilterQuery, UpdateQuery } from 'mongoose';
+import { Model, Document, FilterQuery, UpdateQuery, ClientSession } from 'mongoose';
 import { IBaseRepository } from '../interfaces/Ibase-repositry';
 import logger from '../utils/logger';
 import { RepositoryError } from '../utils/error-handler';
@@ -15,16 +15,21 @@ export abstract class BaseRepository<T extends Document> implements IBaseReposit
   }
 
   // Create a new entity
-  create = async (data: Partial<T>): Promise<T> => {
+  create = async (data: Partial<T>, session?: ClientSession): Promise<T> => {
     try {
-      const entity = new this.model(data);
-      const result = await entity.save();
-      logger.info(`Created entity in ${this.model.modelName}: ${result._id}`);
-      return result;
-    } catch (error: any) {
-      logger.error(`Error creating entity in ${this.model.modelName}: ${error.message}`);
-      throw new RepositoryError(`${ERROR_MESSAGES.FAILED_TO_CREATE_ENTITY} in ${this.model.modelName}`);
-    }
+    const entity = new this.model(data);
+    const result = session
+      ? await entity.save({ session })
+      : await entity.save();
+
+    logger.info(`Created entity in ${this.model.modelName}: ${result._id}`);
+    return result;
+  } catch (error: any) {
+    logger.error(`Error creating entity in ${this.model.modelName}: ${error.message}`);
+    throw new RepositoryError(
+      `${ERROR_MESSAGES.FAILED_TO_CREATE_ENTITY} in ${this.model.modelName}`
+    );
+  }
   }
 
   // Find an entity by ID
@@ -64,50 +69,74 @@ export abstract class BaseRepository<T extends Document> implements IBaseReposit
   }
 
   // Update an entity by ID
-  update = async (id: string, data: Partial<T>): Promise<T | null> => {
+  update = async ( id: string, data: Partial<T>, session?: ClientSession ): Promise<T | null> => {
     try {
-      const result = await this.model.findByIdAndUpdate(id, data, { new: true }).exec();
+      const result = await this.model
+        .findByIdAndUpdate(id, data, { new: true, session })
+        .exec();
       logger.info(`Updated entity in ${this.model.modelName}: ${id}`);
       return result;
     } catch (error: any) {
-      logger.error(`Error updating entity in ${this.model.modelName} with ID ${id}: ${error.message}`);
-      throw new RepositoryError(`${ERROR_MESSAGES.FAILED_TO_UPDATE_ENTITY} with ID ${id} in ${this.model.modelName}`);
+      logger.error(
+        `Error updating entity in ${this.model.modelName} with ID ${id}: ${error.message}`
+      );
+      throw new RepositoryError(
+        `${ERROR_MESSAGES.FAILED_TO_UPDATE_ENTITY} with ID ${id} in ${this.model.modelName}`
+      );
     }
-  }
+  };
 
   // Delete an entity by ID
-  delete = async (id: string): Promise<boolean> => {
+  delete = async (id: string, session?: ClientSession): Promise<boolean> => {
     try {
-      const result = await this.model.findByIdAndDelete(id).exec();
+      const result = await this.model
+        .findByIdAndDelete(id, { session })
+        .exec();
       logger.info(`Deleted entity in ${this.model.modelName}: ${id}`);
       return !!result;
     } catch (error: any) {
-      logger.error(`Error deleting entity in ${this.model.modelName} with ID ${id}: ${error.message}`);
-      throw new RepositoryError(`${ERROR_MESSAGES.FAILED_TO_DELETE_ENTITY} with ID ${id} in ${this.model.modelName}`);
+      logger.error(
+        `Error deleting entity in ${this.model.modelName} with ID ${id}: ${error.message}`
+      );
+      throw new RepositoryError(
+        `${ERROR_MESSAGES.FAILED_TO_DELETE_ENTITY} with ID ${id} in ${this.model.modelName}`
+      );
     }
-  }
+  };
 
   // Update an entity by ID
-  findByIdAndUpdate = async (id: string, update: UpdateQuery<T>, options: { new?: boolean } = { new: true }): Promise<T | null> => {
+  findByIdAndUpdate = async ( id: string, update: UpdateQuery<T>, options: { new?: boolean } = { new: true }, session?: ClientSession ): Promise<T | null> => {
     try {
-      const result = await this.model.findByIdAndUpdate(id, update, options).exec();
+      const result = await this.model
+        .findByIdAndUpdate(id, update, { ...options, session })
+        .exec();
       logger.info(`Updated entity in ${this.model.modelName} with ID ${id}`);
       return result;
     } catch (error: any) {
-      logger.error(`Error updating entity in ${this.model.modelName} with ID ${id}: ${error.message}`);
-      throw new RepositoryError(`${ERROR_MESSAGES.FAILED_TO_UPDATE_ENTITY} with ID ${id} in ${this.model.modelName}`);
+      logger.error(
+        `Error updating entity in ${this.model.modelName} with ID ${id}: ${error.message}`
+      );
+      throw new RepositoryError(
+        `${ERROR_MESSAGES.FAILED_TO_UPDATE_ENTITY} with ID ${id} in ${this.model.modelName}`
+      );
     }
-  }
+  };
 
   // Delete an entity by ID
-  findByIdAndDelete = async (id: string): Promise<T | null> => {
+  findByIdAndDelete = async ( id: string, session?: ClientSession ): Promise<T | null> => {
     try {
-      const result = await this.model.findByIdAndDelete(id).exec();
+      const result = await this.model
+        .findByIdAndDelete(id, { session })
+        .exec();
       logger.info(`Deleted entity in ${this.model.modelName}: ${id}`);
       return result;
     } catch (error: any) {
-      logger.error(`Error deleting entity in ${this.model.modelName} with ID ${id}: ${error.message}`);
-      throw new RepositoryError(`${ERROR_MESSAGES.FAILED_TO_DELETE_ENTITY} with ID ${id} in ${this.model.modelName}`);
+      logger.error(
+        `Error deleting entity in ${this.model.modelName} with ID ${id}: ${error.message}`
+      );
+      throw new RepositoryError(
+        `${ERROR_MESSAGES.FAILED_TO_DELETE_ENTITY} with ID ${id} in ${this.model.modelName}`
+      );
     }
-  }
+  };
 }

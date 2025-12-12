@@ -1,5 +1,5 @@
 import { injectable } from "inversify";
-import { Types, Model, PipelineStage } from "mongoose";
+import { Types, Model, PipelineStage, ClientSession } from "mongoose";
 import { BaseRepository } from "../core/repositries/base-repositry";
 import { RepositoryError } from "../core/utils/error-handler";
 import logger from "../core/utils/logger";
@@ -164,14 +164,32 @@ export class CollaborationRepository extends BaseRepository<ICollaboration> impl
     }
   }
 
-  public createCollaboration = async (collaborationData: Partial<ICollaboration>): Promise<ICollaboration> => {
+  public createCollaboration = async (collaborationData: Partial<ICollaboration>, session?: ClientSession): Promise<ICollaboration> => {
     try {
       logger.debug(`Creating collaboration for user: ${collaborationData.userId}`);
-      const collaboration = await this.create({
-        ...collaborationData,
-        mentorId: collaborationData.mentorId ? this.toObjectId(collaborationData.mentorId) : undefined,
-        userId: collaborationData.userId ? this.toObjectId(collaborationData.userId) : undefined,
-      });
+      // const collaboration = await this.create({
+      //   ...collaborationData,
+      //   mentorId: collaborationData.mentorId ? this.toObjectId(collaborationData.mentorId) : undefined,
+      //   userId: collaborationData.userId ? this.toObjectId(collaborationData.userId) : undefined,
+      // });
+      const dataToCreate: Partial<ICollaboration> = {
+      ...collaborationData,
+      mentorId: collaborationData.mentorId
+        ? this.toObjectId(collaborationData.mentorId)
+        : undefined,
+      userId: collaborationData.userId
+        ? this.toObjectId(collaborationData.userId)
+        : undefined,
+    };
+
+    let collaboration: ICollaboration;
+
+    if (session) {
+      const [created] = await this.model.create([dataToCreate], { session });
+      collaboration = created;
+    } else {
+      collaboration = await this.create(dataToCreate);
+    }
       logger.info(`Collaboration created: ${collaboration._id}`);
       return collaboration;
     } catch (error: unknown) {
@@ -185,10 +203,13 @@ export class CollaborationRepository extends BaseRepository<ICollaboration> impl
     }
   }
 
-  public deleteMentorRequest = async (requestId: string): Promise<void> => {
+  public deleteMentorRequest = async (requestId: string, session?: ClientSession): Promise<void> => {
     try {
       logger.debug(`Deleting mentor request: ${requestId}`);
-      const result = await this._mentorRequestModel.findByIdAndDelete(this.toObjectId(requestId)).exec();
+      // const result = await this._mentorRequestModel.findByIdAndDelete(this.toObjectId(requestId)).exec();
+      const query = this._mentorRequestModel.findByIdAndDelete(this.toObjectId(requestId));
+      const result = session ? await query.session(session).exec() : await query.exec();
+
       if (!result) {
         logger.warn(`Mentor request not found for deletion: ${requestId}`);
         throw new RepositoryError(

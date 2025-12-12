@@ -77,4 +77,5 @@ export interface ICollaborationService {
     collab: ICollaborationDTO;
   }>;
   generateReceiptPDF: (collabId: string) => Promise<Buffer>;
+  deleteMentorRequestService(requestId: string): Promise<void>;
 }

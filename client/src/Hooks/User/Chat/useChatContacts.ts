@@ -1,18 +1,16 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { debounce } from "lodash";
-
 import { Contact, formatContact } from "../../../Interface/User/Icontact";
 import { getUserContacts } from "../../../Service/Contact.Service";
-import { getUnreadMessages } from "../../../Service/Chat.Service";
+import { getLastMessagesForContacts, getUnreadMessages } from "../../../Service/Chat.Service";
 import { socketService } from "../../../Service/SocketService";
-
 import { useDispatch } from "react-redux";
 import {
   setActiveChatKey,
 } from "../../../redux/Slice/notificationSlice";
 import { setSelectedContact as setSelectedContactRedux } from "../../../redux/Slice/userSlice";
-
 import { useNavigate, useParams } from "react-router-dom";
+import { ILastMessageSummary } from "../../../Interface/User/IchatMessage";
 
 export const useChatContacts = (currentUserId?: string, getChatKey?: (c: Contact) => string) => {
   const dispatch = useDispatch();
@@ -22,12 +20,14 @@ export const useChatContacts = (currentUserId?: string, getChatKey?: (c: Contact
   const [contacts, setContacts] = useState<Contact[]>([]);
   const [selectedContact, setSelectedContact] = useState<Contact | null>(null);
   const [unreadCounts, setUnreadCounts] = useState<Record<string, number>>({});
+  const [lastMessages, setLastMessages] = useState<Record<string, ILastMessageSummary>>({});
 
   // FETCH CONTACTS
   const fetchContacts = useCallback(async () => {
     try {
       const data = await getUserContacts();
       const formatted = data.map(formatContact);
+      console.log("Formatted Contact : ",formatted);
       setContacts(formatted);
     } catch (err) {
       console.error("Error fetching contacts:", err);
@@ -35,7 +35,6 @@ export const useChatContacts = (currentUserId?: string, getChatKey?: (c: Contact
   }, []);
 
   // FETCH UNREAD COUNTS (DEBOUNCED)
-
   const refetchUnreadCounts = useMemo(() => {
     return debounce(async () => {
       if (!currentUserId) return;
@@ -49,8 +48,18 @@ export const useChatContacts = (currentUserId?: string, getChatKey?: (c: Contact
     }, 400);
   }, [currentUserId]);
 
-  // SORT CONTACTS
+  const refetchLastMessages = useCallback(async () => {
+    if (!currentUserId) return;
+    try {
+      const data = await getLastMessagesForContacts(currentUserId);
+      setLastMessages(data || {});
+      console.log("LAST MESSAGES FOR THECONTACTS : ",data);
+    } catch (err) {
+      console.error("Error fetching last messages:", err);
+    }
+  }, [currentUserId]);
 
+  // SORT CONTACTS
   const sortedContacts = useMemo(() => {
     return [...contacts].sort((a, b) => {
       const tA = a.lastMessageTimestamp
@@ -130,10 +139,12 @@ export const useChatContacts = (currentUserId?: string, getChatKey?: (c: Contact
 
     fetchContacts();
     refetchUnreadCounts();
+    refetchLastMessages();
 
     const handleContactsUpdated = () => {
       fetchContacts();
       refetchUnreadCounts();
+      refetchLastMessages();
     };
 
     socketService.onContactsUpdated(handleContactsUpdated);
@@ -142,7 +153,7 @@ export const useChatContacts = (currentUserId?: string, getChatKey?: (c: Contact
       socketService.offContactsUpdated(handleContactsUpdated);
       refetchUnreadCounts.cancel();
     };
-  }, [currentUserId, fetchContacts, refetchUnreadCounts]);
+  }, [currentUserId, fetchContacts, refetchUnreadCounts, refetchLastMessages]);
 
   return {
     contacts,
@@ -152,5 +163,7 @@ export const useChatContacts = (currentUserId?: string, getChatKey?: (c: Contact
     handleContactSelect,
     unreadCounts,
     refetchUnreadCounts,
+    lastMessages,
+    refetchLastMessages,
   };
 };

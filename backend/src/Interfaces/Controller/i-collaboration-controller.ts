@@ -19,4 +19,6 @@ export interface ICollaborationController {
   approveTimeSlotRequest(req: Request, res: Response, next: NextFunction): Promise<void>;
   getMentorLockedSlotsController(req: Request, res: Response, next: NextFunction): Promise<void>;
   downloadReceiptController(req: Request, res: Response, next: NextFunction): Promise<void>;
+  deleteMentorRequestController(req: Request, res: Response, next: NextFunction): Promise<void>;
+
 }

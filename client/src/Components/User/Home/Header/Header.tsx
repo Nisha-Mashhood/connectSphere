@@ -33,6 +33,7 @@ const Header = () => {
     handleLogout,
     handleProfileClick,
     handleBecomeMentor,
+    isInChatComponent,
   } = useHeader();
 
   if (loading) {
@@ -80,15 +81,11 @@ const Header = () => {
             <span className="absolute bottom-0 left-0 w-0 h-0.5 bg-blue-600 transition-all duration-300 group-hover:w-full"></span>
           </Link>
         </NavbarItem>
-        {currentUser && (
-          <>
-            {showNotifications && (
-              <ChatNotificationButton
-                chatUnreadCount={chatUnreadCount}
-                handleChatClick={handleChatClick}
-              />
-            )}
-          </>
+        {currentUser && showNotifications && !isInChatComponent && (
+          <ChatNotificationButton
+            chatUnreadCount={chatUnreadCount}
+            handleChatClick={handleChatClick}
+          />
         )}
       </NavbarContent>
 

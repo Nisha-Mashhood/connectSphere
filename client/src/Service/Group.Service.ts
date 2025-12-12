@@ -23,7 +23,7 @@ export const groupDetailsWithAdminId = async (id) => {
 };
 
 //Get all groups 
-export const groupDetails = async (params, signal) => {
+export const groupDetails = async (params, signal?: AbortSignal) => {
   try {
     const response = await axiosInstance.get("/group/group-details", { params, signal });
     return response.data.data;

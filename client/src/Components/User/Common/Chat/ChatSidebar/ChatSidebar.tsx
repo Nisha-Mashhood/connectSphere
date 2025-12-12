@@ -6,6 +6,7 @@ import CallLogItem from "./CallLogItem";
 import EmptyState from "./EmptyState.tsx";
 import ContactItem from "./ContactItem.tsx";
 import { FaGraduationCap, FaPhone, FaUserFriends, FaUsers } from "react-icons/fa";
+import { getChatKey } from "../utils/contactUtils.ts";
 
 const ChatSidebar = (props) => {
   const {
@@ -125,17 +126,22 @@ const ChatSidebar = (props) => {
               <EmptyState text="No call history found" />
             )
           ) : filteredContacts.length > 0 ? (
-            filteredContacts.map((contact) => (
-              <ContactItem
-                key={contact.id}
-                contact={contact}
-                unreadCounts={unreadCounts}
-                lastMessages={lastMessages}
-                selected={selectedContact}
-                currentUserId={currentUserId}
-                onSelect={() => onContactSelect(contact)}
-              />
-            ))
+            filteredContacts.map((contact) => {
+              const chatKey = getChatKey(contact);
+
+              return (
+                <ContactItem
+                  key={chatKey}
+                  chatKey={chatKey}
+                  contact={contact}
+                  unreadCounts={unreadCounts}
+                  lastMessages={lastMessages}
+                  selected={selectedContact}
+                  currentUserId={currentUserId}
+                  onSelect={() => onContactSelect(contact)}
+                />
+              );
+            })
           ) : (
             <EmptyState text="No conversations found" />
           )}

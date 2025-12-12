@@ -10,7 +10,6 @@ import {
 import { IChatMessage } from "../Interface/User/IchatMessage";
 import { Notification } from "../Interface/User/Inotification";
 
-// Base interface for call data
 interface CallData {
   userId: string;
   targetId: string;
@@ -19,7 +18,7 @@ interface CallData {
   callType: "audio" | "video";
 }
 
-// One-on-One call interfaces (unchanged)
+// One-on-One call
 interface OfferData extends CallData {
   offer: RTCSessionDescriptionInit;
   senderName?: string;
@@ -33,16 +32,37 @@ interface IceCandidateData extends CallData {
   candidate: RTCIceCandidateInit;
 }
 
+interface CallCreatedEvent {
+  callId: string;
+  chatKey: string;
+  callType: "audio" | "video";
+  type: "group" | "user-mentor" | "user-user";
+  senderId: string;
+  recipientIds: string[];
+  groupId?: string;
+  callerName?: string;
+  createdAt: string;
+}
+
 export class SocketService {
   public socket: Socket | null = null;
   private userId: string | null = null;
+
+  // Deduplication sets for WebRTC events
   private callEndedSent = new Set<string>();
   private sentOffers = new Set<string>();
   private sentAnswers = new Set<string>();
+
+  // Deduplication for chat messages (messageSaved)
   private processedMessages: Set<string> = new Set();
+
+  // Deduplication for notifications (notification.new)
   private processedNotifications: Set<string> = new Set();
 
+  private callIdByChatKey: Map<string, string> = new Map();
+
   constructor() {
+    // Debounced handler to avoid processing the same messageSaved event repeatedly
     this.handleMessageSaved = debounce(
       this.handleMessageSaved.bind(this),
       200,
@@ -53,8 +73,12 @@ export class SocketService {
     );
   }
 
+  // CORE CONNECTION
+  //Initialize connection to Socket.IO server for the given user.
+
   connect(userId: string, token: string) {
     this.userId = userId;
+
     this.socket = io("http://localhost:3000", {
       auth: { token, userId },
       path: "/socket.io",
@@ -67,8 +91,12 @@ export class SocketService {
       console.log(
         `[SocketService] Connected to Socket.IO server: socketId=${this.socket?.id}, userId=${userId}`
       );
+
+      // Join base rooms
       this.socket?.emit("joinChats", userId);
       this.socket?.emit("joinUserRoom", userId);
+
+      // Reset WebRTC dedupe tracking
       this.callEndedSent.clear();
       this.sentOffers.clear();
       this.sentAnswers.clear();
@@ -77,24 +105,23 @@ export class SocketService {
     this.socket.on("error", (error) => {
       console.error("Socket error:", error.message);
     });
-
     return this.socket;
   }
 
-  public leaveChat(userId: string) {
-    console.log("Sending leaveChat event:", userId);
-    this.socket?.emit("leaveChat", userId);
-  }
-
+   //Cleanly disconnect from the Socket.IO server and reset state
   disconnect() {
     this.socket?.disconnect();
     this.socket = null;
+
+    // Reset dedupe sets
     this.callEndedSent.clear();
     this.sentOffers.clear();
     this.sentAnswers.clear();
+
     console.log("Socket disconnected");
   }
 
+   //Returns whether the socket is currently connected.
   isConnected() {
     const connected = this.socket?.connected || false;
     console.log(
@@ -103,11 +130,79 @@ export class SocketService {
     return connected;
   }
 
+  // USER PRESENCE
+
+   //Explicitly join the user-specific room 
+  joinUserRoom(userId: string): void {
+    if (this.socket) {
+      this.socket.emit("joinUserRoom", userId);
+      console.log(`Emitted joinUserRoom for user_${userId}`);
+    }
+  }
+
+
+   //Leave the user-specific room (user_<userId>).
+  leaveUserRoom(userId: string): void {
+    if (this.socket) {
+      this.socket.emit("leaveUserRoom", userId);
+      console.log(`Emitted leaveUserRoom for user_${userId}`);
+    }
+  }
+
+   //Listen for when a user joins their user room.
+  public onUserRoomJoined(callback: (data: { userId: string }) => void): void {
+    this.socket?.on("userRoomJoined", (data) => {
+      console.log(`Received userRoomJoined for user ${data.userId}`);
+      callback(data);
+    });
+  }
+
+   //Stop listening for userRoomJoined events.
+  public offUserRoomJoined(callback: (data: { userId: string }) => void): void {
+    if (this.socket) {
+      this.socket.off("userRoomJoined", callback);
+      console.log("Unregistered userRoomJoined listener");
+    }
+  }
+
+
+   //Listen for when a user leaves their user room.
+
+  public onUserRoomLeft(callback: (data: { userId: string }) => void): void {
+    this.socket?.on("userRoomLeft", (data) => {
+      console.log(`Received userRoomLeft for user ${data.userId}`);
+      callback(data);
+    });
+  }
+
+   //Stop listening for userRoomLeft events.
+  public offUserRoomLeft(callback: (data: { userId: string }) => void): void {
+    if (this.socket) {
+      this.socket.off("userRoomLeft", callback);
+      console.log("Unregistered userRoomLeft listener");
+    }
+  }
+
+
+  // EMITTERS
+  //  - Chat
+  //  - Notification
+
+  // CHAT EMITTERS
+
+   //Notify server that this user has left a chat context.
+  public leaveChat(userId: string): void {
+    console.log("Sending leaveChat event:", userId);
+    this.socket?.emit("leaveChat", userId);
+  }
+
+  //Mark a chat as the currently active chat for the user.
   public emitActiveChat(userId: string, chatKey: string) {
     console.log("Sending activeChat event:", { userId, chatKey });
     this.socket?.emit("activeChat", { userId, chatKey });
   }
 
+  //Send a chat message.
   public sendMessage(
     message: IChatMessage & { targetId: string; type: string }
   ) {
@@ -115,6 +210,7 @@ export class SocketService {
     this.socket?.emit("sendMessage", { ...message });
   }
 
+  //Emit typing event for current user in a given chat.
   public sendTyping(
     userId: string,
     targetId: string,
@@ -125,6 +221,7 @@ export class SocketService {
     this.socket?.emit("typing", { userId, targetId, type, chatKey });
   }
 
+  //Emit stopTyping event when user stops typing in a given chat.
   public sendStopTyping(
     userId: string,
     targetId: string,
@@ -140,12 +237,238 @@ export class SocketService {
     this.socket?.emit("stopTyping", { userId, targetId, type, chatKey });
   }
 
+  //Mark messages in a chat as read by a given user.
   public markAsRead(chatKey: string, userId: string, type: string) {
     console.log("Sending markAsRead event:", { chatKey, userId, type });
     this.socket?.emit("markAsRead", { chatKey, userId, type });
   }
 
-  // One-on-One WebRTC signaling methods (unchanged)
+  // NOTIFICATION EMITTERS
+
+   //Mark a notification as read for a given user.
+  public markNotificationAsRead( notificationId: string, userId: string, type?: string ) {
+    console.log("Sending notification.read event:", {
+      notificationId,
+      userId,
+      type,
+    });
+    this.socket?.emit("notification.read", { notificationId, userId, type });
+  }
+
+  // LISTENERS
+  //  - Chat
+  //  - Notifications
+  //  - Call Logs
+
+  // CHAT LISTENERS
+
+   //Listen for new incoming chat messages.
+  public onReceiveMessage(callback: (message: IChatMessage) => void) {
+    this.socket?.on("receiveMessage", (message) => {
+      console.log("Received message:", message);
+      callback(message);
+    });
+  }
+
+
+   //Listen for messageSaved event from backend.
+  public onMessageSaved(callback: (message: IChatMessage) => void) {
+    this.socket?.on("messageSaved", (message) => {
+      console.log("Message saved:", message);
+      this.handleMessageSaved(message, callback);
+    });
+  }
+
+   //Internal helper to de-duplicate messageSaved events based on message._id.
+  private handleMessageSaved(
+    message: IChatMessage,
+    callback: (message: IChatMessage) => void
+  ) {
+    if (this.processedMessages.has(message._id)) {
+      console.log("Skipping duplicate messageSaved:", message._id);
+      return;
+    }
+    this.processedMessages.add(message._id);
+    console.log("Message saved:", message);
+    callback(message);
+  }
+
+   //Listen for typing events in any chat.
+  public onTyping(
+    callback: (data: { userId: string; chatKey: string }) => void
+  ) {
+    this.socket?.on("typing", (data) => {
+      console.log("Received typing event:", data);
+      callback(data);
+    });
+  }
+
+  //Listen for stopTyping events in any chat.
+  public onStopTyping(
+    callback: (data: { userId: string; chatKey: string }) => void
+  ) {
+    this.socket?.on("stopTyping", (data) => {
+      console.log("Received stopTyping event:", data);
+      callback(data);
+    });
+  }
+
+   //Listen for messagesRead events (read receipts).
+  public onMessagesRead(
+    callback: (data: { chatKey: string; userId: string }) => void
+  ) {
+    this.socket?.on("messagesRead", (data) => {
+      console.log("Received messagesRead event:", data);
+      callback(data);
+    });
+  }
+
+   //Listen for contactsUpdated events, e.g. when chat contact list should refresh.
+  public onContactsUpdated(callback: () => void) {
+    this.socket?.on("contactsUpdated", () => {
+      console.log("Received contactsUpdated event");
+      callback();
+    });
+  }
+
+   //Stop listening for contactsUpdated events.
+  public offContactsUpdated(callback: () => void) {
+    if (this.socket) {
+      this.socket.off("contactsUpdated", callback);
+      console.log("Unregistered contactsUpdated listener");
+    }
+  }
+
+  // NOTIFICATION LISTENERS
+
+    //Listen for new notifications pushed from backend.
+  public onNotificationNew(callback: (notification: Notification) => void) {
+    this.socket?.on("notification.new", (notification: Notification) => {
+      console.log("Incoming Notification From Backend:", notification);
+
+      if (this.processedNotifications.has(notification.id)) {
+        console.log(`Skipping duplicate notification: ${notification.id}`);
+        return;
+      }
+
+      this.processedNotifications.add(notification.id);
+      console.log("Received notification:", notification);
+      callback(notification);
+
+      setTimeout(
+        () => this.processedNotifications.delete(notification.id),
+        60000
+      );
+    });
+  }
+
+  //Stop listening for new notifications.
+  public offNotificationNew(callback: (notification: Notification) => void) {
+    this.socket?.off("notification.new", callback);
+    console.log("[SocketService] Unregistered notification.new listener");
+  }
+
+  //Listen for notification.read events coming from server.
+  public onNotificationRead(
+    callback: (data: {
+      notificationId: string;
+      userId?: string;
+      type?: string;
+    }) => void
+  ) {
+    this.socket?.on("notification.read", (data) => {
+      console.log("Received notification.read:", data);
+      callback(data);
+    });
+  }
+
+   //Stop listening for notification.read events.
+  public offNotificationRead(
+    callback: (data: {
+      notificationId?: string;
+      userId: string;
+      type?: string;
+    }) => void
+  ) {
+    this.socket?.off("notification.read", callback);
+    console.log("Unregistered notification.read listener");
+  }
+
+    //Listen for notification.updated events
+  public onNotificationUpdated(callback: (notification: Notification) => void) {
+    this.socket?.on("notification.updated", (notification) => {
+      console.log("Received notification.updated:", notification);
+      callback(notification);
+    });
+  }
+
+   //Stop listening for notification.updated events.
+  public offNotificationUpdated(
+    callback: (notification: Notification) => void
+  ): void {
+    this.socket?.off("notification.updated", callback);
+    console.log("Unregistered notification.updated listener");
+  }
+
+  // CALL LOG LISTENERS
+   //Listen for new call logs being created (for both one-to-one and group calls).
+  public onCallLogCreated(callback: (callLog: ICallLog) => void) {
+    this.socket?.on("callLog.created", (callLog: ICallLog) => {
+      console.log("Received callLog.created:", callLog);
+      callback(callLog);
+    });
+  }
+
+  //Stop listening for callLog.created events.
+  public offCallLogCreated(callback: (callLog: ICallLog) => void) {
+    if (this.socket) {
+      this.socket.off("callLog.created", callback);
+      console.log("[SocketService] Unregistered callLog.created listener");
+    }
+  }
+
+   //Listen for updates to existing call logs.
+  public onCallLogUpdated(callback: (callLog: ICallLog) => void) {
+    this.socket?.on("callLog.updated", (callLog: ICallLog) => {
+      console.log("Received callLog.updated:", callLog);
+      callback(callLog);
+    });
+  }
+
+
+   //Stop listening for callLog.updated events.
+  public offCallLogUpdated(callback: (callLog: ICallLog) => void) {
+    if (this.socket) {
+      this.socket.off("callLog.updated", callback);
+      console.log("[SocketService] Unregistered callLog.updated listener");
+    }
+  }
+
+  //One-One webRTC Events
+
+  public getCallIdForChatKey(chatKey: string): string | undefined {
+  return this.callIdByChatKey.get(chatKey);
+}
+
+
+public onCallCreated(callback: (data: CallCreatedEvent) => void): void {
+  this.socket?.on("call.created", (data: CallCreatedEvent) => {
+    console.log("Received call.created from server:", data);
+    // store mapping for later use
+    if (data && data.callId && data.chatKey) {
+      this.callIdByChatKey.set(data.chatKey, data.callId);
+    }
+    callback(data);
+  });
+}
+
+public offCallCreated(callback: (data: CallCreatedEvent) => void): void {
+  if (this.socket) {
+    this.socket.off("call.created", callback);
+    console.log("Unregistered call.created listener");
+  }
+}
+
   sendOffer(data: OfferData): void {
     if (!this.socket || !this.userId) {
       console.error("Cannot send offer: Missing socket or userId");
@@ -161,6 +484,44 @@ export class SocketService {
     this.socket.emit("offer", data);
     setTimeout(() => this.sentOffers.delete(offerKey), 30000);
   }
+
+  public onCallEnded(callback: (data: CallData) => void) {
+    this.socket?.on("callEnded", (data) => {
+      console.log("Received callEnded:", data);
+      callback(data);
+    });
+  }
+
+  public offCallEnded(callback: (data: CallData) => void) {
+    if (this.socket) {
+      this.socket.off("callEnded", callback);
+      console.log("Unregistered callEnded listener");
+    }
+  }
+
+  emitCallEnded(data: CallData): void {
+    if (!this.socket || !this.userId) {
+      console.error("Cannot emit call ended: Missing socket or userId");
+      return;
+    }
+    const eventKey = `${data.chatKey}:${data.userId}:${data.targetId}:${data.callType}`;
+    if (this.callEndedSent.has(eventKey)) {
+      console.log(`Skipping duplicate callEnded for ${eventKey}`);
+      return;
+    }
+    this.callEndedSent.add(eventKey);
+    console.log(`Emitting call ended to ${data.targetId}`);
+    this.socket.emit("callEnded", data);
+    setTimeout(() => this.callEndedSent.delete(eventKey), 60000);
+  }
+
+
+
+
+
+
+  // One-on-One WebRTC signaling methods
+  
 
   sendAnswer(data: AnswerData): void {
     if (!this.socket || !this.userId) {
@@ -187,21 +548,7 @@ export class SocketService {
     this.socket.emit("ice-candidate", data);
   }
 
-  emitCallEnded(data: CallData): void {
-    if (!this.socket || !this.userId) {
-      console.error("Cannot emit call ended: Missing socket or userId");
-      return;
-    }
-    const eventKey = `${data.chatKey}:${data.userId}:${data.targetId}:${data.callType}`;
-    if (this.callEndedSent.has(eventKey)) {
-      console.log(`Skipping duplicate callEnded for ${eventKey}`);
-      return;
-    }
-    this.callEndedSent.add(eventKey);
-    console.log(`Emitting call ended to ${data.targetId}`);
-    this.socket.emit("callEnded", data);
-    setTimeout(() => this.callEndedSent.delete(eventKey), 60000);
-  }
+  
 
   // Group WebRTC signaling methods
   sendGroupOffer(data: GroupOfferData): void {
@@ -310,33 +657,7 @@ export class SocketService {
     }
   }
 
-  joinUserRoom(userId: string): void {
-    if (this.socket) {
-      this.socket.emit("joinUserRoom", userId);
-      console.log(`Emitted joinUserRoom for user_${userId}`);
-    }
-  }
-
-  leaveUserRoom(userId: string): void {
-    if (this.socket) {
-      this.socket.emit("leaveUserRoom", userId);
-      console.log(`Emitted leaveUserRoom for user_${userId}`);
-    }
-  }
-
-  public onUserRoomJoined(callback: (data: { userId: string }) => void): void {
-    this.socket?.on("userRoomJoined", (data) => {
-      console.log(`Received userRoomJoined for user ${data.userId}`);
-      callback(data);
-    });
-  }
-
-  public offUserRoomJoined(callback: (data: { userId: string }) => void): void {
-    if (this.socket) {
-      this.socket.off("userRoomJoined", callback);
-      console.log("Unregistered userRoomJoined listener");
-    }
-  }
+ 
 
   public onJoinGroupCall(
     callback: (data: {
@@ -368,61 +689,8 @@ export class SocketService {
     }
   }
 
-  public onReceiveMessage(callback: (message: IChatMessage) => void) {
-    this.socket?.on("receiveMessage", (message) => {
-      console.log("Received message:", message);
-      callback(message);
-    });
-  }
 
-  public onMessageSaved(callback: (message: IChatMessage) => void) {
-    this.socket?.on("messageSaved", (message) => {
-      console.log("Message saved:", message);
-      this.handleMessageSaved(message, callback);
-    });
-  }
-
-  private handleMessageSaved(
-    message: IChatMessage,
-    callback: (message: IChatMessage) => void
-  ) {
-    if (this.processedMessages.has(message._id)) {
-      console.log("Skipping duplicate messageSaved:", message._id);
-      return;
-    }
-    this.processedMessages.add(message._id);
-    console.log("Message saved:", message);
-    callback(message);
-  }
-
-  public onTyping(
-    callback: (data: { userId: string; chatKey: string }) => void
-  ) {
-    this.socket?.on("typing", (data) => {
-      console.log("Received typing event:", data);
-      callback(data);
-    });
-  }
-
-  public onStopTyping(
-    callback: (data: { userId: string; chatKey: string }) => void
-  ) {
-    this.socket?.on("stopTyping", (data) => {
-      console.log("Received stopTyping event:", data);
-      callback(data);
-    });
-  }
-
-  public onMessagesRead(
-    callback: (data: { chatKey: string; userId: string }) => void
-  ) {
-    this.socket?.on("messagesRead", (data) => {
-      console.log("Received messagesRead event:", data);
-      callback(data);
-    });
-  }
-
-  // One-on-One WebRTC listeners (unchanged)
+  // One-on-One WebRTC listeners
   public onOffer(callback: (data: OfferData) => void) {
     this.socket?.on("offer", (data: OfferData) => {
       console.log("Received offer:", data);
@@ -465,19 +733,7 @@ export class SocketService {
     }
   }
 
-  public onCallEnded(callback: (data: CallData) => void) {
-    this.socket?.on("callEnded", (data) => {
-      console.log("Received callEnded:", data);
-      callback(data);
-    });
-  }
-
-  public offCallEnded(callback: (data: CallData) => void) {
-    if (this.socket) {
-      this.socket.off("callEnded", callback);
-      console.log("Unregistered callEnded listener");
-    }
-  }
+  
 
   // Group WebRTC listeners
   public onGroupOffer(callback: (data: GroupOfferData) => void) {
@@ -643,127 +899,6 @@ export class SocketService {
   }
 }
 
-public onUserRoomLeft(callback: (data: { userId: string }) => void): void {
-  this.socket?.on("userRoomLeft", (data) => {
-    console.log(`Received userRoomLeft for user ${data.userId}`);
-    callback(data);
-  });
-}
-
-public offUserRoomLeft(callback: (data: { userId: string }) => void): void {
-  if (this.socket) {
-    this.socket.off("userRoomLeft", callback);
-    console.log("Unregistered userRoomLeft listener");
-  }
-}
-
-  public onNotificationNew(callback: (notification: Notification) => void) {
-    this.socket?.on("notification.new", (notification: Notification) => {
-      console.log("Incoming Notification From Backend:", notification);
-      if (this.processedNotifications.has(notification._id)) {
-        console.log(`Skipping duplicate notification: ${notification._id}`);
-        return;
-      }
-      this.processedNotifications.add(notification.id);
-      console.log("Received notification:", notification);
-      callback(notification);
-      setTimeout(
-        () => this.processedNotifications.delete(notification.id),
-        60000
-      );
-    });
-  }
-
-  public offNotificationNew(callback: (notification: Notification) => void) {
-    this.socket?.off("notification.new", callback);
-    console.log("[SocketService] Unregistered notification.new listener");
-  }
-
-  public onNotificationRead(
-    callback: (data: {
-      notificationId: string;
-      userId?: string;
-      type?: string;
-    }) => void
-  ) {
-    this.socket?.on("notification.read", (data) => {
-      console.log("Received notification.read:", data);
-      callback(data);
-    });
-  }
-
-  public offNotificationRead(
-    callback: (data: {
-      notificationId?: string;
-      userId: string;
-      type?: string;
-    }) => void
-  ) {
-    this.socket?.off("notification.read", callback);
-    console.log("[SocketService] Unregistered notification.read listener");
-  }
-
-  public onNotificationUpdated(callback: (notification: Notification) => void) {
-    this.socket?.on("notification.updated", (notification) => {
-      console.log("Received notification.updated:", notification);
-      callback(notification);
-    });
-  }
-
-  public markNotificationAsRead(
-    notificationId: string,
-    userId: string,
-    type?: string
-  ) {
-    console.log("Sending notification.read event:", {
-      notificationId,
-      userId,
-      type,
-    });
-    this.socket?.emit("notification.read", { notificationId, userId, type });
-  }
-
-  public onContactsUpdated(callback: () => void) {
-    this.socket?.on("contactsUpdated", () => {
-      console.log("Received contactsUpdated event");
-      callback();
-    });
-  }
-
-  public offContactsUpdated(callback: () => void) {
-    if (this.socket) {
-      this.socket.off("contactsUpdated", callback);
-      console.log("Unregistered contactsUpdated listener");
-    }
-  }
-
-  public onCallLogCreated(callback: (callLog: ICallLog) => void) {
-  this.socket?.on("callLog.created", (callLog: ICallLog) => {
-    console.log("Received callLog.created:", callLog);
-    callback(callLog);
-  });
-}
-
-public offCallLogCreated(callback: (callLog: ICallLog) => void) {
-  if (this.socket) {
-    this.socket.off("callLog.created", callback);
-    console.log("[SocketService] Unregistered callLog.created listener");
-  }
-}
-
-public onCallLogUpdated(callback: (callLog: ICallLog) => void) {
-  this.socket?.on("callLog.updated", (callLog: ICallLog) => {
-    console.log("Received callLog.updated:", callLog);
-    callback(callLog);
-  });
-}
-
-public offCallLogUpdated(callback: (callLog: ICallLog) => void) {
-  if (this.socket) {
-    this.socket.off("callLog.updated", callback);
-    console.log("[SocketService] Unregistered callLog.updated listener");
-  }
-}
 }
 
 export const socketService = new SocketService();

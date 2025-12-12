@@ -112,4 +112,17 @@ export class ChatController extends BaseController implements IChatController{
       next(error);
     }
   };
+
+  getLastMessageSummaries = async (req: Request, res: Response, next: NextFunction): Promise<void> => {
+    try {
+      const { userId } = req.query;
+      if (!userId) {
+        throw new HttpError(ERROR_MESSAGES.REQUIRED_USER_ID, StatusCodes.BAD_REQUEST);
+      }
+      const summaries = await this._chatService.getLastMessageSummaries( userId as string );
+      this.sendSuccess( res, summaries, CHAT_MESSAGES.LAST_MESSAGE_SUMMARIES_RETRIEVED  );
+    } catch (error) {
+      next(error);
+    }
+  };
 }

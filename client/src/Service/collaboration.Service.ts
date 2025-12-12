@@ -260,3 +260,16 @@ export const processRefund = async (collabId: string, reason: string, amount: nu
     throw error;
   }
 }
+
+export const deleteMentorRequest = async (reqId: string) => {
+  console.log('Deleting request:', { reqId }); 
+  try {
+    const response = await axiosInstance.delete(`/collaboration/deleteReq/${reqId}`);
+    console.log('delete Response:', response.data);
+    return response.data.data;
+  } catch (error) {
+    console.error('Refund request error:', error); 
+    handleError(error);
+  }
+}
+

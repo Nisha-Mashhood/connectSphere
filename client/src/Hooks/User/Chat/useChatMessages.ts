@@ -4,7 +4,7 @@ import { Contact } from "../../../Interface/User/Icontact";
 import { IChatMessage } from "../../../Interface/User/IchatMessage";
 import { fetchChatMessages } from "../../../Service/Chat.Service";
 import {
-  deduplicateMessages,
+  // deduplicateMessages,
   getChatKey,
   getChatKeyFromMessage,
 } from "../../../Components/User/Common/Chat/utils/contactUtils";
@@ -94,45 +94,31 @@ export const useChatMessages = (
 
   // HANDLE INCOMING MESSAGE
   const handleIncomingMessage = useCallback(
-    (message: IChatMessage) => {
-      const chatKey = getChatKeyFromMessage(message);
-
-      setAllMessages((prev) => {
-        const current = prev.get(chatKey) || [];
-        const updated = deduplicateMessages([...current, message]);
-
-        return new Map(prev).set(chatKey, updated);
-      });
-
-      setLastMessages((prev) => ({
-        ...prev,
-        [chatKey]: message,
-      }));
-
-      // Notify notification hook
-      if (onMessageActivity) onMessageActivity(chatKey);
-
-      return chatKey;
-    },
-    [onMessageActivity]
-  );
-
-  //HANDLE MESSAGE SAVED (NO NOTIFICATION HERE)
-  const handleMessageSaved = useCallback((message: IChatMessage) => {
+  (message: IChatMessage) => {
     const chatKey = getChatKeyFromMessage(message);
 
     setAllMessages((prev) => {
       const current = prev.get(chatKey) || [];
 
-      const exists = current.some((m) => m._id === message._id);
+      // If same _id already exists, just update that entry
+      const index = current.findIndex((m) => m._id === message._id);
+      let updated: IChatMessage[];
 
-      const updated = exists
-        ? current.map((m) =>
-            m._id === message._id ? { ...m, ...message } : m
-          )
-        : [...current, message];
+      if (index !== -1) {
+        updated = [...current];
+        updated[index] = { ...updated[index], ...message };
+      } else {
+        updated = [...current, message];
+      }
 
-      return new Map(prev).set(chatKey, deduplicateMessages(updated));
+      // Sort by timestamp, oldest → newest
+      updated.sort(
+        (a, b) =>
+          new Date(a.timestamp).getTime() -
+          new Date(b.timestamp).getTime()
+      );
+
+      return new Map(prev).set(chatKey, updated);
     });
 
     setLastMessages((prev) => ({
@@ -140,8 +126,41 @@ export const useChatMessages = (
       [chatKey]: message,
     }));
 
+    if (onMessageActivity) onMessageActivity(chatKey);
+
     return chatKey;
-  }, []);
+  },
+  [onMessageActivity]
+);
+
+  //HANDLE MESSAGE SAVED
+  const handleMessageSaved = useCallback((message: IChatMessage) => {
+  const chatKey = getChatKeyFromMessage(message);
+
+  setAllMessages((prev) => {
+    const current = prev.get(chatKey) || [];
+
+    const index = current.findIndex((m) => m._id === message._id);
+    let updated: IChatMessage[];
+
+    if (index !== -1) {
+      updated = [...current];
+      updated[index] = { ...updated[index], ...message };
+    } else {
+      updated = [...current, message];
+    }
+
+    updated.sort(
+      (a, b) =>
+        new Date(a.timestamp).getTime() -
+        new Date(b.timestamp).getTime()
+    );
+
+    return new Map(prev).set(chatKey, updated);
+  });
+
+  setLastMessages((prev) => ({ ...prev, [chatKey]: message }));
+}, []);
 
   // HANDLE MESSAGES READ (SHOULD MARK NOTIFICATION AS READ)
   const handleMessagesRead = useCallback(
@@ -175,13 +194,13 @@ export const useChatMessages = (
         socketService.socket?.emit("typing", { chatKey, userId });
 
         const key = `${chatKey}_${userId}`;
+        clearTimeout(typingTimeoutsRef.current[key]);
 
-        if (typingTimeoutsRef.current[key]) {
-          clearTimeout(typingTimeoutsRef.current[key]);
-        }
+        socketService.socket?.emit("typing", { chatKey, userId });
 
         typingTimeoutsRef.current[key] = setTimeout(() => {
           socketService.socket?.emit("stopTyping", { chatKey, userId });
+          delete typingTimeoutsRef.current[key];
         }, 1200);
       }, 300),
     []
@@ -196,6 +215,7 @@ export const useChatMessages = (
 
   return () => {
     Object.values(timeoutsMap).forEach((t) => clearTimeout(t));
+    typingTimeoutsRef.current = {};
     sendTyping.cancel();
   };
 }, [sendTyping]);

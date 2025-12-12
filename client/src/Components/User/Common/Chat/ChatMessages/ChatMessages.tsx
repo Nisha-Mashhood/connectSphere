@@ -1,15 +1,11 @@
-import React, { useMemo } from "react";
+import React from "react";
 import { Spinner } from "@nextui-org/react";
-import { MessageSquare } from "lucide-react";
 import { Contact } from "../../../../../Interface/User/Icontact";
 import { IChatMessage } from "../../../../../Interface/User/IchatMessage";
-import { useChatScroll } from "../../../../../Hooks/User/Chat/useChatScroll";
-
 import MessageList from "./MessageList";
-
 import "../Chat.css";
 import "./ChatMessages.css";
-import { getChatKey as buildChatKey } from "../utils/contactUtils";
+import { useChatMessagesView } from "../../../../../Hooks/User/Chat/useChatMessagesView";
 
 interface ChatMessagesProps {
   selectedContact: Contact | null;
@@ -32,153 +28,66 @@ const ChatMessages: React.FC<ChatMessagesProps> = ({
   setAllMessages,
   fetchMessages,
 }) => {
-
-  const getChatKey = useMemo(
-    () => (c: Contact) => buildChatKey(c),
-    []
-  );
-  const messagesEndRef = React.useRef<HTMLDivElement>(null);
-
   const {
     messagesContainerRef,
-    isFetching,
-    initialLoadDone,
-    showScrollDown,
+    messagesEndRef,
+    isAtBottom,
     scrollToBottom,
-  } = useChatScroll({
+    handleContainerScroll,
+    groupedMessages,
+    isLoading,
+    isFetchingOlder,
+    unreadWhileAway,
+    getMessageSender,
+    formatDate,
+    formatTime,
+  } = useChatMessagesView({
     selectedContact,
-    getChatKey,
+    currentUserId,
     allMessages,
     setAllMessages,
     fetchMessages,
-    messagesEndRef,
   });
-
-  // GROUP MESSAGES BY DATE
-
-  const groupMessagesByDate = (messages?: IChatMessage[]) => {
-    if (!messages) return [];
-
-    const groups: { date: string; messages: IChatMessage[] }[] = [];
-    let lastDate = "";
-
-    messages.forEach((msg) => {
-      const d = new Date(msg.timestamp).toDateString();
-
-      if (d !== lastDate) {
-        lastDate = d;
-        groups.push({
-          date: new Date(msg.timestamp).toISOString(),
-          messages: [msg],
-        });
-      } else {
-        groups[groups.length - 1].messages.push(msg);
-      }
-    });
-    return groups;
-  };
-
-  // GET SENDER INFO
-
-  const getMessageSender = (msg: IChatMessage) => {
-    if (msg.senderId === currentUserId) {
-      return {
-        name: "You",
-        profilePic: undefined,
-        isSelf: true,
-      };
-    }
-
-    if (selectedContact?.type === "group") {
-      const member = selectedContact.groupDetails?.members.find(
-        (m) => m.userId === msg.senderId
-      );
-      return member
-        ? {
-            name: member.name,
-            profilePic: member.profilePic,
-            isSelf: false,
-          }
-        : { name: "Unknown", isSelf: false };
-    }
-
-    return {
-      name: selectedContact?.name || "Unknown",
-      profilePic: selectedContact?.profilePic,
-      isSelf: false,
-    };
-  };
-
-  //TIME + DATE FORMATTERS
-
-  const formatTime = (ts: string | Date) => {
-    const d = new Date(ts);
-    return d.toLocaleTimeString([], {
-      hour: "2-digit",
-      minute: "2-digit",
-    });
-  };
-
-  const formatDate = (ts: string | Date) => {
-    const d = new Date(ts);
-    const today = new Date();
-    const yesterday = new Date();
-    yesterday.setDate(yesterday.getDate() - 1);
-
-    if (d.toDateString() === today.toDateString()) return "Today";
-    if (d.toDateString() === yesterday.toDateString()) return "Yesterday";
-
-    return d.toLocaleDateString(undefined, {
-      weekday: "long",
-      month: "short",
-      day: "numeric",
-    });
-  };
-
-
-  // RENDER
-
-  const groupedMessages = useMemo(() => {
-    if (!selectedContact) return [];
-    const chatKey = getChatKey(selectedContact);
-    return groupMessagesByDate(allMessages.get(chatKey));
-  }, [allMessages, selectedContact, getChatKey]);
 
   return (
     <div className="flex flex-col flex-grow relative overflow-hidden h-full">
       {/* MESSAGE LIST */}
       <div
         ref={messagesContainerRef}
+        onScroll={handleContainerScroll}
         className="flex-1 overflow-y-auto mb-4 flex flex-col p-3 space-y-3 scrollbar-thin"
       >
-        {/* Loading */}
-        {isFetching && (
+        {/* Initial loading ONLY when contact is changed */}
+        {isLoading && (
           <div className="flex justify-center p-2">
             <Spinner size="sm" color="primary" />
           </div>
         )}
 
+        {/* Loading older messages (when scrolled to top) */}
+        {!isLoading && isFetchingOlder && (
+          <div className="flex justify-center items-center gap-2 py-2 text-xs text-gray-500">
+            <Spinner size="sm" color="default" />
+            <span>Loading older messages…</span>
+          </div>
+        )}
+
         {/* No contact selected */}
-        {!selectedContact && (
+        {!selectedContact && !isLoading && (
           <div className="flex-1 flex flex-col items-center justify-center">
-            <MessageSquare className="text-blue-400 mb-2" />
             <p className="text-gray-600">Select a contact to start chatting</p>
           </div>
         )}
 
         {/* No messages */}
-        {selectedContact &&
-          groupedMessages.length === 0 &&
-          initialLoadDone &&
-          !isFetching && (
-            <div className="flex-1 flex flex-col items-center justify-center">
-              <MessageSquare className="text-gray-400 mb-2" />
-              <p className="text-gray-500">No messages yet</p>
-            </div>
-          )}
+        {selectedContact && groupedMessages.length === 0 && !isLoading && (
+          <div className="flex-1 flex flex-col items-center justify-center">
+            <p className="text-gray-500">No messages yet</p>
+          </div>
+        )}
 
         {/* Message list */}
-        {selectedContact && (
+        {selectedContact && groupedMessages.length > 0 && (
           <MessageList
             groupedMessages={groupedMessages}
             selectedContact={selectedContact}
@@ -191,13 +100,26 @@ const ChatMessages: React.FC<ChatMessagesProps> = ({
         <div ref={messagesEndRef} />
       </div>
 
-      {/* Scroll Down Button */}
-      {showScrollDown && (
+      {/* Scroll-to-latest button */}
+      {!isAtBottom && (
         <button
-          className="absolute bottom-3 right-3 p-2 bg-gray-200 dark:bg-gray-700 rounded-full shadow"
-          onClick={scrollToBottom}
+          className="absolute bottom-3 right-3 px-3 py-2 rounded-full shadow-lg 
+               bg-purple-600 text-black flex items-center gap-2 
+               transition-all duration-200 group"
+          onClick={() => {
+            scrollToBottom("smooth");
+          }}
         >
-          ↓
+          {/* Arrow icon */}
+          <span className="text-lg font-bold">↓</span>
+          {unreadWhileAway > 0 && (
+            <span className="px-2 py-0.5 rounded-full bg-white text-purple-700 text-xs font-semibold">
+              {unreadWhileAway}
+            </span>
+          )}
+          <span className="hidden group-hover:inline text-xs font-medium">
+            {unreadWhileAway > 0 ? "new" : "Latest"}
+          </span>
         </button>
       )}
     </div>

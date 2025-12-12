@@ -1,3 +1,4 @@
+import { LastMessageSummary } from "../../Utils/types/contact-types";
 import { IChatMessageDTO } from "../DTOs/i-chat-message-dto";
 
 export interface IChatService {
@@ -22,4 +23,5 @@ export interface IChatService {
       mimetype?: string;
     };
   }): Promise<{ url: string; thumbnailUrl?: string; messageId: string }>;
+  getLastMessageSummaries: (userId: string) => Promise<{ [chatKey: string]: LastMessageSummary }>
 }

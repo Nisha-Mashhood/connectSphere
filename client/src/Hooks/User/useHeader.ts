@@ -24,7 +24,9 @@ export const useHeader = () => {
     taskUnreadCount,
     chatNotifications,
     chatUnreadCount,
+    isInChatComponent,
   } = useSelector((state: RootState) => state.notification);
+  console.log("Is the user in Chat Component? : ", isInChatComponent);
 
   const { markSingleNotificationAsRead } = useChatNotifications(
     currentUser?.id
@@ -249,5 +251,6 @@ export const useHeader = () => {
     handleLogout,
     handleProfileClick,
     handleBecomeMentor,
+    isInChatComponent,
   };
 };

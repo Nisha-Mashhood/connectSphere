@@ -5,7 +5,7 @@ import { fetchAllMentors } from "../../Service/Mentor.Service";
 import { getAllSkills, getCategoriesService } from "../../Service/Category.Service";
 import { groupDetails, sendRequsettoGroup } from "../../Service/Group.Service";
 import { fetchAllUsers } from "../../Service/User.Service";
-import { getLockedMentorSlot, SendRequsetToMentor } from "../../Service/collaboration.Service";
+import { deleteMentorRequest, getLockedMentorSlot, SendRequsetToMentor } from "../../Service/collaboration.Service";
 import {
   fetchCollabDetails,
   fetchGroupDetailsForMembers,
@@ -28,8 +28,10 @@ import {
   Category,
   Skill,
   LockedSlot,
+  RequestData,
 } from "../../redux/types";
 import { sendUser_UserRequset } from "../../Service/User-User.Service";
+import { findSameSlotSentRequests, hasUserCollabConflict } from "../../pages/User/Explore/helpers/SlotSelection";
 
 interface FilterOption {
   key: string;
@@ -104,6 +106,10 @@ interface UseExploreMentorsReturn {
   handleRequestGroup: () => Promise<void>;
   isSlotLocked: (day: string, timeSlot: string) => boolean;
   getCurrentTotal: () => string | number;
+  slotConflictModalOpen: boolean;
+  setSlotConflictModalOpen: (open: boolean) => void;
+  conflictingRequests: RequestData[];
+  confirmReplaceRequests: () => Promise<void>;
 }
 
 export const useExploreMentors = (): UseExploreMentorsReturn => {
@@ -151,6 +157,16 @@ export const useExploreMentors = (): UseExploreMentorsReturn => {
   const [isLoading, setIsLoading] = useState(true);
   const [activeTab, setActiveTab] = useState("mentors");
   const limit = 4;
+
+  const [slotConflictModalOpen, setSlotConflictModalOpen] = useState(false);
+  const [conflictingRequests, setConflictingRequests] = useState<RequestData[]>([]);
+  const [pendingMentorRequestData, setPendingMentorRequestData] = useState<{
+    mentorId: string;
+    userId: string;
+    selectedSlot: { day: string; timeSlots: string };
+    price: number;
+    timePeriod: number;
+  } | null>(null);
 
   const filterTypes: FilterType[] = [
     {
@@ -224,6 +240,48 @@ export const useExploreMentors = (): UseExploreMentorsReturn => {
       },
     },
   ];
+
+  const confirmReplaceRequests = useCallback(async (): Promise<void> => {
+  if (!pendingMentorRequestData) return;
+
+  try {
+    //Delete existing same-slot requests
+    if (conflictingRequests.length > 0) {
+      await Promise.all(
+        conflictingRequests.map((r) => deleteMentorRequest(r.id))
+      );
+    }
+
+    //Create the new mentor request
+    const response = await SendRequsetToMentor(pendingMentorRequestData);
+
+    if (response) {
+      toast.success("Request sent successfully!");
+      await dispatch(
+        fetchRequests({
+          userId: currentUser.id,
+          role: currentUser.role,
+          mentorId: pendingMentorRequestData.mentorId,
+        })
+      );
+      setSelectedMentor(null);
+    }
+  } catch (error) {
+    console.error("Error replacing mentor requests:", error);
+    toast.error("Failed to update the request. Please try again.");
+  } finally {
+    setSlotConflictModalOpen(false);
+    setPendingMentorRequestData(null);
+    setConflictingRequests([]);
+  }
+}, [
+  pendingMentorRequestData,
+  conflictingRequests,
+  currentUser.id,
+  currentUser.role,
+  dispatch,
+  setSelectedMentor,
+]);
 
   // Fetch categories and skills
   useEffect(() => {
@@ -402,41 +460,85 @@ export const useExploreMentors = (): UseExploreMentorsReturn => {
     }
   }, []);
 
-  const handleRequestMentor = useCallback(async () => {
-    if (!selectedSlot) {
-      toast.error("Please select a time slot");
-      return;
-    }
-    const [day, timeSlot] = selectedSlot.split(" - ");
-    const requestData = {
-      mentorId: selectedMentor.id,
-      userId: currentUser.id,
-      selectedSlot: {
-        day: day.trim(),
-        timeSlots: timeSlot.trim(),
-      },
-      price: selectedMentor.price,
-      timePeriod: selectedMentor.timePeriod,
-    };
 
-    try {
-      const response = await SendRequsetToMentor(requestData);
-      if (response) {
-        toast.success("Request sent successfully!");
-        dispatch(
-          fetchRequests({
-            userId: currentUser.id,
-            role: currentUser.role,
-            mentorId: selectedMentor?.id || undefined,
-          })
-        );
-        setSelectedMentor(null);
-      }
-    } catch (error) {
-      console.error("Error booking mentor:", error);
-      toast.error("Failed to send the request. Please try again.");
+  const handleRequestMentor = useCallback(async () => {
+  if (!selectedMentor) {
+    toast.error("Please select a mentor");
+    return;
+  }
+
+  if (!selectedSlot) {
+    toast.error("Please select a time slot");
+    return;
+  }
+
+  //Check against existing collaborations
+  const collabConflict = hasUserCollabConflict(selectedSlot, collabDetails);
+
+  if (collabConflict) {
+    toast.error("You already have a confirmed session at this time. Please choose a different slot." );
+    return;
+  }
+
+  const [day, timeSlot] = selectedSlot.split(" - ");
+  if (!day || !timeSlot) {
+    toast.error("Invalid time slot format");
+    return;
+  }
+
+  const requestData = {
+    mentorId: selectedMentor.id,
+    userId: currentUser.id,
+    selectedSlot: {
+      day: day.trim(),
+      timeSlots: timeSlot.trim(),
+    },
+    price: selectedMentor.price,
+    timePeriod: selectedMentor.timePeriod,
+  };
+
+  //Check for existing SENT requests with same slot
+  const existingSameSlotRequests = findSameSlotSentRequests(
+    selectedSlot,
+    req?.sentRequests || []
+  );
+
+  if (existingSameSlotRequests.length > 0) {
+    //Open modal
+    setConflictingRequests(existingSameSlotRequests);
+    setPendingMentorRequestData(requestData);
+    setSlotConflictModalOpen(true);
+    return;
+  }
+
+  //No conflicts → directly send request
+  try {
+    const response = await SendRequsetToMentor(requestData);
+    if (response) {
+      toast.success("Request sent successfully!");
+      dispatch(
+        fetchRequests({
+          userId: currentUser.id,
+          role: currentUser.role,
+          mentorId: selectedMentor?.id || undefined,
+        })
+      );
+      setSelectedMentor(null);
     }
-  }, [currentUser.id, currentUser.role, selectedMentor, selectedSlot, dispatch]);
+  } catch (error) {
+    console.error("Error booking mentor:", error);
+    toast.error("Failed to send the request. Please try again.");
+  }
+}, [
+  selectedMentor,
+  selectedSlot,
+  currentUser.id,
+  currentUser.role,
+  collabDetails,
+  req,
+  dispatch,
+  setSelectedMentor,
+]);
 
   const handleRequestUser = useCallback(async () => {
     try {
@@ -562,5 +664,9 @@ export const useExploreMentors = (): UseExploreMentorsReturn => {
     handleRequestGroup,
     isSlotLocked,
     getCurrentTotal,
+    slotConflictModalOpen,
+    setSlotConflictModalOpen,
+    conflictingRequests,
+    confirmReplaceRequests,
   };
 };

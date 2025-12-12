@@ -18,4 +18,5 @@ export const COLLABORATION_ROUTES = {
   GetAllCollabs: '/getAllCollab',
   // RefundCollab: '/refund/:collabId',
   GetReceiptDownload: '/receipt/:collabId',
+  DeleteMentorRequest: '/deleteReq/:id'
 } as const;

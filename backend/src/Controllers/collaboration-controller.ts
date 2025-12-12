@@ -350,4 +350,14 @@ export class CollaborationController extends BaseController implements ICollabor
       next(error);
     }
   };
+
+  public deleteMentorRequestController = async (req: Request, res: Response, next: NextFunction): Promise<void> => {
+  try {
+    const { id } = req.params;
+    await this._collabService.deleteMentorRequestService(id);
+    this.sendSuccess(res, null, "Mentor request deleted successfully");
+  } catch (error) {
+    next(error);
+  }
+};
 }

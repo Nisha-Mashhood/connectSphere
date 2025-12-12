@@ -52,6 +52,11 @@ export const useChatNotifications = (currentUserId?: string) => {
     async (chatKey: string) => {
       if (!isInChatComponent || !currentUserId) return;
 
+       // Only mark as read if THIS chat is currently active in the UI
+      if (!activeChatKey || activeChatKey !== chatKey) {
+        return;
+      }
+
       const unreadForThisChat = chatNotifications.filter(
         (n) =>
           n.relatedId === chatKey &&
@@ -66,24 +71,11 @@ export const useChatNotifications = (currentUserId?: string) => {
     [
       isInChatComponent,
       currentUserId,
+      activeChatKey,
       chatNotifications,
       markSingleNotificationAsRead,
     ]
   );
-
-  // // SOCKET — Listen for new notifications from backend
-  // useEffect(() => {
-  //   const handleNewNotification = (payload: Notification) => {
-  //     console.log("Incoming Notification:", payload);
-  //     dispatch(addNotification(payload));
-  //   };
-
-  //   socketService.onNotificationNew(handleNewNotification);
-
-  //   return () => {
-  //     socketService.offNotificationNew(handleNewNotification);
-  //   };
-  // }, [dispatch]);
 
   return {
     chatNotifications,

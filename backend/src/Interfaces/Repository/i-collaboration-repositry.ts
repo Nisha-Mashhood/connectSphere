@@ -2,6 +2,7 @@ import { UserIds } from "../../Utils/types/notification-types";
 import { ICollaboration } from "../Models/i-collaboration";
 import { IMentorRequest } from "../Models/i-mentor-request";
 import { LockedSlot } from "../../Utils/types/collaboration-types";
+import { ClientSession } from "mongoose";
 
 export interface ICollaborationRepository {
   findById(id: string): Promise<ICollaboration | null>;
@@ -10,8 +11,8 @@ export interface ICollaborationRepository {
   findMentorRequestById(id: string): Promise<IMentorRequest | null>;
   updateMentorRequestStatus(id: string, status?: string | "Pending"): Promise<IMentorRequest | null>;
   getRequestByUserId(userId: string): Promise<IMentorRequest[]>;
-  createCollaboration(collaborationData: Partial<ICollaboration>): Promise<ICollaboration>;
-  deleteMentorRequest(requestId: string): Promise<void>;
+  createCollaboration(collaborationData: Partial<ICollaboration>, session?: ClientSession): Promise<ICollaboration>;
+  deleteMentorRequest(requestId: string, session?: ClientSession): Promise<void>;
   findCollabById(collabId: string): Promise<ICollaboration | null>;
   deleteCollabById(collabId: string): Promise<ICollaboration | null>;
   markCollabAsCancelled(collabId: string): Promise<ICollaboration | null>;

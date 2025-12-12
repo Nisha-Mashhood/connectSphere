@@ -11,10 +11,9 @@ export class WebRTCService {
     string,
     (candidate: RTCIceCandidateInit) => void
   > = new Map();
-  private isOffererMap: Map<string, boolean> = new Map();
-  public onNegotiationNeeded:
-    | ((targetId: string, offer: RTCSessionDescriptionInit) => void)
-    | undefined;
+  // public onNegotiationNeeded:
+  //   | ((targetId: string, offer: RTCSessionDescriptionInit) => void)
+  //   | undefined;
   private pendingIceCandidates: Map<string, RTCIceCandidateInit[]> = new Map();
 
   constructor() {
@@ -23,7 +22,6 @@ export class WebRTCService {
 
   async initPeerConnection(
     targetId?: string,
-    isOfferer: boolean = false
   ): Promise<RTCPeerConnection> {
     if (!targetId) {
       if (
@@ -48,8 +46,11 @@ export class WebRTCService {
       console.log("Initializing single peer connection with config:", config);
       try {
         this.singlePeerConnection = new RTCPeerConnection(config);
-        console.log(`Setting isOfferer for ${targetId || "single"} =`, isOfferer);
-        this.isOffererMap.set(targetId || "single", isOfferer);
+        const registeredCb = this.onTrackCallbacks.get("single");
+        if (registeredCb) {
+          this.singlePeerConnection.ontrack = (event) =>
+            registeredCb(event, "single");
+        }
         this.setupPeerConnectionEvents(this.singlePeerConnection, "single");
         console.log("Single peer connection initialized successfully");
         return this.singlePeerConnection;
@@ -84,7 +85,13 @@ export class WebRTCService {
       try {
         const peerConnection = new RTCPeerConnection(config);
         this.peerConnections.set(targetId, peerConnection);
-        this.isOffererMap.set(targetId, isOfferer);
+
+        // attach ontrack if callback already registered earlier
+        const registeredCb = this.onTrackCallbacks.get(targetId);
+        if (registeredCb) {
+          peerConnection.ontrack = (event) => registeredCb(event, targetId);
+        }
+
         this.setupPeerConnectionEvents(peerConnection, targetId);
         console.log(`Peer connection initialized for ${targetId}`);
         return peerConnection;
@@ -181,37 +188,31 @@ export class WebRTCService {
       }
     };
 
-    peerConnection.onnegotiationneeded = async () => {
-      if (!this.isOffererMap.get(targetId)) {
-        console.log(
-          `Negotiation needed for ${targetId}, but not an offerer, skipping`
-        );
-        return;
-      }
-      try {
-        if (peerConnection.signalingState !== "stable") {
-          console.log(
-            `Rolling back for ${targetId} due to signaling state: ${peerConnection.signalingState}`
-          );
-          await peerConnection.setLocalDescription({ type: "rollback" });
-        }
-        console.log(`Negotiation needed for ${targetId}, creating offer`);
-        const offer = await peerConnection.createOffer();
-        await peerConnection.setLocalDescription(offer);
-        console.log(
-          `Offer created and local description set for ${targetId}:`,
-          offer
-        );
-        if (this.onNegotiationNeeded) {
-          this.onNegotiationNeeded(targetId, offer);
-          console.log(`Called onNegotiationNeeded for ${targetId}`);
-        } else {
-          console.warn(`No onNegotiationNeeded callback set for ${targetId}`);
-        }
-      } catch (error) {
-        console.error(`Error handling negotiation for ${targetId}:`, error);
-      }
-    };
+    // peerConnection.onnegotiationneeded = async () => {
+    //   try {
+    //     if (peerConnection.signalingState !== "stable") {
+    //       console.log(
+    //         `Rolling back for ${targetId} due to signaling state: ${peerConnection.signalingState}`
+    //       );
+    //       await peerConnection.setLocalDescription({ type: "rollback" });
+    //     }
+    //     console.log(`Negotiation needed for ${targetId}, creating offer`);
+    //     const offer = await peerConnection.createOffer();
+    //     await peerConnection.setLocalDescription(offer);
+    //     console.log(
+    //       `Offer created and local description set for ${targetId}:`,
+    //       offer
+    //     );
+    //     if (this.onNegotiationNeeded) {
+    //       this.onNegotiationNeeded(targetId, offer);
+    //       console.log(`Called onNegotiationNeeded for ${targetId}`);
+    //     } else {
+    //       console.warn(`No onNegotiationNeeded callback set for ${targetId}`);
+    //     }
+    //   } catch (error) {
+    //     console.error(`Error handling negotiation for ${targetId}:`, error);
+    //   }
+    // };
   }
 
   // Check remote description
@@ -238,7 +239,6 @@ export class WebRTCService {
     );
     return hasRemoteDesc;
   }
-
 
   async getLocalStream(): Promise<MediaStream> {
     console.log("Requesting user media (video and audio)");
@@ -591,32 +591,43 @@ export class WebRTCService {
     targetId: string,
     callback: (event: RTCTrackEvent, targetId: string) => void
   ) {
-    console.log(` Registering ontrack callback for ${targetId}`);
+    console.log(`Registering ontrack callback for ${targetId}`);
     this.onTrackCallbacks.set(targetId, callback);
+
     const peerConnection = this.peerConnections.get(targetId);
     if (peerConnection) {
       peerConnection.ontrack = (event) => {
-        console.log(` ontrack event for ${targetId}:`, {
-          streams: event.streams.map((s) => ({
-            id: s.id,
-            tracks: s.getTracks().map((t) => ({
-              kind: t.kind,
-              id: t.id,
-              enabled: t.enabled,
-              readyState: t.readyState,
-            })),
-          })),
-          track: {
-            kind: event.track.kind,
-            id: event.track.id,
-            enabled: event.track.enabled,
-            readyState: event.track.readyState,
-          },
-        });
-        callback(event, targetId);
+        console.log(`ontrack event for ${targetId}:` /* ... */);
+        const cb = this.onTrackCallbacks.get(targetId);
+        if (cb) cb(event, targetId);
+      };
+      return;
+    }
+
+    // if using singlePeerConnection, attach there as well
+    if (
+      this.singlePeerConnection &&
+      (targetId === "single" || !peerConnection)
+    ) {
+      this.singlePeerConnection.ontrack = (event) => {
+        console.log(`ontrack event for single (via onTrack):` /* ... */);
+        const cb = this.onTrackCallbacks.get(targetId);
+        if (cb) cb(event, targetId);
       };
     }
   }
+
+  offTrack(targetId: string) {
+  this.onTrackCallbacks.delete(targetId);
+
+  const pc = this.peerConnections.get(targetId);
+  if (pc) {
+    pc.ontrack = null;
+  }
+  if (targetId === "single" && this.singlePeerConnection) {
+    this.singlePeerConnection.ontrack = null;
+  }
+}
 
   // Register onicecandidate callback
   onIceCandidate(
@@ -642,7 +653,6 @@ export class WebRTCService {
       this.peerConnections.delete(targetId);
       this.onTrackCallbacks.delete(targetId);
       this.onIceCandidateCallbacks.delete(targetId);
-      this.isOffererMap.delete(targetId);
       this.pendingIceCandidates.delete(targetId);
       console.log(`Cleaned up peer connection resources for ${targetId}`);
     } catch (error) {
@@ -673,8 +683,7 @@ export class WebRTCService {
     this.addedTrackIds.clear();
     this.onTrackCallbacks.clear();
     this.onIceCandidateCallbacks.clear();
-    this.isOffererMap.clear();
-    this.onNegotiationNeeded = undefined;
+    // this.onNegotiationNeeded = undefined;
     this.pendingIceCandidates.clear();
     console.log("WebRTC service stopped");
   }

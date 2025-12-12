@@ -1,4 +1,4 @@
-import { NavbarItem, Badge, Link } from "@nextui-org/react";
+import { NavbarItem, Link } from "@nextui-org/react";
 
 interface Props {
   chatUnreadCount: number;
@@ -6,16 +6,10 @@ interface Props {
 }
 
 const ChatNotificationButton = ({ chatUnreadCount, handleChatClick }: Props) => {
+  const hasUnread = chatUnreadCount > 0;
   return (
     <NavbarItem>
-      <Badge
-        content={chatUnreadCount}
-        color="danger"
-        isInvisible={chatUnreadCount === 0}
-        placement="top-right"
-        size="sm"
-        className="animate-pulse"
-      >
+      <div className="relative inline-flex items-center">
         <Link
           href="/chat"
           color="foreground"
@@ -25,7 +19,13 @@ const ChatNotificationButton = ({ chatUnreadCount, handleChatClick }: Props) => 
           Chat
           <span className="absolute bottom-0 left-0 w-0 h-0.5 bg-blue-600 transition-all duration-300 group-hover:w-full"></span>
         </Link>
-      </Badge>
+
+        {hasUnread && (
+          <span
+            className="absolute -top-1 -right-3 h-2 w-2 rounded-full bg-red-500 animate-ping"
+          />
+        )}
+      </div>
     </NavbarItem>
   );
 };

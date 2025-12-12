@@ -68,11 +68,14 @@ const ChatHeader: React.FC<ChatHeaderProps> = ({
     toggleAudio,
     toggleVideo,
     toggleScreenShare,
+    getIsCaller,
   } = call;
 
-  const groupCallRef = useRef<{ startGroupCall: (type: "audio" | "video") => void } | null>(
-    null
-  );
+  const isCaller = getIsCaller();
+
+  const groupCallRef = useRef<{
+    startGroupCall: (type: "audio" | "video") => void;
+  } | null>(null);
 
   const getGradient = () => {
     if (!selectedContact) return "from-violet-500 to-fuchsia-500";
@@ -97,7 +100,10 @@ const ChatHeader: React.FC<ChatHeaderProps> = ({
     const typingUsersNames = typingUserIds
       .map((userId) => {
         let memberName: string | undefined;
-        if (selectedContact.type === "group" && selectedContact.groupDetails?.members) {
+        if (
+          selectedContact.type === "group" &&
+          selectedContact.groupDetails?.members
+        ) {
           const member = selectedContact.groupDetails.members.find(
             (m) => m.userId === userId
           );
@@ -171,7 +177,9 @@ const ChatHeader: React.FC<ChatHeaderProps> = ({
                   {selectedContact.type === "user-mentor"
                     ? "Mentorship"
                     : selectedContact.type === "group"
-                    ? `${selectedContact.groupDetails?.members.length || 0} members`
+                    ? `${
+                        selectedContact.groupDetails?.members.length || 0
+                      } members`
                     : selectedContact.targetJobTitle || "Connection"}
                 </p>
               )}
@@ -179,7 +187,9 @@ const ChatHeader: React.FC<ChatHeaderProps> = ({
           </div>
         )}
         {!selectedContact && (
-          <h2 className="text-base sm:text-lg font-bold">Select a conversation</h2>
+          <h2 className="text-base sm:text-lg font-bold">
+            Select a conversation
+          </h2>
         )}
       </div>
 
@@ -188,10 +198,8 @@ const ChatHeader: React.FC<ChatHeaderProps> = ({
           {/* AUDIO CALL BUTTON */}
           <Tooltip
             content={
-              selectedContact.type === "group"
-                ? isAudioCallActive
-                  ? "End group audio call"
-                  : "Group audio call"
+              isCaller === false
+                ? "Only one person can start the call"
                 : isAudioCallActive
                 ? "End audio call"
                 : "Audio call"
@@ -215,16 +223,17 @@ const ChatHeader: React.FC<ChatHeaderProps> = ({
               isDisabled={isVideoCallActive}
             >
               <FaPhone size={14} />
+              {isCaller === false && !isVideoCallActive && (
+                <span className="absolute -top-1 -right-1 text-xs">⏳</span>
+              )}
             </Button>
           </Tooltip>
 
           {/* VIDEO CALL BUTTON */}
           <Tooltip
             content={
-              selectedContact.type === "group"
-                ? isVideoCallActive
-                  ? "End group video call"
-                  : "Group video call"
+              isCaller === false
+                ? "Only one person can start the call"
                 : isVideoCallActive
                 ? "End video call"
                 : "Video call"
@@ -248,6 +257,9 @@ const ChatHeader: React.FC<ChatHeaderProps> = ({
               isDisabled={isAudioCallActive}
             >
               <FaVideo size={14} />
+              {isCaller === false && !isVideoCallActive && (
+                <span className="absolute -top-1 -right-1 text-xs">⏳</span>
+              )}
             </Button>
           </Tooltip>
 
@@ -330,7 +342,11 @@ const ChatHeader: React.FC<ChatHeaderProps> = ({
                 onPress={toggleAudio}
                 aria-label={isAudioMuted ? "Unmute" : "Mute"}
               >
-                {isAudioMuted ? <FaMicrophoneSlash size={16} /> : <FaMicrophone size={16} />}
+                {isAudioMuted ? (
+                  <FaMicrophoneSlash size={16} />
+                ) : (
+                  <FaMicrophone size={16} />
+                )}
               </Button>
             </Tooltip>
             <Tooltip
@@ -343,7 +359,11 @@ const ChatHeader: React.FC<ChatHeaderProps> = ({
                 onPress={toggleVideo}
                 aria-label={isVideoOff ? "Turn video on" : "Turn video off"}
               >
-                {isVideoOff ? <FaVideoSlash size={16} /> : <FaVideo size={16} />}
+                {isVideoOff ? (
+                  <FaVideoSlash size={16} />
+                ) : (
+                  <FaVideo size={16} />
+                )}
               </Button>
             </Tooltip>
             <Tooltip
@@ -359,7 +379,11 @@ const ChatHeader: React.FC<ChatHeaderProps> = ({
                 <FaDesktop size={16} />
               </Button>
             </Tooltip>
-            <Button color="danger"  onPress={() => endCall()} aria-label="End call">
+            <Button
+              color="danger"
+              onPress={() => endCall()}
+              aria-label="End call"
+            >
               End Call
             </Button>
           </div>
@@ -378,17 +402,28 @@ const ChatHeader: React.FC<ChatHeaderProps> = ({
               <audio ref={remoteAudioRef} autoPlay />
             </div>
             <div className="flex gap-2">
-              <Tooltip content={isAudioMuted ? "Unmute" : "Mute"} placement="top">
+              <Tooltip
+                content={isAudioMuted ? "Unmute" : "Mute"}
+                placement="top"
+              >
                 <Button
                   isIconOnly
                   color={isAudioMuted ? "danger" : "primary"}
                   onPress={toggleAudio}
                   aria-label={isAudioMuted ? "Unmute" : "Mute"}
                 >
-                  {isAudioMuted ? <FaMicrophoneSlash size={16} /> : <FaMicrophone size={16} />}
+                  {isAudioMuted ? (
+                    <FaMicrophoneSlash size={16} />
+                  ) : (
+                    <FaMicrophone size={16} />
+                  )}
                 </Button>
               </Tooltip>
-              <Button color="danger" onPress={() => endCall()} aria-label="End call">
+              <Button
+                color="danger"
+                onPress={() => endCall()}
+                aria-label="End call"
+              >
                 End Call
               </Button>
             </div>
@@ -397,10 +432,14 @@ const ChatHeader: React.FC<ChatHeaderProps> = ({
       )}
 
       {/* INCOMING CALL MODAL */}
-      <Modal isOpen={isIncomingCall && selectedContact?.type !== "group"} onClose={declineCall}>
+      <Modal
+        isOpen={isIncomingCall && selectedContact?.type !== "group"}
+        onClose={declineCall}
+      >
         <ModalContent>
           <ModalHeader>
-            Incoming {incomingCallData?.callType === "audio" ? "Audio" : "Video"} Call
+            Incoming{" "}
+            {incomingCallData?.callType === "audio" ? "Audio" : "Video"} Call
           </ModalHeader>
           <ModalBody>
             <p>Call from {incomingCallData?.senderName || "Unknown"}</p>

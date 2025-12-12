@@ -1,8 +1,9 @@
 import { useState, useEffect, useRef, useCallback } from "react";
-import { uploadMedia } from "../../../../../Service/Chat.Service";
-import { UseChatInputReturn } from "./types";
-import { Contact } from "../../../../../Interface/User/Icontact";
-import { IChatMessage } from "../../../../../Interface/User/IchatMessage";
+import { uploadMedia } from "../../../Service/Chat.Service";
+import { UseChatInputReturn } from "../../../Components/User/Common/Chat/ChatInput/types";
+import { Contact } from "../../../Interface/User/Icontact";
+import { IChatMessage } from "../../../Interface/User/IchatMessage";
+// import { socketService } from "../../../../../Service/SocketService";
 
 interface UseChatInputProps {
   selectedContact: Contact | null;
@@ -49,83 +50,6 @@ export const useChatInput = ({
       textarea.style.height = `${Math.min(textarea.scrollHeight, 120)}px`;
     }
   }, [messageInput]);
-
-  // Handle click outside for emoji picker
-  useEffect(() => {
-    const handleClickOutside = (event: MouseEvent) => {
-      if (emojiPickerRef.current && !emojiPickerRef.current.contains(event.target as Node)) {
-        setShowEmojiPicker(false);
-      }
-    };
-    document.addEventListener("mousedown", handleClickOutside);
-    return () => document.removeEventListener("mousedown", handleClickOutside);
-  }, []);
-
-  const handleSendMessage = useCallback(() => {
-    if ((!messageInput.trim() && !selectedFile) || !selectedContact || !currentUserId) return;
-
-    if (selectedFile) {
-      handleUpload();
-      return;
-    }
-
-    console.log("selectedContact when sending:", selectedContact);
-    
-    const isSenderUser = selectedContact.userId === currentUserId;
-    const targetId =
-      selectedContact.type === "group"
-        ? selectedContact.groupId
-        : isSenderUser
-        ? selectedContact.targetId
-        : selectedContact.userId;
-
-    const message: IChatMessage & { targetId: string; type: string } = {
-      _id: Date.now().toString(),
-      senderId: currentUserId,
-      content: messageInput,
-      contentType: "text",
-      timestamp: new Date().toISOString(),
-      targetId,
-      type: selectedContact.type,
-      isRead: false,
-      status: "pending",
-      ...(selectedContact.type === "group" && { groupId: selectedContact.groupId }),
-      ...(selectedContact.type === "user-mentor" && { collaborationId: selectedContact.collaborationId }),
-      ...(selectedContact.type === "user-user" && { userConnectionId: selectedContact.userConnectionId }),
-    };
-
-    onSendMessage(message);
-    setMessageInput("");
-    inputRef.current?.focus();
-  }, [messageInput, selectedFile, selectedContact, currentUserId, onSendMessage]);
-
-  const handleFileSelect = useCallback(
-    (file: File) => {
-      if (!selectedContact || !currentUserId) return;
-
-      const fileType = file.type;
-      const isImage = allowedTypes.image.includes(fileType);
-      const isVideo = allowedTypes.video.includes(fileType);
-      const isFile = allowedTypes.file.includes(fileType);
-
-      if (!isImage && !isVideo && !isFile) {
-        setError(`Unsupported file type. Please upload a valid file.`);
-        return;
-      }
-
-      const maxSize = isVideo ? 50 * 1024 * 1024 : 10 * 1024 * 1024;
-      if (file.size > maxSize) {
-        setError(`File is too large. Maximum size is ${isVideo ? "50MB" : "10MB"}.`);
-        return;
-      }
-
-      setSelectedFile(file);
-      setError(null);
-      setPreviewUrl(URL.createObjectURL(file));
-      inputRef.current?.focus();
-    },
-    [selectedContact, currentUserId]
-  );
 
   const handleUpload = useCallback(async () => {
     if (!selectedFile || !selectedContact || !currentUserId) return;
@@ -200,7 +124,91 @@ export const useChatInput = ({
       }
       inputRef.current?.focus();
     }
-  }, [selectedFile, selectedContact, currentUserId, messageInput, onSendMessage]);
+  }, [selectedFile, selectedContact, currentUserId, messageInput, onSendMessage, isUploading]);
+
+  // Handle click outside for emoji picker
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (emojiPickerRef.current && !emojiPickerRef.current.contains(event.target as Node)) {
+        setShowEmojiPicker(false);
+      }
+    };
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => document.removeEventListener("mousedown", handleClickOutside);
+  }, []);
+
+  const handleSendMessage = useCallback(() => {
+    if ((!messageInput.trim() && !selectedFile) || !selectedContact || !currentUserId) return;
+
+    if (selectedFile) {
+      handleUpload();
+      return;
+    }
+    const tempId = `temp_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
+
+    console.log("selectedContact when sending:", selectedContact);
+    
+    const isSenderUser = selectedContact.userId === currentUserId;
+    const targetId =
+      selectedContact.type === "group"
+        ? selectedContact.groupId
+        : isSenderUser
+        ? selectedContact.targetId
+        : selectedContact.userId;
+
+    const message: IChatMessage & { targetId: string; type: string } = {
+      _id: tempId,
+      senderId: currentUserId,
+      content: messageInput,
+      contentType: "text",
+      timestamp: new Date().toISOString(),
+      targetId,
+      type: selectedContact.type,
+      isRead: false,
+      status: "pending",
+      ...(selectedContact.type === "group" && { groupId: selectedContact.groupId }),
+      ...(selectedContact.type === "user-mentor" && { collaborationId: selectedContact.collaborationId }),
+      ...(selectedContact.type === "user-user" && { userConnectionId: selectedContact.userConnectionId }),
+    };
+
+    onSendMessage(message);
+  //   socketService.sendMessage({
+  //   ...message,
+  //   _id: undefined,
+  // });
+    setMessageInput("");
+    inputRef.current?.focus();
+  }, [messageInput, selectedFile, selectedContact, currentUserId, onSendMessage, handleUpload]);
+
+  const handleFileSelect = useCallback(
+    (file: File) => {
+      if (!selectedContact || !currentUserId) return;
+
+      const fileType = file.type;
+      const isImage = allowedTypes.image.includes(fileType);
+      const isVideo = allowedTypes.video.includes(fileType);
+      const isFile = allowedTypes.file.includes(fileType);
+
+      if (!isImage && !isVideo && !isFile) {
+        setError(`Unsupported file type. Please upload a valid file.`);
+        return;
+      }
+
+      const maxSize = isVideo ? 50 * 1024 * 1024 : 10 * 1024 * 1024;
+      if (file.size > maxSize) {
+        setError(`File is too large. Maximum size is ${isVideo ? "50MB" : "10MB"}.`);
+        return;
+      }
+
+      setSelectedFile(file);
+      setError(null);
+      setPreviewUrl(URL.createObjectURL(file));
+      inputRef.current?.focus();
+    },
+    [selectedContact, currentUserId]
+  );
+
+  
 
   const handleRemoveFile = useCallback(() => {
     setSelectedFile(null);

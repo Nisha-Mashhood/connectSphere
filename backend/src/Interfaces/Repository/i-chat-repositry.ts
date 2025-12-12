@@ -39,11 +39,11 @@ export interface IChatRepository {
     type: "group" | "user-mentor" | "user-user"
   ): Promise<string[]>;
 
-  findLatestMessageByGroupId(groupId: string): Promise<{ timestamp: Date } | null>;
+  findLatestMessageByGroupId(groupId: string): Promise<IChatMessage | null>;
   findLatestMessageByCollaborationId(
     collaborationId: string
-  ): Promise<{ timestamp: Date } | null>;
+  ): Promise<IChatMessage | null>;
   findLatestMessageByUserConnectionId(
     userConnectionId: string
-  ): Promise<{ timestamp: Date } | null>;
+  ): Promise<IChatMessage | null>;
 }

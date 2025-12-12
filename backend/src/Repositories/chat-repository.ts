@@ -204,7 +204,7 @@ export class ChatRepository extends BaseRepository<IChatMessage> implements ICha
       const gId = this.toObjectId(groupId);
       const uId = this.toObjectId(userId);
       const count = await this.model.countDocuments({
-       _id: gId,
+        groupId: gId,
         isRead: false,
         senderId: { $ne: uId },
       });
@@ -314,16 +314,16 @@ export class ChatRepository extends BaseRepository<IChatMessage> implements ICha
     }
   }
 
-  public async findLatestMessageByGroupId(groupId: string): Promise<{ timestamp: Date } | null> {
+  public async findLatestMessageByGroupId(groupId: string): Promise<IChatMessage | null> {
     try {
       logger.debug(`Finding latest message for groupId: ${groupId}`);
       const message = await this.model
         .findOne({ groupId: this.toObjectId(groupId) })
         .sort({ timestamp: -1 })
-        .select('timestamp')
+        .select('timestamp content senderId contentType')
         .lean()
         .exec();
-      return message ? { timestamp: message.timestamp } : null;
+      return message as IChatMessage | null;
     } catch (error: unknown) {
       const err = error instanceof Error ? error : new Error(String(error));
       logger.error(`Error finding latest message by groupId ${groupId}: ${err}`);
@@ -335,16 +335,16 @@ export class ChatRepository extends BaseRepository<IChatMessage> implements ICha
     }
   }
 
-  public async findLatestMessageByCollaborationId(collaborationId: string): Promise<{ timestamp: Date } | null> {
+  public async findLatestMessageByCollaborationId(collaborationId: string): Promise<IChatMessage | null> {
     try {
       logger.debug(`Finding latest message for collaborationId: ${collaborationId}`);
       const message = await this.model
         .findOne({ collaborationId: this.toObjectId(collaborationId) })
         .sort({ timestamp: -1 })
-        .select('timestamp')
+        .select('timestamp content senderId contentType')
         .lean()
         .exec();
-      return message ? { timestamp: message.timestamp } : null;
+      return message as IChatMessage | null;
     } catch (error: unknown) {
       const err = error instanceof Error ? error : new Error(String(error));
       logger.error(`Error finding latest message by collaborationId ${collaborationId}: ${err}`);
@@ -356,16 +356,16 @@ export class ChatRepository extends BaseRepository<IChatMessage> implements ICha
     }
   }
 
-  public async findLatestMessageByUserConnectionId(userConnectionId: string): Promise<{ timestamp: Date } | null> {
+  public async findLatestMessageByUserConnectionId(userConnectionId: string): Promise<IChatMessage | null> {
     try {
       logger.debug(`Finding latest message for userConnectionId: ${userConnectionId}`);
       const message = await this.model
         .findOne({ userConnectionId: this.toObjectId(userConnectionId) })
         .sort({ timestamp: -1 })
-        .select('timestamp')
+        .select('timestamp content senderId contentType')
         .lean()
         .exec();
-      return message ? { timestamp: message.timestamp } : null;
+      return message as IChatMessage | null;
     } catch(error: unknown) {
       const err = error instanceof Error ? error : new Error(String(error));
       logger.error(`Error finding latest message by userConnectionId ${userConnectionId}: ${err}`);

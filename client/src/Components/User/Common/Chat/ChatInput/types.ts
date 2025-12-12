@@ -1,4 +1,5 @@
-import { Contact, IChatMessage } from "../../../../../types";
+import { IChatMessage } from "../../../../../Interface/User/IchatMessage";
+import { Contact } from "../../../../../Interface/User/Icontact";
 
 export interface ChatInputProps {
   selectedContact: Contact | null;

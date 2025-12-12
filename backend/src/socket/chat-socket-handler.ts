@@ -124,15 +124,6 @@ export class ChatSocketHandler {
         groupId,
         _id,
       } = message;
-      logger.info(`senderId: ${senderId}`);
-      logger.info(`targetId: ${targetId}`);
-      logger.info(`type: ${type}`);
-      logger.info(`content: ${content}`);
-      logger.info(`contentType: ${contentType}`);
-      logger.info(`collaborationId: ${collaborationId}`);
-      logger.info(`userConnectionId: ${userConnectionId}`);
-      logger.info(`groupId: ${groupId}`);
-      logger.info(`_id: ${_id}`);
 
       if (!senderId || !targetId || !type || !content) {
         logger.error("Missing required fields in message");

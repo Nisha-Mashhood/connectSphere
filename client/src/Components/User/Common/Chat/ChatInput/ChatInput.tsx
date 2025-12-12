@@ -1,6 +1,5 @@
-// ChatInput.tsx
-import React, { useEffect, useRef } from "react";
-import { useChatInput } from "./useChatInput";
+import React, { useEffect, useMemo, useRef } from "react";
+import { useChatInput } from "../../../../../Hooks/User/Chat/useChatInput";
 import TextInput from "./TextInput";
 import FileSelector from "./FileSelector";
 import FilePreview from "./FilePreview";
@@ -33,15 +32,28 @@ const ChatInput: React.FC<ChatInputProps> = ({ selectedContact, currentUserId, o
   const typingTimeoutRef = useRef(null);
   const lastMessageInput = useRef<string>("");
 
-  const emitTyping = debounce((chatKey: string, targetId: string, type: string) => {
-    console.log("Emitting typing event:", { userId: currentUserId, targetId, type, chatKey });
-    socketService.sendTyping(currentUserId!, targetId, type, chatKey);
-  }, 500);
+  const emitTyping = useMemo(
+  () =>
+    debounce((chatKey: string, targetId: string, type: string) => {
+      socketService.sendTyping(currentUserId!, targetId, type, chatKey);
+    }, 500),
+  [currentUserId]
+);
 
-  const emitStopTyping = debounce((chatKey: string, targetId: string, type: string) => {
-    console.log("Emitting stopTyping event:", { userId: currentUserId, targetId, type, chatKey });
-    socketService.sendStopTyping(currentUserId!, targetId, type, chatKey);
-  }, 1000);
+const emitStopTyping = useMemo(
+  () =>
+    debounce((chatKey: string, targetId: string, type: string) => {
+      socketService.sendStopTyping(currentUserId!, targetId, type, chatKey);
+    }, 1000),
+  [currentUserId]
+);
+
+useEffect(() => {
+  return () => {
+    emitTyping.cancel();
+    emitStopTyping.cancel();
+  };
+}, [emitTyping, emitStopTyping]);
 
   useEffect(() => {
     if (!selectedContact || !currentUserId) return;
@@ -67,7 +79,7 @@ const ChatInput: React.FC<ChatInputProps> = ({ selectedContact, currentUserId, o
     return () => {
       if (typingTimeoutRef.current) clearTimeout(typingTimeoutRef.current);
     };
-  }, [messageInput, selectedContact, currentUserId, getChatKey]);
+  }, [messageInput, selectedContact, currentUserId, getChatKey, emitStopTyping, emitTyping]);
 
   return (
     <div className="flex flex-col p-2 sm:p-3 bg-white dark:bg-gray-900 border-t border-purple-200 dark:border-gray-800">

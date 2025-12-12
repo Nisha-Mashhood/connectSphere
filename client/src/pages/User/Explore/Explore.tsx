@@ -8,6 +8,7 @@ import { getMentorButtonConfig, getUserButtonConfig, getGroupButtonConfig } from
 import ExploreModal from '../../../Components/ReusableComponents/ExploreModal';
 import RequestStatusHandler from '../../../Components/User/UserComponents/HelperComponents/RequestStatusHandler';
 import { useExploreMentors } from '../../../Hooks/User/useExploreMentors';
+import BaseModal from '../../../Components/ReusableComponents/BaseModal';
 
 const ExploreMentors = () => {
   const {
@@ -50,6 +51,10 @@ const ExploreMentors = () => {
     handleRequestUser,
     handleRequestGroup,
     isSlotLocked,
+    slotConflictModalOpen,
+    setSlotConflictModalOpen,
+    conflictingRequests,
+    confirmReplaceRequests,
   } = useExploreMentors();
 
   return (
@@ -136,6 +141,26 @@ const ExploreMentors = () => {
           }
           isActionDisabled={selectedMentor ? !selectedSlot : false}
         />
+
+        <BaseModal
+          isOpen={slotConflictModalOpen}
+          onClose={() => setSlotConflictModalOpen(false)}
+          title="Existing request for this time slot"
+          onSubmit={confirmReplaceRequests}
+          actionText="Continue"
+          cancelText="Cancel"
+          size="md"
+        >
+        <p className="text-sm text-default-600">
+          You already have {conflictingRequests.length} request
+          {conflictingRequests.length > 1 ? "s" : ""} for this day and time.
+        </p>
+        <p className="text-sm text-default-600 mt-2">
+          If you continue, the previous request
+            {conflictingRequests.length > 1 ? "s will" : " will"} be deleted and a new
+          request will be created with this mentor and time slot.
+        </p>
+      </BaseModal>
       </div>
     </div>
   );

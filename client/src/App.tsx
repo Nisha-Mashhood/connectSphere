@@ -5,14 +5,16 @@ import { setupInterceptors } from "./lib/axios";
 import { useEffect } from "react";
 import NotificationHandler from "./Components/User/Home/NotificationHandler";
 import { useReviewModalTimer } from "./Service/useReviewModalTimer";
-import { useSelector } from "react-redux";
+import { useDispatch, useSelector } from "react-redux";
 import { RootState } from "./redux/store";
 import ReviewModal from "./Components/Forms/ReviewModal";
+import { setIsInChatComponent } from "./redux/Slice/notificationSlice";
 
 
 function App() {
   const navigate = useNavigate();
   const location = useLocation();
+   const dispatch = useDispatch();
   const { currentUser, needsReviewPrompt } = useSelector((state: RootState) => state.user);
   const isAdminRoute = location.pathname.startsWith("/admin");
   const { isModalOpen, setIsModalOpen } = useReviewModalTimer(needsReviewPrompt, isAdminRoute);
@@ -22,6 +24,11 @@ function App() {
     setupInterceptors(navigate);
   }, [navigate]);
 
+  useEffect(() => {
+    const isChatRoute = location.pathname.startsWith("/chat");
+    dispatch(setIsInChatComponent(isChatRoute));
+    // dispatch(setIsInChatComponent(false));
+  }, [dispatch, location.pathname]);
 
   return (
     <>

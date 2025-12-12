@@ -32,7 +32,7 @@ export const useChatCall = ({
   selectedContact,
   getChatKey,
 }: UseChatCallParams) => {
-  //CALL LOGS
+  // CALL LOGS
   const [callLogs, setCallLogs] = useState<ICallLog[]>([]);
 
   const fetchCallLogs = useCallback(async () => {
@@ -49,7 +49,22 @@ export const useChatCall = ({
     fetchCallLogs();
   }, [fetchCallLogs]);
 
-  //RINGTONE
+  const getIsCaller = useCallback(() => {
+    if (!currentUserId || !selectedContact) return null;
+
+    const myId = currentUserId;
+    const theirId =
+      selectedContact.targetId ||
+      selectedContact.contactId ||
+      selectedContact.userId ||
+      selectedContact.groupId;
+
+    if (!theirId) return null;
+
+    return myId.localeCompare(theirId) < 0;
+  }, [currentUserId, selectedContact]);
+
+  // RINGTONE
   const ringtone = useRef<HTMLAudioElement | null>(null);
   const isRingtonePlaying = useRef(false);
 
@@ -81,7 +96,7 @@ export const useChatCall = ({
     }
   }, []);
 
-  //MEDIA REFS
+  // MEDIA REFS
   const localVideoRef = useRef<HTMLVideoElement | null>(null);
   const remoteVideoRef = useRef<HTMLVideoElement | null>(null);
   const localAudioRef = useRef<HTMLAudioElement | null>(null);
@@ -114,7 +129,7 @@ export const useChatCall = ({
     remoteStreamRef.current = remoteStream;
   }, [remoteStream]);
 
-  //END CALL
+  // END CALL
   const endCall = useCallback(
     (fromRemote: boolean = false) => {
       // Stop WebRTC & local media
@@ -148,12 +163,7 @@ export const useChatCall = ({
         });
       }
     },
-    [
-      chatKey,
-      isVideoCallActive,
-      selectedContact,
-      stopRingtone,
-    ]
+    [chatKey, isVideoCallActive, selectedContact, stopRingtone]
   );
 
   useEffect(() => {
@@ -168,17 +178,27 @@ export const useChatCall = ({
         remoteStreamRef.current.getTracks().forEach((t) => t.stop());
       }
     };
-  }, []);
+  }, [stopRingtone]);
 
-  //ASSIGN STREAMS TO ELEMENTS
+useEffect(() => {
+  if (localVideoRef.current) {
+    localVideoRef.current.srcObject = localStream;
+  }
+  if (remoteVideoRef.current) {
+    remoteVideoRef.current.srcObject = remoteStream;
+  }
+}, [localStream, remoteStream]);
+
   useEffect(() => {
-    if (localVideoRef.current) localVideoRef.current.srcObject = localStream;
-    if (remoteVideoRef.current) remoteVideoRef.current.srcObject = remoteStream;
-    if (localAudioRef.current) localAudioRef.current.srcObject = localStream;
-    if (remoteAudioRef.current) remoteAudioRef.current.srcObject = remoteStream;
-  }, [localStream, remoteStream]);
+    console.log("Video refs:", {
+      localVideo: !!localVideoRef.current,
+      remoteVideo: !!remoteVideoRef.current,
+      localStreamTracks: localStream?.getTracks().map((t) => t.kind) || null,
+      remoteStreamTracks: remoteStream?.getTracks().map((t) => t.kind) || null,
+    });
+  }, [localStream, remoteStream, isVideoCallActive]);
 
-  //SETUP WEBRTC + SOCKETS
+  // SETUP WEBRTC + SOCKETS
   useEffect(() => {
     if (
       !selectedContact ||
@@ -195,27 +215,20 @@ export const useChatCall = ({
       // Ensure peer connection exists
       await webrtcService.initPeerConnection();
 
-      // WebRTC: remote track handler (single connection)
+      // WebRTC: remote track handler
       webrtcService.onTrack("single", (event) => {
         if (!isMounted) return;
         const stream = event.streams[0];
-        if (stream) {
-          console.log(
-            "REMOTE TRACK (single) RECEIVED — attaching to remoteStream + VIDEO TAG"
-          );
+        if (!stream) return;
 
-          setRemoteStream(stream);
-          if (remoteVideoRef.current) {
-            remoteVideoRef.current.srcObject = stream;
-          }
-
-          if (remoteAudioRef.current) {
-            remoteAudioRef.current.srcObject = stream;
-          }
-        }
+        console.log(
+          "onTrack: remote stream received, tracks:",
+          stream.getTracks().map((t) => t.kind)
+        );
+        setRemoteStream(stream);
       });
 
-      //  WebRTC: ICE candidate
+      // WebRTC: ICE candidate
       webrtcService.onIceCandidate("single", (candidate) => {
         if (!isMounted || !selectedContact || !chatKey || !candidate) return;
 
@@ -232,12 +245,12 @@ export const useChatCall = ({
 
     setup();
 
-    //Socket event handlers
+    // Socket event handlers
     const handleOffer = (data: IncomingCallData) => {
       if (
         !isMounted ||
         data.chatKey !== chatKey ||
-        data.targetId !== currentUserId || 
+        data.targetId !== currentUserId ||
         isAudioCallActive ||
         isVideoCallActive
       ) {
@@ -305,7 +318,7 @@ export const useChatCall = ({
     endCall,
   ]);
 
-  //START CALLS
+  // START CALLS
   const startVideoCall = useCallback(async () => {
     if (
       !selectedContact ||
@@ -317,8 +330,18 @@ export const useChatCall = ({
       return;
     }
 
+    const isCaller = getIsCaller();
+    if (isCaller === null) return;
+    if (!isCaller) {
+      toast("You cannot start the call. Wait for them to call you.", {
+        icon: "ℹ️",
+      });
+      return;
+    }
+
     try {
-      await webrtcService.initPeerConnection("single", true);
+      await webrtcService.initPeerConnection("single");
+
       const stream = await webrtcService.getLocalStream();
       setLocalStream(stream);
 
@@ -343,7 +366,14 @@ export const useChatCall = ({
       toast.error("Camera/Microphone access denied");
       endCall();
     }
-  }, [chatKey, isAudioCallActive, isVideoCallActive, selectedContact, endCall]);
+  }, [
+    chatKey,
+    isAudioCallActive,
+    isVideoCallActive,
+    selectedContact,
+    endCall,
+    getIsCaller,
+  ]);
 
   const startAudioCall = useCallback(async () => {
     if (
@@ -356,8 +386,18 @@ export const useChatCall = ({
       return;
     }
 
+    const isCaller = getIsCaller();
+    if (isCaller === null) return;
+    if (!isCaller) {
+      toast("You cannot start the call. Wait for them to call you.", {
+        icon: "ℹ️",
+      });
+      return;
+    }
+
     try {
-      await webrtcService.initPeerConnection("single", true);
+      await webrtcService.initPeerConnection("single");
+
       const stream = await webrtcService.getLocalAudioStream();
       setLocalStream(stream);
 
@@ -382,34 +422,46 @@ export const useChatCall = ({
       toast.error("Microphone access denied");
       endCall();
     }
-  }, [chatKey, isAudioCallActive, isVideoCallActive, selectedContact, endCall]);
+  }, [
+    chatKey,
+    isAudioCallActive,
+    isVideoCallActive,
+    selectedContact,
+    endCall,
+    getIsCaller,
+  ]);
 
-  //ACCEPT INCOMING CALL
+  // ACCEPT INCOMING CALL
   const acceptCall = useCallback(async () => {
     if (!incomingCallData || !chatKey || !selectedContact) return;
 
-    try {
-      await webrtcService.initPeerConnection("single", true);
+    const isCaller = getIsCaller();
+    if (isCaller === true) {
+      console.log("I'm the caller but received an offer , ignoring");
+      return; // ignore conflicting offer
+    }
 
-      // Apply remote offer
+    try {
+      //receiver must NOT mark itself as the offerer
+      await webrtcService.initPeerConnection("single");
+
+      // Apply remote offer first
       await webrtcService.setRemoteDescription(incomingCallData.offer);
 
-      // Get local media & attach
+      // Now get local media & attach immediately for local preview
       const stream =
         incomingCallData.callType === "audio"
           ? await webrtcService.getLocalAudioStream()
           : await webrtcService.getLocalStream();
+          
+          setLocalStream(stream);
 
-      setLocalStream(stream);
-      if (localVideoRef.current) {
-        localVideoRef.current.srcObject = stream;
-      }
-
+      // Add local tracks to the peer connection
       stream
         .getTracks()
         .forEach((track) => webrtcService.addTrack("single", track, stream));
 
-      //Create & send answer
+      // Create & send answer
       const answer = await webrtcService.createAnswer();
 
       socketService.sendAnswer({
@@ -432,9 +484,9 @@ export const useChatCall = ({
       toast.error("Failed to accept call");
       endCall();
     }
-  }, [incomingCallData, chatKey, selectedContact, stopRingtone, endCall]);
+  }, [incomingCallData, chatKey, selectedContact, stopRingtone, endCall, getIsCaller]);
 
-  //DECLINE CALL
+  // DECLINE CALL
   const declineCall = useCallback(() => {
     if (!incomingCallData || !chatKey || !selectedContact) return;
 
@@ -452,7 +504,7 @@ export const useChatCall = ({
     webrtcService.stop();
   }, [incomingCallData, chatKey, selectedContact, stopRingtone]);
 
-  //TOGGLE CONTROLS
+  // TOGGLE CONTROLS
   const toggleAudio = useCallback(() => {
     if (!localStreamRef.current) return;
     const track = localStreamRef.current.getAudioTracks()[0];
@@ -510,7 +562,7 @@ export const useChatCall = ({
     }
   }, [isScreenSharing]);
 
-  //AUTO DECLINE AFTER 30 SECONDS
+  // AUTO DECLINE AFTER 30 SECONDS
   useEffect(() => {
     if (!isIncomingCall) return;
     const timer = setTimeout(() => declineCall(), 30000);
@@ -531,7 +583,7 @@ export const useChatCall = ({
     localAudioRef,
     remoteAudioRef,
     ringtone,
-
+    getIsCaller,
     startVideoCall,
     startAudioCall,
     endCall,

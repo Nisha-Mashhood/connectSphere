@@ -1,4 +1,4 @@
-import { IChatMessage } from "../Interface/User/IchatMessage";
+import { IChatMessage, ILastMessageSummary } from "../Interface/User/IchatMessage";
 import { axiosInstance } from "../lib/axios";
 import  { AxiosProgressEvent } from "axios";
 import { handleError } from "./ErrorHandler";
@@ -18,12 +18,6 @@ export const fetchChatMessages = async (
     });
     return response.data.data;
   } catch (error) {
-    // if (error.name === "CanceledError") {
-    //   return { messages: [], total: 0 };
-    // }else{
-    // console.error("Error fetching chat messages:", error);
-    // throw error;
-    // }
     handleError(error);
   }
 };
@@ -63,7 +57,6 @@ export const getUnreadMessages = async (userId: string) => {
     const response = await axiosInstance.get("/chat/unread", {
       params: { userId },
     });
-    // console.log("getUnreadMessages response:", response.data); 
     return response.data.data; 
   } catch (error) {
     const errorMessage = error.response
@@ -78,5 +71,16 @@ export const getUnreadMessages = async (userId: string) => {
       return {};
     }
     throw new Error(errorMessage); 
+  }
+};
+
+export const getLastMessagesForContacts = async ( userId: string ): Promise<Record<string, ILastMessageSummary>> => {
+  try {
+    const response = await axiosInstance.get("/chat/last-messages", {
+      params: { userId },
+    });
+    return response.data.data;
+  } catch (error) {
+    handleError(error);
   }
 };

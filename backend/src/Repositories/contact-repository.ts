@@ -1,5 +1,5 @@
 import { inject, injectable } from 'inversify';
-import { Types, Model } from 'mongoose';
+import { Types, Model, ClientSession } from 'mongoose';
 import { BaseRepository } from '../core/repositries/base-repositry';
 import { RepositoryError } from '../core/utils/error-handler';
 import logger from '../core/utils/logger';
@@ -32,7 +32,7 @@ export class ContactRepository extends BaseRepository<IContact> implements ICont
     return new Types.ObjectId(idStr);
   }
 
-   public createContact = async (contactData: Partial<IContact>): Promise<IContact> => {
+   public createContact = async (contactData: Partial<IContact>, session?: ClientSession): Promise<IContact> => {
     try {
       logger.debug(`Creating contact for user: ${contactData.userId}`);
       const contact = await this.create({
@@ -42,7 +42,9 @@ export class ContactRepository extends BaseRepository<IContact> implements ICont
         collaborationId: contactData.collaborationId ? this.toObjectId(contactData.collaborationId) : undefined,
         userConnectionId: contactData.userConnectionId ? this.toObjectId(contactData.userConnectionId) : undefined,
         groupId: contactData.groupId ? this.toObjectId(contactData.groupId) : undefined,
-      });
+      },
+    session
+  );
       logger.info(`Contact created: ${contact._id}`);
       return contact;
     } catch (error: unknown) {

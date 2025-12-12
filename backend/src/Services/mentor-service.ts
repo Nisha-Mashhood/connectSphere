@@ -371,7 +371,7 @@ export class MentorService implements IMentorService {
         "mentor_approved",
         user._id.toString(),
         user._id.toString(),
-        "profile"
+        "user"
       );
       logger.info(
         `Created mentor_approved notification for user ${user._id}: ${notification.id}`

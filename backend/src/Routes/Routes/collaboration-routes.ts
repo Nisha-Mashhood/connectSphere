@@ -30,6 +30,7 @@ router.get(COLLABORATION_ROUTES.GetAllMentorRequests, [apiLimiter, authMiddlewar
 router.get(COLLABORATION_ROUTES.GetAllCollabs, [apiLimiter, authMiddleware.verifyToken, authMiddleware.authorize('admin')], collabController.getAllCollabs);
 // router.post(COLLABORATION_ROUTES.RefundCollab, [apiLimiter, authMiddleware.verifyToken, authMiddleware.checkBlockedStatus,], collabController.processRefund);
 router.get(COLLABORATION_ROUTES.GetReceiptDownload,[apiLimiter, authMiddleware.verifyToken, authMiddleware.checkBlockedStatus,], collabController.downloadReceiptController);
+router.delete(COLLABORATION_ROUTES.DeleteMentorRequest,[apiLimiter, authMiddleware.verifyToken, authMiddleware.checkBlockedStatus],collabController.deleteMentorRequestController);
 export default router;
 
 

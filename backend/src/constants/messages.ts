@@ -88,6 +88,7 @@ export const CHAT_MESSAGES = {
   MESSAGE_UPLOADED: "Message uploaded and saved",
   NO_UNREAD_MESSAGES: "No unread messages found",
   UNREAD_COUNTS_RETRIEVED: "Unread message counts retrieved successfully",
+  LAST_MESSAGE_SUMMARIES_RETRIEVED: "Last message summaries retrieved successfully",
 
   //Repositry
 

@@ -12,6 +12,7 @@ import { IChatService } from "../Interfaces/Services/i-chat-service";
 import { uploadMedia } from "../core/utils/cloudinary";
 import { IChatMessageDTO } from "../Interfaces/DTOs/i-chat-message-dto";
 import { toChatMessageDTOs } from "../Utils/mappers/chat-message-mapper";
+import { LastMessageSummary } from "../Utils/types/contact-types";
 
 @injectable()
 export class ChatService implements IChatService {
@@ -290,4 +291,95 @@ export class ChatService implements IChatService {
           );
     }
   };
+
+  getLastMessageSummaries = async (
+  userId: string
+): Promise<{ [chatKey: string]: LastMessageSummary }> => {
+  try {
+    logger.debug(`Fetching last message summaries for user: ${userId}`);
+    if (!userId) {
+      throw new ServiceError("User ID is required", StatusCodes.BAD_REQUEST);
+    }
+    if (!Types.ObjectId.isValid(userId)) {
+      throw new ServiceError(
+        "Invalid user ID: must be a 24 character hex string",
+        StatusCodes.BAD_REQUEST
+      );
+    }
+
+    const contacts = await this._contactRepository.findContactsByUserId(userId);
+    const summaries: { [chatKey: string]: LastMessageSummary } = {};
+
+    for (const contact of contacts) {
+      try {
+        if (contact.type === "group" && contact.groupId?._id) {
+          const groupId = contact.groupId._id.toString();
+          const msg = await this._chatRepository.findLatestMessageByGroupId(
+            groupId
+          );
+          if (msg) {
+            summaries[`group_${groupId}`] = {
+              content: msg.content,
+              senderId: msg.senderId.toString(),
+              timestamp: msg.timestamp,
+              contentType: msg.contentType as any,
+            };
+          }
+        } else if (
+          contact.type === "user-mentor" &&
+          contact.collaborationId?._id
+        ) {
+          const collabId = contact.collaborationId._id.toString();
+          const msg =
+            await this._chatRepository.findLatestMessageByCollaborationId(
+              collabId
+            );
+          if (msg) {
+            summaries[`user-mentor_${collabId}`] = {
+              content: msg.content,
+              senderId: msg.senderId.toString(),
+              timestamp: msg.timestamp,
+              contentType: msg.contentType as any,
+            };
+          }
+        } else if (
+          contact.type === "user-user" &&
+          contact.userConnectionId?._id
+        ) {
+          const connId = contact.userConnectionId._id.toString();
+          const msg =
+            await this._chatRepository.findLatestMessageByUserConnectionId(
+              connId
+            );
+          if (msg) {
+            summaries[`user-user_${connId}`] = {
+              content: msg.content,
+              senderId: msg.senderId.toString(),
+              timestamp: msg.timestamp,
+              contentType: msg.contentType as any,
+            };
+          }
+        }
+      } catch (err: any) {
+        logger.warn(
+          `Skipping last message summary for contact ${contact._id}: ${err.message}`
+        );
+      }
+    }
+
+    return summaries;
+  } catch (error: unknown) {
+    const err = error instanceof Error ? error : new Error(String(error));
+    logger.error(
+      `Error fetching last message summaries for user ${userId}: ${err.message}`
+    );
+    throw error instanceof ServiceError
+      ? error
+      : new ServiceError(
+          "Failed to fetch last message summaries",
+          StatusCodes.INTERNAL_SERVER_ERROR,
+          err
+        );
+  }
+};
 }

@@ -43,7 +43,7 @@ const MessageList: React.FC<MessageListProps> = ({
 
         return (
           <div
-            key={`${msg._id}_${msg.timestamp}`}
+            key={msg._id || `${msg.senderId || "unknown"}_${msg.timestamp}_${idx}`}
             className="animate-fade-in-up"
           >
             <MessageBubble

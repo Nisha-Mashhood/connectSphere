@@ -18,3 +18,11 @@ export interface IChatMessage {
   caption?: string;
   createdAt?:string;
 }
+
+
+export interface ILastMessageSummary {
+  content: string;
+  senderId: string;
+  timestamp: string;
+  contentType: "text" | "image" | "video" | "file";
+}

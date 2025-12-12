@@ -1,33 +1,33 @@
-import "./Chat.css";
-import React, { useEffect, useState } from "react";
+import "../../Components/User/Common/Chat/Chat.css";
+import React, { useCallback, useEffect, useState } from "react";
 import { useSelector, useDispatch } from "react-redux";
 import { Card } from "@nextui-org/react";
-import { RootState } from "../../../../redux/store";
-import { socketService } from "../../../../Service/SocketService";
-import ChatSidebar from "./ChatSidebar/ChatSidebar";
-import ChatHeader from "./ChatHeader";
-import ChatDetailsSidebar from "./ChatDetailsSideBar/ChatDetailsSidebar";
-import ChatMessages from "./ChatMessages/ChatMessages";
-import ChatInput from "./ChatInput/ChatInput";
+import { RootState } from "../../redux/store";
+import { socketService } from "../../Service/SocketService";
+import ChatSidebar from "../../Components/User/Common/Chat/ChatSidebar/ChatSidebar";
+import ChatHeader from "../../Components/User/Common/Chat/ChatHeader";
+import ChatDetailsSidebar from "../../Components/User/Common/Chat/ChatDetailsSideBar/ChatDetailsSidebar";
+import ChatMessages from "../../Components/User/Common/Chat/ChatMessages/ChatMessages";
+import ChatInput from "../../Components/User/Common/Chat/ChatInput/ChatInput";
 
-import { useChatContacts } from "../../../../Hooks/User/Chat/useChatContacts";
-import { useChatMessages } from "../../../../Hooks/User/Chat/useChatMessages";
-import { useChatNotifications } from "../../../../Hooks/User/Chat/useChatNotifications";
+import { useChatContacts } from "../../Hooks/User/Chat/useChatContacts";
+import { useChatMessages } from "../../Hooks/User/Chat/useChatMessages";
+import { useChatNotifications } from "../../Hooks/User/Chat/useChatNotifications";
 
 import {
   setIsInChatComponent,
   setActiveChatKey,
-} from "../../../../redux/Slice/notificationSlice";
+} from "../../redux/Slice/notificationSlice";
 
-import { getChatKey } from "./utils/contactUtils";
-import { useChatCall } from "../../../../Hooks/User/Chat/OneToOneCall/useChatCall";
+import { getChatKey } from "../../Components/User/Common/Chat/utils/contactUtils";
+import { useChatCall } from "../../Hooks/User/Chat/OneToOneCall/useChatCall";
 
 const Chat: React.FC = () => {
     const [isSidebarOpen, setIsSidebarOpen] = useState(false);
     const [isDetailsSidebarOpen, setIsDetailsSidebarOpen] = useState(false);
-  const dispatch = useDispatch();
-  const { currentUser } = useSelector((state: RootState) => state.user);
-
+    const dispatch = useDispatch();
+    const { currentUser } = useSelector((state: RootState) => state.user);
+  
   // Contacts Hook
   const {
     sortedContacts,
@@ -36,18 +36,21 @@ const Chat: React.FC = () => {
     handleContactSelect,
     unreadCounts,
     refetchUnreadCounts,
+    lastMessages,
   } = useChatContacts(currentUser?.id, getChatKey);
-
+  
   // Notification Hook
   const { autoMarkMessageNotificationAsRead } = useChatNotifications(
     currentUser?.id
   );
-
-  // SINGLE INSTANCE OF useChatMessages()
-  const chatMsg = useChatMessages((chatKey) => {
+  
+  const onMessageActivity = useCallback((chatKey: string) => {
     autoMarkMessageNotificationAsRead(chatKey);
     refetchUnreadCounts();
-  });
+  }, [autoMarkMessageNotificationAsRead, refetchUnreadCounts]);
+
+  //Message Hook
+  const chatMsg = useChatMessages(onMessageActivity)
 
   // Calls
   const call = useChatCall({
@@ -58,16 +61,17 @@ const Chat: React.FC = () => {
 
   // Initial contact selection
   useEffect(() => {
-    if (sortedContacts.length > 0) {
+    if (sortedContacts.length > 0 && !selectedContact) {
       setInitialContact(sortedContacts);
     }
-  }, [sortedContacts, setInitialContact]);
+  }, [sortedContacts, setInitialContact, selectedContact]);
 
   // Socket connection
   useEffect(() => {
     if (!currentUser?.id) return;
 
-    sessionStorage.setItem("isInChatComponent", "true");
+    // sessionStorage.setItem("isInChatComponent", "true");
+    console.log("Inside caht container");
     dispatch(setIsInChatComponent(true));
 
     socketService.connect(
@@ -78,16 +82,14 @@ const Chat: React.FC = () => {
     refetchUnreadCounts();
 
     return () => {
-      sessionStorage.removeItem("isInChatComponent");
       dispatch(setIsInChatComponent(false));
       dispatch(setActiveChatKey(null));
       socketService.leaveChat(currentUser.id);
-      sessionStorage.removeItem("activeChatKey");
     };
   }, [currentUser?.id, dispatch, refetchUnreadCounts]);
 
     const closeSidebar = () => setIsSidebarOpen(false);
-  const closeDetailsSidebar = () => setIsDetailsSidebarOpen(false);
+    const closeDetailsSidebar = () => setIsDetailsSidebarOpen(false);
 
 
   return (
@@ -100,7 +102,7 @@ const Chat: React.FC = () => {
           selectedContact={selectedContact}
           onContactSelect={handleContactSelect}
           unreadCounts={unreadCounts}
-          lastMessages={chatMsg.lastMessages}
+          lastMessages={lastMessages}
           currentUserId={currentUser?.id || ""}
           callLogs={call.callLogs}
         />
@@ -163,7 +165,7 @@ const Chat: React.FC = () => {
                       closeSidebar();
                     }}
                     unreadCounts={unreadCounts}
-                    lastMessages={chatMsg.lastMessages}
+                    lastMessages={lastMessages}
                     chatNotifications={[]}
                     currentUserId={currentUser?.id || ""}
                     callLogs={call.callLogs}

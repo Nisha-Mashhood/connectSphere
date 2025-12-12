@@ -1,5 +1,5 @@
 import { inject, injectable } from "inversify";
-import { Types } from "mongoose";
+import mongoose, { Types } from "mongoose";
 import { v4 as uuid } from "uuid";
 import PDFDocument from "pdfkit";
 import { StatusCodes } from "../enums/status-code-enums";
@@ -102,6 +102,55 @@ export class CollaborationService implements ICollaborationService {
     }
   };
 
+  private async hasMentorSlotConflict(
+    mentorId: string,
+    day: string,
+    time: string
+  ): Promise<boolean> {
+    const lockedSlots: LockedSlot[] =
+      await this._collabRepository.getLockedSlotsByMentorId(mentorId);
+
+    const normalizedDay = day.trim().toLowerCase();
+    const normalizedTime = time.trim().toLowerCase();
+
+    return lockedSlots.some((slot) => {
+      const slotDay = slot.day.trim().toLowerCase();
+      if (slotDay !== normalizedDay) return false;
+
+      return slot.timeSlots.some(
+        (t) => t.trim().toLowerCase() === normalizedTime
+      );
+    });
+  }
+
+  private async hasUserCollabSlotConflict(
+    userId: string,
+    day: string,
+    time: string
+  ): Promise<boolean> {
+    const collaborations = await this._collabRepository.getCollabDataForUser(userId);
+
+    const normalizedDay = day.trim().toLowerCase();
+    const normalizedTime = time.trim().toLowerCase();
+
+    return collaborations.some((collab) => {
+      // Skip cancelled or completed collabs
+      if (collab.isCancelled || collab.isCompleted) return false;
+      if (!Array.isArray(collab.selectedSlot)) return false;
+
+      return collab.selectedSlot.some((slot) => {
+        if (!slot.day || !Array.isArray(slot.timeSlots)) return false;
+
+        const slotDay = slot.day.trim().toLowerCase();
+        if (slotDay !== normalizedDay) return false;
+
+        return slot.timeSlots.some(
+          (t) => t.trim().toLowerCase() === normalizedTime
+        );
+      });
+    });
+  }
+
   public acceptRequest = async (
     requestId: string
   ): Promise<IMentorRequestDTO | null> => {
@@ -113,6 +162,47 @@ export class CollaborationService implements ICollaborationService {
           StatusCodes.BAD_REQUEST
         );
       }
+
+      //Load the request first
+    const existingRequest = await this._collabRepository.findMentorRequestById(requestId);
+
+    if (!existingRequest) {
+      throw new ServiceError("Mentor request not found", StatusCodes.NOT_FOUND);
+    }
+
+    if ( !existingRequest.selectedSlot || !existingRequest.selectedSlot.day ||!existingRequest.selectedSlot.timeSlots ) {
+      throw new ServiceError( "Selected time slot not found for this request", StatusCodes.BAD_REQUEST );
+    }
+
+    const slotDay = existingRequest.selectedSlot.day;
+    const rawTime = existingRequest.selectedSlot.timeSlots;
+    const slotTime = Array.isArray(rawTime) ? rawTime[0] : rawTime;
+    const mentorIdStr = existingRequest.mentorId.toString();
+    const userIdStr = existingRequest.userId.toString();
+
+    //Check mentor schedule (collabs + accepted requests)
+    const mentorHasConflict = await this.hasMentorSlotConflict(
+      mentorIdStr,
+      slotDay,
+      slotTime
+    );
+
+    if (mentorHasConflict) {
+      throw new ServiceError("Mentor already has a session at this time slot", StatusCodes.BAD_REQUEST);
+    }
+
+    //Check user schedule (confirmed collaborations)
+    const userHasConflict = await this.hasUserCollabSlotConflict(
+      userIdStr,
+      slotDay,
+      slotTime
+    );
+
+    if (userHasConflict) {
+      throw new ServiceError("User already has a confirmed session at this time slot", StatusCodes.BAD_REQUEST);
+    }
+
+
       const updatedRequest = await this._collabRepository.updateMentorRequestStatus(
         requestId,
         "Accepted"
@@ -329,52 +419,83 @@ export class CollaborationService implements ICollaborationService {
     }
   };
 
+
   public processPaymentService = async (
-    paymentMethodId: string,
-    amount: number,
-    requestId: string,
-    mentorRequestData: Partial<IMentorRequest>,
-    email: string,
-    returnUrl: string
-  ): Promise<{ paymentIntent: Stripe.PaymentIntent; contacts?: any[] }> => {
-    try {
-      logger.debug(`Processing payment for request: ${requestId}`);
-      if (!mentorRequestData.mentorId || !mentorRequestData.userId) {
-        throw new ServiceError(
-          "Mentor ID and User ID are required",
-          StatusCodes.BAD_REQUEST
-        );
-      }
+  paymentMethodId: string,
+  amount: number,
+  requestId: string,
+  mentorRequestData: Partial<IMentorRequest>,
+  email: string,
+  returnUrl: string
+): Promise<{ paymentIntent: Stripe.PaymentIntent; contacts?: any[] }> => {
+  try {
+    logger.debug(`Processing payment for request: ${requestId}`);
 
-      const idempotencyKey = uuid();
-
-      let customers = await stripe.customers.list({ email, limit: 1 });
-      let customer = customers.data.length > 0 ? customers.data[0] : null;
-
-      if (!customer) {
-        customer = await stripe.customers.create({
-          email,
-          payment_method: paymentMethodId,
-          invoice_settings: { default_payment_method: paymentMethodId },
-        });
-      }
-
-      const paymentIntent = await stripe.paymentIntents.create(
-        {
-          amount,
-          currency: "inr",
-          customer: customer.id,
-          payment_method: paymentMethodId,
-          confirm: true,
-          receipt_email: email,
-          description: `Payment for Request ID: ${requestId}`,
-          metadata: { requestId },
-          return_url: `${returnUrl}?payment_status=success&request_id=${requestId}`,
-        },
-        { idempotencyKey }
+    if (!mentorRequestData.mentorId || !mentorRequestData.userId) {
+      throw new ServiceError(
+        "Mentor ID and User ID are required",
+        StatusCodes.BAD_REQUEST
       );
+    }
 
-      if (paymentIntent.status === "succeeded") {
+    //Fetch mentor & user
+    const mentor  = await this._mentorRepository.getMentorById(
+      mentorRequestData.mentorId.toString()
+    );
+    if (!mentor || !mentor.userId) {
+      throw new ServiceError(
+        "Mentor or mentor’s userId not found",
+        StatusCodes.NOT_FOUND
+      );
+    }
+    const mentorUser = mentor.userId as Pick<IUser, "_id" | "name" | "email">;
+
+    const user = await this._userRepository.findById(
+      mentorRequestData.userId.toString()
+    );
+    if (!user) {
+      throw new ServiceError("User not found", StatusCodes.NOT_FOUND);
+    }
+
+    const idempotencyKey = uuid();
+
+    let customers = await stripe.customers.list({ email, limit: 1 });
+    let customer = customers.data.length > 0 ? customers.data[0] : null;
+
+    if (!customer) {
+      customer = await stripe.customers.create({
+        email,
+        payment_method: paymentMethodId,
+        invoice_settings: { default_payment_method: paymentMethodId },
+      });
+    }
+
+    const paymentIntent = await stripe.paymentIntents.create(
+      {
+        amount,
+        currency: "inr",
+        customer: customer.id,
+        payment_method: paymentMethodId,
+        confirm: true,
+        receipt_email: email,
+        description: `Payment for Request ID: ${requestId}`,
+        metadata: { requestId },
+        return_url: `${returnUrl}?payment_status=success&request_id=${requestId}`,
+      },
+      { idempotencyKey }
+    );
+
+    // If payment not successful → no DB changes
+    if (paymentIntent.status !== "succeeded") {
+      return { paymentIntent };
+    }
+
+    // ---------- MONGODB TRANSACTION START ----------
+    const session = await mongoose.startSession();
+    let createdContacts: any[] | undefined;
+
+    try {
+      await session.withTransaction(async () => {
         const startDate = new Date();
         const endDate = new Date(startDate);
         const totalSessions = mentorRequestData.timePeriod || 1;
@@ -387,6 +508,7 @@ export class CollaborationService implements ICollaborationService {
           );
         }
 
+        // Calculate endDate based on day & number of sessions
         let sessionCount = 0;
         while (sessionCount < totalSessions) {
           endDate.setDate(endDate.getDate() + 1);
@@ -398,108 +520,108 @@ export class CollaborationService implements ICollaborationService {
           }
         }
 
-        const collaboration = await this._collabRepository.createCollaboration({
-          mentorId: mentorRequestData.mentorId,
-          userId: mentorRequestData.userId,
-          selectedSlot: mentorRequestData.selectedSlot
-            ? [mentorRequestData.selectedSlot]
-            : [],
-          price: amount / 100,
-          payment: true,
-          isCancelled: false,
-          startDate,
-          endDate,
-          paymentIntentId: paymentIntent.id,
-        });
+        // Create collaboration inside transaction
+        const collaboration = await this._collabRepository.createCollaboration(
+          {
+            mentorId: mentorRequestData.mentorId,
+            userId: mentorRequestData.userId,
+            selectedSlot: mentorRequestData.selectedSlot
+              ? [mentorRequestData.selectedSlot]
+              : [],
+            price: amount / 100,
+            payment: true,
+            isCancelled: false,
+            startDate,
+            endDate,
+            paymentIntentId: paymentIntent.id,
+          },
+          session
+        );
+
         const collaborationDTO = toCollaborationDTO(collaboration);
         if (!collaborationDTO) {
-          logger.error(`Failed to map collaboration ${collaboration._id} to DTO`);
-          throw new ServiceError("Failed to map collaboration to DTO", StatusCodes.INTERNAL_SERVER_ERROR);
+          logger.error(
+            `Failed to map collaboration ${collaboration._id} to DTO`
+          );
+          throw new ServiceError(
+            "Failed to map collaboration to DTO",
+            StatusCodes.INTERNAL_SERVER_ERROR
+          );
         }
         logger.info(`Collaboration created: ${collaboration._id}`);
 
-        const mentor = await this._mentorRepository.getMentorById(
-          mentorRequestData.mentorId.toString()
-        );
-        if (!mentor || !mentor.userId) {
-          throw new ServiceError(
-            "Mentor or mentor’s userId not found",
-            StatusCodes.NOT_FOUND
-          );
-        }
-        const mentorUser = mentor.userId as Pick<
-          IUser,
-          "_id" | "name" | "email"
-        >;
-
-        const user = await this._userRepository.findById(
-          mentorRequestData.userId.toString()
-        );
-        if (!user) {
-          throw new ServiceError("User not found", StatusCodes.NOT_FOUND);
-        }
-
+        // Create contacts inside transaction
         const [contact1, contact2] = await Promise.all([
-          this._contactRepository.createContact({
-            userId: mentorRequestData.userId.toString(),
-            targetUserId: mentorUser._id.toString(),
-            collaborationId: collaboration._id,
-            type: "user-mentor",
-          }),
-          this._contactRepository.createContact({
-            userId: mentorUser._id.toString(),
-            targetUserId: mentorRequestData.userId.toString(),
-            collaborationId: collaboration._id,
-            type: "user-mentor",
-          }),
+          this._contactRepository.createContact(
+            {
+              userId: mentorRequestData.userId ? mentorRequestData.userId.toString() : undefined,
+              targetUserId: mentorUser._id.toString(),
+              collaborationId: collaboration._id,
+              type: "user-mentor",
+            },
+            session
+          ),
+          this._contactRepository.createContact(
+            {
+              userId: mentorUser._id.toString(),
+              targetUserId: mentorRequestData.userId ? mentorRequestData.userId.toString() : undefined,
+              collaborationId: collaboration._id,
+              type: "user-mentor",
+            },
+            session
+          ),
         ]);
 
-        await this._notificationService.sendNotification(
-          user._id.toString(),
-          "collaboration_status",
-          mentorUser._id.toString(),
-          collaboration._id.toString(),
-          "collaboration",
-          undefined,
-          undefined,
-          `Payment completed and collaboration created with ${mentorUser.name}!`
-        );
-        logger.info(
-          `Sent collaboration_status notification to user ${user._id}`
-        );
+        createdContacts = [contact1, contact2];
 
-        await this._notificationService.sendNotification(
+        // Delete mentor request inside transaction
+        await this._collabRepository.deleteMentorRequest(requestId, session);
+      });
+
+      // ---------- TRANSACTION COMMITTED SUCCESSFULLY ----------
+
+      // Notifications & emails
+      await this._notificationService.sendNotification(
+        user._id.toString(),
+        "collaboration_status",
+        mentorUser._id.toString(),
+        requestId,
+        "collaboration",
+        undefined,
+        undefined,
+        `Payment completed and collaboration created with ${mentorUser.name}!`
+      );
+
+      await this._notificationService.sendNotification(
           mentorUser._id.toString(),
           "collaboration_status",
           user._id.toString(),
-          collaboration._id.toString(),
+          requestId,
           "collaboration",
           undefined,
           undefined,
           `${user.name}’s payment completed and collaboration created!`
-        );
-        logger.info(
-          `Sent collaboration_status notification to mentor ${mentorUser._id}`
-        );
 
-        await this._collabRepository.deleteMentorRequest(requestId);
-        return { paymentIntent, contacts: [contact1, contact2] };
-      }
-      return { paymentIntent };
-    } catch (error: unknown) {
-      const err = error instanceof Error ? error : new Error(String(error));
-      logger.error(
-        `Error processing payment for request ${requestId}: ${err.message}`
       );
-      throw error instanceof ServiceError
-        ? error
-        : new ServiceError(
-            "Failed to process payment",
-            StatusCodes.INTERNAL_SERVER_ERROR,
-            err
-          );
+
+      return { paymentIntent, contacts: createdContacts };
+    } finally {
+      session.endSession();
     }
-  };
+  } catch (error: unknown) {
+    const err = error instanceof Error ? error : new Error(String(error));
+    logger.error(
+      `Error processing payment for request ${requestId}: ${err.message}`
+    );
+    throw error instanceof ServiceError
+      ? error
+      : new ServiceError(
+          "Failed to process payment",
+          StatusCodes.INTERNAL_SERVER_ERROR,
+          err
+        );
+  }
+};
 
   //Check whether the collbaoration is completed
   private checkAndCompleteCollaboration = async (
@@ -1452,4 +1574,30 @@ export class CollaborationService implements ICollaborationService {
           );
     }
   }
+
+  public deleteMentorRequestService = async (requestId: string): Promise<void> => {
+  try {
+    logger.debug(`Deleting mentor request in service: ${requestId}`);
+
+    if (!Types.ObjectId.isValid(requestId)) {
+      throw new ServiceError(
+        "Invalid request ID: must be a 24 character hex string",
+        StatusCodes.BAD_REQUEST
+      );
+    }
+
+    await this._collabRepository.deleteMentorRequest(requestId);
+    logger.info(`Mentor request deleted: ${requestId}`);
+  } catch (error: unknown) {
+    const err = error instanceof Error ? error : new Error(String(error));
+    logger.error(`Error deleting mentor request ${requestId}: ${err.message}`);
+    throw error instanceof ServiceError
+      ? error
+      : new ServiceError(
+          "Failed to delete mentor request",
+          StatusCodes.INTERNAL_SERVER_ERROR,
+          err
+        );
+  }
+};
 }

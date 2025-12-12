@@ -65,3 +65,17 @@ export interface AppNotification {
   callId?: string;
   status: "unread" | "read";
 }
+
+
+//one-one call
+export interface CallCreatedEvent {
+  callId: string;
+  chatKey: string;
+  callType: "audio" | "video";
+  type: "group" | "user-mentor" | "user-user";
+  senderId: string;
+  recipientIds: string[];
+  groupId?: string;
+  callerName?: string;
+  createdAt: string;
+}
