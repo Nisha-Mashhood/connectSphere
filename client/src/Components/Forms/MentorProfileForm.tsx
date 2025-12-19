@@ -26,7 +26,10 @@ import toast from "react-hot-toast";
 import {
   BecomeMentorFormValues,
   becomeMentorSchema,
+  MentorExperienceInput,
 } from "../../validation/becomeMentorValidation";
+import ExperienceModal from "../ReusableComponents/ExperienceModal";
+import { formatDate } from "../../pages/User/Profile/helper";
 
 const MentorProfileForm = () => {
   const navigate = useNavigate();
@@ -40,6 +43,12 @@ const MentorProfileForm = () => {
 
   // === Skills Dropdown Modal ===
   const [isSkillsOpen, setIsSkillsOpen] = useState(false);
+
+  // === Experience State ===
+  const [experiences, setExperiences] = useState<MentorExperienceInput[]>([]);
+  const [isExperienceModalOpen, setIsExperienceModalOpen] = useState(false);
+  const [editingExperience, setEditingExperience] = useState<MentorExperienceInput | null>(null);
+  const [editingIndex, setEditingIndex] = useState<number | null>(null);
 
   useEffect(() => {
     const fetchSkills = async () => {
@@ -73,6 +82,7 @@ const MentorProfileForm = () => {
       skills: [],
       certificates: [],
       availableSlots: [],
+      experiences: [],
     },
     mode: "onChange",
   });
@@ -110,6 +120,43 @@ const MentorProfileForm = () => {
     trigger("certificates");
   };
 
+  const handleAddExperience = () => {
+    setEditingExperience(null);
+    setEditingIndex(null);
+    setIsExperienceModalOpen(true);
+  };
+
+  const handleEditExperience = (exp: MentorExperienceInput, index: number) => {
+    setEditingExperience(exp);
+    setEditingIndex(index);
+    setIsExperienceModalOpen(true);
+  };
+
+  const handleDeleteExperience = (index: number) => {
+    const updated = experiences.filter((_, i) => i !== index);
+    setExperiences(updated);
+    setValue("experiences", updated, { shouldValidate: true });
+    trigger("experiences");
+  };
+
+  const handleSaveExperience = (data: MentorExperienceInput) => {
+    let updated;
+    if (editingIndex !== null) {
+      // Edit existing
+      updated = experiences.map((exp, i) =>
+        i === editingIndex ? data : exp
+      );
+    } else {
+      // Add new
+      updated = [...experiences, data];
+    }
+    // Sort by startDate descending (most recent first)
+    updated.sort((a, b) => new Date(b.startDate).getTime() - new Date(a.startDate).getTime());
+    setExperiences(updated);
+    setValue("experiences", updated, { shouldValidate: true });
+    trigger("experiences");
+  };
+
   const onSubmit: SubmitHandler<BecomeMentorFormValues> = async (data) => {
     if (isLoading) return;
 
@@ -128,6 +175,7 @@ const MentorProfileForm = () => {
     formData.append("skills", JSON.stringify(data.skills));
     formData.append("availableSlots", JSON.stringify(availableSlots));
     formData.append("timePeriod", data.timePeriod.toString());
+    formData.append("experiences", JSON.stringify(data.experiences));
 
     try {
       setIsLoading(true);
@@ -315,6 +363,79 @@ const MentorProfileForm = () => {
             ))}
           </div>
         </div>
+
+        {/* ===== WORK EXPERIENCE SECTION ===== */}
+        <div className="space-y-4 border-t pt-6">
+          <h2 className="text-xl font-semibold">Work Experience</h2>
+          <p className="text-sm text-gray-600">
+            Add your professional experience. Most recent first.
+          </p>
+
+          {/* Preview of Added Experiences */}
+          <div className="space-y-3">
+            {experiences.length === 0 ? (
+              <div className="text-center py-8 text-gray-500 border-2 border-dashed rounded-lg">
+                <p>No experiences added yet</p>
+                <p className="text-sm mt-2">Click the button below to add your first experience</p>
+              </div>
+            ) : (
+              experiences.map((exp, index) => (
+                <div
+                  key={index}
+                  className="flex items-start justify-between p-4 border rounded-lg bg-gray-50 hover:bg-gray-100 cursor-pointer transition"
+                  onClick={() => handleEditExperience(exp, index)}
+                >
+                  <div className="flex-1">
+                    <p className="font-semibold text-lg">{exp.role}</p>
+                    <p className="text-md text-gray-700">{exp.organization}</p>
+                    <p className="text-sm text-gray-600 mt-1">
+                      {formatDate(exp.startDate)} — {exp.isCurrent ? "Present" : formatDate(exp.endDate || "")}
+                    </p>
+                    {exp.description && (
+                      <p className="text-sm text-gray-600 mt-2 line-clamp-2">
+                        {exp.description}
+                      </p>
+                    )}
+                  </div>
+                  <Button
+                    isIconOnly
+                    color="danger"
+                    variant="light"
+                    size="sm"
+                    onPress={() => {
+                      handleDeleteExperience(index);
+                    }}
+                  >
+                    ×
+                  </Button>
+                </div>
+              ))
+            )}
+          </div>
+
+          <Button
+            type="button"
+            color="primary"
+            variant="bordered"
+            onPress={handleAddExperience}
+            startContent={<span className="text-lg">+</span>}
+            className="w-full mt-4"
+          >
+            {experiences.length === 0 ? "Add Your First Experience" : "Add Another Experience"}
+          </Button>
+
+          {errors.experiences && (
+            <p className="text-red-500 text-sm mt-2">{errors.experiences.message}</p>
+          )}
+        </div>
+
+        {/* Experience Modal */}
+        <ExperienceModal
+          isOpen={isExperienceModalOpen}
+          onClose={() => setIsExperienceModalOpen(false)}
+          onSave={handleSaveExperience}
+          initialData={editingExperience}
+        />
 
         {/* Available Slots – Reusable */}
         <div className="space-y-2">

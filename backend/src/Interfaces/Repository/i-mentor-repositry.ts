@@ -1,8 +1,8 @@
 import { IMentor } from "../Models/i-mentor";
 import { CompleteMentorDetails, MentorQuery } from "../../Utils/types/mentor-types";
+import { ClientSession } from "mongoose";
 
 export interface IMentorRepository {
-  submitMentorRequest(data: Partial<IMentor>): Promise<IMentor>;
   getAllMentorRequests(
     page?: number,
     limit?: number,
@@ -32,5 +32,6 @@ export interface IMentorRepository {
     availableSlots: object[];
     timePeriod: number;
     certifications: string[];
-  }): Promise<IMentor>;
+  }, options?: { session?: ClientSession }
+): Promise<IMentor>;
 }

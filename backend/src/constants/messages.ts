@@ -217,6 +217,7 @@ export const MENTOR_MESSAGES = {
   NO_MENTORS_FOUND: "No mentors found",
   MENTORS_FETCHED: "Mentors fetched successfully",
   MENTOR_RETRIEVED: "Mentor retrieved successfully",
+  MENTOR_EXPERIENCE_DETAILS_RETRIEVED: "Mentor experiences retrieved successfully",
   MENTOR_REQUEST_APPROVED: "Mentor request approved successfully. Email sent to user",
   MENTOR_REQUEST_REJECTED: "Mentor request rejected successfully. Email sent to user",
   MENTORSHIP_CANCELLED: "Mentorship cancelled successfully. Email sent to user",
@@ -224,6 +225,7 @@ export const MENTOR_MESSAGES = {
   MENTOR_ANALYTICS_RETRIEVED: "Mentor analytics retrieved successfully",
   SALES_REPORT_RETRIEVED: "Sales report retrieved successfully",
   NO_MENTOR_FOUND: "Mentor Not Found",
+  NO_MENTOR_EXPERIENCE_FOUND: "Mentor experience not found"
 
   //Repositry
   

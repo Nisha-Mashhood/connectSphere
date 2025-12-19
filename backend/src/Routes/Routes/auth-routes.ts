@@ -15,6 +15,7 @@ router.post(AUTH_ROUTES.Register, authLimiter, authController.signup.bind(authCo
 router.post(AUTH_ROUTES.Login, authLimiter, authController.login.bind(authController));
 router.post(AUTH_ROUTES.ForgotPassword, authLimiter, authController.handleForgotPassword.bind(authController));
 router.post(AUTH_ROUTES.VerifyOTP, authLimiter, authController.handleVerifyOTP.bind(authController));
+router.post(AUTH_ROUTES.ResentOTP, authLimiter, authController.resendOtp.bind(authController));
 router.post(AUTH_ROUTES.ResetPassword, authLimiter, authController.handleResetPassword.bind(authController));
 router.post(AUTH_ROUTES.GoogleSignup, authLimiter, authController.googleSignup.bind(authController));
 router.post(AUTH_ROUTES.GoogleLogin, authLimiter, authController.googleLogin.bind(authController));

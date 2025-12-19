@@ -42,7 +42,7 @@ const Header = () => {
 
   return (
     <Navbar
-      className="bg-gradient-to-r from-white to-gray-50 shadow-lg border-b border-gray-100 z-[200]"
+      className="bg-gradient-to-r from-white to-gray-50 shadow-lg border-b border-gray-100 z-[50]"
       maxWidth="xl"
       height="4.5rem"
     >

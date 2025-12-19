@@ -1,3 +1,4 @@
+import mongoose from "mongoose";
 import { inject, injectable } from "inversify";
 import { sendEmail } from "../core/utils/email";
 import logger from "../core/utils/logger";
@@ -5,6 +6,7 @@ import { IMentor } from "../Interfaces/Models/i-mentor";
 import {
   CompleteMentorDetails,
   MentorAnalytics,
+  MentorExperienceInput,
   MentorQuery,
   SalesReport,
 } from "../Utils/types/mentor-types";
@@ -20,6 +22,10 @@ import { ICategoryRepository } from "../Interfaces/Repository/i-category-reposit
 import { ISkillsRepository } from "../Interfaces/Repository/i-skills-repositry";
 import { IMentorDTO } from "../Interfaces/DTOs/i-mentor-dto";
 import { toMentorDTO, toMentorDTOs } from "../Utils/mappers/mentor-mapper";
+import { IMentorExperienceRepository } from "../Interfaces/Repository/i-mentor-experience-repository";
+import { IMentorExperience } from "../Interfaces/Models/i-mentor-experience";
+import { IMentorExperienceDTO } from "../Interfaces/DTOs/i-mentor-experience-dto";
+import { toMentorExperienceDTO, toMentorExperienceDTOs } from "../Utils/mappers/mentor-experience-mapper";
 
 @injectable()
 export class MentorService implements IMentorService {
@@ -29,15 +35,16 @@ export class MentorService implements IMentorService {
   private _notificationService: INotificationService;
   private _categoryRepository: ICategoryRepository;
   private _skillRepository: ISkillsRepository;
+  private _mentorExperienceRepository: IMentorExperienceRepository;
 
   constructor(
     @inject("IMentorRepository") mentorRepository: IMentorRepository,
     @inject("IUserRepository") userRepository: IUserRepository,
-    @inject("ICollaborationRepository")
-    collaborationRepository: ICollaborationRepository,
+    @inject("ICollaborationRepository") collaborationRepository: ICollaborationRepository,
     @inject("INotificationService") notificationService: INotificationService,
     @inject("ICategoryRepository") categoryService: ICategoryRepository,
-    @inject("ISkillsRepository") skillRepository: ISkillsRepository
+    @inject("ISkillsRepository") skillRepository: ISkillsRepository,
+    @inject("IMentorExperienceRepository") mentorExperienceRepository: IMentorExperienceRepository
   ) {
     this._mentorRepository = mentorRepository;
     this._authRepository = userRepository;
@@ -45,6 +52,7 @@ export class MentorService implements IMentorService {
     this._notificationService = notificationService;
     this._categoryRepository = categoryService;
     this._skillRepository = skillRepository;
+    this._mentorExperienceRepository = mentorExperienceRepository;
   }
 
   submitMentorRequest = async (mentorData: {
@@ -56,7 +64,15 @@ export class MentorService implements IMentorService {
     availableSlots: object[];
     timePeriod: number;
     certifications: string[];
+    experiences?: MentorExperienceInput[];
   }): Promise<IMentorDTO | null> => {
+
+    const session = await mongoose.startSession();
+    session.startTransaction();
+
+    let mentor: IMentor | null = null;
+    
+
     try {
       logger.debug(`Submitting mentor request for user: ${mentorData.userId}`);
 
@@ -91,7 +107,7 @@ export class MentorService implements IMentorService {
       }
 
       if (user.role !== "mentor") {
-        await this._authRepository.updateUserRole(mentorData.userId, "mentor");
+        await this._authRepository.updateUserRole(mentorData.userId, "mentor", { session });
       }
 
       if (mentorData.skills.length === 0) {
@@ -126,11 +142,47 @@ export class MentorService implements IMentorService {
         );
       }
 
-      const mentor = await this._mentorRepository.saveMentorRequest(mentorData);
+      mentor = await this._mentorRepository.saveMentorRequest(
+        {
+        userId: mentorData.userId,
+        skills: mentorData.skills,
+        specialization: mentorData.specialization,
+        bio: mentorData.bio,
+        price: mentorData.price,
+        availableSlots: mentorData.availableSlots,
+        timePeriod: mentorData.timePeriod,
+        certifications: mentorData.certifications,
+      }, { session }
+      );
       logger.info(
         `Mentor request submitted: ${mentor._id} for user ${mentorData.userId}`
       );
 
+      if (mentorData.experiences && mentorData.experiences.length > 0) {
+      const experiencePromises = mentorData.experiences.map((exp) =>
+        this._mentorExperienceRepository.createOne(
+          {
+            mentorId: mentor?._id,
+            role: exp.role,
+            organization: exp.organization,
+            startDate: new Date(exp.startDate),
+            endDate: exp.endDate ? new Date(exp.endDate) : undefined,
+            isCurrent: exp.isCurrent,
+            description: exp.description || undefined,
+          } as Partial<IMentorExperience>,
+          { session }
+        )
+      );
+
+      const createdExperiences = await Promise.all(experiencePromises);
+      logger.info(`Created ${createdExperiences.length} experiences for mentor ${mentor._id}`);
+    }
+
+    // Commit transaction
+    await session.commitTransaction();
+    logger.info("Transaction committed successfully — mentor and experiences saved atomically");
+
+    try {
       const admins = await this._authRepository.getAllAdmins();
       if (!admins || admins.length === 0) {
         logger.warn("No admins found to notify for new mentor request");
@@ -143,25 +195,26 @@ export class MentorService implements IMentorService {
             mentor._id.toString(),
             "user"
           );
-          logger.info(
-            `Created new_mentor notification for admin ${admin._id}: ${notification.id}`
-          );
+          logger.info(`Created new_mentor notification for admin ${admin._id}: ${notification.id}`);
         }
       }
+    } catch (notifError) {
+      logger.error("Failed to send admin notifications", notifError);
+    }
 
       return toMentorDTO(mentor);
     } catch (error: unknown) {
+      await session.abortTransaction();
+      logger.error("Transaction aborted — rolling back all changes");
+
       const err = error instanceof Error ? error : new Error(String(error));
-      logger.error(
-        `Error submitting mentor request for user ${mentorData.userId}: ${err.message}`
-      );
+      logger.error(`Error submitting mentor request for user ${mentorData.userId}: ${err.message}`);
+
       throw error instanceof ServiceError
         ? error
-        : new ServiceError(
-            "Failed to submit mentor request",
-            StatusCodes.INTERNAL_SERVER_ERROR,
-            err
-          );
+        : new ServiceError("Failed to submit mentor request", StatusCodes.INTERNAL_SERVER_ERROR, err);
+    } finally {
+      session.endSession();
     }
   };
 
@@ -332,6 +385,33 @@ export class MentorService implements IMentorService {
           );
     }
   };
+
+  getMentorExperiences = async (mentorId: string): Promise<IMentorExperienceDTO[]> => {
+  try {
+    logger.debug(`Fetching experiences for mentor ID: ${mentorId}`);
+
+    if (!Types.ObjectId.isValid(mentorId)) {
+      logger.error("Invalid mentor ID format");
+      throw new ServiceError("Invalid mentor ID", StatusCodes.BAD_REQUEST);
+    }
+
+    const experiences = await this._mentorExperienceRepository.findByMentorId(mentorId);
+
+    if (!experiences || experiences.length === 0) {
+      logger.info(`No experiences found for mentor: ${mentorId}`);
+      return [];
+    }
+
+    logger.info(`Fetched ${experiences.length} experiences for mentor: ${mentorId}`);
+    return toMentorExperienceDTOs(experiences);
+  } catch (error: unknown) {
+    const err = error instanceof Error ? error : new Error(String(error));
+    logger.error(`Error fetching experiences for mentor ${mentorId}: ${err.message}`);
+    throw error instanceof ServiceError
+      ? error
+      : new ServiceError("Failed to fetch mentor experiences", StatusCodes.INTERNAL_SERVER_ERROR, err);
+  }
+};
 
   approveMentorRequest = async (id: string): Promise<void> => {
     try {
@@ -568,137 +648,6 @@ export class MentorService implements IMentorService {
     }
   };
 
-  // getMentorAnalytics = async (
-  //   page: number = 1,
-  //   limit: number = 10,
-  //   sortBy:
-  //     | "totalEarnings"
-  //     | "platformFees"
-  //     | "totalCollaborations"
-  //     | "avgCollabPrice" = "totalEarnings",
-  //   sortOrder: "asc" | "desc" = "desc"
-  // ): Promise<{
-  //   mentors: MentorAnalytics[];
-  //   total: number;
-  //   page: number;
-  //   pages: number;
-  // }> => {
-  //   try {
-  //     logger.debug(
-  //       `Fetching mentor analytics with page: ${page}, limit: ${limit}, sortBy: ${sortBy}, sortOrder: ${sortOrder}`
-  //     );
-
-  //     if (page < 1 || limit < 1) {
-  //       logger.error("Invalid pagination parameters");
-  //       throw new ServiceError(
-  //         "Page and limit must be positive numbers",
-  //         StatusCodes.BAD_REQUEST
-  //       );
-  //     }
-
-  //     const validSortFields = [
-  //       "totalEarnings",
-  //       "platformFees",
-  //       "totalCollaborations",
-  //       "avgCollabPrice",
-  //     ];
-  //     if (!validSortFields.includes(sortBy)) {
-  //       logger.error(`Invalid sortBy field: ${sortBy}`);
-  //       throw new ServiceError(
-  //         `SortBy must be one of: ${validSortFields.join(", ")}`,
-  //         StatusCodes.BAD_REQUEST
-  //       );
-  //     }
-
-  //     const validSortOrders = ["asc", "desc"];
-  //     if (!validSortOrders.includes(sortOrder)) {
-  //       logger.error(`Invalid sort order: ${sortOrder}`);
-  //       throw new ServiceError(
-  //         `Sort order must be one of: ${validSortOrders.join(", ")}`,
-  //         StatusCodes.BAD_REQUEST
-  //       );
-  //     }
-
-  //     const { mentors, total } = await this._mentorRepository.getAllMentors();
-  //     const analytics: MentorAnalytics[] = await Promise.all(
-  //       mentors.map(async (mentor: CompleteMentorDetails) => {
-  //         const collaborations = await this._collabRepository.findByMentorId(
-  //           mentor.id.toString()
-  //         );
-  //         const totalCollaborations = collaborations.length;
-  //         const totalEarnings = collaborations.reduce(
-  //           (sum, collab) => sum + (collab.price - 100),
-  //           0
-  //         );
-  //         const platformFees = totalCollaborations * 100;
-  //         const avgCollabPrice =
-  //           totalCollaborations > 0 ? totalEarnings / totalCollaborations : 0;
-
-  //         if (!mentor.userId) {
-  //           logger.warn(`Mentor ${mentor.id} is missing userId`);
-  //           return {
-  //             mentorId: mentor.id.toString(),
-  //             name: "Unknown",
-  //             email: "Unknown",
-  //             specialization: mentor.specialization,
-  //             approvalStatus: mentor.isApproved,
-  //             totalCollaborations,
-  //             totalEarnings,
-  //             platformFees,
-  //             avgCollabPrice,
-  //           };
-  //         }
-
-  //         const user = await this._authRepository.getUserById(
-  //           mentor.userId._id.toString()
-  //         );
-  //         return {
-  //           mentorId: mentor.id.toString(),
-  //           name: user?.name || "Unknown",
-  //           email: user?.email || "Unknown",
-  //           specialization: mentor.specialization,
-  //           approvalStatus: mentor.isApproved,
-  //           totalCollaborations,
-  //           totalEarnings,
-  //           platformFees,
-  //           avgCollabPrice,
-  //         };
-  //       })
-  //     );
-
-  //     const sortedAnalytics = analytics.sort((a, b) => {
-  //       const multiplier = sortOrder === "asc" ? 1 : -1;
-  //       return multiplier * (a[sortBy] - b[sortBy]);
-  //     });
-
-  //     const startIndex = (page - 1) * limit;
-  //     const paginatedAnalytics = sortedAnalytics.slice(
-  //       startIndex,
-  //       startIndex + limit
-  //     );
-
-  //     logger.info(
-  //       `Fetched ${paginatedAnalytics.length} mentor analytics, total: ${total}`
-  //     );
-  //     return {
-  //       mentors: paginatedAnalytics,
-  //       total,
-  //       page,
-  //       pages: Math.ceil(total / limit),
-  //     };
-  //   } catch (error: unknown) {
-  //     const err = error instanceof Error ? error : new Error(String(error));
-  //     logger.error(`Error fetching mentor analytics: ${err.message}`);
-  //     throw error instanceof ServiceError
-  //       ? error
-  //       : new ServiceError(
-  //           "Failed to fetch mentor analytics",
-  //           StatusCodes.INTERNAL_SERVER_ERROR,
-  //           err
-  //         );
-  //   }
-  // };
-
   getMentorAnalytics = async (
   page: number = 1,
   limit: number = 10,
@@ -922,4 +871,77 @@ export class MentorService implements IMentorService {
           );
     }
   };
+
+  addMentorExperience = async (userId: string, data: Partial<IMentorExperience>): Promise<IMentorExperienceDTO> => {
+    try {
+      const mentor = await this._mentorRepository.getMentorByUserId(userId);
+      if (!mentor) throw new ServiceError("Mentor profile not found", StatusCodes.NOT_FOUND);
+      if (mentor.isApproved !== "Completed") {
+        throw new ServiceError("Only approved mentors can add experiences", StatusCodes.FORBIDDEN);
+      }
+
+      const experience = await this._mentorExperienceRepository.createOne({
+        mentorId: mentor._id,
+        role: data.role!,
+        organization: data.organization!,
+        startDate: new Date(data.startDate!),
+        endDate: data.endDate ? new Date(data.endDate) : undefined,
+        isCurrent: data.isCurrent || false,
+        description: data.description,
+      });
+
+      return toMentorExperienceDTO(experience)!;
+    } catch (error: unknown) {
+      throw error instanceof ServiceError ? error : new ServiceError("Failed to add experience", StatusCodes.INTERNAL_SERVER_ERROR);
+    }
+  };
+
+  updateMentorExperience = async (userId: string, experienceId: string, data: Partial<IMentorExperience>): Promise<IMentorExperienceDTO> => {
+    try {
+      const mentor = await this._mentorRepository.getMentorByUserId(userId);
+      if (!mentor) throw new ServiceError("Mentor profile not found", StatusCodes.NOT_FOUND);
+      if (mentor.isApproved !== "Completed") throw new ServiceError("Only approved mentors can update experiences", StatusCodes.FORBIDDEN);
+
+      const existing = await this._mentorExperienceRepository.findById(experienceId);
+      if (!existing) throw new ServiceError("Experience not found", StatusCodes.NOT_FOUND);
+      if (existing.mentorId.toString() !== mentor._id.toString()) {
+        throw new ServiceError("Unauthorized: Cannot edit another mentor's experience", StatusCodes.FORBIDDEN);
+      }
+
+      const updated = await this._mentorExperienceRepository.update(experienceId, {
+        role: data.role,
+        organization: data.organization,
+        startDate: data.startDate ? new Date(data.startDate) : undefined,
+        endDate: data.isCurrent ? undefined : data.endDate ? new Date(data.endDate) : undefined,
+        isCurrent: data.isCurrent,
+        description: data.description,
+      });
+
+      if (!updated) throw new ServiceError("Failed to update experience", StatusCodes.INTERNAL_SERVER_ERROR);
+
+      return toMentorExperienceDTO(updated)!;
+    } catch (error: unknown) {
+      throw error instanceof ServiceError ? error : new ServiceError("Failed to update experience", StatusCodes.INTERNAL_SERVER_ERROR);
+    }
+  };
+
+  deleteMentorExperience = async (userId: string, experienceId: string): Promise<void> => {
+    try {
+      const mentor = await this._mentorRepository.getMentorByUserId(userId);
+      if (!mentor) throw new ServiceError("Mentor profile not found", StatusCodes.NOT_FOUND);
+      if (mentor.isApproved !== "Completed") throw new ServiceError("Only approved mentors can delete experiences", StatusCodes.FORBIDDEN);
+
+      const existing = await this._mentorExperienceRepository.findById(experienceId);
+      if (!existing) throw new ServiceError("Experience not found", StatusCodes.NOT_FOUND);
+      if (existing.mentorId.toString() !== mentor._id.toString()) {
+        throw new ServiceError("Unauthorized: Cannot delete another mentor's experience", StatusCodes.FORBIDDEN);
+      }
+
+      const deleted = await this._mentorExperienceRepository.delete(experienceId);
+      if (!deleted) throw new ServiceError("Failed to delete experience", StatusCodes.INTERNAL_SERVER_ERROR);
+    } catch (error: unknown) {
+      throw error instanceof ServiceError ? error : new ServiceError("Failed to delete experience", StatusCodes.INTERNAL_SERVER_ERROR);
+    }
+  };
+
 }

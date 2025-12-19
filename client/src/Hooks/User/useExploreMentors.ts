@@ -511,6 +511,11 @@ export const useExploreMentors = (): UseExploreMentorsReturn => {
     return;
   }
 
+  //only user can send 5 requet in 1 day
+  // const requsetByUser = await getTheRequestByUser(currentUser.id);
+  // console.log("Request send by the user :",requsetByUser);
+
+
   //No conflicts → directly send request
   try {
     const response = await SendRequsetToMentor(requestData);
@@ -525,7 +530,8 @@ export const useExploreMentors = (): UseExploreMentorsReturn => {
       );
       setSelectedMentor(null);
     }
-  } catch (error) {
+  } 
+  catch (error) {
     console.error("Error booking mentor:", error);
     toast.error("Failed to send the request. Please try again.");
   }

@@ -11,6 +11,13 @@ export const maxLength = (max: number, message?: string) =>
 
 export const emailFormat = () => Yup.string().email("Invalid email format");
 
+export const noUppercaseEmail = () =>
+  Yup.string().test(
+    "no-uppercase-email",
+    "Email must not contain uppercase letters",
+    (value) => !/[A-Z]/.test(value || "")
+  );
+
 export const noMultipleSpaces = () =>
   Yup.string().test(
     "no-multiple-spaces",

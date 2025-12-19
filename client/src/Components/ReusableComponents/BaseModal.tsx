@@ -53,6 +53,10 @@ const BaseModal: FC<BaseModalProps> = ({
       size={size}
       scrollBehavior={scrollBehavior}
       backdrop="blur"
+      placement="top-center"
+      classNames={{
+        wrapper: "pt-[5.5rem]",
+      }}
     >
       <ModalContent>
         <ModalHeader className="flex flex-col gap-1">{title}</ModalHeader>

@@ -46,8 +46,8 @@ export class AuthController extends BaseController implements IAuthController{
       if (!name || !email || !password) {
         throw new HttpError(ERROR_MESSAGES.REQUIRED_NAME_EMAIL_PASSWORD, StatusCodes.BAD_REQUEST);
       }
-      const user = await this._authService.signup({ name, email, password });
-      this.sendCreated(res, { userId: user.id }, AUTH_MESSAGES.SIGNUP_SUCCESS);
+      const {user, otpId} = await this._authService.signup({ name, email, password });
+      this.sendCreated(res, { email: user.email, otpId }, AUTH_MESSAGES.SIGNUP_SUCCESS);
       logger.info(`User registered: ${user.name} (${email})`);
     } catch (error) {
       logger.error(`Error in signup for email ${req.body.email || "unknown"}: ${error}`);
@@ -63,10 +63,10 @@ export class AuthController extends BaseController implements IAuthController{
       if (!email || !password) {
         throw new HttpError(ERROR_MESSAGES.REQUIRED_EMAIL_PASSWORD, StatusCodes.BAD_REQUEST);
       }
-      const { user, accessToken, refreshToken, needsReviewPrompt } = await this._authService.login(email, password);
-      this._jwtService.setTokensInCookies(res, accessToken, refreshToken);
-      this.sendSuccess(res, { user, needsReviewPrompt }, AUTH_MESSAGES.LOGIN_SUCCESS);
-      logger.info(`User logged in: ${user.userId} (${email})`);
+      const { user, otpId } = await this._authService.login(email, password);
+      // this._jwtService.setTokensInCookies(res, accessToken, refreshToken);
+      this.sendSuccess(res, { user, otpId }, AUTH_MESSAGES.LOGIN_SUCCESS);
+      logger.info(`User logged in otp send for: ${user.userId} (${email})`);
     } catch (error) {
       logger.error(`Error in login for email ${req.body.email || "unknown"}: ${error}`);
       next(error);
@@ -81,8 +81,8 @@ export class AuthController extends BaseController implements IAuthController{
       if (!code) {
         throw new HttpError(ERROR_MESSAGES.REQUIRED_AUTH_CODE, StatusCodes.BAD_REQUEST);
       }
-      const user = await this._authService.googleSignup(code);
-      this.sendCreated(res, { userId: user.id }, AUTH_MESSAGES.GOOGLE_SIGNUP_SUCCESS);
+      const {user, otpId} = await this._authService.googleSignup(code);
+      this.sendCreated(res, { email: user.email, otpId }, AUTH_MESSAGES.GOOGLE_SIGNUP_SUCCESS);
       logger.info(`Google signup completed for user: ${user.userId} (${user.email})`);
     } catch (error) {
       logger.error(`Error in Google signup: ${error}`);
@@ -98,9 +98,8 @@ export class AuthController extends BaseController implements IAuthController{
       if (!code) {
         throw new HttpError(ERROR_MESSAGES.REQUIRED_AUTH_CODE, StatusCodes.BAD_REQUEST);
       }
-      const { user, accessToken, refreshToken, needsReviewPrompt } = await this._authService.googleLogin(code);
-      this._jwtService.setTokensInCookies(res, accessToken, refreshToken);
-      this.sendSuccess(res, { user, accessToken, refreshToken, needsReviewPrompt }, AUTH_MESSAGES.GOOGLE_LOGIN_SUCCESS);
+      const { user, otpId } = await this._authService.googleLogin(code);
+      this.sendSuccess(res, { user, otpId }, AUTH_MESSAGES.GOOGLE_LOGIN_SUCCESS);
       logger.info(`Google login completed for user: ${user.userId} (${user.email})`);
     } catch (error) {
       logger.error(`Error in Google login: ${error}`);
@@ -116,8 +115,8 @@ export class AuthController extends BaseController implements IAuthController{
       if (!code) {
         throw new HttpError(ERROR_MESSAGES.REQUIRED_AUTH_CODE, StatusCodes.BAD_REQUEST);
       }
-      const user = await this._authService.githubSignup(code);
-      this.sendCreated(res, { userId: user.id }, AUTH_MESSAGES.GITHUB_SIGNUP_SUCCESS);
+      const{ user, otpId } = await this._authService.githubSignup(code);
+      this.sendCreated(res, { email: user.email, otpId }, AUTH_MESSAGES.GITHUB_SIGNUP_SUCCESS);
       logger.info(`GitHub signup completed for user: ${user.userId} (${user.email})`);
     } catch (error) {
       logger.error(`Error in GitHub signup: ${error}`);
@@ -133,9 +132,8 @@ export class AuthController extends BaseController implements IAuthController{
       if (!code) {
         throw new HttpError(ERROR_MESSAGES.REQUIRED_AUTH_CODE, StatusCodes.BAD_REQUEST);
       }
-      const { user, accessToken, refreshToken, needsReviewPrompt } = await this._authService.githubLogin(code);
-      this._jwtService.setTokensInCookies(res, accessToken, refreshToken);
-      this.sendSuccess(res, { user, accessToken, refreshToken, needsReviewPrompt }, AUTH_MESSAGES.GITHUB_LOGIN_SUCCESS);
+      const { user, otpId } = await this._authService.githubLogin(code);
+      this.sendSuccess(res, { user, otpId }, AUTH_MESSAGES.GITHUB_LOGIN_SUCCESS);
       logger.info(`GitHub login completed for user: ${user.userId} (${user.email})`);
     } catch (error) {
       logger.error(`Error in GitHub login: ${error}`);
@@ -282,8 +280,8 @@ export class AuthController extends BaseController implements IAuthController{
       if (!email) {
         throw new HttpError(ERROR_MESSAGES.REQUIRED_EMAIL, StatusCodes.BAD_REQUEST);
       }
-      const otp = await this._authService.forgotPassword(email);
-      this.sendSuccess(res, { otp }, AUTH_MESSAGES.OTP_SENT);
+      const otpId = await this._authService.forgotPassword(email);
+      this.sendSuccess(res, { otpId }, AUTH_MESSAGES.OTP_SENT);
       logger.info(`OTP sent to email: ${email}`);
     } catch (error) {
       logger.error(`Error in forgot password for email ${req.body.email || "unknown"}: ${error}`);
@@ -294,19 +292,40 @@ export class AuthController extends BaseController implements IAuthController{
   // Handle verify OTP
   handleVerifyOTP = async (req: Request<{}, {}, VerifyOTPRequestBody>, res: Response, next: NextFunction) => {
     try {
-      const { email, otp } = req.body;
+      const { purpose, email, otpId, otp } = req.body;
       logger.debug(`Verify OTP attempt for email: ${email}`);
       if (!email || !otp) {
         throw new HttpError(ERROR_MESSAGES.REQUIRED_EMAIL_OTP, StatusCodes.BAD_REQUEST);
       }
-      const token = await this._authService.verifyOTP(email, otp);
-      this.sendSuccess(res, { token }, AUTH_MESSAGES.OTP_VERIFIED);
+      const result = await this._authService.verifyOTP(purpose, email, otpId, otp);
+      if (result.purpose === "login") {
+        this._jwtService.setTokensInCookies(
+          res,
+          result.accessToken,
+          result.refreshToken
+        );
+      }
+
+      this.sendSuccess(res, result, AUTH_MESSAGES.OTP_VERIFIED);
       logger.info(`OTP verified for email: ${email}`);
     } catch (error) {
       logger.error(`Error verifying OTP for email ${req.body.email || "unknown"}: ${error}`);
       next(error);
     }
   };
+
+  resendOtp = async (req: Request, res: Response, next: NextFunction) => {
+  try {
+    const { email, purpose } = req.body;
+    if (!email || !purpose) {
+      throw new HttpError( ERROR_MESSAGES.REQUIRED_EMAIL_AND_PURPOSE, StatusCodes.BAD_REQUEST );
+    }
+    const { otpId } = await this._authService.resendOtp(email, purpose);
+    this.sendSuccess( res, { otpId },  AUTH_MESSAGES.OTP_SENT );
+  } catch (error) {
+    next(error);
+  }
+};
 
   // Handle reset password
   handleResetPassword = async (req: Request<{}, {}, ResetPasswordRequestBody>, res: Response, next: NextFunction) => {

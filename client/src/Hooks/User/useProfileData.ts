@@ -1,7 +1,7 @@
 import { useEffect, useState, useCallback } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { useDispatch, useSelector } from "react-redux";
-import { fetchMentorById } from "../../Service/Mentor.Service";
+import { fetchMentorById, getMentorExperiences } from "../../Service/Mentor.Service";
 import { fetchUserDetails } from "../../Service/User.Service";
 import {
   getCollabDataforMentor,
@@ -21,6 +21,7 @@ import {
   RequestData,
   User,
 } from "../../redux/types";
+import { IMentorExperience } from "../../Interface/Admin/IMentor";
 
 interface CollabResponse {
   collabData: CollabData[];
@@ -42,6 +43,8 @@ export const useProfileData = () => {
   const [isCurrentUserMentor, setIsCurrentUserMentor] = useState(false);
   const [feedbacks, setFeedbacks] = useState<Feedback[]>([]);
   const [lockedSlots, setLockedSlots] = useState<LockedSlot[]>([]);
+  const [experiences, setExperiences] = useState<IMentorExperience[]>([]);
+  const [loadingExperiences, setLoadingExperiences] = useState(false);
 
   const checkIfUserIsMentor = async (id: string) => {
     try {
@@ -94,6 +97,21 @@ export const useProfileData = () => {
     [Id]
   );
 
+const fetchExperiences = useCallback(async () => {
+  if (!Id || !isMentor) return;
+  setLoadingExperiences(true);
+  try {
+    const data = await getMentorExperiences(Id);
+    console.log("Experiences : ",data);
+    setExperiences(data.experiences);
+  } catch (error) {
+    console.error("Failed to fetch experiences", error);
+    setExperiences([]);
+  } finally {
+    setLoadingExperiences(false);
+  }
+}, [Id, isMentor]);
+
   const fetchLockedSlots = useCallback(
     async (mentorId: string) => {
       try {
@@ -132,6 +150,7 @@ export const useProfileData = () => {
             }),
             fetchLockedSlots(Id),
             fetchFeedback("mentor"),
+            fetchExperiences(),
           ]);
         } else {
           toast.error("Failed to load mentor data");
@@ -165,6 +184,7 @@ export const useProfileData = () => {
     fetchExistingRequest,
     fetchFeedback,
     fetchLockedSlots,
+    fetchExperiences,
   ]);
 
   const isSlotLocked = useCallback((day: string, timeSlot: string) => {
@@ -190,6 +210,8 @@ export const useProfileData = () => {
     existingRequest,
     isCurrentUserMentor,
     feedbacks,
+    experiences,
+    loadingExperiences,
     lockedSlots,
     isSlotLocked,
     userConnections,

@@ -14,11 +14,11 @@ import toast from "react-hot-toast";
 import { yupResolver } from "@hookform/resolvers/yup";
 import {
   signinStart,
-  setIsAdmin,
   signinFailure,
+  setOtpContext,
 } from "../../redux/Slice/userSlice";
 import { login } from "../../Service/Auth.service";
-import { adminPasscodeCheck } from "../../Service/Admin.Service";
+// import { adminPasscodeCheck } from "../../Service/Admin.Service";
 import {
   AdminLoginFormValues,
   adminLoginSchema,
@@ -46,7 +46,7 @@ const AdminLogin = () => {
     try {
       dispatch(signinStart());
 
-      const { user } = await login({ ...data });
+      const { user, otpId } = await login({ ...data });
 
       if (user.role !== "admin") {
         toast.error("Access denied. Admin role required.");
@@ -54,22 +54,16 @@ const AdminLogin = () => {
         return;
       }
 
-      const passkey = prompt("Enter Admin Passkey:");
-      if (!passkey?.trim()) {
-        toast.error("Passkey is required.");
-        return;
-      }
+      dispatch(
+        setOtpContext({
+          email: user.email,
+          otpId,
+          purpose: "login",
+        })
+      );
 
-      const { valid } = await adminPasscodeCheck(passkey);
-      if (!valid) {
-        toast.error("Invalid passkey.");
-        dispatch(signinFailure("Invalid passkey"));
-        return;
-      }
-
-      toast.success("Welcome, Admin!");
-      dispatch(setIsAdmin(user));
-      navigate("/admin/dashboard", { replace: true });
+      toast.success("OTP sent to your email");
+      navigate("/otp");
     } catch (error) {
       const message =
         error?.response?.data?.message || error.message || "Login failed";

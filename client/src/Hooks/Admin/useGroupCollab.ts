@@ -35,17 +35,20 @@ export const useGroupCollab = () => {
     [debouncedUpdate]
   );
 
-  const fetchGroups = useCancellableFetch(async (signal) => {
+  const fetchGroups = useCancellableFetch(
+  useCallback(async (signal) => {
     const params = { search: debouncedQuery, page, limit: PAGE_SIZE };
-    const res = await groupDetails(params, signal);
-    return res;
-  }, [debouncedQuery, page]);
+    return groupDetails(params, signal);
+  }, [debouncedQuery, page])
+);
 
-  const fetchRequests = useCancellableFetch(async (signal) => {
+  const fetchRequests = useCancellableFetch(
+    useCallback(async (signal) => {
     const params = { search: debouncedQuery, page, limit: PAGE_SIZE };
     const res = await getAllGroupRequests(params, signal);
     return res;
-  }, [debouncedQuery, page]);
+  }, [debouncedQuery, page])
+  );
 
   useEffect(() => {
     const load = async () => {

@@ -1,3 +1,4 @@
+import { IMentorExperience } from "../Interface/Admin/IMentor";
 import { axiosInstance } from "../lib/axios";
 import { handleError } from "./ErrorHandler";
 
@@ -50,6 +51,16 @@ export const fetchMentorById = async (mentorId) => {
     handleError(error)
   }
 }
+
+export const getMentorExperiences = async (mentorId: string) => {
+  try {
+    const response = await axiosInstance.get(`/mentors/experiences/${mentorId}`);
+    return response.data.data || [];
+  } catch (error) {
+    console.error("Failed to fetch mentor experiences", error);
+    throw error;
+  }
+};
 
 //Fetch All Mentors
 export const fetchAllMentors = async (params) => {
@@ -141,5 +152,37 @@ export const getSalesReport = async (period: string) => {
     return response.data.data;
   } catch (error) {
     handleError(error);
+  }
+};
+
+//Add Mentor Experience
+export const addMentorExperience = async (userId:string, experienceData: Omit<IMentorExperience, "id">) => {
+  try {
+    const response = await axiosInstance.post(`/mentors/experiences/?userId=${userId}`, experienceData);
+    return response.data.data;
+  } catch (error) {
+    handleError(error);
+    throw error;
+  }
+};
+
+// Update Existing Experience
+export const updateMentorExperience = async (userId: string ,experienceId: string, experienceData: Partial<IMentorExperience>) => {
+  try {
+    const response = await axiosInstance.put(`/mentors/experiences/${experienceId}?userId=${userId}`, experienceData);
+    return response.data.data;
+  } catch (error) {
+    handleError(error);
+    throw error;
+  }
+};
+
+// Delete Experience
+export const deleteMentorExperience = async (userId:string, experienceId: string) => {
+  try {
+    await axiosInstance.delete(`/mentors/deleteexperiences/${experienceId}?userId=${userId}`);
+  } catch (error) {
+    handleError(error);
+    throw error;
   }
 };

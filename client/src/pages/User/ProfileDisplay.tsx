@@ -10,6 +10,7 @@ import { CollaborationSection } from "../../Components/User/Profile/OthersProfil
 import { FeedbackSection } from "../../Components/User/Profile/OthersProfile/FeedbackSection";
 import { Skill } from "../../redux/types";
 import { Slot } from "../../validation/createGroupValidation";
+import ExperienceSection from "../../Components/User/Profile/OthersProfile/ExperienceSection";
 
 const ProfileDisplay = () => {
   const dispatch = useDispatch();
@@ -21,6 +22,8 @@ const ProfileDisplay = () => {
     hasExistingCollaboration,
     existingRequest,
     feedbacks,
+    experiences,
+    loadingExperiences,
     isSlotLocked,
     userConnections,
     currentUser,
@@ -138,6 +141,12 @@ const ProfileDisplay = () => {
                 </div>
               )}
 
+              {isMentor && (
+                <ExperienceSection
+                  experiences={experiences}
+                  loading={loadingExperiences}
+                />
+              )}
               {/* Collaborations – column layout */}
               <CollaborationSection
                 collabData={collabData}

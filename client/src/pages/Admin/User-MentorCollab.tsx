@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import {
   Tabs,
   Tab,
@@ -38,19 +38,19 @@ const UserMentorCollab = () => {
   }, [searchTerm]);
 
   const fetchCollabs = useCancellableFetch(
-    async (signal) => {
+    useCallback(async (signal) => {
       const res = await UserToMentorCollab(collabPage, ITEMS_PER_PAGE, searchTerm, signal);
       return { list: res.collabs || [], total: (res.pages || 1) * ITEMS_PER_PAGE };
     },
-    [collabPage, searchTerm]
+    [collabPage, searchTerm])
   );
 
   const fetchRequests = useCancellableFetch(
-    async (signal) => {
+    useCallback(async (signal) => {
       const res = await UserToMentorRequset(requestPage, ITEMS_PER_PAGE, searchTerm, signal);
       return { list: res.requests || [], total: (res.pages || 1) * ITEMS_PER_PAGE };
     },
-    [requestPage, searchTerm]
+    [requestPage, searchTerm])
   );
 
   useEffect(() => {

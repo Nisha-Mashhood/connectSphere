@@ -1,6 +1,8 @@
 import { IMentor } from "../Models/i-mentor";
-import { CompleteMentorDetails, MentorAnalytics, MentorQuery, SalesReport } from "../../Utils/types/mentor-types";
+import { CompleteMentorDetails, MentorAnalytics, MentorExperienceInput, MentorQuery, SalesReport } from "../../Utils/types/mentor-types";
 import { IMentorDTO } from "../DTOs/i-mentor-dto";
+import { IMentorExperienceDTO } from "../DTOs/i-mentor-experience-dto";
+import { IMentorExperience } from "../Models/i-mentor-experience";
 
 export interface IMentorService {
   submitMentorRequest: (mentorData: {
@@ -12,6 +14,7 @@ export interface IMentorService {
     availableSlots: object[];
     timePeriod: number;
     certifications: string[];
+    experiences?: MentorExperienceInput[]
   }) => Promise<IMentorDTO | null>;
   getAllMentorRequests: (
     page?: number,
@@ -27,6 +30,7 @@ export interface IMentorService {
   }>;
   getAllMentors: (query: MentorQuery) => Promise<{ mentors: CompleteMentorDetails[]; total: number }>;
   getMentorByMentorId: (mentorId: string) => Promise<IMentorDTO | null>;
+  getMentorExperiences: (mentorId: string)=> Promise<IMentorExperienceDTO[]>
   approveMentorRequest: (id: string) => Promise<void>;
   rejectMentorRequest: (id: string, reason: string) => Promise<void>;
   cancelMentorship: (id: string) => Promise<void>;
@@ -45,4 +49,7 @@ export interface IMentorService {
     pages: number;
   }>;
   getSalesReport: (period: string) => Promise<SalesReport>;
+  addMentorExperience: (userId: string, data: Partial<IMentorExperience>)=> Promise<IMentorExperienceDTO>
+  updateMentorExperience: (userId: string, experienceId: string, data: Partial<IMentorExperience>)=> Promise<IMentorExperienceDTO>
+  deleteMentorExperience: (userId: string, experienceId: string)=> Promise<void> 
 }

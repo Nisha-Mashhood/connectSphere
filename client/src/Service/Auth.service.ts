@@ -1,9 +1,10 @@
 import { axiosInstance } from "../lib/axios";
+import { OtpPurpose } from "../redux/types";
 import { handleError } from "./ErrorHandler";
 
 export const register = async (data) => {
   try {
-    const response = await axiosInstance.post("/auth/register/signup", data);
+    const response = await axiosInstance.post("/auth/signup", data);
     return response.data.data;
   } catch (error) {
    handleError(error)
@@ -62,19 +63,29 @@ export const updateUserDetails = async (userId: string, formData: FormData) => {
   }
 };
 
-export const sentOTP = async (email: string) => {
+export const resendOTP = async (data: { email: string; purpose: OtpPurpose; }) => {
+  try {
+    const response = await axiosInstance.post( "/auth/resend-otp", data);
+    return response.data.data; 
+  } catch (error) {
+    handleError(error);
+  }
+};
+
+export const forgotPassword = async (email: string) => {
   try {
     console.log(email);
-    const response = await axiosInstance.post("/auth/register/forgot-password", { email });
+    const response = await axiosInstance.post("/auth/forgot-password", { email });
     return response.data.data
   } catch (error) {
     handleError(error)
   }
 };
+
 export const verifyOTP = async (data) => {
   try {
     const response = await axiosInstance.post(
-      "/auth/register/verify-otp",
+      "/auth/verify-otp",
       data
     );
 
@@ -87,7 +98,7 @@ export const verifyOTP = async (data) => {
 
 export const resetPassword = async (data) => {
   try {
-    await axiosInstance.post("/auth/register/reset-password", data);
+    await axiosInstance.post("/auth/reset-password", data);
   } catch (error) {
     handleError(error)
   }

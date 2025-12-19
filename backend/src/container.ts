@@ -115,6 +115,8 @@ import { IGroupCallSocketHandler } from './Interfaces/Services/i-group-call-sock
 import { GroupCallSocketHandler } from './socket/group-call-socket-handler';
 import { INotificationSocketHandler } from './Interfaces/Services/i-notification-socket-handler';
 import { NotificationSocketHandler } from './socket/notification-socket-handler';
+import { IMentorExperienceRepository } from './Interfaces/Repository/i-mentor-experience-repository';
+import { MentorExperienceRepository } from './repositories/mentor-experience-repository';
 
 
 const container = new Container();
@@ -137,6 +139,7 @@ container.bind<ISkillsRepository>('ISkillsRepository').to(SkillsRepository);
 container.bind<ISubcategoryRepository>('ISubCategoryRepository').to(SubcategoryRepository);
 container.bind<ITaskRepository>('ITaskRepository').to(TaskRepository);
 container.bind<IUserConnectionRepository>('IUserConnectionRepository').to(UserConnectionRepository);
+container.bind<IMentorExperienceRepository>("IMentorExperienceRepository").to(MentorExperienceRepository);
 
 
 //Bind Interface to Services

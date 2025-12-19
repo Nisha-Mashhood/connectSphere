@@ -18,10 +18,13 @@ router.put(MENTOR_ROUTES.ApproveMentorRequest, [apiLimiter, authMiddleware.verif
 router.put(MENTOR_ROUTES.RejectMentorRequest, [apiLimiter, authMiddleware.verifyToken, authMiddleware.authorize('admin')], mentorController.rejectMentorRequest);
 router.put(MENTOR_ROUTES.CancelMentorship, [apiLimiter, authMiddleware.verifyToken, authMiddleware.authorize('admin')], mentorController.cancelMentorship);
 router.get(MENTOR_ROUTES.GetMentorDetails, [apiLimiter, authMiddleware.verifyToken, authMiddleware.checkBlockedStatus], mentorController.getMentorDetails);
+router.get(MENTOR_ROUTES.GetMentorExperience, [apiLimiter, authMiddleware.verifyToken, authMiddleware.checkBlockedStatus], mentorController.getMentorExperiences);
 router.put(MENTOR_ROUTES.UpdateMentorProfile, [apiLimiter, authMiddleware.verifyToken, authMiddleware.checkBlockedStatus], mentorController.updateMentorProfile);
 router.get(MENTOR_ROUTES.GetAllMentors, [apiLimiter, authMiddleware.verifyToken, authMiddleware.checkBlockedStatus], mentorController.getAllMentors);
 router.get(MENTOR_ROUTES.GetMentorByUserId, [apiLimiter, authMiddleware.verifyToken, authMiddleware.checkBlockedStatus], mentorController.getMentorByUserId);
 router.get(MENTOR_ROUTES.GetMentorAnalytics, [apiLimiter, authMiddleware.verifyToken, authMiddleware.authorize('admin')], mentorController.getMentorAnalytics);
 router.get(MENTOR_ROUTES.GetSalesReport, [apiLimiter, authMiddleware.verifyToken, authMiddleware.authorize('admin')], mentorController.getSalesReport);
-
+router.post(MENTOR_ROUTES.AddExperience, [apiLimiter, authMiddleware.verifyToken, authMiddleware.checkBlockedStatus], mentorController.addExperience);
+router.put(MENTOR_ROUTES.UpdateExperience, [apiLimiter, authMiddleware.verifyToken, authMiddleware.checkBlockedStatus], mentorController.updateExperience);
+router.delete(MENTOR_ROUTES.DeleteExperience, [apiLimiter, authMiddleware.verifyToken, authMiddleware.checkBlockedStatus], mentorController.deleteExperience);
 export default router;

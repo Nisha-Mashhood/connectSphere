@@ -827,10 +827,10 @@ export class CollaborationService implements ICollaborationService {
       }
       await this._contactRepository.deleteContact(collabId, "user-mentor");
 
-      const user = collab.userId as Pick<IUser, "name" | "email">;
-      const mentor = (
-        collab.mentorId as { userId: Pick<IUser, "name" | "email"> }
-      ).userId;
+      const user = collab.userId as Pick<IUser, "_id" | "name" | "email">;
+      const mentor = (collab.mentorId as { userId: Pick<IUser, "_id" | "name" | "email"> } ).userId;
+      logger.info(`[cancel and Refund] user deatils : ${user}`);
+      logger.info(`[cancel and Refund] mentor Details : ${mentor}`);
 
       if (!user.email || !mentor.email) {
         throw new ServiceError(
@@ -838,6 +838,34 @@ export class CollaborationService implements ICollaborationService {
           StatusCodes.NOT_FOUND
         );
       }
+
+      //Give notification here also
+
+      await this._notificationService.sendNotification(
+        user._id.toString(),
+        "collaboration_status",
+        mentor._id.toString(),
+        collabId,
+        "collaboration",
+        undefined,
+        undefined,
+        `Your collaboration with ${mentor.name} cancelled.`
+      );
+      logger.info(`Sent collaboration_status 'cancelled' notification to user ${user._id}`);
+
+      await this._notificationService.sendNotification(
+        mentor._id.toString(),
+        "collaboration_status",
+        user._id.toString(),
+        collabId,
+        "collaboration",
+        undefined,
+        undefined,
+        `You collaboration with ${user.name} cancelled`
+      );
+      logger.info(
+        `Sent collaboration_status 'cancelled' to mentor ${mentor._id}`
+      );
 
       const userSubject = "Mentorship Cancellation and Refund Notice";
       const userText = collab.paymentIntentId
@@ -988,10 +1016,6 @@ export class CollaborationService implements ICollaborationService {
         );
       }
       const collab = await this._collabRepository.findCollabById(collabId);
-      // if (collab && (collab.isCancelled || collab.isCompleted)) {
-      //   logger.info(`Collaboration ${collabId} is cancelled or completed`);
-      //   return null;
-      // }
       const collabDTO = toCollaborationDTO(collab);
       if (!collabDTO && collab) {
         logger.error(`Failed to map collaboration ${collab._id} to DTO`);

@@ -6,6 +6,7 @@ export const ERROR_MESSAGES = {
   REQUIRED_USER_ID: "User ID is required",
   REQUIRED_EMAIL: "Email is required",
   REQUIRED_EMAIL_OTP: "Email and OTP are required",
+  REQUIRED_EMAIL_AND_PURPOSE: "Email and purpose are required",
   REQUIRED_EMAIL_NEW_PASSWORD: "Email and new password are required",
   REQUIRED_PASSKEY: "Passkey is required",
   REQUIRED_USER_ID_ROLE: "User ID and role are required",

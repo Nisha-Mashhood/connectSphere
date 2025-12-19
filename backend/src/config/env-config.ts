@@ -29,6 +29,7 @@ const config = {
   vapidPublicKey: process.env.VAPID_PUBLIC_KEY,
   vapidPrivateKey: process.env.VAPID_PRIVATE_KEY,
   vapidEmail: process.env.VAPID_EMAIL,
+  redisclienturl: process.env.REDIS_URL,
   logLevel: process.env.LOG_LEVEL,
 };
 

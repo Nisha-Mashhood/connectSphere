@@ -1,12 +1,13 @@
 import { useGoogleLogin } from '@react-oauth/google';
 import { useDispatch } from 'react-redux';
 import { useNavigate } from 'react-router-dom';
-import { signinStart, signinSuccess, signinFailure } from '../../../redux/Slice/userSlice';
-import { checkProfile, googleLogin } from '../../../Service/Auth.service';
+import { signinStart, signinFailure, setOtpContext } from '../../../redux/Slice/userSlice';
+import { googleLogin } from '../../../Service/Auth.service';
 import toast from 'react-hot-toast';
+import { AppDispatch } from '../../../redux/store';
 
 const GoogleLogin = () => {
-  const dispatch = useDispatch();
+  const dispatch = useDispatch<AppDispatch>();
   const navigate = useNavigate();
 
   const login = useGoogleLogin({
@@ -15,26 +16,18 @@ const GoogleLogin = () => {
     onSuccess: async (response) => {
       try {
         dispatch(signinStart());
-        
-        // Call the Google Login API
-        const result = await googleLogin(response.code);
-        console.log("[GoogleLogin] Login response:", result);
-        
+        const result = await googleLogin(response.code);        
         if (result.user) {
-          // Dispatch user data to Redux store
-          dispatch(signinSuccess({ user: result.user, needsReviewPrompt: result.needsReviewPrompt }));
-          toast.success('Login successful!');
+          dispatch(
+          setOtpContext({
+            email: result.user.email,
+            otpId: result.otpId,
+            purpose: "login",
+          })
+        );
+        toast.success("OTP sent to your email");
+        navigate("/otp");
 
-
-          // Check if profile is complete
-          const profileResponse = await checkProfile(result.user._id);
-          if (!profileResponse.isProfileComplete) {
-            navigate('/complete-profile');
-            return;
-          }
-
-          // Navigate to the homepage
-          navigate('/');
         }
       } catch (error) {
         dispatch(signinFailure(error.message));

@@ -1,12 +1,13 @@
 import { useGoogleLogin } from '@react-oauth/google';
 import { useDispatch } from 'react-redux';
 import { useNavigate } from 'react-router-dom';
-import { signinFailure, signinStart } from '../../../redux/Slice/userSlice';
+import { setOtpContext, signinFailure, signinStart } from '../../../redux/Slice/userSlice';
 import { googleSignup } from '../../../Service/Auth.service';
 import toast from 'react-hot-toast';
+import { AppDispatch } from '../../../redux/store';
 
 const GoogleSignup = () => {
-  const dispatch = useDispatch();
+  const dispatch = useDispatch<AppDispatch>();
   const navigate = useNavigate();
 
   const signup = useGoogleLogin({
@@ -18,10 +19,16 @@ const GoogleSignup = () => {
 
         dispatch(signinStart());
          const data = await googleSignup(response.code);
-         console.log("data:",data);
+         dispatch(
+          setOtpContext({
+            email: data.email,
+            otpId: data.otpId,
+            purpose: "signup",
+          })
+        );
 
-         toast.success('Signup successful! Please login to continue');
-        navigate('/login');
+        toast.success("OTP sent to your email");
+        navigate("/otp");
       } catch (error) {
         dispatch(signinFailure(error.message));
         toast.error('Google signup failed');

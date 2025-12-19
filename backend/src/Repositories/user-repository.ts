@@ -8,6 +8,7 @@ import { UserQuery } from "../Utils/types/auth-types";
 import { Model, PipelineStage, Types } from "mongoose";
 import { IUserRepository } from "../Interfaces/Repository/i-user-repositry";
 import { StatusCodes } from "../enums/status-code-enums";
+import { ClientSession } from "mongoose";
 
 @injectable()
 export class UserRepository extends BaseRepository<IUser> implements IUserRepository{
@@ -356,10 +357,10 @@ export class UserRepository extends BaseRepository<IUser> implements IUserReposi
   }
 
   //Update The user Role
-   public updateUserRole = async (userId: string, role: string): Promise<IUser | null> => {
+   public updateUserRole = async (userId: string, role: string, options?: { session?: ClientSession }): Promise<IUser | null> => {
     try {
       logger.debug(`Updating role for user: ${userId} to ${role}`);
-      const user = await this.findByIdAndUpdate(userId, { role }, { new: true });
+      const user = await this.findByIdAndUpdate(userId, { role }, { new: true }, options?.session);
       if (!user) {
         logger.warn(`User not found: ${userId}`);
         throw new RepositoryError(`User not found with ID: ${userId}`, StatusCodes.NOT_FOUND);

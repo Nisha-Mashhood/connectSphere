@@ -13,6 +13,7 @@ import {
   noEmailInPassword,
   noStartingSpecialChar,
   noExcessiveRepeats,
+  noUppercaseEmail,
 } from "./validationRules.ts"; 
 
 export interface SignupFormValues {
@@ -32,6 +33,7 @@ export const signupSchema = Yup.object({
 
   email: required("Email is required")
     .concat(emailFormat())
+    .concat(noUppercaseEmail())
     .concat(maxLength(100, "Email cannot exceed 100 characters"))
     .concat(noMultipleSpaces())
     .concat(noExcessiveRepeats(3))

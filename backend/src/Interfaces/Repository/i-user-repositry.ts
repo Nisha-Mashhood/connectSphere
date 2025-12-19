@@ -1,5 +1,6 @@
 import { IUser } from '../Models/i-user';
 import { UserQuery } from '../../Utils/types/auth-types';
+import { ClientSession } from 'mongoose';
 
 export interface IUserRepository {
   createUser(userData: Partial<IUser>): Promise<IUser>;
@@ -27,5 +28,5 @@ export interface IUserRepository {
   updateUserProfile(id: string, data: Partial<IUser>): Promise<IUser | null>;
   blockUser(id: string): Promise<IUser | null>;
   unblockUser(id: string): Promise<IUser | null>;
-  updateUserRole(userId: string, role: string): Promise<IUser | null>;
+  updateUserRole(userId: string, role: string, options?: { session?: ClientSession }): Promise<IUser | null>;
 }

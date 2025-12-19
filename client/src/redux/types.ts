@@ -20,6 +20,17 @@ export interface User {
   role?: UserRole;
 }
 
+export type OtpPurpose =
+  | "signup"
+  | "login"
+  | "forgot-password"
+
+export interface otpContext {
+  email: string;
+  otpId: string;
+  purpose: OtpPurpose;
+};
+
 //Complete user Details
 export interface CompleteMentorDetails {
   id: string;

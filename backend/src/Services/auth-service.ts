@@ -2,14 +2,14 @@ import { inject, injectable } from "inversify";
 import { ServiceError } from "../core/utils/error-handler";
 import { IUser } from "../Interfaces/Models/i-user";
 import bcrypt from "bcryptjs";
-import { generateOTP } from "../Utils/utils/auth-utils/o-t-p";
-import { sendEmail } from "../core/utils/email";
+import { sendOtpAndStore } from "../Utils/utils/auth-utils/o-t-p";
 import config from "../config/env-config";
 import { OAuth2Client } from "../Utils/utils/auth-utils/google-config";
 import axios from "axios";
 import logger from "../core/utils/logger";
-import { ProfileUpdateData,  SignupData,
+import { OtpPurpose, ProfileUpdateData,  SignupData,
   UserQuery,
+  VerifyOtpResult,
 } from "../Utils/types/auth-types";
 import { IAuthService } from "../Interfaces/Services/i-user-service";
 import { StatusCodes } from "../enums/status-code-enums";
@@ -19,9 +19,7 @@ import { IUserRepository } from "../Interfaces/Repository/i-user-repositry";
 import { INotificationService } from "../Interfaces/Services/i-notification-service";
 import { IJWTService } from "../Interfaces/Services/i-jwt-service";
 import { uploadMedia } from "../core/utils/cloudinary";
-
-// Temporary OTP storage (replace with Redis in production)
-const otpStore: { [email: string]: string } = {};
+import { verifyOtpFromRedis } from "../Utils/utils/auth-utils/otp-redis-helper";
 
 @injectable()
 export class AuthService implements IAuthService {
@@ -76,9 +74,10 @@ export class AuthService implements IAuthService {
     }
   };
 
-  public signup = async (data: SignupData): Promise<IUserDTO> => {
+  public signup = async (data: SignupData): Promise<{user:IUserDTO, otpId:string}> => {
     try {
       const { name, email, password } = data;
+      const normalizedEmail = email.toLowerCase().trim();
       const userExists = await this._userRepository.findUserByEmail(email);
       if (userExists) {
         throw new ServiceError("User already exists", StatusCodes.BAD_REQUEST);
@@ -94,7 +93,20 @@ export class AuthService implements IAuthService {
 
       // Notify admins of new user
       await this.notifyAdminsOfNewUser(user);
-      return toUserDTO(user)!; //Return value is not null
+
+      // Generate & send OTP for email verification
+      const otpId: string = await sendOtpAndStore({
+      email: normalizedEmail,
+      purpose: "signup",
+      emailSubject: "Verify your email - ConnectSphere",
+      emailBody: (otp: string) =>
+        `Your verification OTP for signing up on ConnectSphere is: ${otp}. It will expire shortly.`,
+    });
+
+      return {
+      user: toUserDTO(user)!,
+      otpId,
+    }; 
     } catch (error: unknown) {
       const err = error instanceof Error ? error : new Error(String(error));
       logger.error(`Error in signup for email ${data.email}: ${err.message}`);
@@ -113,10 +125,9 @@ export class AuthService implements IAuthService {
     password: string
   ): Promise<{
     user: IUserDTO;
-    accessToken: string;
-    refreshToken: string;
-    needsReviewPrompt: boolean;
+    otpId:string,
   }> => {
+    const normalizedEmail = email.toLowerCase().trim();
     try {
       const user = await this._userRepository.findUserByEmail(email);
       if (!user) {
@@ -135,38 +146,16 @@ export class AuthService implements IAuthService {
       if (!isMatch) {
         throw new ServiceError("Invalid credentials", StatusCodes.BAD_REQUEST);
       }
-      await this._userRepository.incrementLoginCount(user._id.toString());
-      const updatedUser = await this._userRepository.findById(
-        user._id.toString()
-      );
-      if (!updatedUser) {
-        throw new ServiceError(
-          "User not found after login count update",
-          StatusCodes.NOT_FOUND
-        );
-      }
-      const accessToken = this._jwtService.generateAccessToken({
-        userId: user._id,
-        userRole: user.role,
-      });
-      const refreshToken = this._jwtService.generateRefreshToken({
-        userId: user._id,
-        userRole: user.role,
-      });
-      await this._userRepository.updateRefreshToken(
-        user._id.toString(),
-        refreshToken
-      );
-      const needsReviewPrompt =
-        updatedUser.loginCount >= 5 && !updatedUser.hasReviewed;
-      logger.info(
-        `User ${email} logged in. loginCount: ${updatedUser.loginCount}, needsReviewPrompt: ${needsReviewPrompt}`
-      );
+      const otpId: string = await sendOtpAndStore({
+      email: normalizedEmail,
+      purpose: "login",
+      emailSubject: "Verify your email - ConnectSphere",
+      emailBody: (otp: string) =>
+        `Your verification OTP for Login on ConnectSphere is: ${otp}. It will expire shortly.`,
+    });
       return {
-        user: toUserDTO(updatedUser)!,
-        accessToken,
-        refreshToken,
-        needsReviewPrompt,
+        user: toUserDTO(user)!,
+        otpId,
       };
     } catch (error: unknown) {
       const err = error instanceof Error ? error : new Error(String(error));
@@ -181,7 +170,7 @@ export class AuthService implements IAuthService {
     }
   };
 
-  public googleSignup = async (code: string): Promise<IUserDTO> => {
+  public googleSignup = async (code: string): Promise<{user:IUserDTO, otpId:string}> => {
     try {
       const { tokens } = await OAuth2Client.getToken(code);
       OAuth2Client.setCredentials(tokens);
@@ -189,6 +178,7 @@ export class AuthService implements IAuthService {
         `https://www.googleapis.com/oauth2/v1/userinfo?alt=json&access_token=${tokens.access_token}`
       );
       const { email, name, picture } = userRes.data;
+      const normalizedEmail = email.toLowerCase().trim();
       const existingUser = await this._userRepository.findUserByEmail(email);
       if (existingUser) {
         throw new ServiceError(
@@ -196,6 +186,13 @@ export class AuthService implements IAuthService {
           StatusCodes.BAD_REQUEST
         );
       }
+      const otpId: string = await sendOtpAndStore({
+      email: normalizedEmail,
+      purpose: "signup",
+      emailSubject: "Verify your email - ConnectSphere",
+      emailBody: (otp: string) =>
+        `Your verification OTP for signing up on ConnectSphere is: ${otp}. It will expire shortly.`,
+    });
       const user = await this._userRepository.createUser({
         name,
         email,
@@ -210,7 +207,10 @@ export class AuthService implements IAuthService {
       // Notify admins of new user
       await this.notifyAdminsOfNewUser(user);
 
-      return toUserDTO(user)!;
+      return {
+      user: toUserDTO(user)!,
+      otpId,
+    }; 
     } catch (error: unknown) {
       const err = error instanceof Error ? error : new Error(String(error));
       logger.error(`Error in Google signup: ${err.message}`);
@@ -228,9 +228,7 @@ export class AuthService implements IAuthService {
     code: string
   ): Promise<{
     user: IUserDTO;
-    accessToken: string;
-    refreshToken: string;
-    needsReviewPrompt: boolean;
+    otpId:string,
   }> => {
     try {
       const { tokens } = await OAuth2Client.getToken(code);
@@ -239,44 +237,21 @@ export class AuthService implements IAuthService {
         `https://www.googleapis.com/oauth2/v1/userinfo?alt=json&access_token=${tokens.access_token}`
       );
       const { email } = userRes.data;
+      const normalizedEmail = email.toLowerCase().trim();
       const existingUser = await this._userRepository.findUserByEmail(email);
       if (!existingUser) {
         throw new ServiceError("Email not registered", StatusCodes.NOT_FOUND);
       }
-      await this._userRepository.incrementLoginCount(
-        existingUser._id.toString()
-      );
-      const updatedUser = await this._userRepository.findById(
-        existingUser._id.toString()
-      );
-      if (!updatedUser) {
-        throw new ServiceError(
-          "User not found after login count update",
-          StatusCodes.NOT_FOUND
-        );
-      }
-      const accessToken = this._jwtService.generateAccessToken({
-        userId: existingUser._id,
-        userRole: existingUser.role,
-      });
-      const refreshToken = this._jwtService.generateRefreshToken({
-        userId: existingUser._id,
-        userRole: existingUser.role,
-      });
-      await this._userRepository.updateRefreshToken(
-        existingUser._id.toString(),
-        refreshToken
-      );
-      const needsReviewPrompt =
-        updatedUser.loginCount >= 5 && !updatedUser.hasReviewed;
-      logger.info(
-        `Google login for ${email}. loginCount: ${updatedUser.loginCount}, needsReviewPrompt: ${needsReviewPrompt}`
-      );
+      const otpId: string = await sendOtpAndStore({
+      email: normalizedEmail,
+      purpose: "login",
+      emailSubject: "Verify your email - ConnectSphere",
+      emailBody: (otp: string) =>
+        `Your verification OTP for Login on ConnectSphere is: ${otp}. It will expire shortly.`,
+    });
       return {
-        user: toUserDTO(updatedUser)!,
-        accessToken,
-        refreshToken,
-        needsReviewPrompt,
+        user: toUserDTO(existingUser)!,
+        otpId,
       };
     } catch (error: unknown) {
       const err = error instanceof Error ? error : new Error(String(error));
@@ -291,7 +266,7 @@ export class AuthService implements IAuthService {
     }
   };
 
-  public githubSignup = async (code: string): Promise<IUserDTO> => {
+  public githubSignup = async (code: string): Promise<{user:IUserDTO, otpId:string}> => {
     try {
       const tokenResponse = await axios.post(
         "https://github.com/login/oauth/access_token",
@@ -323,6 +298,7 @@ export class AuthService implements IAuthService {
         }
         email = primaryEmail.email;
       }
+      const normalizedEmail = email.toLowerCase().trim();
       const existingUser = await this._userRepository.findUserByEmail(email);
       if (existingUser) {
         throw new ServiceError(
@@ -330,6 +306,13 @@ export class AuthService implements IAuthService {
           StatusCodes.BAD_REQUEST
         );
       }
+      const otpId: string = await sendOtpAndStore({
+      email: normalizedEmail,
+      purpose: "signup",
+      emailSubject: "Verify your email - ConnectSphere",
+      emailBody: (otp: string) =>
+        `Your verification OTP for signing up on ConnectSphere is: ${otp}. It will expire shortly.`,
+    });
       const user = await this._userRepository.createUser({
         name: userResponse.data.name || userResponse.data.login,
         email,
@@ -344,7 +327,10 @@ export class AuthService implements IAuthService {
       // Notify admins of new user
       await this.notifyAdminsOfNewUser(user);
 
-      return toUserDTO(user)!;
+      return {
+      user: toUserDTO(user)!,
+      otpId,
+    }; 
     } catch (error: unknown) {
       const err = error instanceof Error ? error : new Error(String(error));
       logger.error(`Error in GitHub signup: ${err.message}`);
@@ -362,9 +348,7 @@ export class AuthService implements IAuthService {
     code: string
   ): Promise<{
     user: IUserDTO;
-    accessToken: string;
-    refreshToken: string;
-    needsReviewPrompt: boolean;
+    otpId:string,
   }> => {
     try {
       const tokenResponse = await axios.post(
@@ -397,44 +381,21 @@ export class AuthService implements IAuthService {
         }
         email = primaryEmail.email;
       }
+      const normalizedEmail = email.toLowerCase().trim();
       const existingUser = await this._userRepository.findUserByEmail(email);
       if (!existingUser) {
         throw new ServiceError("Email not registered", StatusCodes.NOT_FOUND);
       }
-      await this._userRepository.incrementLoginCount(
-        existingUser._id.toString()
-      );
-      const updatedUser = await this._userRepository.findById(
-        existingUser._id.toString()
-      );
-      if (!updatedUser) {
-        throw new ServiceError(
-          "User not found after login count update",
-          StatusCodes.NOT_FOUND
-        );
-      }
-      const accessToken = this._jwtService.generateAccessToken({
-        userId: existingUser._id,
-        userRole: existingUser.role,
-      });
-      const refreshToken = this._jwtService.generateRefreshToken({
-        userId: existingUser._id,
-        userRole: existingUser.role,
-      });
-      await this._userRepository.updateRefreshToken(
-        existingUser._id.toString(),
-        refreshToken
-      );
-      const needsReviewPrompt =
-        updatedUser.loginCount >= 5 && !updatedUser.hasReviewed;
-      logger.info(
-        `GitHub login for ${email}. loginCount: ${updatedUser.loginCount}, needsReviewPrompt: ${needsReviewPrompt}`
-      );
+      const otpId: string = await sendOtpAndStore({
+      email: normalizedEmail,
+      purpose: "login",
+      emailSubject: "Verify your email - ConnectSphere",
+      emailBody: (otp: string) =>
+        `Your verification OTP for Login on ConnectSphere is: ${otp}. It will expire shortly.`,
+    });
       return {
-        user: toUserDTO(updatedUser)!,
-        accessToken,
-        refreshToken,
-        needsReviewPrompt,
+        user: toUserDTO(existingUser)!,
+        otpId,
       };
     } catch (error: unknown) {
       const err = error instanceof Error ? error : new Error(String(error));
@@ -477,12 +438,14 @@ export class AuthService implements IAuthService {
       if (!user) {
         throw new ServiceError("User not found", StatusCodes.NOT_FOUND);
       }
-      const otp = generateOTP();
-      otpStore[normalizedEmail] = otp;
-      logger.info(`Stored OTP for ${normalizedEmail}: ${otp}`);
-      await sendEmail(normalizedEmail, "Password Reset OTP", `Your OTP is ${otp}`);
-      logger.info(`Sent OTP to ${normalizedEmail}`);
-      return otp; // Remove in production
+      const otpId: string = await sendOtpAndStore({
+      email: normalizedEmail,
+      purpose: "forgot_password",
+      emailSubject: "Verify your email - ConnectSphere",
+      emailBody: (otp: string) =>
+        `Your verification OTP for Resetting Your password on ConnectSphere is: ${otp}. It will expire shortly.`,
+    });
+      return otpId;
     } catch (error: unknown) {
       const err = error instanceof Error ? error : new Error(String(error));
       logger.error(`Error in forgot password for ${email}: ${err.message}`);
@@ -492,27 +455,72 @@ export class AuthService implements IAuthService {
     }
   };
 
-  public verifyOTP = async (email: string, otp: string): Promise<string> => {
+  public verifyOTP = async (purpose:OtpPurpose, email:string, otpId: string, otp: string): Promise<VerifyOtpResult> => {
     const normalizedEmail = email.toLowerCase().trim();
-    logger.info(`Verifying OTP for ${normalizedEmail}, Stored OTP: ${otpStore[normalizedEmail] || "undefined"}, Provided OTP: ${otp}`);
-    try {
-      if (!otpStore[normalizedEmail]) {
-        throw new ServiceError("No OTP found for this email", StatusCodes.BAD_REQUEST);
+      try {
+      const result = await verifyOtpFromRedis(
+        purpose,
+        normalizedEmail,
+        otpId,
+        otp
+      );
+      // Only LOGIN creates tokens
+      if (purpose === "login") {
+        const user = await this._userRepository.findUserByEmail(normalizedEmail);
+        if (!user) {
+          throw new ServiceError("User not found", StatusCodes.NOT_FOUND);
+        }
+        await this._userRepository.incrementLoginCount(user._id.toString());
+
+        const updatedUser = await this._userRepository.findById(user._id.toString());
+        if (!updatedUser) {
+          throw new ServiceError("User not updated", StatusCodes.NOT_MODIFIED);
+        }
+        const accessToken = this._jwtService.generateAccessToken({
+          userId: user._id,
+          userRole: user.role,
+        });
+        const refreshToken = this._jwtService.generateRefreshToken({
+          userId: user._id,
+          userRole: user.role,
+        });
+        await this._userRepository.updateRefreshToken(
+          user._id.toString(),
+          refreshToken
+        );
+        const needsReviewPrompt = updatedUser.loginCount >= 5 && !updatedUser.hasReviewed;
+            return {
+              purpose: "login",
+              user: toUserDTO(updatedUser)!,
+              accessToken,
+              refreshToken,
+              needsReviewPrompt,
+            };
+        }
+        return {
+          purpose,
+          email: result.email,
+        };
+
+      } catch (error: unknown) {
+        const err = error instanceof Error ? error : new Error(String(error));
+        logger.error(`Error verifying OTP : ${err.message}`);
+        throw error instanceof ServiceError
+          ? error
+          : new ServiceError("Failed to verify OTP", StatusCodes.INTERNAL_SERVER_ERROR, err);
       }
-      if (otpStore[normalizedEmail] !== otp) {
-        throw new ServiceError("Invalid or expired OTP", StatusCodes.BAD_REQUEST);
-      }
-      delete otpStore[normalizedEmail];
-      const token = this._jwtService.generateAccessToken({ email: normalizedEmail }, "10m");
-      logger.info(`OTP verified for ${normalizedEmail}`);
-      return  token ;
-    } catch (error: unknown) {
-      const err = error instanceof Error ? error : new Error(String(error));
-      logger.error(`Error verifying OTP for ${normalizedEmail}: ${err.message}`);
-      throw error instanceof ServiceError
-        ? error
-        : new ServiceError("Failed to verify OTP", StatusCodes.INTERNAL_SERVER_ERROR, err);
-    }
+  };
+
+  public resendOtp = async ( email: string, purpose: OtpPurpose ): Promise<{ otpId: string }> => {
+    const normalizedEmail = email.toLowerCase().trim();
+    const otpId = await sendOtpAndStore({
+      email: normalizedEmail,
+      purpose,
+      emailSubject: "Your OTP - ConnectSphere",
+      emailBody: (otp: string) =>
+      `Your OTP for ${purpose.replace("_", " ")} is: ${otp}. It will expire shortly.`,
+    });
+    return { otpId };
   };
 
   public resetPassword = async (

@@ -28,6 +28,7 @@ export interface IAuthController {
   logout(req: Request<{}, {}, LogoutRequestBody>, res: Response, next: NextFunction): Promise<void>;
   handleForgotPassword(req: Request<{}, {}, ForgotPasswordRequestBody>, res: Response, next: NextFunction): Promise<void>;
   handleVerifyOTP(req: Request<{}, {}, VerifyOTPRequestBody>, res: Response, next: NextFunction): Promise<void>;
+  resendOtp(req: Request, res: Response, next: NextFunction): Promise<void>; 
   handleResetPassword(req: Request<{}, {}, ResetPasswordRequestBody>, res: Response, next: NextFunction): Promise<void>;
   verifyPasskey(req: Request<{}, {}, VerifyPasskeyRequestBody>, res: Response, next: NextFunction): Promise<void>;
   getAllUsers(req: Request, res: Response, next: NextFunction): Promise<void>;

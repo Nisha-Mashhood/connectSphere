@@ -7,6 +7,7 @@ import MentorInfoTab from "./MentorInfoTab";
 import MentorFeedbackTab from "./MentorFeedbackTab";
 import RejectionModal from "./RejectionModal";
 import CertificateViewer from "./CertificateViewer";
+import MentorExperienceTab from "../../ReusableComponents/MentorExperienceTab";
 
 interface Props {
   mentor: Mentor;
@@ -18,6 +19,8 @@ const MentorDetailModal: React.FC<Props> = ({ mentor, onClose, onMentorUpdate })
   const {
     feedbacks,
     loadingFeedback,
+    experiences,
+    loadingExperiences,
     approveMentor,
     cancelMentorship,
     rejectionModal,
@@ -44,6 +47,12 @@ const MentorDetailModal: React.FC<Props> = ({ mentor, onClose, onMentorUpdate })
             <Tabs aria-label="Mentor Tabs">
               <Tab key="details" title="Details">
                 <MentorInfoTab mentor={mentor} onCertificateClick={setSelectedCertificate} />
+              </Tab>
+              <Tab key="experience" title="Experience">
+                <MentorExperienceTab
+                  experiences={experiences}
+                  loading={loadingExperiences}
+                />
               </Tab>
               <Tab key="feedback" title="Feedback">
                 <MentorFeedbackTab

@@ -6,7 +6,7 @@ import TextField from "../../ReusableComponents/TextFiled";
 import TextArea from "../../ReusableComponents/TextArea";
 import FileInput from "../../ReusableComponents/FileInput";
 import Button from "../../ReusableComponents/Button";
-import { useEffect } from "react";
+import { useEffect, useMemo } from "react";
 import { useNavigate } from "react-router-dom";
 import type { Resolver } from "react-hook-form";
 import { debounce } from "lodash";
@@ -28,23 +28,26 @@ const CompleteProfile: React.FC = () => {
     mode: "onChange",
   });
 
-  const debouncedLoadUserDetails = debounce(async () => {
-    const userDetails = await getUserDetails();
+  const debouncedLoadUserDetails = useMemo(
+  () =>
+    debounce(async () => {
+      const userDetails = await getUserDetails();
 
-    if (userDetails) {
-      Object.entries(userDetails).forEach(([key, value]) => {
-        setValue(key as keyof CompleteProfileFormValues, value);
-      });
-    }
-  }, 300); 
+      if (userDetails) {
+        Object.entries(userDetails).forEach(([key, value]) => {
+          setValue(key as keyof CompleteProfileFormValues, value);
+        });
+      }
+    }, 300),
+  [getUserDetails, setValue]
+);
 
   useEffect(() => {
     debouncedLoadUserDetails();
-
     return () => {
       debouncedLoadUserDetails.cancel();
     };
-  }, []); 
+  }, [debouncedLoadUserDetails]); 
 
   if (!isDataLoaded) {
     return <div>Loading...</div>;

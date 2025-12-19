@@ -1,20 +1,18 @@
 import { useEffect } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
 import {
-  checkProfile,
   githubLogin,
   githubSignup,
 } from "../../../Service/Auth.service";
 import {
-  signinStart,
-  signinFailure,
-  signinSuccess,
+  setOtpContext,
 } from "../../../redux/Slice/userSlice";
 import toast from "react-hot-toast";
 import { useDispatch } from "react-redux";
+import { AppDispatch } from "../../../redux/store";
 
 const GithubCallback = () => {
-  const dispatch = useDispatch();
+  const dispatch = useDispatch<AppDispatch>();
   const navigate = useNavigate();
   const location = useLocation();
 
@@ -35,15 +33,33 @@ const GithubCallback = () => {
       try {
         if (state === "signup") {
           console.log("Starting GitHub signup process");
-          await handleGithubSignup(code);
+          const { email, otpId } = await githubSignup(code);
+          dispatch(
+            setOtpContext({
+              email,
+              otpId,
+              purpose: "signup",
+            })
+          );
+          toast.success("OTP sent to your email");
+          navigate("/otp");
+          return;
         } else if (state === "login") {
           console.log("Starting GitHub login process");
-          await handleGithubLogin(code);
-        } else {
-          console.error("Invalid state parameter:", state);
-          toast.error("Invalid authentication request");
-          navigate("/login");
-        }
+          const { user, otpId } = await githubLogin(code);
+          dispatch(
+            setOtpContext({
+              email: user.email,
+              otpId,
+              purpose: "login",
+            })
+          );
+          toast.success("OTP sent to your email");
+          navigate("/otp");
+          return;
+        } 
+        toast.error("Invalid authentication state");
+        navigate("/login");
       } catch (error) {
         console.error("Callback handling error:", error.message );
         toast.error("Authentication failed");
@@ -52,52 +68,7 @@ const GithubCallback = () => {
     };
 
     handleCallback();
-  }, [location]);
-
-  const handleGithubLogin = async (code: string) => {
-    try {
-      dispatch(signinStart());
-      const result = await githubLogin(code);
-      console.log("[GithubCallback] Login response:", result);
-      dispatch(signinSuccess({ user: result.user, needsReviewPrompt: result.needsReviewPrompt }));
-      toast.success("Login successful!");
-
-
-      const profileResponse = await checkProfile(result.user._id);
-      if (!profileResponse.isProfileComplete) {
-        navigate("/complete-profile");
-        return;
-      }
-
-      navigate("/");
-    } catch (error) {
-      dispatch(signinFailure(error.message));
-      if (error.response && error.response.status === 404) {
-        toast.error("Email not registered. Please sign up first.");
-        navigate("/signup");
-      } else {
-        toast.error(error.message || "GitHub login failed!");
-      }
-    }
-  };
-
-  const handleGithubSignup = async (code: string) => {
-    try {
-      dispatch(signinStart());
-      await githubSignup(code);
-      toast.success("Signup successful! Please login to continue.");
-      navigate("/login");
-    } catch (error) {
-      dispatch(signinFailure(error.message));
-      if (error.message === "Email already registered. Please login instead.") {
-        toast.error("Email already registered. Please login instead.");
-        navigate("/login");
-      } else {
-        toast.error(error.message || "GitHub signup failed!");
-        navigate("/signup");
-      }
-    }
-  };
+  }, [location, navigate, dispatch]);
 
   return <div>Redirecting...</div>;
 };

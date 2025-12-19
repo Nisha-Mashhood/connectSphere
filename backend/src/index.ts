@@ -36,7 +36,6 @@ const server: http.Server = http.createServer(app);
 const startServer = async () => {
   await connectDB(); 
 
-
   // Middleware
   app.use(express.json());
   app.use(cookieParser());

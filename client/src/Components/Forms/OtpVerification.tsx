@@ -3,6 +3,8 @@ import otpImage from "../../assets/OTP verification.png";
 import Button from "../ReusableComponents/Button";
 import InputOTP from "../ReusableComponents/InputOTP";
 import { useOTPVerification } from "../../Hooks/Auth/useOTPVerification";
+import { useSelector } from "react-redux";
+import { RootState } from "../../redux/store";
 
 const OTPVerification = () => {
   const {
@@ -15,9 +17,34 @@ const OTPVerification = () => {
     handleResendOtp,
     handleOTPChange,
     otpValue,
-    resetEmail,
   } = useOTPVerification();
+  const { otpContext } = useSelector((state: RootState) => state.user);
 
+const getOtpHeading = (purpose?: string) => {
+  switch (purpose) {
+    case "signup":
+      return "Verify your email";
+    case "login":
+      return "Confirm login";
+    case "forgot_password":
+      return "Reset your password";
+    default:
+      return "Enter verification code";
+  }
+};
+
+const getOtpSubText = (purpose?: string) => {
+  switch (purpose) {
+    case "signup":
+      return "Complete your signup by verifying your email.";
+    case "login":
+      return "We need to verify it's really you.";
+    case "forgot_password":
+      return "Verify OTP to reset your password.";
+    default:
+      return "Enter the verification code sent to your email.";
+  }
+};
   return (
     <div>
       <section className="flex flex-col md:flex-row h-screen items-center">
@@ -32,10 +59,11 @@ const OTPVerification = () => {
         <div className="bg-white w-full md:max-w-md lg:max-w-full md:w-1/2 xl:w-1/3 h-screen px-6 lg:px-16 xl:px-12 flex items-center justify-center">
           <div className="w-full h-100">
             <h1 className="text-xl md:text-2xl font-bold leading-tight mt-12">
-              Enter Verification Code
+              {getOtpHeading(otpContext?.purpose)}
             </h1>
             <p className="text-gray-600 mt-2">
-              We’ve sent a code to your email <strong>{resetEmail}</strong>. Enter it below to verify.
+              {getOtpSubText(otpContext?.purpose)}{" "}
+              <strong>{otpContext?.email}</strong>
             </p>
 
             <form className="mt-6" onSubmit={handleSubmit(handleVerifyOTP)}>
@@ -74,7 +102,11 @@ const OTPVerification = () => {
                 </div>
               </div>
 
-              <Button label="Verify" type="submit" disabled={isSubmitting} />
+              <Button
+                label="Verify"
+                type="submit"
+                disabled={isSubmitting || otpValue.length !== 6}
+              />
             </form>
           </div>
         </div>

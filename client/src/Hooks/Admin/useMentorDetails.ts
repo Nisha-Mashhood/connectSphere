@@ -3,6 +3,7 @@ import { toast } from "react-hot-toast";
 import {
   approveMentor as approveMentorService,
   cancelMentorship as cancelMentorshipService,
+  getMentorExperiences,
   rejectMentor,
 } from "../../Service/Mentor.Service";
 import {
@@ -10,6 +11,7 @@ import {
   toggleFeedbackVisibility,
 } from "../../Service/Feedback.service";
 import { Feedback, Mentor } from "../../redux/types";
+import { IMentorExperience } from "../../Interface/Admin/IMentor";
 
 export const useMentorDetails = (mentor: Mentor, onClose: () => void, onMentorUpdate: (m: Mentor) => void) => {
   const [feedbacks, setFeedbacks] = useState<Feedback[]>([]);
@@ -17,6 +19,8 @@ export const useMentorDetails = (mentor: Mentor, onClose: () => void, onMentorUp
   const [selectedCertificate, setSelectedCertificate] = useState<string | null>(null);
   const [rejectionModal, setRejectionModal] = useState(false);
   const [rejectionReason, setRejectionReason] = useState("");
+  const [experiences, setExperiences] = useState<IMentorExperience[]>([]);
+  const [loadingExperiences, setLoadingExperiences] = useState(false);
 
   // Fetch feedback
   const fetchFeedback = useCallback(async () => {
@@ -33,9 +37,25 @@ export const useMentorDetails = (mentor: Mentor, onClose: () => void, onMentorUp
     }
   }, [mentor.id]);
 
+  const fetchExperiences = useCallback(async () => {
+  setLoadingExperiences(true);
+  try {
+    const data = await getMentorExperiences(mentor.id);
+    console.log("Experinces : ",data.experiences)
+    setExperiences(data.experiences);
+  } catch (error) {
+    console.log(error);
+    toast.error("Failed to load experiences");
+    setExperiences([]);
+  } finally {
+    setLoadingExperiences(false);
+  }
+}, [mentor.id]);
+
   useEffect(() => {
     fetchFeedback();
-  }, [fetchFeedback]);
+    fetchExperiences();
+  }, [fetchFeedback, fetchExperiences]);
 
   // Approve mentor
   const approveMentor = async () => {
@@ -97,6 +117,8 @@ export const useMentorDetails = (mentor: Mentor, onClose: () => void, onMentorUp
   return {
     feedbacks,
     loadingFeedback,
+    experiences,
+    loadingExperiences,
     approveMentor,
     cancelMentorship,
     rejectionModal,

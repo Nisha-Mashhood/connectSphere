@@ -1,15 +1,14 @@
-import { useEffect, useRef, useCallback, DependencyList } from "react";
+import { useEffect, useRef, useCallback } from "react";
 import axios from "axios";
 
 export const useCancellableFetch = <T,>(
-  fetchFn: (signal: AbortSignal) => Promise<T>,
-  deps: DependencyList
+  fetchFn: (signal: AbortSignal) => Promise<T>
 ) => {
   const abortRef = useRef<AbortController | null>(null);
 
   const fetch = useCallback(async () => {
-    // Cancel any previous request
     abortRef.current?.abort();
+
     const controller = new AbortController();
     abortRef.current = controller;
 
@@ -17,12 +16,12 @@ export const useCancellableFetch = <T,>(
       return await fetchFn(controller.signal);
     } catch (err) {
       if (axios.isCancel(err)) {
-        console.log("[canceled]", err.message);
+        console.log("[canceled]");
         return null;
       }
       throw err;
     }
-  }, deps); 
+  }, [fetchFn]); 
 
   useEffect(() => {
     return () => {

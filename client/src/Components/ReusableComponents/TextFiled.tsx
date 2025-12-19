@@ -1,4 +1,6 @@
 import { FieldError, UseFormRegisterReturn } from "react-hook-form";
+import { useState } from "react";
+import { FaEye, FaEyeSlash } from "react-icons/fa";
 
 interface TextFieldProps {
   label: string;
@@ -17,6 +19,9 @@ const TextField: React.FC<TextFieldProps> = ({
   registration,
   error,
 }) => {
+  const isPassword = type === "password";
+  const [showPassword, setShowPassword] = useState(false);
+
   return (
     <div className="mt-4">
       <label className="block font-medium">
@@ -27,14 +32,29 @@ const TextField: React.FC<TextFieldProps> = ({
           </span>
         )}
       </label>
-      <input
-        type={type}
-        placeholder={placeholder}
-        className={`w-full px-4 py-3 rounded-lg bg-gray-200 mt-2 border ${
-          error ? "border-red-500" : "border-gray-300"
-        } focus:border-blue-500 focus:bg-white focus:outline-none`}
-        {...registration}
-      />
+
+      <div className="relative mt-2">
+        <input
+          type={isPassword && showPassword ? "text" : type}
+          placeholder={placeholder}
+          className={`w-full px-4 py-3 pr-12 rounded-lg bg-gray-200 border ${
+            error ? "border-red-500" : "border-gray-300"
+          } focus:border-blue-500 focus:bg-white focus:outline-none`}
+          {...registration}
+        />
+
+        {/* Eye Icon */}
+        {isPassword && (
+          <button
+            type="button"
+            onClick={() => setShowPassword((prev) => !prev)}
+            className="absolute right-4 top-1/2 -translate-y-1/2 text-gray-600 hover:text-gray-800 focus:outline-none"
+          >
+            {showPassword ? <FaEyeSlash /> : <FaEye />}
+          </button>
+        )}
+      </div>
+
       {error && (
         <div
           className="text-red-600 text-sm"

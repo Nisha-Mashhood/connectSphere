@@ -11,6 +11,15 @@ import {
   fileUploadRule,
 } from "./validationRules";
 
+export type MentorExperienceInput = {
+  role?: string;
+  organization?: string;
+  startDate?: string;
+  endDate?: string;
+  isCurrent?: boolean;
+  description?: string;
+};
+
 export interface BecomeMentorFormValues {
   specialization: string;
   bio: string;
@@ -19,7 +28,32 @@ export interface BecomeMentorFormValues {
   skills: string[];
   certificates: File[];
   availableSlots: { day?: string; timeSlots?: string[] }[];
+  experiences: MentorExperienceInput[];
 }
+
+export const mentorExperienceSchema: Yup.ObjectSchema<MentorExperienceInput> =
+  Yup.object({
+    role: Yup.string().required("Role is required"),
+    organization: Yup.string().required("Organization is required"),
+    startDate: Yup.string().required("Start date is required"),
+
+    isCurrent: Yup.boolean().required(),
+
+    endDate: Yup.string()
+      .nullable()
+      .when("isCurrent", {
+        is: false,
+        then: (schema) =>
+          schema.required("End date is required if not current"),
+        otherwise: (schema) => schema.nullable(),
+      }),
+
+    description: Yup.string()
+      .max(500, "Description too long")
+      .optional(),
+  })
+  .required()
+  .defined();
 
 export const becomeMentorSchema: Yup.ObjectSchema<BecomeMentorFormValues> = Yup.object({
   specialization: required("Specialization is required")
@@ -53,4 +87,11 @@ export const becomeMentorSchema: Yup.ObjectSchema<BecomeMentorFormValues> = Yup.
   certificates: fileUploadRule(1, 2),
 
   availableSlots: atLeastOneSlot().required(),
+
+  experiences: Yup.array()
+    .of(mentorExperienceSchema)
+    .min(1, "At least one experience is required")
+    .required()
+    .defined()
+
 }).required();

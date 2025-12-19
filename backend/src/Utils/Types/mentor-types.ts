@@ -1,3 +1,5 @@
+import { Types } from "mongoose";
+
 export interface MentorAnalytics {
   mentorId: string;
   name: string;
@@ -68,3 +70,13 @@ export interface CompleteMentorDetails {
   createdAt: Date;
   updatedAt: Date;
 }
+
+export type MentorExperienceInput = {
+  mentorId?: string | Types.ObjectId;
+  role: string;
+  organization: string;
+  startDate: Date | string;
+  endDate?: Date | string;
+  isCurrent: boolean;
+  description?: string;
+};

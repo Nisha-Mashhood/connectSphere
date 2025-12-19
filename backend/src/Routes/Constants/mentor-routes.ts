@@ -6,9 +6,13 @@ export const MENTOR_ROUTES = {
   RejectMentorRequest: '/rejectmentorrequest/:id',
   CancelMentorship: '/cancelmentorship/:mentorId',
   GetMentorDetails: '/getmentorDetails/:mentorId',
+  GetMentorExperience: '/experiences/:mentorId',
   UpdateMentorProfile: '/update-mentor/:mentorId',
   GetAllMentors: '/getAllMentors',
   GetMentorByUserId: '/user/:userId',
   GetMentorAnalytics: '/mentor-analytics',
   GetSalesReport: '/sales-report',
+  AddExperience: '/experiences',
+  UpdateExperience:'/experiences/:experienceId',
+  DeleteExperience: '/deleteexperiences/:experienceId',
 } as const;

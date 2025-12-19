@@ -9,6 +9,7 @@ import { IUser } from "../Interfaces/Models/i-user";
 import { CompleteMentorDetails, MentorQuery } from "../Utils/types/mentor-types";
 import { StatusCodes } from "../enums/status-code-enums";
 import { IMentorRepository } from "../Interfaces/Repository/i-mentor-repositry";
+import { ClientSession } from "mongoose";
 
 @injectable()
 export class MentorRepository extends BaseRepository<IMentor> implements IMentorRepository {
@@ -39,19 +40,44 @@ export class MentorRepository extends BaseRepository<IMentor> implements IMentor
     return new Types.ObjectId(idStr);
   }
 
-  public submitMentorRequest = async (data: Partial<IMentor>): Promise<IMentor> => {
+  // public submitMentorRequest = async (data: Partial<IMentor>, options?: { session?: ClientSession }): Promise<IMentor> => {
+  //   try {
+  //     logger.debug(`Submitting mentor request for user: ${data.userId}`);
+  //     const mentor = await this.create({
+  //       ...data,
+  //       userId: this.toObjectId(data.userId),
+  //     }, options?.session);
+  //     logger.info(`Mentor request submitted: ${mentor._id}`);
+  //     return mentor;
+  //   } catch (error: unknown) {
+  //     const err = error instanceof Error ? error : new Error(String(error));
+  //     logger.error(`Error submitting mentor request for user ${data.userId}`, err);
+  //     throw new RepositoryError('Error submitting mentor request', StatusCodes.INTERNAL_SERVER_ERROR, err);
+  //   }
+  // }
+
+   public saveMentorRequest = async (data: {
+    userId: string;
+    skills: string[];
+    specialization: string;
+    bio: string;
+    price: number;
+    availableSlots: object[];
+    timePeriod: number;
+    certifications: string[];
+  }, options?: { session?: ClientSession }): Promise<IMentor> => {
     try {
-      logger.debug(`Submitting mentor request for user: ${data.userId}`);
+      logger.debug(`Saving mentor request for user: ${data.userId}`);
       const mentor = await this.create({
         ...data,
         userId: this.toObjectId(data.userId),
-      });
-      logger.info(`Mentor request submitted: ${mentor._id}`);
+      }, options?.session);
+      logger.info(`Mentor request saved: ${mentor._id}`);
       return mentor;
     } catch (error: unknown) {
       const err = error instanceof Error ? error : new Error(String(error));
-      logger.error(`Error submitting mentor request for user ${data.userId}`, err);
-      throw new RepositoryError('Error submitting mentor request', StatusCodes.INTERNAL_SERVER_ERROR, err);
+      logger.error(`Error saving mentor request for user ${data.userId}`, err);
+      throw new RepositoryError('Error saving mentor request', StatusCodes.INTERNAL_SERVER_ERROR, err);
     }
   }
 
@@ -458,28 +484,5 @@ export class MentorRepository extends BaseRepository<IMentor> implements IMentor
     }
   }
 
-  public saveMentorRequest = async (data: {
-    userId: string;
-    skills: string[];
-    specialization: string;
-    bio: string;
-    price: number;
-    availableSlots: object[];
-    timePeriod: number;
-    certifications: string[];
-  }): Promise<IMentor> => {
-    try {
-      logger.debug(`Saving mentor request for user: ${data.userId}`);
-      const mentor = await this.create({
-        ...data,
-        userId: this.toObjectId(data.userId),
-      });
-      logger.info(`Mentor request saved: ${mentor._id}`);
-      return mentor;
-    } catch (error: unknown) {
-      const err = error instanceof Error ? error : new Error(String(error));
-      logger.error(`Error saving mentor request for user ${data.userId}`, err);
-      throw new RepositoryError('Error saving mentor request', StatusCodes.INTERNAL_SERVER_ERROR, err);
-    }
-  }
+ 
 }

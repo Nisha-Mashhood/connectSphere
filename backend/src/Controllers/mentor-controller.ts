@@ -9,6 +9,7 @@ import { StatusCodes } from "../enums/status-code-enums";
 import { IMentorService } from "../Interfaces/Services/i-mentor-service";
 import { MENTOR_MESSAGES } from "../constants/messages";
 import { ERROR_MESSAGES } from "../constants/error-messages";
+import { MentorExperienceInput } from "../Utils/types/mentor-types";
 
 @injectable()
 export class MentorController extends BaseController implements IMentorController{
@@ -46,9 +47,29 @@ export class MentorController extends BaseController implements IMentorControlle
     }
   };
 
+  getMentorExperiences = async (req: Request, res: Response, next: NextFunction): Promise<void> => {
+  try {
+    const { mentorId } = req.params;
+    const experiences = await this._mentorService.getMentorExperiences(mentorId);
+    if (!experiences) {
+        this.sendSuccess(res,  experiences, MENTOR_MESSAGES.NO_MENTOR_EXPERIENCE_FOUND);
+        return;
+      }
+    this.sendSuccess(res, { experiences }, MENTOR_MESSAGES.MENTOR_EXPERIENCE_DETAILS_RETRIEVED);
+  } catch (error: any) {
+    next(error);
+  }
+};
+
   createMentor = async (req: Request, res: Response, next: NextFunction): Promise<void> => {
     try {
-      const { userId, specialization, bio, price, skills, availableSlots, timePeriod } = req.body;
+      const { userId, specialization, bio, price, skills, availableSlots, timePeriod, experiences } = req.body;
+
+      let parsedExperiences: MentorExperienceInput[] = experiences ? JSON.parse(experiences) : [];
+
+      if (!Array.isArray(parsedExperiences)) {
+      throw new HttpError("Experiences must be an array", StatusCodes.BAD_REQUEST);
+    }
 
       let uploadedCertificates: string[] = [];
       if (req.files && Array.isArray(req.files) && req.files.length > 0) {
@@ -70,6 +91,7 @@ export class MentorController extends BaseController implements IMentorControlle
         availableSlots: JSON.parse(availableSlots),
         timePeriod,
         certifications: uploadedCertificates,
+        experiences: parsedExperiences,
       });
 
       this.sendCreated(res, newMentor, MENTOR_MESSAGES.MENTOR_REGISTRATION_SUBMITTED);
@@ -252,6 +274,54 @@ export class MentorController extends BaseController implements IMentorControlle
       const { period = "1month" } = req.query;
       const report = await this._mentorService.getSalesReport(period as string);
       this.sendSuccess(res, report, MENTOR_MESSAGES.SALES_REPORT_RETRIEVED);
+    } catch (error: any) {
+      next(error);
+    }
+  };
+
+  addExperience = async (req: Request, res: Response, next: NextFunction): Promise<void> => {
+    try {
+      const userId = req.query.userId as string;
+      if (!userId) {
+        throw new HttpError("Unauthorized", StatusCodes.UNAUTHORIZED);
+      }
+      const experienceData = req.body;
+      const newExperience = await this._mentorService.addMentorExperience(userId, experienceData);
+
+      this.sendSuccess(res, { experience: newExperience }, "Experience added successfully");
+    } catch (error: any) {
+      next(error);
+    }
+  };
+
+  updateExperience = async (req: Request, res: Response, next: NextFunction): Promise<void> => {
+    try {
+      const userId = req.query.userId as string;
+      const { experienceId } = req.params;
+      const updateData = req.body;
+      if (!userId || !experienceId) {
+        throw new HttpError("Invalid request", StatusCodes.BAD_REQUEST);
+      }
+
+      const updatedExperience = await this._mentorService.updateMentorExperience(userId, experienceId, updateData);
+
+      this.sendSuccess(res, { experience: updatedExperience }, "Experience updated successfully");
+    } catch (error: any) {
+      next(error);
+    }
+  };
+
+  deleteExperience = async (req: Request, res: Response, next: NextFunction): Promise<void> => {
+    try {
+      const userId = req.query.userId as string;
+      const { experienceId } = req.params;
+
+      if (!userId || !experienceId) {
+        throw new HttpError("Invalid request", StatusCodes.BAD_REQUEST);
+      }
+      await this._mentorService.deleteMentorExperience(userId, experienceId);
+
+      this.sendSuccess(res, null, "Experience deleted successfully");
     } catch (error: any) {
       next(error);
     }

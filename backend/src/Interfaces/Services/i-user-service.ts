@@ -1,16 +1,17 @@
-import { ProfileUpdateData, SignupData, UserQuery } from "../../Utils/types/auth-types";
+import { OtpPurpose, ProfileUpdateData, SignupData, UserQuery, VerifyOtpResult } from "../../Utils/types/auth-types";
 import { IUserAdminDTO, IUserDTO } from "../DTOs/i-user-dto";
 
 export interface IAuthService {
-  signup: (data: SignupData) => Promise<IUserDTO>;
-  login: (email: string, password: string) => Promise<{ user: IUserDTO; accessToken: string; refreshToken: string; needsReviewPrompt: boolean }>;
-  googleSignup: (code: string) => Promise<IUserDTO>;
-  googleLogin: (code: string) => Promise<{ user: IUserDTO; accessToken: string; refreshToken: string; needsReviewPrompt: boolean }>;
-  githubSignup: (code: string) => Promise<IUserDTO>;
-  githubLogin: (code: string) => Promise<{ user: IUserDTO; accessToken: string; refreshToken: string; needsReviewPrompt: boolean }>;
+  signup: (data: SignupData) => Promise<{user:IUserDTO; otpId:string}>;
+  login: (email: string, password: string) => Promise<{ user: IUserDTO; otpId:string }>;
+  googleSignup: (code: string) => Promise<{user:IUserDTO; otpId:string}>;
+  googleLogin: (code: string) => Promise<{ user: IUserDTO; otpId:string }>;
+  githubSignup: (code: string) => Promise<{user:IUserDTO; otpId:string}>;
+  githubLogin: (code: string) => Promise<{ user: IUserDTO; otpId:string }>;
   refreshToken: (refreshToken: string) => Promise<{ newAccessToken: string }>;
   forgotPassword: (email: string) => Promise<string>;
-  verifyOTP: (email: string, otp: string) => Promise<string>;
+  verifyOTP: (purpose:OtpPurpose, email:string, otpId: string, otp: string) => Promise<VerifyOtpResult>;
+  resendOtp: (email: string, purpose:OtpPurpose) => Promise<{ otpId: string }>;
   resetPassword: (email: string, newPassword: string) => Promise<void>;
   logout: (email: string) => Promise<void>;
   verifyAdminPasskey: (passkey: string) => Promise<boolean>;

@@ -3,8 +3,8 @@ import { yupResolver } from "@hookform/resolvers/yup";
 import { useNavigate } from "react-router-dom";
 import { useDispatch } from "react-redux";
 import toast from "react-hot-toast";
-import { setResetEmail, signinStart, signinFailure } from "../../redux/Slice/userSlice";
-import { sentOTP } from "../../Service/Auth.service";
+import { setResetEmail, signinStart, signinFailure, setOtpContext } from "../../redux/Slice/userSlice";
+import { forgotPassword } from "../../Service/Auth.service";
 import { forgotPasswordSchema, ForgotPasswordFormValues } from "../../validation/forgotPasswordValidation";
 
 export function useForgotPassword() {
@@ -31,7 +31,14 @@ export function useForgotPassword() {
     }
     try {
       dispatch(signinStart());
-      await sentOTP(values.email);
+      const { otpId } = await forgotPassword(values.email);
+      dispatch(
+        setOtpContext({
+          email: values.email,
+          otpId,
+          purpose: "forgot_password",
+        })
+      );
       dispatch(setResetEmail(values.email));
       toast.success("OTP sent successfully!");
       navigate("/otp");
