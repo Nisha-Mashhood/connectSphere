@@ -1,22 +1,28 @@
-import config from '../../config/env-config';
-import winston from 'winston';
+import winston from "winston";
+import { Logtail } from "@logtail/node";
+import { LogtailTransport } from "@logtail/winston";
+import config from "../../config/env-config";
 
-// Winston logger 
+//Logtail client
+const logtail = new Logtail(process.env.BETTERSTACK_LOG_TOKEN!, {
+  endpoint: process.env.BETTERSTACK_LOG_ENDPOINT,
+});
+
 const logger = winston.createLogger({
-  // Set log level 
-  level: config.logLevel || 'info',
-  // log format 
+  level: config.logLevel || "info",
   format: winston.format.combine(
-    winston.format.timestamp({ format: 'YYYY-MM-DD HH:mm:ss' }),
-    winston.format.printf(({ timestamp, level, message }) => {
-      return `${timestamp} [${level.toUpperCase()}]: ${message}`;
-    })
+    winston.format.timestamp({ format: "YYYY-MM-DD HH:mm:ss" }),
+    winston.format.printf(
+      ({ timestamp, level, message }) =>
+        `${timestamp} [${level.toUpperCase()}]: ${message}`
+    )
   ),
-  // Log to console and log file
   transports: [
     new winston.transports.Console(),
-    new winston.transports.File({ filename: 'logs/app.log' })
-  ]
+
+    //Better Stack (cloud logs)
+    new LogtailTransport(logtail),
+  ],
 });
 
 export default logger;

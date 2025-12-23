@@ -244,7 +244,7 @@ export class UserRepository extends BaseRepository<IUser> implements IUserReposi
   query: UserQuery = {}
 ): Promise<{ users: IUser[]; total: number }> => {
   try {
-    const { search, page = 1, limit = 10, excludeId } = query;
+    const { search, page = 1, limit = 10, excludeId, status } = query;
 
     logger.debug(`Fetching users → ${JSON.stringify({ search, page, limit, excludeId })}`);
 
@@ -258,6 +258,12 @@ export class UserRepository extends BaseRepository<IUser> implements IUserReposi
       } catch (err) {
         logger.warn(`Invalid excludeId: ${excludeId} error ${err}`);
       }
+    }
+
+    if (status === 'active') {
+      matchStage.isBlocked = false;
+    } else if (status === 'blocked') {
+      matchStage.isBlocked = true;
     }
 
     if (search?.trim()) {

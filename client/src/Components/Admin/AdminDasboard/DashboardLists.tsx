@@ -42,7 +42,7 @@ export const DashboardLists = ({
                     <Button 
                       size="sm" 
                       color="primary"
-                      onPress={() => navigate(`/admin/request/${mentor.requestId}`)}
+                      onPress={() => navigate("/admin/mentormange")}
                     >
                       Review
                     </Button>

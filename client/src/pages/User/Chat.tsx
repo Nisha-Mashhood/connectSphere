@@ -113,8 +113,10 @@ const Chat: React.FC = () => {
         <Card className="flex-1 flex flex-col rounded-none shadow-lg">
           <ChatHeader
             selectedContact={selectedContact}
+            onlineUsers={chatMsg.onlineUsers}
             typingUsers={chatMsg.typingUsers}
             getChatKey={getChatKey}
+            currentUserId={currentUser?.id}
             toggleSidebar={() => setIsSidebarOpen(true)}
             toggleDetailsSidebar={() => setIsDetailsSidebarOpen(true)}
             call={call}

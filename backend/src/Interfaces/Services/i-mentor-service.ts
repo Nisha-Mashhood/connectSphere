@@ -51,5 +51,6 @@ export interface IMentorService {
   getSalesReport: (period: string) => Promise<SalesReport>;
   addMentorExperience: (userId: string, data: Partial<IMentorExperience>)=> Promise<IMentorExperienceDTO>
   updateMentorExperience: (userId: string, experienceId: string, data: Partial<IMentorExperience>)=> Promise<IMentorExperienceDTO>
-  deleteMentorExperience: (userId: string, experienceId: string)=> Promise<void> 
+  deleteMentorExperience: (userId: string, experienceId: string)=> Promise<void>;
+  generateSalesReportPDF: (period: string )=> Promise<Buffer>
 }

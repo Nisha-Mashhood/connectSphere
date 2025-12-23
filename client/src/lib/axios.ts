@@ -75,8 +75,12 @@ export const setupInterceptors = (navigate) => {
     async (error) => {
   
       if (error?.config) {
-        const requestKey = getRequestKey(error.config);
-        pendingRequests.delete(requestKey);
+        try {
+          const requestKey = getRequestKey(error.config);
+          pendingRequests.delete(requestKey);
+        } catch {
+          // ignore cleanup errors
+        }
       }
 
       if (axios.isCancel(error)) {

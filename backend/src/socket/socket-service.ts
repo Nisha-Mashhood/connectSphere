@@ -149,7 +149,12 @@ export class SocketService implements ISocketService{
     if (userId) {
       socket.leave(`user_${userId}`);
       logger.info(`User ${userId} left personal room: user_${userId}, socketId=${socket.id}`);
+      const remaining = this._io?.sockets.adapter.rooms.get(`user_${userId}`)?.size || 0;
+        if (remaining === 0) {
+          this._io?.emit("userOffline", { userId });
+          logger.info(`Broadcasted userOffline for ${userId}`);
     }
+      }
     //check for group rooms
     const rooms = Array.from(socket.rooms).filter((room) => room.startsWith("group_"));
     if(rooms){

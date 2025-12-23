@@ -14,7 +14,8 @@ export interface IMentorController {
   updateMentorProfile(req: Request, res: Response, next:NextFunction): Promise<void>;
   getMentorAnalytics(req: Request, res: Response, next:NextFunction): Promise<void>;
   getSalesReport(req: Request, res: Response, next:NextFunction): Promise<void>;
-  addExperience(req: Request, res: Response, next: NextFunction): Promise<void>
-  updateExperience(req: Request, res: Response, next: NextFunction): Promise<void>
-  deleteExperience(req: Request, res: Response, next: NextFunction): Promise<void>
+  addExperience(req: Request, res: Response, next: NextFunction): Promise<void>;
+  updateExperience(req: Request, res: Response, next: NextFunction): Promise<void>;
+  deleteExperience(req: Request, res: Response, next: NextFunction): Promise<void>;
+  downloadSalesReportPDF(req: Request, res: Response, next: NextFunction): Promise<void>;
 }

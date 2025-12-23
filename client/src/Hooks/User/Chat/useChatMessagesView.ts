@@ -153,19 +153,34 @@ export const useChatMessagesView = ({
     }
 
     // Real new messages arrived
-    if (newCount > prevCount) {
-      const newMessages = msgs.slice(prevCount);
-      const newFromOthers = newMessages.filter(
-        (m) => m.senderId && m.senderId !== currentUserId
-      ).length;
+  if (newCount > prevCount) {
+    const newMessages = msgs.slice(prevCount);
 
-      if (isAtBottom) {
-        scrollToBottom("auto");
-        setUnreadWhileAway(0);
-      } else if (newFromOthers > 0) {
-        setUnreadWhileAway((prev) => prev + newFromOthers);
-      }
+    // Count messages from others
+    const newFromOthers = newMessages.filter(
+      (m) => m.senderId && m.senderId !== currentUserId
+    );
+
+    // Count messages from self (current user)
+    const newFromSelf = newMessages.filter(
+      (m) => m.senderId === currentUserId
+    );
+
+    // Always scroll to bottom if current user sent a message
+    if (newFromSelf.length > 0) {
+      setTimeout(() => {
+        scrollToBottom("smooth");
+      }, 100);
+      setUnreadWhileAway(0);
+    } else if (newFromOthers.length > 0 && !isAtBottom) {
+      setUnreadWhileAway((prev) => prev + newFromOthers.length);
     }
+    else if (isAtBottom) {
+      setTimeout(() => {
+        scrollToBottom("auto");
+      }, 50);
+    }
+  }
 
     lastMessageCountRef.current = newCount;
     lastLatestTimestampRef.current = latestTs;

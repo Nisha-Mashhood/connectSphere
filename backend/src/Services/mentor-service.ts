@@ -26,6 +26,8 @@ import { IMentorExperienceRepository } from "../Interfaces/Repository/i-mentor-e
 import { IMentorExperience } from "../Interfaces/Models/i-mentor-experience";
 import { IMentorExperienceDTO } from "../Interfaces/DTOs/i-mentor-experience-dto";
 import { toMentorExperienceDTO, toMentorExperienceDTOs } from "../Utils/mappers/mentor-experience-mapper";
+import { ICollaborationService } from "../Interfaces/Services/i-collaboration-service";
+import PDFDocument from 'pdfkit';
 
 @injectable()
 export class MentorService implements IMentorService {
@@ -36,6 +38,7 @@ export class MentorService implements IMentorService {
   private _categoryRepository: ICategoryRepository;
   private _skillRepository: ISkillsRepository;
   private _mentorExperienceRepository: IMentorExperienceRepository;
+  private _collabService: ICollaborationService;
 
   constructor(
     @inject("IMentorRepository") mentorRepository: IMentorRepository,
@@ -44,7 +47,8 @@ export class MentorService implements IMentorService {
     @inject("INotificationService") notificationService: INotificationService,
     @inject("ICategoryRepository") categoryService: ICategoryRepository,
     @inject("ISkillsRepository") skillRepository: ISkillsRepository,
-    @inject("IMentorExperienceRepository") mentorExperienceRepository: IMentorExperienceRepository
+    @inject("IMentorExperienceRepository") mentorExperienceRepository: IMentorExperienceRepository,
+    @inject('ICollaborationService') collaborationService : ICollaborationService,
   ) {
     this._mentorRepository = mentorRepository;
     this._authRepository = userRepository;
@@ -53,6 +57,7 @@ export class MentorService implements IMentorService {
     this._categoryRepository = categoryService;
     this._skillRepository = skillRepository;
     this._mentorExperienceRepository = mentorExperienceRepository;
+    this._collabService = collaborationService;
   }
 
   submitMentorRequest = async (mentorData: {
@@ -523,38 +528,68 @@ export class MentorService implements IMentorService {
   };
 
   cancelMentorship = async (id: string): Promise<void> => {
+    const session = await mongoose.startSession();
+    session.startTransaction();
+
     try {
-      logger.debug(`Cancelling mentorship: ${id}`);
+      logger.debug(`Cancelling mentorship for mentor ID: ${id}`);
 
       if (!Types.ObjectId.isValid(id)) {
-        logger.error("Invalid mentor ID");
         throw new ServiceError(
           "Mentor ID must be a valid ObjectId",
           StatusCodes.BAD_REQUEST
         );
       }
 
-      const mentor = await this._mentorRepository.cancelMentorship(id);
+      // First, cancel the mentor profile
+      const mentor = await this._mentorRepository.cancelMentorship(id, { session });
       if (!mentor) {
-        logger.error(`Mentor not found: ${id}`);
         throw new ServiceError("Mentor not found", StatusCodes.NOT_FOUND);
       }
 
-      const user = await this._authRepository.getUserById(
-        mentor.userId.toString()
-      );
+      const user = await this._authRepository.getUserById(mentor.userId.toString());
       if (!user) {
-        logger.error(`User not found for mentor userId: ${mentor.userId}`);
         throw new ServiceError("User not found", StatusCodes.NOT_FOUND);
       }
 
+      // Send email to mentor about account cancellation
       await sendEmail(
         user.email,
-        "Mentorship Cancelled",
-        `Hello ${user.name},\n\nWe regret to inform you that your mentorship has been cancelled by the admin. If you have any questions, please contact support.\n\nBest regards,\nAdmin\nConnectSphere`
+        "Mentorship Cancelled by Admin",
+        `Hello ${user.name},\n\nWe regret to inform you that your mentorship privileges have been revoked by the administrator.\n\nAll your ongoing collaborations have been cancelled and users have been refunded where applicable.\n\nIf you believe this is a mistake, please contact support.\n\nBest regards,\nAdmin\nConnectSphere`
       );
-      logger.info(`Cancellation email sent to: ${user.email}`);
+      logger.info(`Mentorship cancellation email sent to: ${user.email}`);
+
+      //active collaborations
+      const activeCollabs = await this._collabService.getCollabDataForMentorService( id, false );
+
+      if (activeCollabs.length > 0) {
+        logger.info(`Found ${activeCollabs.length} active collaborations for mentor ${id}. Processing cancellations...`);
+
+        const cancelReason = "Admin has cancelled the mentor's mentorship account.";
+        const refundPercentage = 0.5;
+
+        for (const collab of activeCollabs) {
+          try {
+            const refundAmount = collab.price * refundPercentage;
+
+            await this._collabService.cancelAndRefundCollab( collab.id, cancelReason, refundAmount );
+
+            logger.info(`Successfully cancelled and refunded collaboration ${collab.id} (refund: ₹${refundAmount})`);
+          } catch (cancelError: any) {
+            logger.error(
+              `Failed to cancel collaboration ${collab.id} during mentor cancellation: ${cancelError.message}`
+            );
+          }
+        }
+      } else {
+        logger.info(`No active collaborations found for mentor ${id}`);
+      }
+
+      await session.commitTransaction();
+      logger.info(`Mentorship successfully cancelled for mentor ${id} with all active collaborations processed`);
     } catch (error: unknown) {
+      await session.abortTransaction();
       const err = error instanceof Error ? error : new Error(String(error));
       logger.error(`Error cancelling mentorship ${id}: ${err.message}`);
       throw error instanceof ServiceError
@@ -564,6 +599,8 @@ export class MentorService implements IMentorService {
             StatusCodes.INTERNAL_SERVER_ERROR,
             err
           );
+    } finally {
+      session.endSession();
     }
   };
 
@@ -871,6 +908,107 @@ export class MentorService implements IMentorService {
           );
     }
   };
+
+
+  public generateSalesReportPDF = async (period: string = "1month"): Promise<Buffer> => {
+  try {
+    const reportData: SalesReport = await this.getSalesReport(period);
+
+    const periodLabel = 
+      period === "1month" ? "Last 30 Days" :
+      period === "1year" ? "Last 1 Year" :
+      "Last 5 Years";
+
+    return new Promise((resolve, reject) => {
+      const doc = new PDFDocument({ margin: 50, size: "A4" });
+      const buffers: Buffer[] = [];
+
+      doc.on("data", buffers.push.bind(buffers));
+      doc.on("end", () => {
+        const pdfBuffer = Buffer.concat(buffers);
+        resolve(pdfBuffer);
+      });
+      doc.on("error", reject);
+
+      // Header
+      doc.fontSize(28).text("ConnectSphere Sales Report", { align: "center" });
+      doc.fontSize(18).text(`Period: ${periodLabel}`, { align: "center" });
+      doc.fontSize(12).text(`Generated on: ${new Date().toLocaleDateString()}`, { align: "center" });
+      doc.moveDown(3);
+
+      // Revenue Summary Section
+      doc.fontSize(20).text("Revenue Summary", { underline: true });
+      doc.moveDown(1);
+
+      const summary = [
+        { label: "Total Revenue (paid by students)", value: `₹${reportData.totalRevenue.toFixed(2)}` },
+        { label: "Platform Fee (₹100 per collaboration)", value: `₹${reportData.platformRevenue.toFixed(2)}` },
+        { label: "Mentor Earnings (after platform fee)", value: `₹${reportData.mentorRevenue.toFixed(2)}` },
+        { label: "Total Collaborations Completed", value: reportData.mentorBreakdown.reduce((sum, m) => sum + m.collaborations, 0).toString() },
+      ];
+
+      summary.forEach(item => {
+        doc.fontSize(14).text(item.label, { continued: true, align: "left" });
+        doc.text(item.value, { align: "right" });
+        doc.moveDown(0.5);
+      });
+
+      doc.moveDown(3);
+
+      // Explanation for New Admins
+      doc.fontSize(16).text("Understanding the Report", { underline: true });
+      doc.moveDown(1);
+      doc.fontSize(11).list([
+        "Total Revenue: Full amount students paid for mentorship sessions.",
+        "Platform Fee: ₹100 deducted from each completed collaboration as service fee.",
+        "Mentor Earnings: Amount transferred to mentors (session price - ₹100).",
+        "Sessions: Number of successfully completed mentorship programs.",
+      ], { bulletRadius: 3, textIndent: 20 });
+      doc.moveDown(3);
+
+      // Mentor Breakdown Table
+      if (reportData.mentorBreakdown.length === 0) {
+        doc.fontSize(14).text("No mentor earnings in this period.", { align: "center" });
+      } else {
+        doc.fontSize(20).text("Mentor Earnings Breakdown", { underline: true });
+        doc.moveDown(1);
+
+        // Table headers
+        const tableTop = doc.y;
+        const xPositions = [50, 130, 250, 350, 450];
+        const headers = ["Mentor Name", "Email", "Sessions", "Mentor Earnings", "Platform Fee"];
+
+        doc.font("Helvetica-Bold");
+        headers.forEach((header, i) => {
+          doc.fontSize(11).text(header, xPositions[i], tableTop);
+        });
+        doc.moveDown(1);
+
+        // Rows
+        doc.font("Helvetica");
+        reportData.mentorBreakdown.forEach((mentor) => {
+          const y = doc.y;
+          doc.fontSize(10)
+             .text((mentor.name || "Unknown").substring(0, 20), xPositions[0], y)
+             .text((mentor.email || "Unknown").substring(0, 25), xPositions[1], y)
+             .text(`${mentor.collaborations.toString()}`, xPositions[2], y)
+             .text(`₹${mentor.mentorEarnings.toFixed(2)}`, xPositions[3], y)
+             .text(`₹${mentor.platformFees.toFixed(2)}`, xPositions[4], y);
+          doc.moveDown(0.8);
+        });
+      }
+
+      // Footer
+      doc.moveDown(5);
+      doc.fontSize(10).text("This report is confidential and intended for administrative use only.", { align: "center" });
+
+      doc.end();
+    });
+  } catch (error) {
+    logger.error("Error in generateSalesReportPDF:", error);
+    throw new ServiceError("Failed to generate sales report PDF", StatusCodes.INTERNAL_SERVER_ERROR);
+  }
+};
 
   addMentorExperience = async (userId: string, data: Partial<IMentorExperience>): Promise<IMentorExperienceDTO> => {
     try {

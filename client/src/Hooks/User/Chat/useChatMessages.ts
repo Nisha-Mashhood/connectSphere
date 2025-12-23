@@ -13,6 +13,7 @@ import { socketService } from "../../../Service/SocketService";
 export const useChatMessages = (
   onMessageActivity?: (chatKey: string) => void
 ) => {
+  const [onlineUsers, setOnlineUsers] = useState<Record<string, boolean>>({});
   const [allMessages, setAllMessages] = useState<Map<string, IChatMessage[]>>(
     new Map()
   );
@@ -222,6 +223,13 @@ export const useChatMessages = (
 
   // SOCKET LISTENERS — ALL MOVED HERE
   useEffect(() => {
+    const onUserOnline = ({ userId }: { userId: string }) => {
+    setOnlineUsers(prev => ({ ...prev, [userId]: true }));
+  };
+
+  const onUserOffline = ({ userId }: { userId: string }) => {
+    setOnlineUsers(prev => ({ ...prev, [userId]: false }));
+  };
     const onReceive = (msg: IChatMessage) => handleIncomingMessage(msg);
     const onSaved = (msg: IChatMessage) => handleMessageSaved(msg);
     const onRead = ({ chatKey }: { chatKey: string }) =>
@@ -256,6 +264,8 @@ export const useChatMessages = (
       }));
     };
 
+    socketService.onUserOnline(onUserOnline);
+    socketService.onUserOffline(onUserOffline);
     socketService.onReceiveMessage(onReceive);
     socketService.onMessageSaved(onSaved);
     socketService.onMessagesRead(onRead);
@@ -263,6 +273,8 @@ export const useChatMessages = (
     socketService.onStopTyping(onStopTyping);
 
     return () => {
+      socketService.offUserOnline(onUserOnline);
+      socketService.offUserOffline(onUserOffline);
       socketService.socket?.off("receiveMessage", onReceive);
       socketService.socket?.off("messageSaved", onSaved);
       socketService.socket?.off("messagesRead", onRead);
@@ -273,6 +285,8 @@ export const useChatMessages = (
 
   // RETURN HOOK API
   return {
+    onlineUsers,
+    
     allMessages,
     setAllMessages,
 

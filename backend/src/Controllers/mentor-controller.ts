@@ -326,4 +326,32 @@ export class MentorController extends BaseController implements IMentorControlle
       next(error);
     }
   };
+
+  downloadSalesReportPDF = async (req: Request, res: Response, next: NextFunction): Promise<void> => {
+  const { period } = req.query;
+
+  if (!period || typeof period !== "string") {
+    res.status(400).json({ message: "Period query parameter is required" });
+    return;
+  }
+  try {
+    logger.debug(`Admin requested sales report PDF for period: ${period}`);
+
+    const pdfBuffer = await this._mentorService.generateSalesReportPDF(period);
+
+    const periodLabel =
+      period === "1month" ? "Last-30-Days" :
+      period === "1year" ? "Last-1-Year" :
+      "Last-5-Years";
+
+    const filename = `sales-report-${periodLabel}-${new Date().toISOString().split("T")[0]}.pdf`;
+
+    res.setHeader("Content-Type", "application/pdf");
+    res.setHeader("Content-Disposition", `attachment; filename="${filename}"`);
+    res.send(pdfBuffer);
+  } catch (error: any) {
+    logger.error(`Error in downloadSalesReportPDF: ${error.message}`);
+    next(error);
+  }
+};
 }

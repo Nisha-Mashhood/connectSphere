@@ -1,5 +1,5 @@
 import { Mentor } from "../../redux/types";
-import { Button, Select, SelectItem } from "@nextui-org/react";
+import { Button, Select, SelectItem, Chip } from "@nextui-org/react";
 import { FaEye } from "react-icons/fa";
 import MentorDetailModal from "../../Components/Admin/MentorDetails/MentorDetailModal";
 import { toast } from "react-hot-toast";
@@ -7,6 +7,7 @@ import { useCallback, useEffect, useState } from "react";
 import DataTable from "../../Components/ReusableComponents/DataTable";
 import { fetchMentorRequestsService } from "../../Service/Mentor.Service";
 import SearchBar from "../../Components/ReusableComponents/SearchBar";
+import { SlidersHorizontal } from "lucide-react";
 
 const LIMIT = 10;
 
@@ -83,19 +84,96 @@ const AdminMentorRequests: React.FC = () => {
     },
   ];
 
+  const getStatusLabel = (status: string) => {
+    switch (status) {
+      case "Processing": return "Processing";
+      case "Completed": return "Approved";
+      case "Rejected": return "Rejected";
+      default: return status;
+    }
+  };
+
   return (
     <div className="container mx-auto p-6 min-h-screen">
       <div className="bg-white shadow-lg rounded-xl p-6">
         <h1 className="text-2xl font-bold text-primary mb-6">Mentor Requests</h1>
 
-        <div className="mb-4">
-        <SearchBar
-          activeTab="Users"
-          searchQuery={search}
-          setSearchQuery={setSearch}
-          onSearchChange={setSearch}
-        />
-      </div>
+        {/*Search & Filter Bar */}
+        <div className="bg-gradient-to-r from-gray-50 to-gray-100 rounded-xl shadow-sm border border-gray-200 p-4 mb-6">
+          <div className="flex flex-col md:flex-row gap-4 items-stretch md:items-center">
+            {/* Search Bar */}
+            <div className="flex-1">
+              <SearchBar
+                activeTab="Mentors"
+                searchQuery={search}
+                setSearchQuery={setSearch}
+                onSearchChange={setSearch}
+              />
+            </div>
+
+            {/* Filter Section */}
+            <div className="flex items-center gap-3">
+              <div className="flex items-center gap-2 text-gray-600">
+                <SlidersHorizontal className="w-4 h-4" />
+                <span className="text-sm font-medium hidden sm:inline">Filter:</span>
+              </div>
+              <Select
+                placeholder="Status"
+                selectedKeys={statusFilter ? [statusFilter] : []}
+                onSelectionChange={(keys) => {
+                  setStatusFilter(Array.from(keys)[0] as string || "");
+                  setPage(1);
+                }}
+                className="w-40"
+                size="md"
+                classNames={{
+                  trigger: "bg-white border-gray-300 hover:bg-gray-50 transition-colors shadow-sm",
+                }}
+              >
+                <SelectItem key="">All Status</SelectItem>
+                <SelectItem key="Processing">Processing</SelectItem>
+                <SelectItem key="Completed">Approved</SelectItem>
+                <SelectItem key="Rejected">Rejected</SelectItem>
+              </Select>
+            </div>
+          </div>
+
+          {/* Active Filters Display */}
+          {(search || statusFilter) && (
+            <div className="flex flex-wrap gap-2 mt-3 pt-3 border-t border-gray-300">
+              <span className="text-xs text-gray-500 font-medium">Active filters:</span>
+              {search && (
+                <Chip
+                  size="sm"
+                  variant="flat"
+                  onClose={() => setSearch("")}
+                  classNames={{
+                    base: "bg-blue-50 text-blue-700",
+                    closeButton: "text-blue-700",
+                  }}
+                >
+                  Search: "{search}"
+                </Chip>
+              )}
+              {statusFilter && (
+                <Chip
+                  size="sm"
+                  variant="flat"
+                  onClose={() => {
+                    setStatusFilter("");
+                    setPage(1);
+                  }}
+                  classNames={{
+                    base: "bg-purple-50 text-purple-700",
+                    closeButton: "text-purple-700",
+                  }}
+                >
+                  Status: {getStatusLabel(statusFilter)}
+                </Chip>
+              )}
+            </div>
+          )}
+        </div>
 
         <DataTable
           data={mentorRequests}
@@ -107,19 +185,6 @@ const AdminMentorRequests: React.FC = () => {
           searchValue={search}
           onSearchChange={setSearch}
           searchPlaceholder="Search by name or email..."
-          topContent={
-            <Select
-              placeholder="Filter by status"
-              selectedKeys={statusFilter ? [statusFilter] : []}
-              onSelectionChange={(keys) => setStatusFilter(Array.from(keys)[0] as string || "")}
-              className="max-w-xs"
-            >
-              <SelectItem key="" value="">All</SelectItem>
-              <SelectItem key="Processing">Processing</SelectItem>
-              <SelectItem key="Completed">Approved</SelectItem>
-              <SelectItem key="Rejected">Rejected</SelectItem>
-            </Select>
-          }
         />
       </div>
 

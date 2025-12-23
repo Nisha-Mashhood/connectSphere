@@ -74,11 +74,11 @@ export class ChatSocketHandler {
 
   public handleJoinUserRoom(socket: Socket, userId: string): void {
     socket.join(`user_${userId}`);
-    const roomMembers =
-      this._io?.sockets.adapter.rooms.get(`user_${userId}`)?.size || 0;
-    logger.info(
-      `User ${userId} joined personal room: user_${userId}, socketId=${socket.id}, members=${roomMembers}`
-    );
+    const roomMembers =  this._io?.sockets.adapter.rooms.get(`user_${userId}`)?.size || 0;
+    logger.info(`User ${userId} joined personal room: user_${userId}, socketId=${socket.id}, members=${roomMembers}` );
+    this._io?.emit("userOnline", { userId });
+    console.log(`[ONLINE] User ${userId} is online (broadcasted)`);
+    socket.emit("userOnline", { userId });
   }
 
   public handleEnsureUserRoom(socket: Socket, data: { userId: string }): void {
@@ -132,7 +132,6 @@ export class ChatSocketHandler {
       }
 
       const timestamp = new Date();
-      const timestampString = timestamp.toISOString();
       let room: string = "";
       let savedMessage: any = null;
 
@@ -220,6 +219,9 @@ export class ChatSocketHandler {
           type === "group"
             ? `group_${targetId}`
             : `chat_${[senderId, targetId].sort().join("_")}`;
+
+            savedMessage.status = "sent";
+            await savedMessage.save();
       }
 
       if (!savedMessage) {
@@ -240,6 +242,30 @@ export class ChatSocketHandler {
       );
       logger.info(`GroupId : ${savedMessage.groupId?.toString() || null}`);
 
+      // ====================== BUILD messageData (common for both types) ======================
+    const messageData = {
+        senderId,
+        targetId,
+        type,
+        content: savedMessage.content || content,
+        contentType,
+        thumbnailUrl: savedMessage.thumbnailUrl,
+        fileMetadata: savedMessage.fileMetadata,
+        ...(type === "group" && {
+          groupId: savedMessage.groupId?.toString() || targetId,
+        }),
+        ...(type === "user-mentor" && {
+          collaborationId: savedMessage.collaborationId?.toString(),
+        }),
+        ...(type === "user-user" && {
+          userConnectionId: savedMessage.userConnectionId?.toString(),
+        }),
+        timestamp: savedMessage.timestamp.toISOString(),
+        _id: savedMessage._id.toString(),
+        status: savedMessage.status,
+        isRead: savedMessage.isRead || false,
+      };
+
       // ====================== DETERMINE CHATKEY & RECIPIENTS ======================
       let chatKey: string | null = null;
       const recipientIds: string[] = [];
@@ -248,9 +274,7 @@ export class ChatSocketHandler {
         chatKey = `group_${savedMessage.groupId.toString()}`;
         const group = await Group.findById(savedMessage.groupId);
         if (group) {
-          recipientIds.push(
-            ...group.members
-              .filter((m) => m.userId.toString() !== senderId)
+          recipientIds.push( ...group.members .filter((m) => m.userId.toString() !== senderId)
               .map((m) => m.userId.toString())
           );
         }
@@ -264,11 +288,7 @@ export class ChatSocketHandler {
 
           if (typeof collab.mentorId === "object" && collab.mentorId !== null) {
             const mentorObj = collab.mentorId as IMentor;
-            if (
-              typeof mentorObj.userId === "object" &&
-              mentorObj.userId !== null &&
-              "_id" in mentorObj.userId
-            ) {
+            if (typeof mentorObj.userId === "object" && mentorObj.userId !== null && "_id" in mentorObj.userId ) {
               mentorUserId = mentorObj.userId._id.toString();
             }
           }
@@ -278,11 +298,7 @@ export class ChatSocketHandler {
           }
           let userUserId: string | null = null;
 
-          if (
-            typeof collab.userId === "object" &&
-            collab.userId !== null &&
-            "_id" in collab.userId
-          ) {
+          if ( typeof collab.userId === "object" && collab.userId !== null && "_id" in collab.userId ) {
             userUserId = (collab.userId as IUser)._id.toString();
           } else {
             userUserId = collab.userId?.toString() || null;
@@ -307,28 +323,15 @@ export class ChatSocketHandler {
         }
       }
 
-      logger.info(`[DEBUG 3] Final chatKey & recipients`);
-      logger.info(`chat Key ${chatKey}`);
-      logger.info(`recipientCount ${recipientIds.length}`);
-      logger.info(`recipientIds ${recipientIds}`);
-
       if (!chatKey || recipientIds.length === 0) {
-        logger.warn(
-          "[DEBUG 4] No valid chatKey or recipients → skipping notifications"
+        logger.warn("No valid chatKey or recipients → skipping notifications"
         );
       } else if (this._io) {
-        logger.info(
-          "[DEBUG 5] Starting notification + contactsUpdated for",
-          recipientIds.length,
-          "users"
-        );
+        logger.info("Starting notification + contactsUpdated for", recipientIds.length, "users" );
 
         // === SEND NOTIFICATIONS ===
         for (const recipientId of recipientIds) {
           try {
-            logger.info(
-              `[NOTIFY] Creating message notification for user: ${recipientId}`
-            );
             let relatedId: string | null = null;
 
             if (type === "group") {
@@ -344,16 +347,8 @@ export class ChatSocketHandler {
                 "message",
                 senderId,
                 relatedId!,
-                type === "group"
-                  ? "group"
-                  : type === "user-mentor"
-                  ? "collaboration"
-                  : "userconnection"
+                type === "group" ? "group" : type === "user-mentor" ? "collaboration" : "userconnection"
               );
-            logger.info(
-              `[NOTIFY SUCCESS] Notification created: ${notification.id} for ${recipientId}`
-            );
-
             // Auto-mark as read if recipient is actively viewing this chat
             const activeChat = this._activeChats.get(recipientId);
             if (activeChat === chatKey && notification.status === "unread") {
@@ -363,53 +358,20 @@ export class ChatSocketHandler {
               this._io
                 .to(`user_${recipientId}`)
                 .emit("notification.read", { notificationId: notification.id });
-              logger.info(
-                `[AUTO-READ] Notification auto-read for active user ${recipientId}`
-              );
             }
           } catch (err: any) {
-            logger.error(
-              `[NOTIFY ERROR] Failed for ${recipientId}:`,
-              err.message
-            );
+            logger.error( `[NOTIFY ERROR] Failed for ${recipientId}:`, err.message );
           }
         }
-
         // === EMIT contactsUpdated TO REFRESH UNREAD COUNTS ===
         const allUsers = [...new Set([senderId, ...recipientIds])];
         for (const userId of allUsers) {
           this._io.to(`user_${userId}`).emit("contactsUpdated");
-          logger.info(`[CONTACTS] Emitted contactsUpdated → user_${userId}`);
         }
       }
-
       // ====================== BROADCAST MESSAGE ======================
-      const messageData = {
-        senderId,
-        targetId,
-        type,
-        content,
-        contentType,
-        thumbnailUrl: savedMessage.thumbnailUrl,
-        fileMetadata: savedMessage.fileMetadata,
-        ...(type === "group" && {
-          groupId: savedMessage.groupId?.toString() || targetId,
-        }),
-        ...(type === "user-mentor" && {
-          collaborationId: savedMessage.collaborationId?.toString(),
-        }),
-        ...(type === "user-user" && {
-          userConnectionId: savedMessage.userConnectionId?.toString(),
-        }),
-        timestamp: timestampString,
-        _id: savedMessage._id.toString(),
-        status: savedMessage.status,
-        isRead: savedMessage.isRead || false,
-      };
-
       socket.broadcast.to(room).emit("receiveMessage", messageData);
       socket.emit("messageSaved", messageData);
-      logger.info(`[BROADCAST] Message sent to room: ${room}`);
     } catch (error: any) {
       logger.error(
         "[FATAL] handleSendMessage crashed:",
@@ -451,64 +413,116 @@ export class ChatSocketHandler {
   }
 
   public async handleMarkAsRead(
-    socket: Socket,
-    data: MarkAsReadData
-  ): Promise<void> {
-    try {
-      const { chatKey, userId, type } = data;
-      const updatedMessages = await this._chatRepo.markMessagesAsRead(
-        chatKey,
-        userId,
-        type
-      );
-      const notifications = await this._notificationService.getNotifications(
-        userId
-      );
-      const messageNotifications = notifications.filter(
-        (n) =>
-          n.type === "message" &&
-          n.relatedId === chatKey &&
-          n.status === "unread"
-      );
-
-      for (const notification of messageNotifications) {
-        const updatedNotification =
-          await this._notificationService.markNotificationAsRead(
-            notification.id.toString()
-          );
-        if (updatedNotification && this._io) {
-          this._io
-            .to(`user_${userId}`)
-            .emit("notification.read", { notificationId: notification.id });
-        }
-      }
-
-      let room: string;
-      if (type === "group") {
-        room = `group_${chatKey.replace("group_", "")}`;
-      } else {
-        const contact = await this._contactsRepo.findContactByUsers(
-          userId,
-          chatKey.replace(/^(user-mentor_|user-user_)/, "")
+  socket: Socket,
+  data: MarkAsReadData
+): Promise<void> {
+  try {
+    const { chatKey, userId, type } = data;
+    const updatedMessages = await this._chatRepo.markMessagesAsRead(
+      chatKey,
+      userId,
+      type
+    );
+    const notifications = await this._notificationService.getNotifications(
+      userId
+    );
+    const messageNotifications = notifications.filter(
+      (n) =>
+        n.type === "message" &&
+        n.relatedId === chatKey &&
+        n.status === "unread"
+    );
+    for (const notification of messageNotifications) {
+      const updatedNotification =
+        await this._notificationService.markNotificationAsRead(
+          notification.id.toString()
         );
-        const ids = [
-          contact?.userId.toString(),
-          contact?.targetUserId?.toString(),
-        ].sort();
-        room = `chat_${ids[0]}_${ids[1]}`;
+      if (updatedNotification && this._io) {
+        this._io
+          .to(`user_${userId}`)
+          .emit("notification.read", { notificationId: notification.id });
       }
-
-      this._io
-        ?.to(room)
-        .emit("messagesRead", { chatKey, userId, messageIds: updatedMessages });
-      logger.info(
-        `Marked messages as read for user ${userId} in chat ${chatKey}`
-      );
-    } catch (error: any) {
-      logger.error(`Error marking messages as read: ${error.message}`);
-      socket.emit("error", { message: "Failed to mark messages as read" });
     }
+    let room: string;
+    if (type === "group") {
+      room = `group_${chatKey.replace("group_", "")}`;
+    } else {
+      const contact = await this._contactsRepo.findContactByUsers(
+        userId,
+        chatKey.replace(/^(user-mentor_|user-user_)/, "")
+      );
+      const ids = [
+        contact?.userId.toString(),
+        contact?.targetUserId?.toString(),
+      ].sort();
+      room = `chat_${ids[0]}_${ids[1]}`;
+    }
+    console.log(`[READ EMIT] Emitting messagesRead to room ${room}`, { chatKey, userId, messageIds: updatedMessages });
+    this._io?.to(room).emit("messagesRead", { chatKey, userId, messageIds: updatedMessages });
+
+    // NEW: Emit to personal rooms for 1-on-1 chats
+    let otherUsers: string[] = [];
+    if (type === "user-user") {
+      const connId = chatKey.replace("user-user_", "");
+      const conn = await UserConnection.findById(connId);
+      if (conn) {
+        const otherUser = conn.requester.toString() === userId ? conn.recipient.toString() : conn.requester.toString();
+        otherUsers.push(otherUser);
+      }
+    } else if (type === "user-mentor") {
+        const collabId = chatKey.replace("user-mentor_", "");
+        const collab = await this._collabRepository.findCollabById(collabId);
+        if (collab) {
+          let mentorUserId: string | null = null;
+          if (typeof collab.mentorId === "object" && collab.mentorId !== null) {
+            const mentorObj = collab.mentorId as IMentor;
+            if (mentorObj.userId) {
+              mentorUserId = typeof mentorObj.userId === "object" 
+                ? (mentorObj.userId as IUser)._id.toString()
+                : mentorObj.userId
+            }
+          } else if (collab.mentorId) {
+            mentorUserId = collab.mentorId.toString();
+          }
+
+          let userUserId: string | null = null;
+          if (typeof collab.userId === "object" && collab.userId !== null) {
+            userUserId = (collab.userId as IUser)._id.toString();
+          } else if (collab.userId) {
+            userUserId = collab.userId.toString();
+          }
+
+          if (mentorUserId && userUserId) {
+            const otherUser = userUserId === userId ? mentorUserId : userUserId;
+            if (otherUser && otherUser !== userId) {
+              otherUsers.push(otherUser);
+            }
+          }
+        }
+      } else if (type === "group") {
+      const groupId = chatKey.replace("group_", "");
+      const group = await this._groupRepo.getGroupById(groupId);
+      if (group) {
+        otherUsers = group.members
+          .filter(m => m.userId.toString() !== userId)
+          .map(m => m.userId.toString());
+      }
+    }
+
+    // Emit to all other users' personal rooms
+    otherUsers.forEach(otherId => {
+      console.log(`[READ EMIT] Emitting to personal room user_${otherId}`);
+      this._io?.to(`user_${otherId}`).emit("messagesRead", { chatKey, userId, messageIds: updatedMessages });
+    });
+
+    logger.info(`Marked messages as read for user ${userId} in chat ${chatKey}`);
+  } catch (error: any) {
+    logger.error(`Error marking messages as read: ${error.message}`);
+    socket.emit("error", { message: "Failed to mark messages as read" });
   }
+}
+
+
   public handleLeaveChat(userId: string): void {
     try {
       this._activeChats.delete(userId);

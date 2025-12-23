@@ -399,13 +399,14 @@ export class AuthController extends BaseController implements IAuthController{
   fetchAllUsers = async (req: Request, res: Response, next: NextFunction): Promise<void> => {
     try {
 
-      const { search, page, limit, excludeId } = req.query;
+      const { search, page, limit, excludeId, status } = req.query;
       const query: UserQuery = {};
 
       if (search) query.search = search as string;
       if (page) query.page = parseInt(page as string, 10);
       if (limit) query.limit = parseInt(limit as string, 10);
       if (excludeId) query.excludeId = excludeId as string;
+      if (status) query.status = status as string;
 
       logger.debug(`Fetching users with query: ${JSON.stringify(query)}`);
       const result = await this._authService.getAllUsersAdmin(query);

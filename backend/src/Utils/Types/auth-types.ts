@@ -78,7 +78,7 @@ export interface ProfileUpdateData extends Partial<IUser> {
   coverPicFile?: Express.Multer.File;
 }
 
-//Interface for Quesry for User Retrievel
+//Interface for Query for User Retrievel
 export type UserQuery = {
   search?: string;
   sortField?: 'industry' | 'reasonForJoining' | 'hasReviewed';
@@ -86,6 +86,7 @@ export type UserQuery = {
   page?: number;
   limit?: number;
   excludeId?: string;
+  status?: string;
 };
 
 //Upadte Password 

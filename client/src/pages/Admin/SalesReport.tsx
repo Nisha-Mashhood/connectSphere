@@ -5,6 +5,7 @@ import {
   CardHeader,
   CardBody,
   Spinner,
+  Button,
 } from "@nextui-org/react";
 
 import {
@@ -19,7 +20,7 @@ import {
 } from "recharts";
 
 import DataTable from "../../Components/ReusableComponents/DataTable";
-import { getSalesReport } from "../../Service/Mentor.Service";
+import { downloadSalesReport, getSalesReport } from "../../Service/Mentor.Service";
 
 interface MentorBreakdown {
   id: string;
@@ -111,18 +112,32 @@ const SalesReport = () => {
     <div className="p-8 max-w-6xl mx-auto">
       <Card className="shadow-md">
         {/* Header */}
-        <CardHeader className="flex justify-between items-center">
+        <CardHeader className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
           <h1 className="text-2xl font-bold">Sales Report</h1>
 
-          <select
-            value={period}
-            onChange={(e) => setPeriod(e.target.value)}
-            className="px-4 py-2 border rounded-md"
-          >
-            <option value="1month">Last 30 Days</option>
-            <option value="1year">Last 1 Year</option>
-            <option value="5years">Last 5 Years</option>
-          </select>
+          <div className="flex flex-col sm:flex-row gap-3 w-full sm:w-auto">
+            <select
+              value={period}
+              onChange={(e) => setPeriod(e.target.value)}
+              disabled={loading}
+              className="px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary"
+            >
+              <option value="1month">Last 30 Days</option>
+              <option value="1year">Last 1 Year</option>
+              <option value="5years">Last 5 Years</option>
+            </select>
+
+            <Button
+              color="primary"
+              size="lg"
+              onPress={() => downloadSalesReport(period)}
+              isDisabled={loading || !report}
+              startContent={<span className="text-xl">📄</span>}
+              className="font-medium"
+            >
+              Download PDF Report
+            </Button>
+          </div>
         </CardHeader>
 
         <CardBody>

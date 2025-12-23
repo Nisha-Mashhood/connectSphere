@@ -6,6 +6,7 @@ export interface ChatInputProps {
   currentUserId?: string;
   onSendMessage: (message: IChatMessage & { targetId: string; type: string }) => void;
   getChatKey: (contact: Contact) => string
+  scrollToBottom?: (behavior?: ScrollBehavior) => void;
 }
 
 export interface TextInputProps {

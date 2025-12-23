@@ -15,4 +15,5 @@ export const MENTOR_ROUTES = {
   AddExperience: '/experiences',
   UpdateExperience:'/experiences/:experienceId',
   DeleteExperience: '/deleteexperiences/:experienceId',
+  DownloadSalesReposrt: '/downloadSalesReport',
 } as const;

@@ -33,61 +33,60 @@ const normalizeExperience = (exp: IMentorExperience): IMentorExperience => {
   };
 };
 
-    // Full date validation
-    const validateExperienceDates = (
-    data: IMentorExperience,
-    experiences: IMentorExperience[],
-    ignoreId?: string
-    ): string | null => {
+// Full date validation
+const validateExperienceDates = (
+  data: IMentorExperience,
+  experiences: IMentorExperience[],
+  ignoreId?: string
+): string | null => {
+  const start = new Date(`${data.startDate}-01`);
+  const end = data.endDate ? new Date(`${data.endDate}-01`) : null;
+  const now = new Date();
 
-    const start = new Date(`${data.startDate}-01`);
-    const end = data.endDate ? new Date(`${data.endDate}-01`) : null;
-    const now = new Date();
+  // Overlap check
+  const overlap = experiences.some((exp) => {
+    if (ignoreId && exp.id === ignoreId) return false;
+    const expStart = new Date(`${exp.startDate}-01`);
+    const expEnd = exp.endDate ? new Date(`${exp.endDate}-01`) : now;
+    const currentEnd = end ?? now;
+    return start <= expEnd && currentEnd >= expStart;
+  });
+  if (overlap) {
+    return "This experience overlaps with an existing time period";
+  }
+  return null;
+};
 
-    // Overlap check
-    const overlap = experiences.some((exp) => {
-        if (ignoreId && exp.id === ignoreId) return false;
-        const expStart = new Date(`${exp.startDate}-01`);
-        const expEnd = exp.endDate ? new Date(`${exp.endDate}-01`) : now;
-        const currentEnd = end ?? now;
-        return start <= expEnd && currentEnd >= expStart;
-    });
-    if (overlap) {
-        return "This experience overlaps with an existing time period";
-    }
-    return null;
-    };
+export const useExperienceSection = ({
+  mentorId,
+  userId,
+}: UseExperienceSectionProps) => {
+  const [experiences, setExperiences] = useState<IMentorExperience[]>([]);
+  const [loadingExperiences, setLoadingExperiences] = useState(false);
+  const [expandedKeys, setExpandedKeys] = useState<string[]>([]);
 
-    export const useExperienceSection = ({
-    mentorId,
-    userId,
-    }: UseExperienceSectionProps) => {
-    const [experiences, setExperiences] = useState<IMentorExperience[]>([]);
-    const [loadingExperiences, setLoadingExperiences] = useState(false);
-    const [expandedKeys, setExpandedKeys] = useState<string[]>([]);
+  const {
+    isOpen: isExperienceModalOpen,
+    onOpen: onExperienceModalOpen,
+    onClose: onExperienceModalClose,
+  } = useDisclosure();
 
-    const {
-        isOpen: isExperienceModalOpen,
-        onOpen: onExperienceModalOpen,
-        onClose: onExperienceModalClose,
-    } = useDisclosure();
+  const {
+    isOpen: isDeleteModalOpen,
+    onOpen: onDeleteModalOpen,
+    onClose: onDeleteModalClose,
+  } = useDisclosure();
 
-    const {
-        isOpen: isDeleteModalOpen,
-        onOpen: onDeleteModalOpen,
-        onClose: onDeleteModalClose,
-    } = useDisclosure();
+  const [selectedExperience, setSelectedExperience] =
+    useState<IMentorExperience | null>(null);
 
-    const [selectedExperience, setSelectedExperience] =
-        useState<IMentorExperience | null>(null);
+  const [editingExperienceId, setEditingExperienceId] = useState<string | null>(
+    null
+  );
 
-    const [editingExperienceId, setEditingExperienceId] = useState<string | null>(
-        null
-    );
-
-    const [experienceToDelete, setExperienceToDelete] = useState<string | null>(
-        null
-    );
+  const [experienceToDelete, setExperienceToDelete] = useState<string | null>(
+    null
+  );
 
   //Fetch experiences
   const fetchExperiences = useCallback(async () => {
@@ -108,7 +107,7 @@ const normalizeExperience = (exp: IMentorExperience): IMentorExperience => {
     }
   }, [mentorId]);
 
-    //Accordion handler
+  //Accordion handler
   const handleExpansionChange = (keys: "all" | Set<React.Key> | string[]) => {
     let newKeys: string[] = [];
     if (keys === "all") {
@@ -129,7 +128,6 @@ const normalizeExperience = (exp: IMentorExperience): IMentorExperience => {
       fetchExperiences();
     }
   };
-
 
   const handleOpenAddModal = () => {
     setSelectedExperience(null);
@@ -168,6 +166,9 @@ const normalizeExperience = (exp: IMentorExperience): IMentorExperience => {
           editingExperienceId,
           payload
         );
+        if (!res) {
+          return;
+        }
         const updatedExperience = normalizeExperience(res.experience);
 
         setExperiences((prev) =>
@@ -179,6 +180,9 @@ const normalizeExperience = (exp: IMentorExperience): IMentorExperience => {
       } else {
         // ADD
         const res = await addMentorExperience(userId, payload);
+        if (!res) {
+          return;
+        }
         const created = normalizeExperience(res.experience ?? res);
 
         setExperiences((prev) => [...prev, created]);
@@ -188,8 +192,8 @@ const normalizeExperience = (exp: IMentorExperience): IMentorExperience => {
       setEditingExperienceId(null);
       onExperienceModalClose();
     } catch (error) {
-      console.error("Failed to save experience", error);
       toast.error("Failed to save experience");
+      console.error("Failed to save experience", error);
     }
   };
 

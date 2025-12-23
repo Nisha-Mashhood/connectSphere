@@ -407,14 +407,14 @@ export class MentorRepository extends BaseRepository<IMentor> implements IMentor
     }
   }
 
-  public cancelMentorship = async (id: string): Promise<IMentor | null> => {
+  public cancelMentorship = async (id: string, options?: { session?: ClientSession }): Promise<IMentor | null> => {
     try {
       logger.debug(`Cancelling mentorship: ${id}`);
       const updatedMentor = await this.model
         .findByIdAndUpdate(
           this.toObjectId(id),
           { isApproved: "Processing" },
-          { new: true }
+          { new: true, session: options?.session }
         )
         .exec();
       if (!updatedMentor) {

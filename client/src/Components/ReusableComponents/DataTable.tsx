@@ -44,6 +44,7 @@ export default function DataTable<T extends { id: string }>({
   loading = false,
   onSearchChange,
   emptyMessage = "No data found.",
+  topContent,
   bottomContent,
   onRowClick
 }: DataTableProps<T>) {
@@ -64,6 +65,11 @@ export default function DataTable<T extends { id: string }>({
 
   return (
     <div className="space-y-4">
+      {topContent && (
+        <div className="flex items-center justify-between gap-4">
+          {topContent}
+        </div>
+    )}
       <Table isStriped aria-label="Data table">
         <TableHeader>
           {columns.map((col) => (

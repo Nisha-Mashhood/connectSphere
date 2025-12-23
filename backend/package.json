@@ -25,6 +25,8 @@
   },
   "description": "Backend for Connect Sphere platform, supporting user authentication, collaboration management, and mentor features.",
   "dependencies": {
+    "@logtail/node": "^0.5.6",
+    "@logtail/winston": "^0.5.6",
     "@types/winston": "^2.4.4",
     "axios": "^1.7.9",
     "bcrypt": "^5.1.1",

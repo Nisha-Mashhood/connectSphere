@@ -162,7 +162,6 @@ export const addMentorExperience = async (userId:string, experienceData: Omit<IM
     return response.data.data;
   } catch (error) {
     handleError(error);
-    throw error;
   }
 };
 
@@ -173,7 +172,6 @@ export const updateMentorExperience = async (userId: string ,experienceId: strin
     return response.data.data;
   } catch (error) {
     handleError(error);
-    throw error;
   }
 };
 
@@ -183,6 +181,36 @@ export const deleteMentorExperience = async (userId:string, experienceId: string
     await axiosInstance.delete(`/mentors/deleteexperiences/${experienceId}?userId=${userId}`);
   } catch (error) {
     handleError(error);
-    throw error;
   }
 };
+
+//Download Sales Report
+export const downloadSalesReport = async (period: string) => {
+  try {
+    const response = await axiosInstance.get("/mentors/downloadSalesReport", {
+      params: { period },
+      responseType: "blob",
+    });
+
+    const blob = new Blob([response.data], { type: "application/pdf" });
+    const url = window.URL.createObjectURL(blob);
+    const link = document.createElement("a");
+    link.href = url;
+
+    const periodLabel =
+      period === "1month" ? "last-30-days" :
+      period === "1year" ? "last-1-year" :
+      "last-5-years";
+
+    link.download = `sales-report-${periodLabel}-${new Date().toISOString().split("T")[0]}.pdf`;
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+    window.URL.revokeObjectURL(url);
+
+  } catch (error) {
+    console.error("Download failed:", error);
+    handleError(error);
+  }
+};
+

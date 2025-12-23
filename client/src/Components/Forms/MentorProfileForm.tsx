@@ -437,9 +437,20 @@ const MentorProfileForm = () => {
           initialData={editingExperience}
         />
 
-        {/* Available Slots – Reusable */}
+        {/* Available Slots */}
         <div className="space-y-2">
-          <label className="block font-medium">Available Slots</label>
+          <div className="flex items-start gap-2">
+            <label className="block font-medium text-lg">Available Slots</label>
+            <div className="bg-blue-100 text-blue-800 text-xs font-medium px-3 py-1 rounded-full">
+              Recurring Weekly
+            </div>
+          </div>
+          
+          <p className="text-sm text-gray-600 -mt-1">
+            Your selected slots will repeat <strong>every week</strong> on the same day and time. 
+            Students can book you on any future week in these slots.
+          </p>
+          
           <AvailableSlotSelector
             availableSlots={availableSlots}
             onSlotsChange={onSlotsChange}

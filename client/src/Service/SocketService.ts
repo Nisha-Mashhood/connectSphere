@@ -88,9 +88,7 @@ export class SocketService {
     });
 
     this.socket.on("connect", () => {
-      console.log(
-        `[SocketService] Connected to Socket.IO server: socketId=${this.socket?.id}, userId=${userId}`
-      );
+      console.log( `[SocketService] Connected to Socket.IO server: socketId=${this.socket?.id}, userId=${userId}` );
 
       // Join base rooms
       this.socket?.emit("joinChats", userId);
@@ -181,6 +179,29 @@ export class SocketService {
       this.socket.off("userRoomLeft", callback);
       console.log("Unregistered userRoomLeft listener");
     }
+  }
+
+  //Online and offline listners
+  public onUserOnline(callback: (data: { userId: string }) => void): void {
+    this.socket?.on("userOnline", (data) => {
+      console.log("Received userOnline:", data.userId);
+      callback(data);
+    });
+  }
+
+  public offUserOnline(callback: (data: { userId: string }) => void): void {
+    this.socket?.off("userOnline", callback);
+  }
+
+  public onUserOffline(callback: (data: { userId: string }) => void): void {
+    this.socket?.on("userOffline", (data) => {
+      console.log("Received userOffline:", data.userId);
+      callback(data);
+    });
+  }
+
+  public offUserOffline(callback: (data: { userId: string }) => void): void {
+    this.socket?.off("userOffline", callback);
   }
 
 

@@ -76,10 +76,11 @@ export const useAdminDashboardData = (timeFormat: string, timeRange: string) => 
 
       // Pending mentors
       const formattedPending = pendingMentorsList?.map((mentor) => ({
-        name: mentor?.userId?.name || "Unknown",
-        email: mentor?.userId?.email || "No email",
-        requestId: mentor._id,
+        name: mentor?.user?.name || "Unknown",
+        email: mentor?.user?.email || "No email",
+        requestId: mentor.id,
       })) || [];
+      console.log('Pending Mentors : ',pendingMentorsList);
       setPendingMentors(formattedPending);
 
       // Top mentors

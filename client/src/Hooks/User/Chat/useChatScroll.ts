@@ -1,7 +1,7 @@
 import { useCallback, useRef, useState } from "react";
 
 interface UseChatScrollOptions {
-  bottomThreshold?: number;      // how close to bottom to consider "at bottom"
+  bottomThreshold?: number;
 }
 
 export const useChatScroll = (options?: UseChatScrollOptions) => {
@@ -12,7 +12,7 @@ export const useChatScroll = (options?: UseChatScrollOptions) => {
 
   const bottomThreshold = options?.bottomThreshold ?? 80;
 
-  // 🔹 Called on scroll: updates isAtBottom
+  // Called on scroll: updates isAtBottom
   const handleScroll = useCallback(() => {
     const container = messagesContainerRef.current;
     if (!container) return;
@@ -25,7 +25,7 @@ export const useChatScroll = (options?: UseChatScrollOptions) => {
     setIsAtBottom(distanceFromBottom <= bottomThreshold);
   }, [bottomThreshold]);
 
-  // 🔹 Scroll to bottom (used when we WANT to jump to latest message)
+  //Scroll to bottom (used when we WANT to jump to latest message)
   const scrollToBottom = useCallback(
     (behavior: ScrollBehavior = "smooth") => {
       if (messagesEndRef.current) {

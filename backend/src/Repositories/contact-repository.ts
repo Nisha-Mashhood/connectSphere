@@ -158,19 +158,6 @@ export class ContactRepository extends BaseRepository<IContact> implements ICont
         const bTimestamp = b.lastMessage?.timestamp ? new Date(b.lastMessage.timestamp).getTime() : 0;
         return bTimestamp - aTimestamp || a._id.toString().localeCompare(b._id.toString());
       });
-
-      logger.info(`Retrieved ${sortedContacts.length} sorted contacts for user: ${userId}`);
-      logger.debug(`Sorted contacts for user ${userId}: ${JSON.stringify(
-        sortedContacts.map(c => ({
-          _id: c._id,
-          type: c.type,
-          lastMessageTimestamp: c.lastMessage?.timestamp,
-          targetUserId: c.targetUserId?._id,
-          groupId: c.groupId?._id,
-        })),
-        null,
-        2
-      )}`);
       return sortedContacts;
     } catch (error: unknown) {
       const err = error instanceof Error ? error : new Error(String(error));

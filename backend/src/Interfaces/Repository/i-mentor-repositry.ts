@@ -19,7 +19,7 @@ export interface IMentorRepository {
   getMentorDetails(id: string): Promise<IMentor | null>;
   approveMentorRequest(id: string): Promise<IMentor | null>;
   rejectMentorRequest(id: string): Promise<IMentor | null>;
-  cancelMentorship(id: string): Promise<IMentor | null>;
+  cancelMentorship(id: string, options?: { session?: ClientSession }): Promise<IMentor | null>;
   getMentorById(id: string): Promise<IMentor | null>;
   getMentorByUserId(userId: string): Promise<IMentor | null>;
   updateMentorById(mentorId: string, updateData: Partial<IMentor>): Promise<IMentor | null>;

@@ -27,4 +27,6 @@ router.get(MENTOR_ROUTES.GetSalesReport, [apiLimiter, authMiddleware.verifyToken
 router.post(MENTOR_ROUTES.AddExperience, [apiLimiter, authMiddleware.verifyToken, authMiddleware.checkBlockedStatus], mentorController.addExperience);
 router.put(MENTOR_ROUTES.UpdateExperience, [apiLimiter, authMiddleware.verifyToken, authMiddleware.checkBlockedStatus], mentorController.updateExperience);
 router.delete(MENTOR_ROUTES.DeleteExperience, [apiLimiter, authMiddleware.verifyToken, authMiddleware.checkBlockedStatus], mentorController.deleteExperience);
+router.get(MENTOR_ROUTES.DownloadSalesReposrt,[apiLimiter, authMiddleware.verifyToken, authMiddleware.authorize("admin"),], mentorController.downloadSalesReportPDF
+);
 export default router;
