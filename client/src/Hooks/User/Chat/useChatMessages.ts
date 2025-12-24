@@ -221,7 +221,7 @@ export const useChatMessages = (
   };
 }, [sendTyping]);
 
-  // SOCKET LISTENERS — ALL MOVED HERE
+  // SOCKET LISTENERS
   useEffect(() => {
     const onUserOnline = ({ userId }: { userId: string }) => {
     setOnlineUsers(prev => ({ ...prev, [userId]: true }));

@@ -69,19 +69,13 @@ const Chat: React.FC = () => {
   // Socket connection
   useEffect(() => {
     if (!currentUser?.id) return;
-
-    // sessionStorage.setItem("isInChatComponent", "true");
-    console.log("Inside caht container");
+    console.log("Inside chat container");
+    socketService.emitChatOnline(currentUser.id);
     dispatch(setIsInChatComponent(true));
-
-    socketService.connect(
-      currentUser.id,
-      localStorage.getItem("authToken")!
-    );
-
     refetchUnreadCounts();
 
     return () => {
+      socketService.emitChatOffline(currentUser.id);
       dispatch(setIsInChatComponent(false));
       dispatch(setActiveChatKey(null));
       socketService.leaveChat(currentUser.id);

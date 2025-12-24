@@ -6,6 +6,8 @@ import { Contact } from "../../../../Interface/User/Icontact";
 import { ICallLog } from "../../../../types";
 import { getCallLogs } from "../../../../Service/Call.Service";
 import ringTone from "../../../../assets/ringTone.mp3";
+import { setIncomingCall } from "../../../../redux/Slice/callSlice";
+import { useDispatch } from 'react-redux';
 
 const webrtcService = new WebRTCService();
 
@@ -34,6 +36,9 @@ export const useChatCall = ({
 }: UseChatCallParams) => {
   // CALL LOGS
   const [callLogs, setCallLogs] = useState<ICallLog[]>([]);
+  const [isLocalPlaying, setIsLocalPlaying] = useState(false);
+  const [isRemotePlaying, setIsRemotePlaying] = useState(false);
+  const dispatch = useDispatch();
 
   const fetchCallLogs = useCallback(async () => {
     if (!currentUserId) return;
@@ -48,21 +53,6 @@ export const useChatCall = ({
   useEffect(() => {
     fetchCallLogs();
   }, [fetchCallLogs]);
-
-  const getIsCaller = useCallback(() => {
-    if (!currentUserId || !selectedContact) return null;
-
-    const myId = currentUserId;
-    const theirId =
-      selectedContact.targetId ||
-      selectedContact.contactId ||
-      selectedContact.userId ||
-      selectedContact.groupId;
-
-    if (!theirId) return null;
-
-    return myId.localeCompare(theirId) < 0;
-  }, [currentUserId, selectedContact]);
 
   // RINGTONE
   const ringtone = useRef<HTMLAudioElement | null>(null);
@@ -151,6 +141,8 @@ export const useChatCall = ({
       setIsScreenSharing(false);
       setIsIncomingCall(false);
       setIncomingCallData(null);
+      setIsLocalPlaying(false);
+setIsRemotePlaying(false);
       stopRingtone();
 
       if (!fromRemote && selectedContact && chatKey) {
@@ -181,13 +173,20 @@ export const useChatCall = ({
   }, [stopRingtone]);
 
 useEffect(() => {
-  if (localVideoRef.current) {
+  if (localVideoRef.current && localStream) {
     localVideoRef.current.srcObject = localStream;
+    localVideoRef.current.muted = true;
+    localVideoRef.current.play().catch(() => {});
   }
-  if (remoteVideoRef.current) {
+}, [localStream, localVideoRef]);
+
+useEffect(() => {
+  if (remoteVideoRef.current && remoteStream) {
     remoteVideoRef.current.srcObject = remoteStream;
+    remoteVideoRef.current.muted = false;
+    remoteVideoRef.current.play().catch(() => {});
   }
-}, [localStream, remoteStream]);
+}, [remoteStream, remoteVideoRef]);
 
   useEffect(() => {
     console.log("Video refs:", {
@@ -197,6 +196,102 @@ useEffect(() => {
       remoteStreamTracks: remoteStream?.getTracks().map((t) => t.kind) || null,
     });
   }, [localStream, remoteStream, isVideoCallActive]);
+
+  // Detect when local video starts playing
+useEffect(() => {
+  if (!localVideoRef.current) return;
+
+  const video = localVideoRef.current;
+
+  const onPlaying = () => {
+    setIsLocalPlaying(true);
+    console.log("✅ Local video confirmed playing");
+  };
+
+  video.addEventListener("playing", onPlaying);
+
+  // Also check immediately if already playing
+  if (video.readyState >= 3) { // HAVE_CURRENT_DATA or better
+    setIsLocalPlaying(true);
+  }
+
+  const timeout = setTimeout(() => {
+    if (localStream) setIsLocalPlaying(true);
+  }, 5000);
+
+  return () => {
+    video.removeEventListener("playing", onPlaying);
+    clearTimeout(timeout);
+  };
+}, [localStream, localVideoRef]); // ← Add ref
+
+useEffect(() => {
+  if (!remoteVideoRef.current) return;
+
+  const video = remoteVideoRef.current;
+
+  const onPlaying = () => {
+    setIsRemotePlaying(true);
+    console.log("✅ Remote video confirmed playing");
+  };
+
+  video.addEventListener("playing", onPlaying);
+
+  if (video.readyState >= 3) {
+    setIsRemotePlaying(true);
+  }
+
+  const timeout = setTimeout(() => {
+    if (remoteStream) setIsRemotePlaying(true);
+  }, 15000); // longer for remote
+
+  return () => {
+    video.removeEventListener("playing", onPlaying);
+    clearTimeout(timeout);
+  };
+}, [remoteStream, remoteVideoRef]);
+
+  //New UseEffect
+useEffect(() => {   
+  const attach = () => {     
+    if (localVideoRef.current && localStream) {       
+      localVideoRef.current.srcObject = localStream;       
+      localVideoRef.current.muted = true;       
+      localVideoRef.current.play().catch(() => {});       
+      console.log("✅ Local video attached and playing");     
+    }   
+  };
+  // Run immediately   
+  attach();
+  // If video element appears later (e.g., overlay mounts after stream), catch it  
+   const observer = new MutationObserver(attach);
+  // Observe the parent of where  will be (or document body as fallback)   
+  const parent = document.getElementById('root') || document.body; // or any container   
+  observer.observe(parent, { childList: true, subtree: true });
+
+  return () => observer.disconnect(); 
+}, [localStream, localVideoRef]);
+
+
+
+useEffect(() => {   
+  const attach = () => {    
+     if (remoteVideoRef.current && remoteStream) {       
+      remoteVideoRef.current.srcObject = remoteStream;       
+      remoteVideoRef.current.muted = false;       
+      remoteVideoRef.current.play().catch(() => {});       
+      console.log("✅ Remote video attached and playing");     
+    }   
+  };
+
+  attach();
+
+  const observer = new MutationObserver(attach);   
+  const parent = document.getElementById('root') || document.body;   
+  observer.observe(parent, { childList: true, subtree: true });
+
+  return () => observer.disconnect(); 
+}, [remoteStream, remoteVideoRef]);
 
   // SETUP WEBRTC + SOCKETS
   useEffect(() => {
@@ -260,6 +355,12 @@ useEffect(() => {
       console.log("Incoming OFFER for me:", data);
       setIncomingCallData(data);
       setIsIncomingCall(true);
+      dispatch(setIncomingCall({
+        senderId: data.userId,
+        senderName: data.senderName || "Someone",
+        callType: data.callType,
+        contactType: data.type as 'user-user' | 'user-mentor',
+      }));
       playRingtone();
     };
 
@@ -316,6 +417,7 @@ useEffect(() => {
     isVideoCallActive,
     playRingtone,
     endCall,
+    dispatch,
   ]);
 
   // START CALLS
@@ -330,14 +432,6 @@ useEffect(() => {
       return;
     }
 
-    const isCaller = getIsCaller();
-    if (isCaller === null) return;
-    if (!isCaller) {
-      toast("You cannot start the call. Wait for them to call you.", {
-        icon: "ℹ️",
-      });
-      return;
-    }
 
     try {
       await webrtcService.initPeerConnection("single");
@@ -372,7 +466,6 @@ useEffect(() => {
     isVideoCallActive,
     selectedContact,
     endCall,
-    getIsCaller,
   ]);
 
   const startAudioCall = useCallback(async () => {
@@ -383,15 +476,6 @@ useEffect(() => {
       isVideoCallActive ||
       !chatKey
     ) {
-      return;
-    }
-
-    const isCaller = getIsCaller();
-    if (isCaller === null) return;
-    if (!isCaller) {
-      toast("You cannot start the call. Wait for them to call you.", {
-        icon: "ℹ️",
-      });
       return;
     }
 
@@ -428,63 +512,64 @@ useEffect(() => {
     isVideoCallActive,
     selectedContact,
     endCall,
-    getIsCaller,
   ]);
 
   // ACCEPT INCOMING CALL
   const acceptCall = useCallback(async () => {
-    if (!incomingCallData || !chatKey || !selectedContact) return;
+  if (!incomingCallData || !chatKey || !selectedContact) return;
 
-    const isCaller = getIsCaller();
-    if (isCaller === true) {
-      console.log("I'm the caller but received an offer , ignoring");
-      return; // ignore conflicting offer
+  try {
+    await webrtcService.initPeerConnection("single");
+
+    // STEP 1: Get local stream FIRST
+    const stream =
+      incomingCallData.callType === "audio"
+        ? await webrtcService.getLocalAudioStream()
+        : await webrtcService.getLocalStream();
+
+    setLocalStream(stream);
+
+    // ADD THIS LINE — Open call overlay NOW so local video shows immediately
+    if (incomingCallData.callType === "audio") {
+      setIsAudioCallActive(true);
+    } else {
+      setIsVideoCallActive(true);  // ← This opens the video overlay right away!
     }
 
-    try {
-      //receiver must NOT mark itself as the offerer
-      await webrtcService.initPeerConnection("single");
+    // STEP 2: Add local tracks
+    stream.getTracks().forEach((track) => {
+      webrtcService.addTrack("single", track, stream);
+      console.log("Added local track to PC:", track.kind, track.id);
+    });
 
-      // Apply remote offer first
-      await webrtcService.setRemoteDescription(incomingCallData.offer);
+    // STEP 3: Set remote description (offer)
+    await webrtcService.setRemoteDescription(incomingCallData.offer);
 
-      // Now get local media & attach immediately for local preview
-      const stream =
-        incomingCallData.callType === "audio"
-          ? await webrtcService.getLocalAudioStream()
-          : await webrtcService.getLocalStream();
-          
-          setLocalStream(stream);
+    // STEP 4: Create answer
+    const answer = await webrtcService.createAnswer();
 
-      // Add local tracks to the peer connection
-      stream
-        .getTracks()
-        .forEach((track) => webrtcService.addTrack("single", track, stream));
+    // STEP 5: Send answer
+    socketService.sendAnswer({
+      userId: selectedContact.userId || "",
+      targetId: incomingCallData.userId,
+      type: selectedContact.type,
+      chatKey,
+      answer,
+      callType: incomingCallData.callType,
+    });
 
-      // Create & send answer
-      const answer = await webrtcService.createAnswer();
+    // Hide incoming modal + stop ringtone
+    setIsIncomingCall(false);
+    setIncomingCallData(null);
+    stopRingtone();
 
-      socketService.sendAnswer({
-        userId: selectedContact.userId || "",
-        targetId: incomingCallData.userId,
-        type: selectedContact.type,
-        chatKey,
-        answer,
-        callType: incomingCallData.callType,
-      });
-
-      setIsIncomingCall(false);
-      setIncomingCallData(null);
-      stopRingtone();
-
-      if (incomingCallData.callType === "audio") setIsAudioCallActive(true);
-      else setIsVideoCallActive(true);
-    } catch (err) {
-      console.error("Accept call failed:", err);
-      toast.error("Failed to accept call");
-      endCall();
-    }
-  }, [incomingCallData, chatKey, selectedContact, stopRingtone, endCall, getIsCaller]);
+    // No need to set active again — already done above
+  } catch (err) {
+    console.error("Accept call failed:", err);
+    toast.error("Failed to accept call");
+    endCall();
+  }
+}, [incomingCallData, chatKey, selectedContact, stopRingtone, endCall]);
 
   // DECLINE CALL
   const declineCall = useCallback(() => {
@@ -583,7 +668,7 @@ useEffect(() => {
     localAudioRef,
     remoteAudioRef,
     ringtone,
-    getIsCaller,
+    // getIsCaller,
     startVideoCall,
     startAudioCall,
     endCall,
@@ -592,5 +677,7 @@ useEffect(() => {
     toggleAudio,
     toggleVideo,
     toggleScreenShare,
+    isLocalPlaying,
+  isRemotePlaying,
   };
 };

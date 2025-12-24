@@ -163,9 +163,7 @@ export class SocketService {
     }
   }
 
-
    //Listen for when a user leaves their user room.
-
   public onUserRoomLeft(callback: (data: { userId: string }) => void): void {
     this.socket?.on("userRoomLeft", (data) => {
       console.log(`Received userRoomLeft for user ${data.userId}`);
@@ -182,6 +180,16 @@ export class SocketService {
   }
 
   //Online and offline listners
+  public emitChatOnline(userId: string): void {
+    console.log("Emitting chat:online", userId);
+    this.socket?.emit("chat:online", { userId });
+  }
+
+  public emitChatOffline(userId: string): void {
+    console.log("Emitting chat:offline", userId);
+    this.socket?.emit("chat:offline", { userId });
+  }
+
   public onUserOnline(callback: (data: { userId: string }) => void): void {
     this.socket?.on("userOnline", (data) => {
       console.log("Received userOnline:", data.userId);

@@ -27,7 +27,6 @@ function App() {
   useEffect(() => {
     const isChatRoute = location.pathname.startsWith("/chat");
     dispatch(setIsInChatComponent(isChatRoute));
-    // dispatch(setIsInChatComponent(false));
   }, [dispatch, location.pathname]);
 
   return (

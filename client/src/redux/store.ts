@@ -1,8 +1,9 @@
 import { AnyAction, combineReducers, configureStore } from '@reduxjs/toolkit';
-import userReducer, { signOut } from '../redux/Slice/userSlice';
-import profileReducer from '../redux/Slice/profileSlice';
-import  notificationReducer from '../redux/Slice/notificationSlice';
-import reviewReducer from '../redux/Slice/reviewSlice';
+import userReducer, { signOut } from './Slice/userSlice';
+import profileReducer from './Slice/profileSlice';
+import  notificationReducer from './Slice/notificationSlice';
+import reviewReducer from './Slice/reviewSlice';
+import callReducer from './Slice/callSlice';
 import storage from 'redux-persist/lib/storage';
 import { persistReducer, persistStore } from 'redux-persist';
 
@@ -11,26 +12,11 @@ const appReducer = combineReducers({
     profile: profileReducer,
     notification: notificationReducer,
     review: reviewReducer,
+    call: callReducer,
 });
-
-// const initialNotificationState = {
-//     chatNotifications: [],
-//     taskNotifications: [],
-//     chatUnreadCount: 0,
-//     taskUnreadCount: 0,
-//     isInChatComponent: false,
-//     activeChatKey: null,
-// };
 
 const rootReducer = (state: ReturnType<typeof appReducer>, action: AnyAction) => {
     if (action.type === signOut.type) {
-        // Clear slices state on logout
-        // state = {
-        //     user: undefined, // Clears the user slice
-        //     profile: undefined, // Clears the profile slice
-        //     notification: initialNotificationState,
-        //     review:undefined,
-        // };
         state = undefined;
     }
     return appReducer(state || undefined, action);
@@ -40,7 +26,6 @@ const persistConfig = {
     key: 'root',
     version: 1,
     storage,
-    //whitelist: ["user"], // Only persist user slice
 };
 
 const persistedReducer = persistReducer(persistConfig, rootReducer);

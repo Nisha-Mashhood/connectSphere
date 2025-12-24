@@ -1,7 +1,6 @@
 import React, { useRef, lazy, Suspense } from "react";
 import {
   Button,
-  Tooltip,
   Avatar,
   Dropdown,
   DropdownTrigger,
@@ -21,13 +20,11 @@ import {
   FaEllipsisV,
   FaUserFriends,
   FaInfoCircle,
-  FaMicrophone,
-  FaMicrophoneSlash,
-  FaVideoSlash,
-  FaDesktop,
 } from "react-icons/fa";
 import { Contact } from "../../../../Interface/User/Icontact";
 import { useChatCall } from "../../../../Hooks/User/Chat/OneToOneCall/useChatCall";
+import VideoCallOverlay from "./VideoCallOverlay";
+import AudioCallOverlay from "./AudioCallOverlay";
 
 const GroupCall = lazy(() => import("./Groups/GroupCall"));
 
@@ -62,8 +59,6 @@ const ChatHeader: React.FC<ChatHeaderProps> = ({
     incomingCallData,
     localVideoRef,
     remoteVideoRef,
-    localAudioRef,
-    remoteAudioRef,
     startVideoCall,
     startAudioCall,
     endCall,
@@ -72,10 +67,8 @@ const ChatHeader: React.FC<ChatHeaderProps> = ({
     toggleAudio,
     toggleVideo,
     toggleScreenShare,
-    getIsCaller,
   } = call;
 
-  const isCaller = getIsCaller();
 
   const groupCallRef = useRef<{
     startGroupCall: (type: "audio" | "video") => void;
@@ -113,7 +106,7 @@ const ChatHeader: React.FC<ChatHeaderProps> = ({
       selectedContact.userId.toString(),
       selectedContact.userId,
     ].filter(Boolean);
-    const otherId = candidates.find(id => id !== currentUserId);
+    const otherId = candidates.find((id) => id !== currentUserId);
     return otherId || null;
   };
 
@@ -211,8 +204,8 @@ const ChatHeader: React.FC<ChatHeaderProps> = ({
                 {selectedContact.name}
               </h2>
 
-              {getTypingIndicator() || (
-                selectedContact.type === "group" ? (
+              {getTypingIndicator() ||
+                (selectedContact.type === "group" ? (
                   <p className="text-xs text-white/80">
                     {selectedContact.groupDetails?.members.length || 0} members
                   </p>
@@ -225,8 +218,7 @@ const ChatHeader: React.FC<ChatHeaderProps> = ({
                   <p className="text-xs text-white/80">
                     {selectedContact.targetJobTitle || "Offline"}
                   </p>
-                )
-              )}
+                ))}
             </div>
           </div>
         )}
@@ -240,72 +232,44 @@ const ChatHeader: React.FC<ChatHeaderProps> = ({
       {selectedContact && (
         <div className="flex items-center gap-1 sm:gap-2">
           {/* AUDIO CALL BUTTON */}
-          <Tooltip
-            content={
-              isCaller === false
-                ? "Only one person can start the call"
+          <Button
+            isIconOnly
+            variant="flat"
+            className="bg-white/20 text-white hover:bg-white/30 transition-all w-8 h-8 sm:w-10 sm:h-10"
+            onPress={isAudioCallActive ? () => endCall() : startAudioCall}
+            aria-label={
+              selectedContact.type === "group"
+                ? isAudioCallActive
+                  ? "End group audio call"
+                  : "Group audio call"
                 : isAudioCallActive
                 ? "End audio call"
                 : "Audio call"
             }
-            placement="bottom"
+            isDisabled={isVideoCallActive}
           >
-            <Button
-              isIconOnly
-              variant="flat"
-              className="bg-white/20 text-white hover:bg-white/30 transition-all w-8 h-8 sm:w-10 sm:h-10"
-              onPress={isAudioCallActive ? () => endCall() : startAudioCall}
-              aria-label={
-                selectedContact.type === "group"
-                  ? isAudioCallActive
-                    ? "End group audio call"
-                    : "Group audio call"
-                  : isAudioCallActive
-                  ? "End audio call"
-                  : "Audio call"
-              }
-              isDisabled={isVideoCallActive}
-            >
-              <FaPhone size={14} />
-              {isCaller === false && !isVideoCallActive && (
-                <span className="absolute -top-1 -right-1 text-xs">⏳</span>
-              )}
-            </Button>
-          </Tooltip>
+            <FaPhone size={14} />
+          </Button>
 
           {/* VIDEO CALL BUTTON */}
-          <Tooltip
-            content={
-              isCaller === false
-                ? "Only one person can start the call"
+          <Button
+            isIconOnly
+            variant="flat"
+            className="bg-white/20 text-white hover:bg-white/30 transition-all w-8 h-8 sm:w-10 sm:h-10"
+            onPress={isVideoCallActive ? () => endCall() : startVideoCall}
+            aria-label={
+              selectedContact.type === "group"
+                ? isVideoCallActive
+                  ? "End group video call"
+                  : "Group video call"
                 : isVideoCallActive
                 ? "End video call"
                 : "Video call"
             }
-            placement="bottom"
+            isDisabled={isAudioCallActive}
           >
-            <Button
-              isIconOnly
-              variant="flat"
-              className="bg-white/20 text-white hover:bg-white/30 transition-all w-8 h-8 sm:w-10 sm:h-10"
-              onPress={isVideoCallActive ? () => endCall() : startVideoCall}
-              aria-label={
-                selectedContact.type === "group"
-                  ? isVideoCallActive
-                    ? "End group video call"
-                    : "Group video call"
-                  : isVideoCallActive
-                  ? "End video call"
-                  : "Video call"
-              }
-              isDisabled={isAudioCallActive}
-            >
-              <FaVideo size={14} />
-              {isCaller === false && !isVideoCallActive && (
-                <span className="absolute -top-1 -right-1 text-xs">⏳</span>
-              )}
-            </Button>
-          </Tooltip>
+            <FaVideo size={14} />
+          </Button>
 
           {/* GROUP CALL COMPONENT */}
           {selectedContact.type === "group" && (
@@ -352,129 +316,29 @@ const ChatHeader: React.FC<ChatHeaderProps> = ({
 
       {/* VIDEO CALL OVERLAY */}
       {isVideoCallActive && selectedContact?.type !== "group" && (
-        <div className="fixed inset-0 bg-black z-[50] flex flex-col items-center justify-center p-4">
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 w-full max-w-4xl">
-            <div className="relative bg-gray-900 rounded-lg overflow-hidden">
-              <video
-                ref={localVideoRef}
-                autoPlay
-                playsInline
-                muted
-                className="w-full h-48 sm:h-64 object-cover bg-black"
-              />
-              <p className="absolute bottom-2 left-2 text-white text-sm font-semibold bg-black/50 px-2 py-1 rounded">
-                You
-              </p>
-            </div>
-            <div className="relative bg-gray-900 rounded-lg overflow-hidden">
-              <video
-                ref={remoteVideoRef}
-                autoPlay
-                playsInline
-                className="w-full h-48 sm:h-64 object-cover bg-black"
-              />
-              <p className="absolute bottom-2 left-2 text-white text-sm font-semibold bg-black/50 px-2 py-1 rounded">
-                {selectedContact?.name}
-              </p>
-            </div>
-          </div>
-          <div className="flex gap-2 mt-4">
-            <Tooltip content={isAudioMuted ? "Unmute" : "Mute"} placement="top">
-              <Button
-                isIconOnly
-                color={isAudioMuted ? "danger" : "primary"}
-                onPress={toggleAudio}
-                aria-label={isAudioMuted ? "Unmute" : "Mute"}
-              >
-                {isAudioMuted ? (
-                  <FaMicrophoneSlash size={16} />
-                ) : (
-                  <FaMicrophone size={16} />
-                )}
-              </Button>
-            </Tooltip>
-            <Tooltip
-              content={isVideoOff ? "Turn video on" : "Turn video off"}
-              placement="top"
-            >
-              <Button
-                isIconOnly
-                color={isVideoOff ? "danger" : "primary"}
-                onPress={toggleVideo}
-                aria-label={isVideoOff ? "Turn video on" : "Turn video off"}
-              >
-                {isVideoOff ? (
-                  <FaVideoSlash size={16} />
-                ) : (
-                  <FaVideo size={16} />
-                )}
-              </Button>
-            </Tooltip>
-            <Tooltip
-              content={isScreenSharing ? "Stop sharing" : "Share screen"}
-              placement="top"
-            >
-              <Button
-                isIconOnly
-                color={isScreenSharing ? "danger" : "primary"}
-                onPress={toggleScreenShare}
-                aria-label={isScreenSharing ? "Stop sharing" : "Share screen"}
-              >
-                <FaDesktop size={16} />
-              </Button>
-            </Tooltip>
-            <Button
-              color="danger"
-              onPress={() => endCall()}
-              aria-label="End call"
-            >
-              End Call
-            </Button>
-          </div>
-        </div>
+        <VideoCallOverlay
+          localVideoRef={localVideoRef}
+          remoteVideoRef={remoteVideoRef}
+          isAudioMuted={isAudioMuted}
+          isVideoOff={isVideoOff}
+          isScreenSharing={isScreenSharing}
+          toggleAudio={toggleAudio}
+          toggleVideo={toggleVideo}
+          toggleScreenShare={toggleScreenShare}
+          endCall={endCall}
+          remoteName={selectedContact.name}
+        />
       )}
 
       {/* AUDIO CALL OVERLAY */}
       {isAudioCallActive && selectedContact?.type !== "group" && (
-        <div className="fixed inset-0 bg-black z-[50] flex flex-col items-center justify-center p-4">
-          <div className="flex flex-col items-center gap-4 w-full max-w-md">
-            <div className="bg-gray-900 rounded-lg p-4 w-full text-center">
-              <p className="text-white text-lg font-semibold">
-                Audio Call with {selectedContact?.name}
-              </p>
-              <audio ref={localAudioRef} autoPlay muted />
-              <audio ref={remoteAudioRef} autoPlay />
-            </div>
-            <div className="flex gap-2">
-              <Tooltip
-                content={isAudioMuted ? "Unmute" : "Mute"}
-                placement="top"
-              >
-                <Button
-                  isIconOnly
-                  color={isAudioMuted ? "danger" : "primary"}
-                  onPress={toggleAudio}
-                  aria-label={isAudioMuted ? "Unmute" : "Mute"}
-                >
-                  {isAudioMuted ? (
-                    <FaMicrophoneSlash size={16} />
-                  ) : (
-                    <FaMicrophone size={16} />
-                  )}
-                </Button>
-              </Tooltip>
-              <Button
-                color="danger"
-                onPress={() => endCall()}
-                aria-label="End call"
-              >
-                End Call
-              </Button>
-            </div>
-          </div>
-        </div>
+        <AudioCallOverlay
+          isAudioMuted={isAudioMuted}
+          toggleAudio={toggleAudio}
+          endCall={endCall}
+          remoteName={selectedContact.name}
+        />
       )}
-
       {/* INCOMING CALL MODAL */}
       <Modal
         isOpen={isIncomingCall && selectedContact?.type !== "group"}

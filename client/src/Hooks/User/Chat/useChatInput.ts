@@ -3,7 +3,6 @@ import { uploadMedia } from "../../../Service/Chat.Service";
 import { UseChatInputReturn } from "../../../Components/User/Common/Chat/ChatInput/types";
 import { Contact } from "../../../Interface/User/Icontact";
 import { IChatMessage } from "../../../Interface/User/IchatMessage";
-// import { socketService } from "../../../../../Service/SocketService";
 
 interface UseChatInputProps {
   selectedContact: Contact | null;
@@ -172,10 +171,6 @@ export const useChatInput = ({
     };
 
     onSendMessage(message);
-  //   socketService.sendMessage({
-  //   ...message,
-  //   _id: undefined,
-  // });
     setMessageInput("");
     inputRef.current?.focus();
   }, [messageInput, selectedFile, selectedContact, currentUserId, onSendMessage, handleUpload]);
