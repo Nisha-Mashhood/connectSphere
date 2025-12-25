@@ -5,15 +5,15 @@ import toast from "react-hot-toast";
 import { Contact } from "../../../../Interface/User/Icontact";
 import { ICallLog } from "../../../../types";
 import { getCallLogs } from "../../../../Service/Call.Service";
-import ringTone from "../../../../assets/ringTone.mp3";
-import { setIncomingCall } from "../../../../redux/Slice/callSlice";
-import { useDispatch } from 'react-redux';
+import { useDispatch, useSelector } from 'react-redux';
+import { RootState } from "../../../../redux/store";
+import { clearIncomingCall, setIncomingCall } from "../../../../redux/Slice/callSlice";
 
 const webrtcService = new WebRTCService();
 
 type CallType = "audio" | "video";
 
-interface IncomingCallData {
+export interface IncomingCallData {
   userId: string;
   targetId: string;
   type: string;
@@ -38,6 +38,7 @@ export const useChatCall = ({
   const [callLogs, setCallLogs] = useState<ICallLog[]>([]);
   const [isLocalPlaying, setIsLocalPlaying] = useState(false);
   const [isRemotePlaying, setIsRemotePlaying] = useState(false);
+  const incomingCall = useSelector((state: RootState) => state.call.incomingCall);
   const dispatch = useDispatch();
 
   const fetchCallLogs = useCallback(async () => {
@@ -53,38 +54,6 @@ export const useChatCall = ({
   useEffect(() => {
     fetchCallLogs();
   }, [fetchCallLogs]);
-
-  // RINGTONE
-  const ringtone = useRef<HTMLAudioElement | null>(null);
-  const isRingtonePlaying = useRef(false);
-
-  useEffect(() => {
-    if (ringtone.current) {
-      ringtone.current.src = ringTone;
-      ringtone.current.load();
-    }
-  }, []);
-
-  const playRingtone = useCallback(async () => {
-    if (!ringtone.current || isRingtonePlaying.current) return;
-    try {
-      isRingtonePlaying.current = true;
-      ringtone.current.currentTime = 0;
-      await ringtone.current.play();
-    } catch (err) {
-      if (err?.name === "NotAllowedError") {
-        toast.error("Click anywhere to enable sound", { duration: 4000 });
-      }
-    }
-  }, []);
-
-  const stopRingtone = useCallback(() => {
-    if (ringtone.current && isRingtonePlaying.current) {
-      ringtone.current.pause();
-      ringtone.current.currentTime = 0;
-      isRingtonePlaying.current = false;
-    }
-  }, []);
 
   // MEDIA REFS
   const localVideoRef = useRef<HTMLVideoElement | null>(null);
@@ -121,47 +90,52 @@ export const useChatCall = ({
 
   // END CALL
   const endCall = useCallback(
-    (fromRemote: boolean = false) => {
-      // Stop WebRTC & local media
-      webrtcService.stop();
+  (fromRemote: boolean = false) => {
 
-      if (localStreamRef.current) {
-        localStreamRef.current.getTracks().forEach((t) => t.stop());
-      }
-      if (remoteStreamRef.current) {
-        remoteStreamRef.current.getTracks().forEach((t) => t.stop());
-      }
+    //  Notify the other side FIRST
+    if (!fromRemote && selectedContact && chatKey) {
+      socketService.emitCallEnded({
+        userId: selectedContact.userId || "",
+        targetId:
+          selectedContact.targetId ||
+          selectedContact.groupId ||
+          "",
+        type: selectedContact.type,
+        chatKey,
+        callType: isVideoCallActive ? "video" : "audio",
+      });
+    }
 
-      setLocalStream(null);
-      setRemoteStream(null);
-      setIsAudioCallActive(false);
-      setIsVideoCallActive(false);
-      setIsAudioMuted(false);
-      setIsVideoOff(false);
-      setIsScreenSharing(false);
-      setIsIncomingCall(false);
-      setIncomingCallData(null);
-      setIsLocalPlaying(false);
-setIsRemotePlaying(false);
-      stopRingtone();
+    // Stop WebRTC safely
+    webrtcService.stop();
 
-      if (!fromRemote && selectedContact && chatKey) {
-        socketService.emitCallEnded({
-          userId: selectedContact.userId || "",
-          targetId: selectedContact.targetId || selectedContact.groupId || "",
-          type: selectedContact.type,
-          chatKey,
-          callType: isVideoCallActive ? "video" : "audio",
-        });
-      }
-    },
-    [chatKey, isVideoCallActive, selectedContact, stopRingtone]
-  );
+    localStreamRef.current?.getTracks().forEach(t => t.stop());
+    remoteStreamRef.current?.getTracks().forEach(t => t.stop());
+
+    // Reset ALL local state
+    setLocalStream(null);
+    setRemoteStream(null);
+    setIsAudioCallActive(false);
+    setIsVideoCallActive(false);
+    setIsAudioMuted(false);
+    setIsVideoOff(false);
+    setIsScreenSharing(false);
+    setIncomingCallData(null);
+    setIsIncomingCall(false);
+    setIsLocalPlaying(false);
+    setIsRemotePlaying(false);
+
+    // Stop ringtone globally
+    dispatch(clearIncomingCall());
+
+  },
+  [chatKey, selectedContact, isVideoCallActive, dispatch]
+);
 
   useEffect(() => {
     return () => {
       webrtcService.stop();
-      stopRingtone();
+      // stopRingtone();
 
       if (localStreamRef.current) {
         localStreamRef.current.getTracks().forEach((t) => t.stop());
@@ -170,7 +144,7 @@ setIsRemotePlaying(false);
         remoteStreamRef.current.getTracks().forEach((t) => t.stop());
       }
     };
-  }, [stopRingtone]);
+  }, []);
 
 useEffect(() => {
   if (localVideoRef.current && localStream) {
@@ -293,6 +267,82 @@ useEffect(() => {
   return () => observer.disconnect(); 
 }, [remoteStream, remoteVideoRef]);
 
+// ACCEPT INCOMING CALL
+  const acceptCall = useCallback(async () => {
+  if (!incomingCallData || !chatKey || !selectedContact) return;
+
+  try {
+    await webrtcService.initPeerConnection("single");
+
+    // STEP 1: Get local stream FIRST
+    const stream =
+      incomingCallData.callType === "audio"
+        ? await webrtcService.getLocalAudioStream()
+        : await webrtcService.getLocalStream();
+
+    setLocalStream(stream);
+
+    // ADD THIS LINE — Open call overlay NOW so local video shows immediately
+    if (incomingCallData.callType === "audio") {
+      setIsAudioCallActive(true);
+    } else {
+      setIsVideoCallActive(true);  // ← This opens the video overlay right away!
+    }
+
+    // STEP 2: Add local tracks
+    stream.getTracks().forEach((track) => {
+      webrtcService.addTrack("single", track, stream);
+      console.log("Added local track to PC:", track.kind, track.id);
+    });
+
+    // STEP 3: Set remote description (offer)
+    await webrtcService.setRemoteDescription(incomingCallData.offer);
+
+    // STEP 4: Create answer
+    const answer = await webrtcService.createAnswer();
+
+    // STEP 5: Send answer
+    socketService.sendAnswer({
+      userId: selectedContact.userId || "",
+      targetId: incomingCallData.userId,
+      type: selectedContact.type,
+      chatKey,
+      answer,
+      callType: incomingCallData.callType,
+    });
+
+    // Hide incoming modal + stop ringtone
+    setIsIncomingCall(false);
+    setIncomingCallData(null);
+    // stopRingtone();
+    dispatch(clearIncomingCall());
+
+    // No need to set active again — already done above
+  } catch (err) {
+    console.error("Accept call failed:", err);
+    toast.error("Failed to accept call");
+    endCall();
+  }
+}, [incomingCallData, chatKey, selectedContact, endCall, dispatch]);
+
+// Auto-accept when coming from other pages
+useEffect(() => {
+  if (
+    incomingCall?.shouldAutoAnswer &&
+    incomingCall?.offerData &&
+    incomingCall.offerData.chatKey === chatKey &&
+    incomingCall.offerData.targetId === currentUserId
+  ) {
+    // Save data and answer
+    setIncomingCallData(incomingCall.offerData);
+
+    setTimeout(() => {
+      acceptCall();
+      dispatch(clearIncomingCall());
+    }, 300);
+  }
+}, [incomingCall, chatKey, currentUserId, acceptCall, dispatch]);
+
   // SETUP WEBRTC + SOCKETS
   useEffect(() => {
     if (
@@ -354,14 +404,15 @@ useEffect(() => {
 
       console.log("Incoming OFFER for me:", data);
       setIncomingCallData(data);
-      setIsIncomingCall(true);
       dispatch(setIncomingCall({
         senderId: data.userId,
         senderName: data.senderName || "Someone",
         callType: data.callType,
         contactType: data.type as 'user-user' | 'user-mentor',
+        offerData: data,
+        shouldAutoAnswer: false,
       }));
-      playRingtone();
+      // playRingtone();
     };
 
     const handleAnswer = async (data: {
@@ -415,7 +466,6 @@ useEffect(() => {
     selectedContact,
     isAudioCallActive,
     isVideoCallActive,
-    playRingtone,
     endCall,
     dispatch,
   ]);
@@ -514,62 +564,6 @@ useEffect(() => {
     endCall,
   ]);
 
-  // ACCEPT INCOMING CALL
-  const acceptCall = useCallback(async () => {
-  if (!incomingCallData || !chatKey || !selectedContact) return;
-
-  try {
-    await webrtcService.initPeerConnection("single");
-
-    // STEP 1: Get local stream FIRST
-    const stream =
-      incomingCallData.callType === "audio"
-        ? await webrtcService.getLocalAudioStream()
-        : await webrtcService.getLocalStream();
-
-    setLocalStream(stream);
-
-    // ADD THIS LINE — Open call overlay NOW so local video shows immediately
-    if (incomingCallData.callType === "audio") {
-      setIsAudioCallActive(true);
-    } else {
-      setIsVideoCallActive(true);  // ← This opens the video overlay right away!
-    }
-
-    // STEP 2: Add local tracks
-    stream.getTracks().forEach((track) => {
-      webrtcService.addTrack("single", track, stream);
-      console.log("Added local track to PC:", track.kind, track.id);
-    });
-
-    // STEP 3: Set remote description (offer)
-    await webrtcService.setRemoteDescription(incomingCallData.offer);
-
-    // STEP 4: Create answer
-    const answer = await webrtcService.createAnswer();
-
-    // STEP 5: Send answer
-    socketService.sendAnswer({
-      userId: selectedContact.userId || "",
-      targetId: incomingCallData.userId,
-      type: selectedContact.type,
-      chatKey,
-      answer,
-      callType: incomingCallData.callType,
-    });
-
-    // Hide incoming modal + stop ringtone
-    setIsIncomingCall(false);
-    setIncomingCallData(null);
-    stopRingtone();
-
-    // No need to set active again — already done above
-  } catch (err) {
-    console.error("Accept call failed:", err);
-    toast.error("Failed to accept call");
-    endCall();
-  }
-}, [incomingCallData, chatKey, selectedContact, stopRingtone, endCall]);
 
   // DECLINE CALL
   const declineCall = useCallback(() => {
@@ -585,9 +579,9 @@ useEffect(() => {
 
     setIsIncomingCall(false);
     setIncomingCallData(null);
-    stopRingtone();
+    // stopRingtone();
     webrtcService.stop();
-  }, [incomingCallData, chatKey, selectedContact, stopRingtone]);
+  }, [incomingCallData, chatKey, selectedContact]);
 
   // TOGGLE CONTROLS
   const toggleAudio = useCallback(() => {
@@ -667,8 +661,6 @@ useEffect(() => {
     remoteVideoRef,
     localAudioRef,
     remoteAudioRef,
-    ringtone,
-    // getIsCaller,
     startVideoCall,
     startAudioCall,
     endCall,

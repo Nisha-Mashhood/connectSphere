@@ -6,11 +6,11 @@ import {
   DropdownTrigger,
   DropdownMenu,
   DropdownItem,
-  Modal,
-  ModalContent,
-  ModalHeader,
-  ModalBody,
-  ModalFooter,
+  // Modal,
+  // ModalContent,
+  // ModalHeader,
+  // ModalBody,
+  // ModalFooter,
   Spinner,
 } from "@nextui-org/react";
 import {
@@ -55,15 +55,15 @@ const ChatHeader: React.FC<ChatHeaderProps> = ({
     isAudioMuted,
     isVideoOff,
     isScreenSharing,
-    isIncomingCall,
-    incomingCallData,
+    // isIncomingCall,
+    // incomingCallData,
     localVideoRef,
     remoteVideoRef,
     startVideoCall,
     startAudioCall,
     endCall,
-    acceptCall,
-    declineCall,
+    // acceptCall,
+    // declineCall,
     toggleAudio,
     toggleVideo,
     toggleScreenShare,
@@ -327,7 +327,17 @@ const ChatHeader: React.FC<ChatHeaderProps> = ({
           toggleScreenShare={toggleScreenShare}
           endCall={endCall}
           remoteName={selectedContact.name}
-        />
+          isCallInProgress={
+            isAudioCallActive ||
+            isVideoCallActive ||
+            !!call.incomingCallData
+          }
+          className={
+            isAudioCallActive || isVideoCallActive || !!call.incomingCallData
+              ? "block"
+              : "hidden"
+          }
+                />
       )}
 
       {/* AUDIO CALL OVERLAY */}
@@ -340,7 +350,7 @@ const ChatHeader: React.FC<ChatHeaderProps> = ({
         />
       )}
       {/* INCOMING CALL MODAL */}
-      <Modal
+      {/* <Modal
         isOpen={isIncomingCall && selectedContact?.type !== "group"}
         onClose={declineCall}
       >
@@ -361,7 +371,7 @@ const ChatHeader: React.FC<ChatHeaderProps> = ({
             </Button>
           </ModalFooter>
         </ModalContent>
-      </Modal>
+      </Modal> */}
     </div>
   );
 };

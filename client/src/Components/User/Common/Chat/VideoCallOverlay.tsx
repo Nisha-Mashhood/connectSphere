@@ -18,6 +18,8 @@ interface VideoCallOverlayProps {
   toggleScreenShare: () => void;
   endCall: () => void;
   remoteName: string;
+  isCallInProgress: boolean;
+  className: string;
 }
 
 const VideoCallOverlay: React.FC<VideoCallOverlayProps> = ({
@@ -31,6 +33,8 @@ const VideoCallOverlay: React.FC<VideoCallOverlayProps> = ({
   toggleScreenShare,
   endCall,
   remoteName,
+  isCallInProgress,
+  className,
 }) => {
   const [isSwapped, setIsSwapped] = useState(false);
   const [isLocalPlaying, setIsLocalPlaying] = useState(false);
@@ -41,8 +45,6 @@ const VideoCallOverlay: React.FC<VideoCallOverlayProps> = ({
   const [dragStart, setDragStart] = useState({ x: 0, y: 0 });
   const dragRef = useRef<HTMLDivElement>(null);
   const hideControlsTimeout = useRef<number | null>(null);
-
-  // ... (all your existing useEffect and drag logic remains unchanged) ...
 
   useEffect(() => {
     const video = localVideoRef.current;
@@ -154,7 +156,7 @@ const VideoCallOverlay: React.FC<VideoCallOverlayProps> = ({
   const isDefaultPosition = position.x === 0 && position.y === 0;
 
   return (
-    <div className="fixed inset-0 bg-black z-[1000] flex flex-col pt-[5.5rem]">
+    <div className={`fixed inset-0 bg-black z-[1000] flex flex-col pt-[5.5rem] ${className}`}>
       <div className="relative flex-1 rounded-3xl overflow-hidden shadow-2xl bg-black mx-4 mb-4">
         {/* Main Large Video */}
         <video
@@ -186,7 +188,7 @@ const VideoCallOverlay: React.FC<VideoCallOverlayProps> = ({
 
         {/* Connecting Spinner */}
         {!(isSwapped ? isLocalPlaying : isRemotePlaying) && (
-          <div className="absolute inset-0 flex flex-col items-center justify-center bg-black/80 backdrop-blur-sm z-50">
+          <div className="absolute inset-0 flex flex-col items-center justify-center bg-black/80 backdrop-blur-sm z-40">
             <div className="relative">
               <div className="w-16 h-16 border-4 border-blue-500/30 rounded-full" />
               <div className="absolute top-0 left-0 w-16 h-16 border-4 border-transparent border-t-blue-500 rounded-full animate-spin" />
@@ -252,7 +254,7 @@ const VideoCallOverlay: React.FC<VideoCallOverlayProps> = ({
 
         {/* Bottom Controls - HIGHEST among overlay elements */}
         <div
-          className={`absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black via-black/90 to-transparent p-8 flex justify-center items-center gap-6 transition-all duration-300 z-40 ${
+          className={`absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black via-black/90 to-transparent p-8 flex justify-center items-center gap-6 transition-all duration-300 z-50 ${
             showControls ? "opacity-100 translate-y-0" : "opacity-0 translate-y-4"
           }`}
         >
@@ -299,13 +301,14 @@ const VideoCallOverlay: React.FC<VideoCallOverlayProps> = ({
           >
             <FaDesktop className="text-white" size={24} />
           </button>
-
+            {isCallInProgress && (
           <button
             onClick={endCall}
             className="relative px-12 py-5 rounded-full bg-red-500 hover:bg-red-600 transition-all duration-200 transform hover:scale-110 active:scale-95 font-semibold text-white text-lg shadow-lg shadow-red-500/50"
           >
             End Call
           </button>
+            )}
         </div>
       </div>
     </div>

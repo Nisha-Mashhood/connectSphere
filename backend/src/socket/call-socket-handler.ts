@@ -84,6 +84,7 @@ public async handleOffer(socket: Socket, data: CallData): Promise<void> {
       contentType = contact.type === "user-mentor" ? "collaboration" : "userconnection";
     }
 
+    const callId = `${chatKey}_${Date.now()}`;
     // Broadcast the offer to the room (recipient(s) will receive it)
     socket.broadcast.to(room).emit("offer", {
       userId,
@@ -92,14 +93,12 @@ public async handleOffer(socket: Socket, data: CallData): Promise<void> {
       chatKey,
       offer,
       callType,
+      callId,
       senderName: (await this._userRepo.findById(userId))?.name || "Unknown",
     });
 
     // Create server-side callId and call log
-    const callId = `${chatKey}_${Date.now()}`;
-
     const sender = await this._userRepo.findById(userId);
-
     const callLog = await createCallLog(socket, this._io, this._callLogRepo, {
       CallId: callId,
       chatKey,

@@ -1,10 +1,13 @@
 import { createSlice, PayloadAction } from '@reduxjs/toolkit';
+import { IncomingCallData } from '../../Hooks/User/Chat/OneToOneCall/useChatCall';
 
 interface IncomingCall {
   senderId: string;
   senderName: string;
   callType: 'audio' | 'video';
   contactType: 'user-user' | 'user-mentor';
+  offerData?: IncomingCallData;
+  shouldAutoAnswer?: boolean;
 }
 
 interface CallState {

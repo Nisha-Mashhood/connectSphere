@@ -189,9 +189,6 @@ const Chat: React.FC = () => {
                 </div>
               </div>
             )}
-      
-            {/* Global ringtone element */}
-            <audio ref={call.ringtone} hidden loop preload="auto" />
     </div>
   );
 };
