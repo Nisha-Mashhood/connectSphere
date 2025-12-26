@@ -6,35 +6,9 @@ import { inject, injectable } from "inversify";
 import { ISocketService } from "../Interfaces/Services/i-socket-service";
 import { IChatSocketHandler } from "../Interfaces/Services/i-chat-socket-handler";
 import { ICallSocketHandler } from "../Interfaces/Services/i-call-socket-handler";
-import { IGroupCallSocketHandler } from "../Interfaces/Services/i-group-call-socket-handler";
 import { INotificationSocketHandler } from "../Interfaces/Services/i-notification-socket-handler";
 
-interface GroupCallData {
-  groupId: string;
-  senderId: string;
-  recipientId: string;
-  callType: "audio" | "video";
-  callId: string;
-}
 
-interface GroupOfferData extends GroupCallData {
-  offer: RTCSessionDescriptionInit;
-}
-
-interface GroupAnswerData extends GroupCallData {
-  answer: RTCSessionDescriptionInit;
-}
-
-interface GroupIceCandidateData extends GroupCallData {
-  candidate: RTCIceCandidateInit;
-}
-
-interface JoinGroupCallData {
-  groupId: string;
-  userId: string;
-  callType: "audio" | "video";
-  callId: string;
-}
 
 @injectable()
 export class SocketService implements ISocketService{
@@ -42,25 +16,25 @@ export class SocketService implements ISocketService{
   public static notificationEmitter: EventEmitter = new EventEmitter();
   private _chatHandler: IChatSocketHandler;
   private _callHandler: ICallSocketHandler;
-  private _groupCallHandler: IGroupCallSocketHandler;
+  // private _groupCallHandler: IGroupCallSocketHandler;
   private _notificationHandler: INotificationSocketHandler;
 
   constructor(
     @inject("IChatSocketHandler") chatHandler: IChatSocketHandler,
     @inject("ICallSocketHandler") callHandler: ICallSocketHandler,
-    @inject("IGroupCallSocketHandler") groupCallHandler: IGroupCallSocketHandler,
+    // @inject("IGroupCallSocketHandler") groupCallHandler: IGroupCallSocketHandler,
     @inject("INotificationSocketHandler") notificationHandler: INotificationSocketHandler
   ) {
     this._chatHandler = chatHandler;
     this._callHandler = callHandler;
-    this._groupCallHandler = groupCallHandler;
+    // this._groupCallHandler = groupCallHandler;
     this._notificationHandler = notificationHandler;
   }
 
   public initialize(io: Server): void {
     this._io = io;
     this._callHandler.setIo(io); 
-    this._groupCallHandler.setIo(io); 
+    // this._groupCallHandler.setIo(io); 
     this._notificationHandler.initializeSocket(io);
     this._chatHandler.setIo(io);
     logger.info("Socket.IO server initialized");
@@ -144,19 +118,7 @@ export class SocketService implements ISocketService{
     socket.on("answer", (data: CallData) => this._callHandler.handleAnswer(socket, data));
     socket.on("ice-candidate", (data: CallData) => this._callHandler.handleIceCandidate(socket, data));
     socket.on("callEnded", (data: CallData) => this._callHandler.handleCallEnded(socket, data));
-
-    // Group call events
-    socket.on("groupOffer", (data: GroupOfferData) => this._groupCallHandler.handleGroupOffer(socket, data));
-    socket.on("groupAnswer", (data: GroupAnswerData) => this._groupCallHandler.handleGroupAnswer(socket, data));
-    socket.on("groupIceCandidate", (data: GroupIceCandidateData) =>
-      this._groupCallHandler.handleGroupIceCandidate(socket, data)
-    );
-    socket.on("groupCallEnded", (data: GroupCallData) =>
-      this._groupCallHandler.handleGroupCallEnded(socket, data)
-    );
-    socket.on("joinGroupCall", (data: JoinGroupCallData) =>
-      this._groupCallHandler.handleJoinGroupCall(socket, data)
-    );
+    
 
     // Notification events
     socket.on("notification.read", (data: { notificationId: string; userId: string }) =>
@@ -164,6 +126,32 @@ export class SocketService implements ISocketService{
     );
 
     socket.on("disconnect", () => this.handleDisconnect(socket));
+
+    socket.on("groupCallStarted", (data: { groupId: string; starterId: string; callType: string; roomName: string; starterName: string }) => {
+      logger.info(`Group call started by ${data.starterId} in group ${data.groupId}`);
+      const room = `group_${data.groupId}`;
+      socket.to(room).emit("groupCallStarted", {
+      ...data,
+      starterName: data.starterName || "Someone"
+  });
+      // socket.emit("groupCallStarted", data);
+    });
+
+    socket.on("groupCallJoined", (data: { groupId: string; userId: string }) => {
+      const room = `group_${data.groupId}`;
+      socket.join(room);
+      socket.to(room).emit("groupUserJoin", {
+        userId: data.userId,
+        groupId: data.groupId,
+      });
+      logger.info(`User ${data.userId} joined group call ${data.groupId}`);
+    });
+
+    socket.on("groupCallEnded", (data: { groupId: string; callType: string }) => {
+      logger.info(`Group call ended in group ${data.groupId}`);
+      const room = `group_${data.groupId}`;
+      this._io?.to(room).emit("groupCallEnded", data);
+    });
   }
 
   public handleDisconnect(socket: Socket): void {
@@ -179,4 +167,5 @@ export class SocketService implements ISocketService{
     }
     logger.info(`User disconnected: socketId=${socket.id}, userId=${userId}`);
   }
+
   }

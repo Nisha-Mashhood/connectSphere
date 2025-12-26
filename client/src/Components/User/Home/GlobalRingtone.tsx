@@ -11,14 +11,11 @@ const GlobalRingtone: React.FC = () => {
     if (!audioRef.current) return;
 
     if (incomingCall) {
-      // Play ringtone when call comes
       audioRef.current.currentTime = 0;
       audioRef.current.play().catch((err) => {
         console.log("Ringtone play prevented (user interaction needed):", err);
-        // Common on mobile — needs user tap first
       });
     } else {
-      // Stop when call ends/answered/declined
       audioRef.current.pause();
       audioRef.current.currentTime = 0;
     }

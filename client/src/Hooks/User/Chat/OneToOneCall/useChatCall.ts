@@ -106,7 +106,7 @@ export const useChatCall = ({
       });
     }
 
-    // Stop WebRTC safely
+    // Stop WebRTC 
     webrtcService.stop();
 
     localStreamRef.current?.getTracks().forEach(t => t.stop());
@@ -135,7 +135,6 @@ export const useChatCall = ({
   useEffect(() => {
     return () => {
       webrtcService.stop();
-      // stopRingtone();
 
       if (localStreamRef.current) {
         localStreamRef.current.getTracks().forEach((t) => t.stop());
@@ -185,7 +184,7 @@ useEffect(() => {
   video.addEventListener("playing", onPlaying);
 
   // Also check immediately if already playing
-  if (video.readyState >= 3) { // HAVE_CURRENT_DATA or better
+  if (video.readyState >= 3) {
     setIsLocalPlaying(true);
   }
 
@@ -197,7 +196,7 @@ useEffect(() => {
     video.removeEventListener("playing", onPlaying);
     clearTimeout(timeout);
   };
-}, [localStream, localVideoRef]); // ← Add ref
+}, [localStream, localVideoRef]);
 
 useEffect(() => {
   if (!remoteVideoRef.current) return;
@@ -217,7 +216,7 @@ useEffect(() => {
 
   const timeout = setTimeout(() => {
     if (remoteStream) setIsRemotePlaying(true);
-  }, 15000); // longer for remote
+  }, 15000);
 
   return () => {
     video.removeEventListener("playing", onPlaying);
@@ -225,7 +224,7 @@ useEffect(() => {
   };
 }, [remoteStream, remoteVideoRef]);
 
-  //New UseEffect
+
 useEffect(() => {   
   const attach = () => {     
     if (localVideoRef.current && localStream) {       
@@ -237,10 +236,10 @@ useEffect(() => {
   };
   // Run immediately   
   attach();
-  // If video element appears later (e.g., overlay mounts after stream), catch it  
+  // If video element appears later catch it  
    const observer = new MutationObserver(attach);
-  // Observe the parent of where  will be (or document body as fallback)   
-  const parent = document.getElementById('root') || document.body; // or any container   
+  // Observe the parent of where  will be 
+  const parent = document.getElementById('root') || document.body; 
   observer.observe(parent, { childList: true, subtree: true });
 
   return () => observer.disconnect(); 
@@ -274,7 +273,7 @@ useEffect(() => {
   try {
     await webrtcService.initPeerConnection("single");
 
-    // STEP 1: Get local stream FIRST
+    //Get local stream FIRST
     const stream =
       incomingCallData.callType === "audio"
         ? await webrtcService.getLocalAudioStream()
@@ -282,26 +281,25 @@ useEffect(() => {
 
     setLocalStream(stream);
 
-    // ADD THIS LINE — Open call overlay NOW so local video shows immediately
     if (incomingCallData.callType === "audio") {
       setIsAudioCallActive(true);
     } else {
-      setIsVideoCallActive(true);  // ← This opens the video overlay right away!
+      setIsVideoCallActive(true); 
     }
 
-    // STEP 2: Add local tracks
+    //Add local tracks
     stream.getTracks().forEach((track) => {
       webrtcService.addTrack("single", track, stream);
       console.log("Added local track to PC:", track.kind, track.id);
     });
 
-    // STEP 3: Set remote description (offer)
+    //Set remote description 
     await webrtcService.setRemoteDescription(incomingCallData.offer);
 
-    // STEP 4: Create answer
+    //Create answer
     const answer = await webrtcService.createAnswer();
 
-    // STEP 5: Send answer
+    //Send answer
     socketService.sendAnswer({
       userId: selectedContact.userId || "",
       targetId: incomingCallData.userId,
@@ -314,10 +312,8 @@ useEffect(() => {
     // Hide incoming modal + stop ringtone
     setIsIncomingCall(false);
     setIncomingCallData(null);
-    // stopRingtone();
     dispatch(clearIncomingCall());
 
-    // No need to set active again — already done above
   } catch (err) {
     console.error("Accept call failed:", err);
     toast.error("Failed to accept call");
@@ -357,10 +353,7 @@ useEffect(() => {
     let isMounted = true;
 
     const setup = async () => {
-      // Ensure peer connection exists
       await webrtcService.initPeerConnection();
-
-      // WebRTC: remote track handler
       webrtcService.onTrack("single", (event) => {
         if (!isMounted) return;
         const stream = event.streams[0];
@@ -412,7 +405,6 @@ useEffect(() => {
         offerData: data,
         shouldAutoAnswer: false,
       }));
-      // playRingtone();
     };
 
     const handleAnswer = async (data: {
@@ -485,16 +477,12 @@ useEffect(() => {
 
     try {
       await webrtcService.initPeerConnection("single");
-
       const stream = await webrtcService.getLocalStream();
       setLocalStream(stream);
-
       stream
         .getTracks()
         .forEach((track) => webrtcService.addTrack("single", track, stream));
-
       const offer = await webrtcService.createOffer();
-
       socketService.sendOffer({
         userId: selectedContact.userId || "",
         targetId: selectedContact.targetId || "",
@@ -503,7 +491,6 @@ useEffect(() => {
         offer,
         callType: "video",
       });
-
       setIsVideoCallActive(true);
     } catch (err) {
       console.error(err);
@@ -531,16 +518,12 @@ useEffect(() => {
 
     try {
       await webrtcService.initPeerConnection("single");
-
       const stream = await webrtcService.getLocalAudioStream();
       setLocalStream(stream);
-
       stream
         .getTracks()
         .forEach((track) => webrtcService.addTrack("single", track, stream));
-
       const offer = await webrtcService.createOffer();
-
       socketService.sendOffer({
         userId: selectedContact.userId || "",
         targetId: selectedContact.targetId || "",
@@ -549,7 +532,6 @@ useEffect(() => {
         offer,
         callType: "audio",
       });
-
       setIsAudioCallActive(true);
     } catch (err) {
       console.error(err);
@@ -579,7 +561,6 @@ useEffect(() => {
 
     setIsIncomingCall(false);
     setIncomingCallData(null);
-    // stopRingtone();
     webrtcService.stop();
   }, [incomingCallData, chatKey, selectedContact]);
 

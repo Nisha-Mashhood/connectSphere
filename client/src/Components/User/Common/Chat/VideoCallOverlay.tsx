@@ -252,7 +252,6 @@ const VideoCallOverlay: React.FC<VideoCallOverlayProps> = ({
           </div>
         </div>
 
-        {/* Bottom Controls - HIGHEST among overlay elements */}
         <div
           className={`absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black via-black/90 to-transparent p-8 flex justify-center items-center gap-6 transition-all duration-300 z-50 ${
             showControls ? "opacity-100 translate-y-0" : "opacity-0 translate-y-4"

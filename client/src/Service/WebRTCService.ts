@@ -11,9 +11,6 @@ export class WebRTCService {
     string,
     (candidate: RTCIceCandidateInit) => void
   > = new Map();
-  // public onNegotiationNeeded:
-  //   | ((targetId: string, offer: RTCSessionDescriptionInit) => void)
-  //   | undefined;
   private pendingIceCandidates: Map<string, RTCIceCandidateInit[]> = new Map();
 
   constructor() {
@@ -187,32 +184,6 @@ export class WebRTCService {
         }
       }
     };
-
-    // peerConnection.onnegotiationneeded = async () => {
-    //   try {
-    //     if (peerConnection.signalingState !== "stable") {
-    //       console.log(
-    //         `Rolling back for ${targetId} due to signaling state: ${peerConnection.signalingState}`
-    //       );
-    //       await peerConnection.setLocalDescription({ type: "rollback" });
-    //     }
-    //     console.log(`Negotiation needed for ${targetId}, creating offer`);
-    //     const offer = await peerConnection.createOffer();
-    //     await peerConnection.setLocalDescription(offer);
-    //     console.log(
-    //       `Offer created and local description set for ${targetId}:`,
-    //       offer
-    //     );
-    //     if (this.onNegotiationNeeded) {
-    //       this.onNegotiationNeeded(targetId, offer);
-    //       console.log(`Called onNegotiationNeeded for ${targetId}`);
-    //     } else {
-    //       console.warn(`No onNegotiationNeeded callback set for ${targetId}`);
-    //     }
-    //   } catch (error) {
-    //     console.error(`Error handling negotiation for ${targetId}:`, error);
-    //   }
-    // };
   }
 
   // Check remote description

@@ -1,12 +1,6 @@
 import { io, Socket } from "socket.io-client";
 import { debounce } from "lodash";
-import {
-  GroupAnswerData,
-  GroupCallData,
-  GroupIceCandidateData,
-  GroupOfferData,
-  ICallLog,
-} from "../types";
+import { ICallLog } from "../types";
 import { IChatMessage } from "../Interface/User/IchatMessage";
 import { Notification } from "../Interface/User/Inotification";
 
@@ -42,6 +36,24 @@ interface CallCreatedEvent {
   groupId?: string;
   callerName?: string;
   createdAt: string;
+}
+
+interface GroupCallStart {
+  groupId: string;
+  starterId: string;
+  callType: string;
+  roomName: string;
+  starterName: string;
+}
+
+interface GroupCallJoin {
+  userId: string; 
+  groupId: string
+}
+
+interface GroupCallEnd {
+  groupId: string; 
+  callType: string
 }
 
 export class SocketService {
@@ -126,6 +138,16 @@ export class SocketService {
       `[SocketService] Connection status for user ${this.userId}: ${connected}`
     );
     return connected;
+  }
+
+  // General emit for custom events
+  public emit<T = unknown>(event: string, data: T): void {
+    if (!this.socket) {
+      console.error(`Cannot emit ${event}: Socket not connected`);
+      return;
+    }
+    console.log(`Emitting custom event: ${event}`, data);
+    this.socket.emit(event, data);
   }
 
   // USER PRESENCE
@@ -440,7 +462,7 @@ export class SocketService {
   }
 
   // CALL LOG LISTENERS
-   //Listen for new call logs being created (for both one-to-one and group calls).
+   //Listen for new call logs being created (for both one-to-one).
   public onCallLogCreated(callback: (callLog: ICallLog) => void) {
     this.socket?.on("callLog.created", (callLog: ICallLog) => {
       console.log("Received callLog.created:", callLog);
@@ -478,7 +500,6 @@ export class SocketService {
   public getCallIdForChatKey(chatKey: string): string | undefined {
   return this.callIdByChatKey.get(chatKey);
 }
-
 
 public onCallCreated(callback: (data: CallCreatedEvent) => void): void {
   this.socket?.on("call.created", (data: CallCreatedEvent) => {
@@ -545,12 +566,7 @@ public offCallCreated(callback: (data: CallCreatedEvent) => void): void {
   }
 
 
-
-
-
-
   // One-on-One WebRTC signaling methods
-  
 
   sendAnswer(data: AnswerData): void {
     if (!this.socket || !this.userId) {
@@ -576,148 +592,6 @@ public offCallCreated(callback: (data: CallCreatedEvent) => void): void {
     console.log(`Sending ICE candidate to ${data.targetId}:`, data.candidate);
     this.socket.emit("ice-candidate", data);
   }
-
-  
-
-  // Group WebRTC signaling methods
-  sendGroupOffer(data: GroupOfferData): void {
-    if (!this.socket || !this.userId) {
-      console.error("Cannot send group offer: Missing socket or userId");
-      return;
-    }
-    console.log(`Group Offer Data :`, data);
-    const offerKey = `${data.callId}:${data.senderId}:${data.recipientId}:${data.callType}`;
-    if (this.sentOffers.has(offerKey)) {
-      console.log(`Skipping duplicate group offer: ${offerKey}`);
-      return;
-    }
-    this.sentOffers.add(offerKey);
-    console.log(`Sending group offer to ${data.recipientId}:`, data.offer);
-    this.socket.emit("groupOffer", {
-      groupId: data.groupId,
-      senderId: data.senderId,
-      recipientId: data.recipientId,
-      offer: data.offer,
-      callType: data.callType,
-      callId: data.callId,
-    });
-    setTimeout(() => this.sentOffers.delete(offerKey), 30000);
-  }
-
-  sendGroupAnswer(data: GroupAnswerData): void {
-    if (!this.socket || !this.userId) {
-      console.error("Cannot send group answer: Missing socket or userId");
-      return;
-    }
-    const answerKey = `${data.callId}:${data.senderId}:${data.recipientId}:${data.callType}`;
-    if (this.sentAnswers.has(answerKey)) {
-      console.log(`Skipping duplicate group answer: ${answerKey}`);
-      return;
-    }
-    this.sentAnswers.add(answerKey);
-    console.log(`Sending group answer to ${data.recipientId}:`, data.answer);
-    this.socket.emit("groupAnswer", {
-      groupId: data.groupId,
-      senderId: data.senderId,
-      recipientId: data.recipientId,
-      answer: data.answer,
-      callType: data.callType,
-      callId: data.callId,
-    });
-    setTimeout(() => this.sentAnswers.delete(answerKey), 30000);
-  }
-
-  sendGroupIceCandidate(data: GroupIceCandidateData): void {
-    if (!this.socket || !this.userId) {
-      console.error(
-        "Cannot send group ICE candidate: Missing socket or userId"
-      );
-      return;
-    }
-    console.log(
-      `Sending group ICE candidate to ${data.recipientId}:`,
-      data.candidate
-    );
-    this.socket.emit("groupIceCandidate", {
-      groupId: data.groupId,
-      senderId: data.senderId,
-      recipientId: data.recipientId,
-      candidate: data.candidate,
-      callType: data.callType,
-      callId: data.callId,
-    });
-  }
-
-  emitGroupCallEnded(data: GroupCallData): void {
-    if (!this.socket || !this.userId) {
-      console.error("Cannot emit group call ended: Missing socket or userId");
-      return;
-    }
-    const eventKey = `${data.callId}:${data.groupId}:${data.callType}`;
-    if (this.callEndedSent.has(eventKey)) {
-      console.log(`Skipping duplicate group callEnded for ${eventKey}`);
-      return;
-    }
-    this.callEndedSent.add(eventKey);
-    console.log(
-      `Emitting group call ended for group ${data.groupId}, callId: ${data.callId}`
-    );
-    this.socket.emit("groupCallEnded", {
-      groupId: data.groupId,
-      callType: data.callType,
-      callId: data.callId,
-    });
-    setTimeout(() => this.callEndedSent.delete(eventKey), 60000);
-  }
-
-  public emitJoinGroupCall(
-    groupId: string,
-    userId: string,
-    callType: "audio" | "video",
-    callId: string
-  ): void {
-    if (this.socket && this.userId) {
-      console.log(
-        `Emitting joinGroupCall for user ${userId} in group ${groupId}, callId: ${callId}, callType: ${callType}`
-      );
-      this.socket.emit("joinGroupCall", { groupId, userId, callType, callId });
-    } else {
-      console.error("Cannot emit joinGroupCall: Socket or userId missing");
-    }
-  }
-
- 
-
-  public onJoinGroupCall(
-    callback: (data: {
-      groupId: string;
-      userId: string;
-      callType: "audio" | "video";
-      callId: string;
-    }) => void
-  ): void {
-    this.socket?.on("joinGroupCall", (data) => {
-      console.log(
-        `Received joinGroupCall for user ${data.userId}, call ${data.callId}`
-      );
-      callback(data);
-    });
-  }
-
-  public offJoinGroupCall(
-    callback: (data: {
-      groupId: string;
-      userId: string;
-      callType: "audio" | "video";
-      callId: string;
-    }) => void
-  ): void {
-    if (this.socket) {
-      this.socket.off("joinGroupCall", callback);
-      console.log("Unregistered joinGroupCall listener");
-    }
-  }
-
 
   // One-on-One WebRTC listeners
   public onOffer(callback: (data: OfferData) => void) {
@@ -762,172 +636,35 @@ public offCallCreated(callback: (data: CallCreatedEvent) => void): void {
     }
   }
 
-  
-
-  // Group WebRTC listeners
-  public onGroupOffer(callback: (data: GroupOfferData) => void) {
-    this.socket?.on(
-      "groupOffer",
-      (data: {
-        groupId: string;
-        senderId: string;
-        recipientId: string;
-        offer: RTCSessionDescriptionInit;
-        callType: "audio" | "video";
-        callId: string;
-        senderName?: string;
-      }) => {
-        console.log(`Received group offer from ${data.senderId}`);
-        callback({
-          groupId: data.groupId,
-          senderId: data.senderId,
-          recipientId: data.recipientId,
-          type: "group",
-          callId: data.callId,
-          offer: data.offer,
-          callType: data.callType,
-          senderName: data.senderName,
-        });
-      }
-    );
-  }
-
-  public offGroupOffer(callback: (data: GroupOfferData) => void) {
-    if (this.socket) {
-      this.socket.off("groupOffer", callback);
-      console.log("Unregistered group offer listener");
-    }
-  }
-
-  public onGroupAnswer(callback: (data: GroupAnswerData) => void) {
-    this.socket?.on(
-      "groupAnswer",
-      (data: {
-        groupId: string;
-        senderId: string;
-        recipientId: string;
-        answer: RTCSessionDescriptionInit;
-        callType: "audio" | "video";
-        callId: string;
-      }) => {
-        console.log(`Received group answer from ${data.senderId}`);
-        callback({
-          groupId: data.groupId,
-          senderId: data.senderId,
-          recipientId: data.recipientId,
-          type: "group",
-          callId: data.callId,
-          answer: data.answer,
-          callType: data.callType,
-        });
-      }
-    );
-  }
-
-  public offGroupAnswer(callback: (data: GroupAnswerData) => void) {
-    if (this.socket) {
-      this.socket.off("groupAnswer", callback);
-      console.log("Unregistered group answer listener");
-    }
-  }
-
-  public onGroupIceCandidate(callback: (data: GroupIceCandidateData) => void) {
-    this.socket?.on(
-      "groupIceCandidate",
-      (data: {
-        groupId: string;
-        senderId: string;
-        recipientId: string;
-        candidate: RTCIceCandidateInit;
-        callType: "audio" | "video";
-        callId: string;
-      }) => {
-        console.log(`Received group ICE candidate from ${data.senderId}`);
-        callback({
-          groupId: data.groupId,
-          senderId: data.senderId,
-          recipientId: data.recipientId,
-          type: "group",
-          callId: data.callId,
-          candidate: data.candidate,
-          callType: data.callType,
-        });
-      }
-    );
-  }
-
-  public offGroupIceCandidate(callback: (data: GroupIceCandidateData) => void) {
-    if (this.socket) {
-      this.socket.off("groupIceCandidate", callback);
-      console.log("Unregistered group ice-candidate listener");
-    }
-  }
-
-  public onGroupCallEnded(callback: (data: GroupCallData) => void) {
-    this.socket?.on(
-      "groupCallEnded",
-      (data: {
-        groupId: string;
-        callType: "audio" | "video";
-        callId: string;
-      }) => {
-        console.log(
-          `Received group callEnded for group ${data.groupId}, callId: ${data.callId}`
-        );
-        callback({
-          groupId: data.groupId,
-          type: "group",
-          callId: data.callId,
-          callType: data.callType,
-        });
-      }
-    );
-  }
-
-  public offGroupCallEnded(callback: (data: GroupCallData) => void) {
-    if (this.socket) {
-      this.socket.off("groupCallEnded", callback);
-      console.log("Unregistered group callEnded listener");
-    }
-  }
-
-  public onJoinedGroupCall(
-    callback: (data: {
-      groupId: string;
-      callId: string;
-      callType: "audio" | "video";
-      participants: string[];
-    }) => void
-  ): void {
-    this.socket?.on("joinedGroupCall", (data) => {
-      console.log(
-        `Received joinedGroupCall for call ${data.callId}, participants: ${data.participants}`
-      );
+  //Group Call Methods
+  public onGroupCallStarted(callback: (data: GroupCallStart ) => void): void {
+    this.socket?.on("groupCallStarted", (data) => {
       callback(data);
     });
   }
 
-  public offJoinedGroupCall(
-    callback: (data: {
-      groupId: string;
-      callId: string;
-      callType: "audio" | "video";
-      participants: string[];
-    }) => void
-  ): void {
-    if (this.socket) {
-      this.socket.off("joinedGroupCall", callback);
-      console.log("Unregistered joinedGroupCall listener");
-    }
+  public offGroupCallStarted( callback: (data: GroupCallStart) => void ): void {
+    this.socket?.off("groupCallStarted", callback);
   }
 
-  public emitLeaveGroupCall(data: { groupId: string; userId: string; callId: string }): void {
-  if (this.socket) {
-    this.socket.emit("leaveGroupCall", data);
-    console.log(`Emitted leaveGroupCall for user ${data.userId}, groupId: ${data.groupId}, callId: ${data.callId}`);
+  public onGroupCallJoined( callback: (data: GroupCallJoin) => void ): void {
+    this.socket?.on("groupCallJoined", callback);
   }
-}
 
+  public offGroupCallJoined( callback: (data: GroupCallJoin) => void ): void {
+    this.socket?.off("groupCallJoined", callback);
+  }
+
+  public onGroupCallEnded( callback: (data: GroupCallEnd) => void ): void {
+    this.socket?.on("groupCallEnded", (data) => {
+      console.log("Received groupCallEnded:", data);
+      callback(data);
+    });
+  }
+
+  public offGroupCallEnded( callback: (data: GroupCallEnd) => void ): void {
+    this.socket?.off("groupCallEnded", callback);
+  }
 }
 
 export const socketService = new SocketService();

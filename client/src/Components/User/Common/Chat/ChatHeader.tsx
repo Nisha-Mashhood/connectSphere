@@ -1,4 +1,4 @@
-import React, { useRef, lazy, Suspense } from "react";
+import React, { lazy, Suspense } from "react";
 import {
   Button,
   Avatar,
@@ -6,11 +6,6 @@ import {
   DropdownTrigger,
   DropdownMenu,
   DropdownItem,
-  // Modal,
-  // ModalContent,
-  // ModalHeader,
-  // ModalBody,
-  // ModalFooter,
   Spinner,
 } from "@nextui-org/react";
 import {
@@ -25,6 +20,7 @@ import { Contact } from "../../../../Interface/User/Icontact";
 import { useChatCall } from "../../../../Hooks/User/Chat/OneToOneCall/useChatCall";
 import VideoCallOverlay from "./VideoCallOverlay";
 import AudioCallOverlay from "./AudioCallOverlay";
+import { useGroupCall } from "../../../../Hooks/User/Chat/GroupCall/useChatGroupCall";
 
 const GroupCall = lazy(() => import("./Groups/GroupCall"));
 
@@ -55,24 +51,20 @@ const ChatHeader: React.FC<ChatHeaderProps> = ({
     isAudioMuted,
     isVideoOff,
     isScreenSharing,
-    // isIncomingCall,
-    // incomingCallData,
     localVideoRef,
     remoteVideoRef,
     startVideoCall,
     startAudioCall,
     endCall,
-    // acceptCall,
-    // declineCall,
     toggleAudio,
     toggleVideo,
     toggleScreenShare,
   } = call;
 
-
-  const groupCallRef = useRef<{
-    startGroupCall: (type: "audio" | "video") => void;
-  } | null>(null);
+  const { isGroupCallActive, startGroupCall, endGroupCall } = useGroupCall({
+    currentUserId,
+    selectedContact,
+  });
 
   const getGradient = () => {
     if (!selectedContact) return "from-violet-500 to-fuchsia-500";
@@ -256,12 +248,26 @@ const ChatHeader: React.FC<ChatHeaderProps> = ({
             isIconOnly
             variant="flat"
             className="bg-white/20 text-white hover:bg-white/30 transition-all w-8 h-8 sm:w-10 sm:h-10"
-            onPress={isVideoCallActive ? () => endCall() : startVideoCall}
+            onPress={() => {
+              if (selectedContact?.type === "group") {
+                if (isGroupCallActive) {
+                  endGroupCall();
+                } else {
+                  startGroupCall();
+                }
+              } else {
+                if (isVideoCallActive) {
+                  endCall();
+                } else {
+                  startVideoCall();
+                }
+              }
+            }}
             aria-label={
-              selectedContact.type === "group"
-                ? isVideoCallActive
+              selectedContact?.type === "group"
+                ? isGroupCallActive
                   ? "End group video call"
-                  : "Group video call"
+                  : "Start group video call"
                 : isVideoCallActive
                 ? "End video call"
                 : "Video call"
@@ -277,8 +283,8 @@ const ChatHeader: React.FC<ChatHeaderProps> = ({
               <GroupCall
                 groupId={selectedContact.groupId || ""}
                 userId={selectedContact.userId || ""}
-                callType={isVideoCallActive ? "video" : "audio"}
-                ref={groupCallRef}
+                isActive={isGroupCallActive}
+                onEnd={endGroupCall}
               />
             </Suspense>
           )}
@@ -349,29 +355,6 @@ const ChatHeader: React.FC<ChatHeaderProps> = ({
           remoteName={selectedContact.name}
         />
       )}
-      {/* INCOMING CALL MODAL */}
-      {/* <Modal
-        isOpen={isIncomingCall && selectedContact?.type !== "group"}
-        onClose={declineCall}
-      >
-        <ModalContent>
-          <ModalHeader>
-            Incoming{" "}
-            {incomingCallData?.callType === "audio" ? "Audio" : "Video"} Call
-          </ModalHeader>
-          <ModalBody>
-            <p>Call from {incomingCallData?.senderName || "Unknown"}</p>
-          </ModalBody>
-          <ModalFooter>
-            <Button color="danger" variant="light" onPress={declineCall}>
-              Decline
-            </Button>
-            <Button color="primary" onPress={acceptCall}>
-              Accept
-            </Button>
-          </ModalFooter>
-        </ModalContent>
-      </Modal> */}
     </div>
   );
 };

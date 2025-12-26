@@ -12,6 +12,8 @@ import { setIsInChatComponent } from "./redux/Slice/notificationSlice";
 import IncomingCallBar from "./Components/User/Home/IncomingCallBar";
 import GlobalCallListener from "./Components/User/Home/GlobalCallListener";
 import GlobalRingtone from "./Components/User/Home/GlobalRingtone";
+import GlobalGroupCallListener from "./Components/User/Common/Chat/GlobalGroupCallListener";
+import { clearIncomingCall, clearIncomingGroupCall } from "./redux/Slice/callSlice";
 
 
 function App() {
@@ -31,10 +33,16 @@ function App() {
     dispatch(setIsInChatComponent(isChatRoute));
   }, [dispatch, location.pathname]);
 
+  useEffect(() => {
+  dispatch(clearIncomingCall());
+  dispatch(clearIncomingGroupCall());
+}, [dispatch]);
+
   return (
     <>
       <NotificationHandler />
-        <GlobalCallListener />  
+        <GlobalCallListener />
+        <GlobalGroupCallListener />  
         <GlobalRingtone /> 
           <IncomingCallBar />
             {isAdminRoute ? <AdminRoutes /> : <UserRoutes />}
