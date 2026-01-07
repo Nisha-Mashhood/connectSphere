@@ -16,6 +16,9 @@ export const sendOtpAndStore = async (
   } = params;
 
   const normalizedEmail: string = email.toLowerCase().trim();
+  const todayDate = new Date();
+  
+
   const otp: string = generateOTP();    //generate otp
   const otpId: string = await saveOtpToRedis(    //save to redis
     {
