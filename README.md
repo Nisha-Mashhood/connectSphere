@@ -95,10 +95,11 @@ Backend
 
 📁 Project Structure
 connectSphere/
+
 ├── client/        # Frontend (React)
-
+|
 ├── backend/       # Backend (Node + Express)
-
+|
 ├── README.md
 
 
