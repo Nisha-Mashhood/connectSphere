@@ -6,136 +6,92 @@ The project is built using Repository Architecture to keep the code clean, organ
 🚀 Features
 👤 User & Mentor Management
 
-User and mentor signup and login
-
-Role-based access (User, Mentor, Admin)
-
-Profile management with skills, experience, and availability
+1. User and mentor signup and login
+2. Role-based access (User, Mentor, Admin)
+3. Profile management with skills, experience, and availability
 
 🤝 Mentorship & Collaboration
 
-Send and accept mentorship requests
-
-Paid mentorship using Stripe
-
-One-to-one and group collaborations
+1. Send and accept mentorship requests
+2. Paid mentorship using Stripe
+3. One-to-one and group collaborations
 
 💬 Communication
 
-Real-time chat using Socket.IO
-
-Typing indicators
-
-File and media sharing
-
-Notifications
+1. Real-time chat using Socket.IO
+2. Typing indicators
+3. File and media sharing
+4. Notifications
 
 📞 Video Calling
 
-One-to-one video calling using WebRTC
-
-Group video calling using Jitsi
+1. One-to-one video calling using WebRTC
+2. Group video calling using Jitsi
 
 🗂 Tasks & Groups
 
-Task creation and tracking
-
-Group management
-
-Notifications based on user activity
+1. Task creation and tracking
+2. Group management
+3. Notifications based on user activity
 
 🛠 Admin Panel
 
-Manage users and mentors
-
-Manage collaborations and payments
-
-View reports and analytics
-
-Manage reviews and feedback
+1. Manage users and mentors
+2. Manage collaborations and payments
+3. View reports and analytics
+4. Manage reviews and feedback
 
 🏗 Project Architecture
 
 The project follows Repository Architecture.
 
-Backend Architecture
+Backend Architecture ---->
 
-Controllers handle API requests
+->Controllers handle API requests
+->Services contain business logic
+->Repositories handle database operations
+->DTOs are used to send safe data to the frontend
+->Dependency Injection is handled using Inversify
 
-Services contain business logic
+Frontend Architecture----->
 
-Repositories handle database operations
-
-DTOs are used to send safe data to the frontend
-
-Dependency Injection is handled using Inversify
-
-Frontend Architecture
-
-Modular React components
-
-Centralized API handling
-
-State management using Redux
-
-Fully typed using TypeScript
+->Modular React components
+->Centralized API handling
+->State management using Redux
+->Fully typed using TypeScript
 
 🧰 Libraries & Services Used
 Frontend
 
-React
-
-TypeScript
-
-Vite
-
-Redux & Redux Persist
-
-NextUI
-
-Recharts
-
-Axios (API handling)
-
-React Hook Form + Yup (form validation)
-
-JWT (authentication handling)
-
-WebRTC (one-to-one video calls)
-
-Jitsi (group video calls)
+->React
+->TypeScript
+->Vite
+->Redux & Redux Persist
+->NextUI
+->Recharts
+->Axios (API handling)
+->React Hook Form + Yup (form validation)
+->JWT (authentication handling)
+->WebRTC (one-to-one video calls)
+->Jitsi (group video calls)
 
 Backend
 
-Node.js
-
-Express
-
-TypeScript
-
-MongoDB Atlas
-
-Repository Architecture
-
-Inversify (Dependency Injection)
-
-JWT Authentication
-
-Socket.IO (real-time chat)
-
-Stripe (payments)
-
-Redis Cloud (OTP handling)
-
-Multer & Cloudinary (file uploads)
-
-Winston Logger (server logging)
-
-BetterStack (cloud logging)
-
-Google Authentication
-
-GitHub Authentication
+->Node.js
+->Express
+->TypeScript
+->MongoDB Atlas
+->Repository Architecture
+->Inversify (Dependency Injection)
+->JWT Authentication
+->Socket.IO (real-time chat)
+->Stripe (payments)
+->Redis Cloud (OTP handling)
+->Multer & Cloudinary (file uploads)
+->Winston Logger (server logging)
+->BetterStack (cloud logging)
+->Google Authentication
+->GitHub Authentication
 
 📁 Project Structure
 connectSphere/
