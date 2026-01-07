@@ -1,83 +1,140 @@
 🌐 ConnectSphere
+
 ConnectSphere is a full-stack web application that connects learners and mentors through mentorship, communication, and collaboration.
 The project is built using Repository Architecture to keep the code clean, organized, and easy to maintain.
 
 🚀 Features
 👤 User & Mentor Management
+
 User and mentor signup and login
+
 Role-based access (User, Mentor, Admin)
+
 Profile management with skills, experience, and availability
 
 🤝 Mentorship & Collaboration
+
 Send and accept mentorship requests
+
 Paid mentorship using Stripe
+
 One-to-one and group collaborations
 
 💬 Communication
+
 Real-time chat using Socket.IO
+
 Typing indicators
+
 File and media sharing
+
 Notifications
 
 📞 Video Calling
+
 One-to-one video calling using WebRTC
+
 Group video calling using Jitsi
 
 🗂 Tasks & Groups
+
 Task creation and tracking
+
 Group management
+
 Notifications based on user activity
 
 🛠 Admin Panel
+
 Manage users and mentors
+
 Manage collaborations and payments
+
 View reports and analytics
+
 Manage reviews and feedback
 
 🏗 Project Architecture
+
 The project follows Repository Architecture.
+
 Backend Architecture
+
 Controllers handle API requests
+
 Services contain business logic
+
 Repositories handle database operations
+
 DTOs are used to send safe data to the frontend
+
 Dependency Injection is handled using Inversify
 
 Frontend Architecture
-Modular Reusable React components
-Centralized API handling using axios
+
+Modular React components
+
+Centralized API handling
+
 State management using Redux
+
 Fully typed using TypeScript
 
 🧰 Libraries & Services Used
 Frontend
+
 React
+
 TypeScript
+
 Vite
+
 Redux & Redux Persist
+
 NextUI
+
 Recharts
+
 Axios (API handling)
+
 React Hook Form + Yup (form validation)
+
 JWT (authentication handling)
+
 WebRTC (one-to-one video calls)
+
 Jitsi (group video calls)
 
 Backend
+
 Node.js
+
 Express
+
 TypeScript
+
 MongoDB Atlas
+
 Repository Architecture
+
 Inversify (Dependency Injection)
+
 JWT Authentication
+
 Socket.IO (real-time chat)
+
 Stripe (payments)
+
 Redis Cloud (OTP handling)
+
 Multer & Cloudinary (file uploads)
+
 Winston Logger (server logging)
+
 BetterStack (cloud logging)
+
 Google Authentication
+
 GitHub Authentication
 
 📁 Project Structure
@@ -87,6 +144,9 @@ connectSphere/
 ├── README.md
 
 ⚙️ Environment Variables (Example Only)
+
+⚠️ Do not add real secrets here
+Use a .env file and keep it out of GitHub.
 
 Backend (backend/.env)
 PORT=3000
@@ -159,20 +219,31 @@ npm install
 npm run dev
 
 🌍 Deployment
+
 Frontend: Vercel
-Backend: 
+
+Backend: Render or Railway
+
 Database: MongoDB Atlas
 
 Frontend and backend are designed to be deployed separately.
 
 ⭐ Key Highlights
+
 Repository Architecture
+
 Dependency Injection using Inversify
+
 Secure authentication with JWT and OAuth
+
 OTP handling using Redis Cloud
+
 Centralized logging with Winston and BetterStack
+
 Real-time chat and video calling
+
 Fully validated forms using React Hook Form and Yup
+
 Payment integration using Stripe
 
 👩‍💻 Author
@@ -182,4 +253,5 @@ Full-Stack MERN Developer
 GitHub: https://github.com/Nisha-Mashhood
 
 📝 Final Note
+
 ConnectSphere is built as a real-world application, focusing on clean code, proper architecture, and scalable features.
