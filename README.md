@@ -97,9 +97,9 @@ Backend
 connectSphere/
 
 ├── client/        # Frontend (React)
-|
+
 ├── backend/       # Backend (Node + Express)
-|
+
 ├── README.md
 
 
