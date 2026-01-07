@@ -101,9 +101,6 @@ connectSphere/
 
 ⚙️ Environment Variables (Example Only)
 
-⚠️ Do not add real secrets here
-Use a .env file and keep it out of GitHub.
-
 Backend (backend/.env)
 PORT=3000
 NODE_ENV=development
