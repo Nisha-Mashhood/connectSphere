@@ -4,6 +4,7 @@ ConnectSphere is a full-stack web application that connects learners and mentors
 The project is built using Repository Architecture to keep the code clean, organized, and easy to maintain.
 
 🚀 Features
+
 👤 User & Mentor Management
 
 1. User and mentor signup and login
@@ -103,7 +104,7 @@ connectSphere/
 ├── README.md
 
 
-⚙️ Environment Variables (Example Only)
+⚙️ Environment Variables
 
 Backend (backend/.env)
 PORT=3000
@@ -146,6 +147,7 @@ VAPID_PUBLIC_KEY=your_vapid_public_key
 VAPID_PRIVATE_KEY=your_vapid_private_key
 VAPID_EMAIL=your_email
 
+
 Frontend (client/.env)
 VITE_BACKEND_URL=http://localhost:3000/api
 
@@ -179,7 +181,7 @@ npm run dev
 
 Frontend: Vercel
 
-Backend: Render or Railway
+Backend: 
 
 Database: MongoDB Atlas
 
