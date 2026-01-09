@@ -1,9 +1,0 @@
-export declare const submitReview: (userId: string, rating: number, comment: string) => Promise<import("../Interfaces/models/IReview.js").IReview | null>;
-export declare const skipReview: (userId: string) => Promise<void>;
-export declare const getAllReviews: () => Promise<import("../Interfaces/models/IReview.js").IReview[] | null>;
-export declare const approveReview: (reviewId: string) => Promise<import("../Interfaces/models/IReview.js").IReview | null>;
-export declare const selectReview: (reviewId: string) => Promise<import("../Interfaces/models/IReview.js").IReview | null>;
-export declare const cancelApproval: (reviewId: string) => Promise<import("../Interfaces/models/IReview.js").IReview | null>;
-export declare const deselectReview: (reviewId: string) => Promise<import("../Interfaces/models/IReview.js").IReview | null>;
-export declare const getSelectedReviews: () => Promise<import("../Interfaces/models/IReview.js").IReview[] | null>;
-//# sourceMappingURL=review.service.d.ts.map

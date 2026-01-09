@@ -1,1 +1,0 @@
-{"version":3,"file":"types.js","sourceRoot":"","sources":["../../../../src/Modules/Collaboration/Types/types.ts"],"names":[],"mappings":"","sourcesContent":["export interface LockedSlot {\r\n  day: string;\r\n  timeSlots: string[];\r\n}"]}
