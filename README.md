@@ -1,216 +1,312 @@
-🌐 ConnectSphere
+# 🌐 ConnectSphere
 
-ConnectSphere is a full-stack web application that connects learners and mentors through mentorship, communication, and collaboration.
-The project is built using Repository Architecture to keep the code clean, organized, and easy to maintain.
+**A Scalable Mentorship & Collaboration Platform**
 
-🚀 Features
+![Image]()
 
-👤 User & Mentor Management
+![Image]()
 
-1. User and mentor signup and login
-2. Role-based access (User, Mentor, Admin)
-3. Profile management with skills, experience, and availability
+![Image]()
 
-🤝 Mentorship & Collaboration
+![Image]()
 
-1. Send and accept mentorship requests
-2. Paid mentorship using Stripe
-3. One-to-one and group collaborations
+![Status]()
+![Tech]()
+![License]()
+![Deployment]()
 
-💬 Communication
+---
 
-1. Real-time chat using Socket.IO
-2. Typing indicators
-3. File and media sharing
-4. Notifications
+## 📌 Project Description
 
-📞 Video Calling
+**ConnectSphere** is a full-stack web application designed to connect **learners and mentors** through structured mentorship, real-time communication, collaboration tools, and secure payments.
 
-1. One-to-one video calling using WebRTC
-2. Group video calling using Jitsi
+The project is built using **Repository Architecture** with **Dependency Injection**, ensuring clean separation of concerns, scalability, and maintainability—aligned with real-world industry standards.
 
-🗂 Tasks & Groups
+---
 
-1. Task creation and tracking
-2. Group management
-3. Notifications based on user activity
+## 📑 Table of Contents
 
-🛠 Admin Panel
+* [Features](#-features)
+* [Tech Stack](#-tech-stack)
+* [Project Architecture](#-project-architecture)
+* [Installation](#-installation-instructions)
+* [Usage](#-usage)
+* [API Overview](#-api-documentation)
+* [Project Structure](#-project-structure)
+* [Environment Variables](#-environment-variables)
+* [Deployment](#-deployment)
+* [Contributing](#-contributing-guidelines)
+* [Visual Preview](#-visual-elements)
+* [Author](#-author)
 
-1. Manage users and mentors
-2. Manage collaborations and payments
-3. View reports and analytics
-4. Manage reviews and feedback
+---
 
-🏗 Project Architecture
+## 🚀 Features
 
-The project follows Repository Architecture.
+### 👤 User & Mentor Management
 
-Backend Architecture ---->
+* User, Mentor, and Admin authentication
+* Role-based access control
+* Profile management with skills, experience, and availability
 
-->Controllers handle API requests
-->Services contain business logic
-->Repositories handle database operations
-->DTOs are used to send safe data to the frontend
-->Dependency Injection is handled using Inversify
+### 🤝 Mentorship & Collaboration
 
-Frontend Architecture----->
+* Send & accept mentorship requests
+* Paid mentorship via **Stripe**
+* One-to-one and group collaborations
 
-->Modular React components
-->Centralized API handling
-->State management using Redux
-->Fully typed using TypeScript
+### 💬 Communication
 
-🧰 Libraries & Services Used
-Frontend
+* Real-time chat using **Socket.IO**
+* Typing indicators
+* Media & file sharing
+* Push notifications
 
-->React
-->TypeScript
-->Vite
-->Redux & Redux Persist
-->NextUI
-->Recharts
-->Axios (API handling)
-->React Hook Form + Yup (form validation)
-->JWT (authentication handling)
-->WebRTC (one-to-one video calls)
-->Jitsi (group video calls)
+### 📞 Video Calling
 
-Backend
+* One-to-one video calls using **WebRTC**
+* Group video calls using **Jitsi**
 
-->Node.js
-->Express
-->TypeScript
-->MongoDB Atlas
-->Repository Architecture
-->Inversify (Dependency Injection)
-->JWT Authentication
-->Socket.IO (real-time chat)
-->Stripe (payments)
-->Redis Cloud (OTP handling)
-->Multer & Cloudinary (file uploads)
-->Winston Logger (server logging)
-->BetterStack (cloud logging)
-->Google Authentication
-->GitHub Authentication
+### 🗂 Tasks & Groups
 
-📁 Project Structure
+* Task creation and tracking
+* Group management
+* Activity-based notifications
+
+### 🛠 Admin Panel
+
+* Manage users & mentors
+* Monitor payments & collaborations
+* Analytics & reports
+* Reviews and feedback management
+
+---
+
+## 🧰 Tech Stack
+
+### Frontend
+
+* React + TypeScript
+* Vite
+* Redux & Redux Persist
+* NextUI / (HeroUI)
+* Recharts
+* Axios
+* React Hook Form + Yup
+* JWT Authentication
+* WebRTC & Jitsi
+
+### Backend
+
+* Node.js & Express
+* TypeScript
+* MongoDB Atlas
+* Repository Architecture
+* Inversify (Dependency Injection)
+* JWT & OAuth (Google, GitHub)
+* Socket.IO
+* Stripe
+* Redis Cloud (OTP)
+* Multer & Cloudinary
+* Winston Logger
+* BetterStack (Cloud Logging)
+
+---
+
+## 🏗 Project Architecture
+
+### Backend (Repository Architecture)
+
+```text
+Controller → Service → Repository → Modal(Database)
+```
+
+* **Controllers**: Handle API requests & responses
+* **Services**: Business logic
+* **Repositories**: Database operations
+* **DTOs**: Safe data transfer to frontend
+* **Inversify**: Dependency Injection
+
+### Frontend
+
+* Modular React components
+* Centralized API services
+* Redux for global state
+* Fully typed with TypeScript
+
+---
+
+## ⚙️ Installation Instructions
+
+### Step 1: Clone the Repository
+
+```bash
+git clone https://github.com/Nisha-Mashhood/connectSphere.git
+cd connectSphere
+```
+
+### Step 2: Run Backend
+
+```bash
+cd backend
+npm install
+npm run dev
+```
+
+### Step 3: Run Frontend
+
+```bash
+cd client
+npm install
+npm run dev
+```
+
+---
+
+## ▶️ Usage
+
+1. Register as a **User** or **Mentor**
+2. Complete your profile
+3. Send or accept mentorship requests
+4. Communicate via chat or video calls
+5. Track tasks and collaborations
+6. Admin manages users, payments, and reports
+
+---
+
+## 🔗 API Documentation (Overview)
+
+| Method | Endpoint                  | Description         |
+| ------ | ------------------------- | ------------------- |
+| POST   | `/api/auth/login`         | User login          |
+| POST   | `/api/auth/signup`        | User signup         |
+| GET    | `/api/mentors`            | Get mentors list    |
+| POST   | `/api/mentorship/request` | Send request        |
+| POST   | `/api/payment/stripe`     | Payment processing  |
+| GET    | `/api/chat/messages`      | Fetch chat messages |
+
+> Detailed API documentation available via Postman collection.
+
+---
+
+## 📁 Project Structure
+
+```text
 connectSphere/
-
-├── client/        # Frontend (React)
-
-├── backend/       # Backend (Node + Express)
-
+├── client/        # React Frontend
+├── backend/       # Node.js Backend
 ├── README.md
+```
 
+---
 
-⚙️ Environment Variables
+## 🔐 Environment Variables
 
-Backend (backend/.env)
-PORT=3000
+### Backend (`backend/.env`)
+
+```env
+PORT=3000 
 NODE_ENV=development
 
-MONGO_URI=your_mongodb_uri
-JWT_SECRET=your_jwt_secret
+MONGO_URI=your_mongodb_uri 
+JWT_SECRET=your_jwt_secret 
 SESSION_SECRET=your_session_secret
 
-ADMIN_EMAIL=admin_email
+ADMIN_EMAIL=admin_email 
 PASSKEY_ADMIN=admin_passkey
 
-BASE_URL=http://localhost:3000
+BASE_URL=http://localhost:3000 
 FRONTEND_URL=http://localhost:5173
 
-GOOGLE_CLIENT_ID=your_google_client_id
+GOOGLE_CLIENT_ID=your_google_client_id 
 GOOGLE_CLIENT_SECRET=your_google_client_secret
 
-GITHUB_CLIENT_ID=your_github_client_id
-GITHUB_CLIENT_SECRET=your_github_client_secret
+GITHUB_CLIENT_ID=your_github_client_id 
+GITHUB_CLIENT_SECRET=your_github_client_secret 
 GITHUB_CALLBACK_URL=http://localhost:3000/github/callback
 
-EMAIL_SERVICE=gmail
-EMAIL_USER=your_email
+EMAIL_SERVICE=gmail EMAIL_USER=your_email 
 EMAIL_PASS=your_email_password
 
-CLOUDINARY_CLOUD_NAME=your_cloudinary_name
-CLOUDINARY_API_KEY=your_cloudinary_key
+CLOUDINARY_CLOUD_NAME=your_cloudinary_name 
+CLOUDINARY_API_KEY=your_cloudinary_key 
 CLOUDINARY_API_SECRET=your_cloudinary_secret
 
 STRIPE_SECRET_KEY=your_stripe_secret_key
 
 REDIS_URL=your_redis_cloud_url
 
-BETTERSTACK_LOG_TOKEN=your_betterstack_token
-BETTERSTACK_LOG_ENDPOINT=your_betterstack_endpoint
-LOG_LEVEL=debug
+BETTERSTACK_LOG_TOKEN=your_betterstack_token 
+BETTERSTACK_LOG_ENDPOINT=your_betterstack_endpoint LOG_LEVEL=debug
 
-VAPID_PUBLIC_KEY=your_vapid_public_key
-VAPID_PRIVATE_KEY=your_vapid_private_key
+VAPID_PUBLIC_KEY=your_vapid_public_key 
+VAPID_PRIVATE_KEY=your_vapid_private_key 
 VAPID_EMAIL=your_email
+```
 
+### Frontend (`client/.env`)
 
-Frontend (client/.env)
+```env
 VITE_BACKEND_URL=http://localhost:3000/api
+VITE_PUBLIC_VAPID_KEY=YOUR_VAPID_PUBLIC_KEY
 
 VITE_GOOGLE_CLIENT_ID=your_google_client_id
 
-VITE_GITHUB_CLIENTID=your_github_client_id
-VITE_GITHUB_REDIRECTURI=http://localhost:5173/github/callback
+VITE_GITHUB_CLIENTID=your_github_client_id 
+VITE_GITHUB_REDIRECTURI=http://localhost:5173/github/callback 
 VITE_GITHUB_URL=https://github.com/login/oauth/authorize
 
-VITE_STRIPE_KEY=your_stripe_public_key
-VITE_VAPID_PUBLIC_KEY=your_vapid_public_key
+VITE_STRIPE_KEY=your_stripe_public_key 
 
 ENV_MODE=development
+```
 
-▶️ How to Run the Project Locally
-Step 1: Clone the Repository
-git clone https://github.com/Nisha-Mashhood/connectSphere.git
-cd connectSphere
+---
 
-Step 2: Run Backend
-cd backend
-npm install
-npm run dev
+## 🌍 Deployment
 
-Step 3: Run Frontend
-cd client
-npm install
-npm run dev
+* **Frontend**: Vercel
+* **Backend**: AWS
+* **Database**: MongoDB Atlas
 
-🌍 Deployment
+Frontend and backend are deployed **independently** for scalability.
 
-Frontend: Vercel
+---
 
-Backend: 
+## 🤝 Contributing Guidelines
 
-Database: MongoDB Atlas
+1. Fork the repository
+2. Create a feature branch
+3. Commit your changes
+4. Push to your branch
+5. Open a Pull Request
 
-Frontend and backend are designed to be deployed separately.
+---
 
-⭐ Key Highlights
+## 🎨 Visual Elements
 
-Repository Architecture
+![Image]()
 
-Dependency Injection using Inversify
+![Image]()
 
-Secure authentication with JWT and OAuth
+![Image]()
 
-OTP handling using Redis Cloud
+![Image]()
 
-Centralized logging with Winston and BetterStack
+> Screenshots and demo GIFs .
 
-Real-time chat and video calling
+---
 
-Fully validated forms using React Hook Form and Yup
+## 👩‍💻 Author
 
-Payment integration using Stripe
-
-👩‍💻 Author
-
-Nisha Mashhood
+**Nisha Mashhood**
 Full-Stack MERN Developer
-GitHub: https://github.com/Nisha-Mashhood
+🔗 GitHub: [https://github.com/Nisha-Mashhood](https://github.com/Nisha-Mashhood)
 
-📝 Final Note
+---
 
-ConnectSphere is built as a real-world application, focusing on clean code, proper architecture, and scalable features.
+## 📝 Final Note
+
+ConnectSphere is built as a **real-world, production-grade application**, following clean architecture principles, strong typing, and scalable design patterns.
+It reflects industry-level practices in authentication, communication, payments, and system design.
