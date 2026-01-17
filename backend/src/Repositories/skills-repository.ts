@@ -1,6 +1,6 @@
 import { injectable } from "inversify";
 import { ISkillsRepository } from "../Interfaces/Repository/i-skills-repositry";
-import { BaseRepository } from "../core/repositries/base-repositry";
+import { BaseRepository } from "../core/Repositries/base-repositry";
 import { RepositoryError } from "../core/utils/error-handler";
 import logger from "../core/utils/logger";
 import { ISkill, } from "../Interfaces/Models/i-skill";

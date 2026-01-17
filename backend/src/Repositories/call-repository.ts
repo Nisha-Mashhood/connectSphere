@@ -1,5 +1,5 @@
 import { RepositoryError } from "../core/utils/error-handler";
-import { BaseRepository } from "../core/repositries/base-repositry";
+import { BaseRepository } from "../core/Repositries/base-repositry";
 import logger from "../core/utils/logger";
 import { ICallLog } from "../Interfaces/Models/i-call-log";
 import callModal from "../Models/call-model";

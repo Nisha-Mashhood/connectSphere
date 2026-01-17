@@ -1,6 +1,6 @@
 import { inject, injectable } from 'inversify';
 import { Types, Model, ClientSession } from 'mongoose';
-import { BaseRepository } from '../core/repositries/base-repositry';
+import { BaseRepository } from '../core/Repositries/base-repositry';
 import { RepositoryError } from '../core/utils/error-handler';
 import logger from '../core/utils/logger';
 import Contact from '../Models/contacts-model';

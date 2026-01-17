@@ -1,7 +1,7 @@
 import { injectable } from "inversify";
 import User from "../Models/user-model";
 import { IUser } from '../Interfaces/Models/i-user';
-import { BaseRepository } from "../core/repositries/base-repositry";
+import { BaseRepository } from "../core/Repositries/base-repositry";
 import { RepositoryError } from "../core/utils/error-handler";
 import logger from "../core/utils/logger";
 import { UserQuery } from "../Utils/types/auth-types";

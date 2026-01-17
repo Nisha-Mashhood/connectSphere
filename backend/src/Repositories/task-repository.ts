@@ -1,6 +1,6 @@
 import { injectable } from 'inversify';
 import { Model, Types, FilterQuery } from 'mongoose';
-import { BaseRepository } from '../core/repositries/base-repositry';
+import { BaseRepository } from '../core/Repositries/base-repositry';
 import { RepositoryError } from '../core/utils/error-handler';
 import logger from '../core/utils/logger';
 import { ITask } from '../Interfaces/Models/i-task';
